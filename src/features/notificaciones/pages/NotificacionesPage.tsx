@@ -4,19 +4,19 @@ import {
   getSolicitudesJugadores,
 } from '../../jugadores/services/jugadorEquipoService';
 import type { SolicitudJugador, ContratoJugadorResumen } from '../../../types';
-import { useEquipo } from '../../../app/providers/EquipoContext';
+import { useOrganizacion } from '../../../app/providers/OrganizacionContext';
 import { useToast } from '../../../shared/components/Toast/ToastProvider';
 
 const NotificacionesPage = () => {
-  const { equipoSeleccionado } = useEquipo();
+  const { organizacionSeleccionada } = useOrganizacion();
   const { addToast } = useToast();
   const [pendientes, setPendientes] = useState<SolicitudJugador[]>([]);
   const [historial, setHistorial] = useState<ContratoJugadorResumen[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const equipoId = equipoSeleccionado?.id;
-    if (!equipoId) {
+    const organizacionId = organizacionSeleccionada?.id;
+    if (!organizacionId) {
       setPendientes([]);
       setHistorial([]);
       return;
@@ -28,8 +28,8 @@ const NotificacionesPage = () => {
       try {
         setLoading(true);
         const [solPendientes, historico] = await Promise.all([
-          getSolicitudesJugadores(equipoId),
-          getHistorialSolicitudesJugadorEquipo(equipoId),
+          getSolicitudesJugadores(organizacionId),
+          getHistorialSolicitudesJugadorEquipo(organizacionId),
         ]);
         if (cancelado) return;
         setPendientes(solPendientes);
@@ -37,7 +37,7 @@ const NotificacionesPage = () => {
       } catch (err) {
         console.error(err);
         if (!cancelado) {
-          addToast({ type: 'error', title: 'Error', message: 'No pudimos cargar las solicitudes del equipo.' });
+          addToast({ type: 'error', title: 'Error', message: 'No pudimos cargar las solicitudes de la organización.' });
         }
       } finally {
         if (!cancelado) {
@@ -51,7 +51,7 @@ const NotificacionesPage = () => {
     return () => {
       cancelado = true;
     };
-  }, [equipoSeleccionado]);
+  }, [organizacionSeleccionada?.id]);
 
   const historialAgrupado = useMemo(() => {
     if (historial.length === 0) return [] as ContratoJugadorResumen[];
@@ -69,9 +69,9 @@ const NotificacionesPage = () => {
 
       {loading ? <p className="text-sm text-slate-500">Cargando solicitudes…</p> : null}
 
-      {!equipoSeleccionado ? (
+      {!organizacionSeleccionada ? (
         <p className="rounded-2xl border border-dashed border-slate-200 px-4 py-6 text-sm text-slate-500">
-          Seleccioná un equipo para ver sus solicitudes.
+          Seleccioná una organización para ver sus solicitudes.
         </p>
       ) : (
         <div className="space-y-8">

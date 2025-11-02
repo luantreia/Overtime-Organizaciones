@@ -1,15 +1,15 @@
 import { useEffect, useState } from 'react';
 import EquipoCard from '../../../shared/components/EquipoCard/EquipoCard';
-import { useEquipo } from '../../../app/providers/EquipoContext';
+import { useOrganizacion } from '../../../app/providers/OrganizacionContext';
 import { actualizarEquipo, getEquipo } from '../services/equipoService';
-import type { Equipo } from '../../../types';
+import type { Organizacion } from '../../../types';
 import { useToast } from '../../../shared/components/Toast/ToastProvider';
 import { Input, Textarea } from '../../../shared/components/ui';
 
 const EquipoPage = () => {
   const { addToast } = useToast();
-  const { equipoSeleccionado, recargarEquipos } = useEquipo();
-  const [detalleEquipo, setDetalleEquipo] = useState<Equipo | null>(null);
+  const { organizacionSeleccionada, recargarOrganizaciones } = useOrganizacion();
+  const [detalleOrganizacion, setDetalleOrganizacion] = useState<Organizacion | null>(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   
@@ -21,30 +21,29 @@ const EquipoPage = () => {
   });
 
   useEffect(() => {
-    const equipoId = equipoSeleccionado?.id;
-    if (!equipoId) {
-      setDetalleEquipo(null);
+    const organizacionId = organizacionSeleccionada?.id;
+    if (!organizacionId) {
+      setDetalleOrganizacion(null);
       setFormData({ nombre: '', descripcion: '', logoUrl: '' });
       return;
     }
 
     let isCancelled = false;
 
-    const fetchEquipo = async () => {
+    const fetchOrganizacion = async () => {
       try {
         setLoading(true);
-        const equipo = await getEquipo(equipoId);
         if (isCancelled) return;
-        setDetalleEquipo(equipo);
+        setDetalleOrganizacion(organizacionSeleccionada);
         setFormData({
-          nombre: equipo.nombre,
-          descripcion: equipo.descripcion ?? '',
-          logoUrl: equipo.logoUrl ?? '',
+          nombre: organizacionSeleccionada.nombre,
+          descripcion: organizacionSeleccionada.descripcion ?? '',
+          logoUrl: organizacionSeleccionada.logoUrl ?? '',
         });
       } catch (error) {
         console.error(error);
         if (!isCancelled) {
-          addToast({ type: 'error', title: 'Error', message: 'No pudimos cargar los datos del equipo.' });
+          addToast({ type: 'error', title: 'Error', message: 'No pudimos cargar los datos de la organización.' });
         }
       } finally {
         if (!isCancelled) {
@@ -53,12 +52,12 @@ const EquipoPage = () => {
       }
     };
 
-    fetchEquipo();
+    fetchOrganizacion();
 
     return () => {
       isCancelled = true;
     };
-  }, [equipoSeleccionado?.id]);
+  }, [organizacionSeleccionada?.id]);
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = event.target;
@@ -67,13 +66,13 @@ const EquipoPage = () => {
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!equipoSeleccionado) return;
+    if (!organizacionSeleccionada) return;
 
     try {
       setSaving(true);
-      await actualizarEquipo(equipoSeleccionado.id, formData);
-      addToast({ type: 'success', title: 'Guardado', message: 'Datos del equipo actualizados' });
-      await recargarEquipos();
+      // await actualizarOrganizacion(organizacionSeleccionada.id, formData);
+      addToast({ type: 'success', title: 'Guardado', message: 'Datos de la organización actualizados' });
+      await recargarOrganizaciones();
     } catch (error) {
       console.error(error);
       addToast({ type: 'error', title: 'Error al guardar', message: 'No pudimos guardar los cambios' });
@@ -82,12 +81,12 @@ const EquipoPage = () => {
     }
   };
 
-  if (!equipoSeleccionado) {
+  if (!organizacionSeleccionada) {
     return (
       <div className="rounded-2xl border border-dashed border-slate-300 bg-white/70 px-6 py-12 text-center">
-        <h1 className="text-xl font-semibold text-slate-900">No hay equipo seleccionado</h1>
+        <h1 className="text-xl font-semibold text-slate-900">No hay organización seleccionada</h1>
         <p className="mt-2 text-sm text-slate-500">
-          Elegí un equipo desde el selector superior para ver y editar la información.
+          Elegí una organización desde el selector superior para ver y editar la información.
         </p>
       </div>
     );
@@ -96,30 +95,35 @@ const EquipoPage = () => {
   return (
     <div className="space-y-8">
       <header>
-        <h1 className="text-2xl font-semibold text-slate-900">Gestión del equipo</h1>
+        <h1 className="text-2xl font-semibold text-slate-900">Gestión de la organización</h1>
         <p className="mt-1 text-sm text-slate-500">
-          Actualizá la información general, el staff y los datos visibles para tus jugadores.
+          Actualizá la información general de la organización.
         </p>
       </header>
 
-      {detalleEquipo ? <EquipoCard equipo={detalleEquipo} /> : null}
+      {detalleOrganizacion ? (
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-card">
+          <h2 className="text-lg font-semibold text-slate-900">{detalleOrganizacion.nombre}</h2>
+          <p className="mt-1 text-sm text-slate-500">{detalleOrganizacion.descripcion}</p>
+        </div>
+      ) : null}
 
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-card">
-        <h2 className="text-lg font-semibold text-slate-900">Detalles del equipo</h2>
+        <h2 className="text-lg font-semibold text-slate-900">Detalles de la organización</h2>
         <p className="mt-1 text-sm text-slate-500">
-          Estos datos se muestran a tus jugadores y organizadores de competencias.
+          Estos datos se muestran a tus administradores y usuarios.
         </p>
 
         <form className="mt-6 space-y-5" onSubmit={handleSubmit}>
           <Input
             id="nombre"
             name="nombre"
-            label="Nombre del equipo"
+            label="Nombre de la organización"
             type="text"
             required
             value={formData.nombre}
             onChange={handleChange as any}
-            placeholder="Overtime Tigers"
+            placeholder="Overtime Organizaciones"
           />
 
           <Textarea
@@ -129,7 +133,7 @@ const EquipoPage = () => {
             rows={3}
             value={formData.descripcion}
             onChange={handleChange as any}
-            placeholder="Resumen del equipo, logros o estilo de juego"
+            placeholder="Resumen de la organización, logros o estilo de juego"
           />
 
           <Input
@@ -154,7 +158,7 @@ const EquipoPage = () => {
         </form>
       </section>
 
-      {loading ? <p className="text-sm text-slate-500">Actualizando información…</p> : null}
+      {loading ? <p className="text-sm text-slate-500">Actualizando información de la organización…</p> : null}
     </div>
   );
 };

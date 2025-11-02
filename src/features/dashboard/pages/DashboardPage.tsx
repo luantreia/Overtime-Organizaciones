@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import PartidoCard from '../../../shared/components/PartidoCard/PartidoCard';
 import EstadisticaCard from '../../../shared/components/EstadisticaCard/EstadisticaCard';
-import { useEquipo } from '../../../app/providers/EquipoContext';
+import { useOrganizacion } from '../../../app/providers/OrganizacionContext';
 import { getPartidos } from '../../partidos/services/partidoService';
 // Ranking reusable section
 import { SeccionTop5estadisticasDirectas } from '../../estadisticas/components/sections/SeccionTop5estadisticasDirectas';
@@ -16,7 +16,7 @@ import { formatNumber } from '../../../utils/formatNumber';
  
 
 const DashboardPage = () => {
-  const { equipoSeleccionado, loading: loadingEquipo } = useEquipo();
+  const { organizacionSeleccionada, loading: loadingOrganizacion } = useOrganizacion();
   const [proximosPartidos, setProximosPartidos] = useState<Partido[]>([]);
   const [solicitudesPendientes, setSolicitudesPendientes] = useState<SolicitudJugador[]>([]);
   const [resumenEquipo, setResumenEquipo] = useState<EstadisticaEquipoResumen | null>(null);
@@ -25,8 +25,8 @@ const DashboardPage = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const equipoId = equipoSeleccionado?.id;
-    if (!equipoId) {
+    const organizacionId = organizacionSeleccionada?.id;
+    if (!organizacionId) {
       setProximosPartidos([]);
       setSolicitudesPendientes([]);
       setResumenEquipo(null);
@@ -40,8 +40,8 @@ const DashboardPage = () => {
       try {
         setLoading(true);
         const [partidos, solicitudes] = await Promise.all([
-          getPartidos({ equipoId, estado: 'pendiente' }),
-          getSolicitudesJugadores(equipoId),
+          getPartidos({ equipoId: organizacionSeleccionada.id, estado: 'pendiente' }),
+          getSolicitudesJugadores(organizacionId),
         ]);
 
         if (isCancelled) return;
@@ -69,7 +69,7 @@ const DashboardPage = () => {
     return () => {
       isCancelled = true;
     };
-  }, [equipoSeleccionado?.id]);
+  }, [organizacionSeleccionada?.id]);
 
   
 
@@ -97,16 +97,16 @@ const DashboardPage = () => {
     ];
   }, [resumenEquipo]);
 
-  if (loadingEquipo) {
-    return <p className="text-sm text-slate-500">Cargando equipos…</p>;
+  if (loadingOrganizacion) {
+    return <p className="text-sm text-slate-500">Cargando organizaciones…</p>;
   }
 
-  if (!equipoSeleccionado) {
+  if (!organizacionSeleccionada) {
     return (
       <div className="rounded-2xl border border-dashed border-slate-300 bg-white/70 px-6 py-12 text-center">
-        <h2 className="text-lg font-semibold text-slate-900">Seleccioná un equipo</h2>
+        <h2 className="text-lg font-semibold text-slate-900">Seleccioná una organización</h2>
         <p className="mt-2 text-sm text-slate-500">
-          Elegí uno de tus equipos desde el selector superior para ver el tablero.
+          Elegí una de tus organizaciones desde el selector superior para ver el tablero.
         </p>
       </div>
     );
@@ -115,9 +115,9 @@ const DashboardPage = () => {
   return (
     <div className="space-y-8">
       <header className="flex flex-col gap-2">
-        <h1 className="text-2xl font-semibold text-slate-900">Hola, {equipoSeleccionado.nombre}</h1>
+        <h1 className="text-2xl font-semibold text-slate-900">Hola, {organizacionSeleccionada.nombre}</h1>
         <p className="text-sm text-slate-500">
-          Gestión rápida del equipo: próximos partidos, solicitudes y rendimiento actual.
+          Gestión rápida de la organización: próximos partidos, solicitudes y rendimiento actual.
         </p>
       </header>
 
@@ -137,7 +137,7 @@ const DashboardPage = () => {
       </section>
 
         <div className="flex flex-col gap-4 ">
-          <SeccionTop5estadisticasDirectas equipoId={equipoSeleccionado.id} />
+          <SeccionTop5estadisticasDirectas equipoId={organizacionSeleccionada.id} />
         </div>
 
       <section className="grid gap-6 lg:grid-cols-2">

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useEquipo } from '../../../app/providers/EquipoContext';
+import { useOrganizacion } from '../../../app/providers/OrganizacionContext';
 import { getEstadisticasEquipo, getHistorialResultados } from '../services/estadisticasService';
 import EstadisticaCard from '../../../shared/components/EstadisticaCard';
 import { formatDate } from '../../../utils/formatDate';
@@ -24,7 +24,7 @@ const RESULTADO_LABELS: Record<'W' | 'D' | 'L', string> = {
 };
 
 const EstadisticasPage = () => {
-  const { equipoSeleccionado } = useEquipo();
+  const { organizacionSeleccionada } = useOrganizacion();
   const { addToast } = useToast();
   const [resumen, setResumen] = useState<EstadisticaEquipoResumen | null>(null);
   const [jugadores, setJugadores] = useState<EstadisticaJugador[]>([]);
@@ -34,8 +34,8 @@ const EstadisticasPage = () => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const equipoId = equipoSeleccionado?.id;
-    if (!equipoId) {
+    const organizacionId = organizacionSeleccionada?.id;
+    if (!organizacionId) {
       setResumen(null);
       setJugadores([]);
       setHistorial([]);
@@ -48,8 +48,8 @@ const EstadisticasPage = () => {
       try {
         setLoading(true);
         const [datosEquipo, historialResultados] = await Promise.all([
-          getEstadisticasEquipo(equipoId),
-          getHistorialResultados(equipoId),
+          getEstadisticasEquipo(organizacionId),
+          getHistorialResultados(organizacionId),
         ]);
         if (isCancelled) return;
         setResumen(datosEquipo.resumen);
@@ -72,7 +72,7 @@ const EstadisticasPage = () => {
     return () => {
       isCancelled = true;
     };
-  }, [equipoSeleccionado?.id]);
+  }, [organizacionSeleccionada?.id]);
 
   const cards = useMemo(() => {
     if (!resumen) return [];
@@ -137,12 +137,12 @@ const EstadisticasPage = () => {
   const historialReciente = useMemo(() => historial.slice(0, 5), [historial]);
   const racha = resumen?.racha ?? [];
 
-  if (!equipoSeleccionado) {
+  if (!organizacionSeleccionada) {
     return (
       <div className="rounded-2xl border border-dashed border-slate-300 bg-white/70 px-6 py-12 text-center">
-        <h1 className="text-xl font-semibold text-slate-900">Seleccioná un equipo</h1>
+        <h1 className="text-xl font-semibold text-slate-900">Seleccioná una organización</h1>
         <p className="mt-2 text-sm text-slate-500">
-          Elegí un equipo para ver su rendimiento histórico.
+          Elegí una organización para ver su rendimiento histórico.
         </p>
       </div>
     );
@@ -151,7 +151,7 @@ const EstadisticasPage = () => {
   return (
     <div className="space-y-10">
       <header className="flex flex-col gap-2">
-        <h1 className="text-2xl font-semibold text-slate-900">Estadísticas del equipo</h1>
+        <h1 className="text-2xl font-semibold text-slate-900">Estadísticas de la organización</h1>
         <p className="text-sm text-slate-500">Seguimiento del rendimiento, ranking y jugadores destacados.</p>
       </header>
 
@@ -165,13 +165,13 @@ const EstadisticasPage = () => {
         </section>
       ) : !loading ? (
         <section className="rounded-2xl border border-dashed border-slate-200 bg-white px-6 py-8 text-center text-sm text-slate-500">
-          Todavía no hay métricas generales para este equipo.
+          Todavía no hay métricas generales para esta organización.
         </section>
       ) : null}
 
       <section className="grid gap-6 xl:grid-cols-[1.6fr_minmax(0,1fr)]">
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-card">
-            <SeccionTop5estadisticasDirectas equipoId={equipoSeleccionado.id} />
+            <SeccionTop5estadisticasDirectas equipoId={organizacionSeleccionada.id} />
         </div>  
 
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-card">
@@ -250,7 +250,7 @@ const EstadisticasPage = () => {
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-slate-500">Aún no hay racha registrada para este equipo.</p>
+              <p className="text-sm text-slate-500">Aún no hay racha registrada para esta organización.</p>
             )}
 
             <div className="mt-6 border-t border-slate-100 pt-4">

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import CompetenciaCard from '../../../shared/components/CompetenciaCard';
-import { useEquipo } from '../../../app/providers/EquipoContext';
+import { useOrganizacion } from '../../../app/providers/OrganizacionContext';
 import { getParticipaciones, solicitarInscripcion } from '../services/equipoCompetenciaService';
 import type { EquipoCompetencia } from '../../../types';
 import { useToast } from '../../../shared/components/Toast/ToastProvider';
@@ -8,7 +8,7 @@ import { Input, Textarea } from '../../../shared/components/ui';
 
 const CompetenciasPage = () => {
   const { addToast } = useToast();
-  const { equipoSeleccionado } = useEquipo();
+  const { organizacionSeleccionada } = useOrganizacion();
   const [participaciones, setParticipaciones] = useState<EquipoCompetencia[]>([]);
   const [loading, setLoading] = useState(false);
   const [inscripcionLoading, setInscripcionLoading] = useState(false);
@@ -17,7 +17,7 @@ const CompetenciasPage = () => {
   
 
   useEffect(() => {
-    const equipoId = equipoSeleccionado?.id;
+    const equipoId = organizacionSeleccionada?.id;
     if (!equipoId) {
       setParticipaciones([]);
       return;
@@ -48,22 +48,22 @@ const CompetenciasPage = () => {
     return () => {
       isCancelled = true;
     };
-  }, [equipoSeleccionado?.id]);
+  }, [organizacionSeleccionada?.id]);
 
   const refresh = async () => {
-    if (!equipoSeleccionado) return;
-    const data = await getParticipaciones({ equipoId: equipoSeleccionado.id });
+    if (!organizacionSeleccionada) return;
+    const data = await getParticipaciones({ equipoId: organizacionSeleccionada.id });
     setParticipaciones(data);
   };
 
   const handleInscripcion = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!equipoSeleccionado || !competenciaId) return;
+    if (!organizacionSeleccionada || !competenciaId) return;
 
     try {
       setInscripcionLoading(true);
       await solicitarInscripcion({
-        equipoId: equipoSeleccionado.id,
+        equipoId: organizacionSeleccionada.id,
         competenciaId,
         mensaje: mensaje || undefined,
       });
@@ -79,12 +79,12 @@ const CompetenciasPage = () => {
     }
   };
 
-  if (!equipoSeleccionado) {
+  if (!organizacionSeleccionada) {
     return (
       <div className="rounded-2xl border border-dashed border-slate-300 bg-white/70 px-6 py-12 text-center">
-        <h1 className="text-xl font-semibold text-slate-900">Seleccioná un equipo</h1>
+        <h1 className="text-xl font-semibold text-slate-900">Seleccioná una organización</h1>
         <p className="mt-2 text-sm text-slate-500">
-          Necesitamos saber qué equipo gestionás para mostrar sus competencias.
+          Necesitamos saber qué organización gestionás para mostrar sus competencias.
         </p>
       </div>
     );
