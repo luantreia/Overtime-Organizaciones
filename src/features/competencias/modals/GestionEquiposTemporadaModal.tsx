@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import ConfirmModal from '../../../shared/components/ConfirmModal/ConfirmModal';
 import type { BackendParticipacionTemporada } from '../services';
-import { obtenerOpcionesEquipos, type EquipoOpcion } from '../../equipo/services/equipoService';
+import { opcionesEquiposParaTemporada, type EquipoDisponibleOpcion } from '../services/participacionTemporadaService';
 
 type Props = {
   isOpen: boolean;
@@ -17,7 +17,7 @@ type Props = {
 
 export default function GestionEquiposTemporadaModal({ isOpen, onClose, esAdmin, temporadaId, participaciones, onUpdateParticipacionTemporada, onDeleteParticipacionTemporada, onCrearSolicitudParticipacionTemporada, onOpenJugadores }: Props) {
   const [equipoSearch, setEquipoSearch] = useState('');
-  const [equipoOptions, setEquipoOptions] = useState<EquipoOpcion[]>([]);
+  const [equipoOptions, setEquipoOptions] = useState<EquipoDisponibleOpcion[]>([]);
   const [equipoSeleccionado, setEquipoSeleccionado] = useState<{ id: string; nombre: string } | null>(null);
 
   const buscarEquipos = async (query: string) => {
@@ -26,7 +26,8 @@ export default function GestionEquiposTemporadaModal({ isOpen, onClose, esAdmin,
       setEquipoOptions([]);
       return;
     }
-    const opts = await obtenerOpcionesEquipos(query.trim());
+    if (!temporadaId) return;
+    const opts = await opcionesEquiposParaTemporada(temporadaId, query.trim());
     setEquipoOptions(opts);
   };
 
@@ -74,12 +75,12 @@ export default function GestionEquiposTemporadaModal({ isOpen, onClose, esAdmin,
                   <div className="mt-1 max-h-40 overflow-auto rounded-md border border-slate-200 bg-white">
                     {equipoOptions.map((opt) => (
                       <button
-                        key={opt.id}
+                        key={opt._id}
                         type="button"
                         className="block w-full px-3 py-1.5 text-left text-sm hover:bg-slate-50"
                         onClick={() => {
-                          setEquipoSeleccionado({ id: opt.id, nombre: opt.nombre });
-                          setEquipoSearch(opt.nombre);
+                          setEquipoSeleccionado({ id: opt._id, nombre: opt.nombre });
+                          setEquipoSearch(opt.nombre || '');
                           setEquipoOptions([]);
                         }}
                       >

@@ -33,3 +33,13 @@ export async function updateParticipacionTemporada(id: string, body: Partial<{ e
 export async function deleteParticipacionTemporada(id: string) {
   return authFetch<{ message?: string }>(`/participacion-temporada/${id}`, { method: 'DELETE' });
 }
+
+export type EquipoDisponibleOpcion = { _id: string; nombre: string; escudo?: string; tipo?: string; pais?: string };
+
+export async function opcionesEquiposParaTemporada(temporadaId: string, q?: string, soloMisEquipos?: boolean): Promise<EquipoDisponibleOpcion[]> {
+  const params = new URLSearchParams();
+  params.set('temporada', temporadaId);
+  if (q) params.set('q', q);
+  if (soloMisEquipos) params.set('soloMisEquipos', 'true');
+  return authFetch<EquipoDisponibleOpcion[]>(`/participacion-temporada/opciones?${params.toString()}`);
+}

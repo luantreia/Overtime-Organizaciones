@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import ConfirmModal from '../../../shared/components/ConfirmModal/ConfirmModal';
 import type { BackendParticipacionTemporada } from '../services';
-import { listJugadorTemporadaByParticipacion, createJugadorTemporada, updateJugadorTemporada, deleteJugadorTemporada, type BackendJugadorTemporada } from '../services/jugadorTemporadaService';
+import { listJugadorTemporadaByParticipacion, createJugadorTemporada, updateJugadorTemporada, deleteJugadorTemporada, type BackendJugadorTemporada, opcionesJugadorTemporada, type JugadorEquipoOpcion } from '../services/jugadorTemporadaService';
 
 // NOTE: Para crear jugador-temporada necesitamos un jugadorEquipoId. Este modal asume que ya existe esa relación
 // y recibe un campo de texto para pegar/ingresar el jugadorEquipoId. Se puede mejorar con un selector luego.
@@ -15,9 +15,18 @@ type Props = {
 export default function JugadoresTemporadaModal({ isOpen, onClose, participacion }: Props) {
   const [items, setItems] = useState<BackendJugadorTemporada[]>([]);
   const [loading, setLoading] = useState(false);
-  const [jugadorEquipoId, setJugadorEquipoId] = useState('');
+  const [search, setSearch] = useState('');
+  const [opciones, setOpciones] = useState<JugadorEquipoOpcion[]>([]);
+  const [seleccion, setSeleccion] = useState<JugadorEquipoOpcion | null>(null);
   const [estado, setEstado] = useState<'aceptado' | 'baja' | 'suspendido'>('aceptado');
   const [rol, setRol] = useState<'jugador' | 'entrenador'>('jugador');
+
+  const equipoId = useMemo(() => {
+    const eq = participacion?.equipo as any;
+    if (!eq) return '';
+    if (typeof eq === 'string') return eq;
+    return eq._id || '';
+  }, [participacion?.equipo]);
 
   useEffect(() => {
     const run = async () => {
@@ -32,6 +41,14 @@ export default function JugadoresTemporadaModal({ isOpen, onClose, participacion
     };
     void run();
   }, [participacion?._id]);
+
+  const buscarOpciones = async (q: string) => {
+    setSearch(q);
+    setSeleccion(null);
+    if (!q || q.trim().length < 2 || !equipoId || !participacion?._id) { setOpciones([]); return; }
+    const opts = await opcionesJugadorTemporada(equipoId, participacion._id, q.trim());
+    setOpciones(opts);
+  };
 
   return (
     <ConfirmModal
@@ -79,7 +96,19 @@ export default function JugadoresTemporadaModal({ isOpen, onClose, participacion
           <div className="rounded-lg border border-slate-200 bg-white p-3">
             <h4 className="text-sm font-medium text-slate-800">Agregar jugador</h4>
             <div className="mt-2 grid gap-2 sm:grid-cols-4">
-              <input className="sm:col-span-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm" placeholder="jugadorEquipoId" value={jugadorEquipoId} onChange={(e)=>setJugadorEquipoId(e.target.value)} />
+              <div className="sm:col-span-2">
+                <input className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm" placeholder="Buscar jugador por nombre o alias" value={search} onChange={(e)=>{ void buscarOpciones(e.target.value); }} />
+                {opciones.length > 0 ? (
+                  <div className="mt-1 max-h-40 overflow-auto rounded-md border border-slate-200 bg-white">
+                    {opciones.map(opt => (
+                      <button key={opt._id} type="button" className="block w-full px-3 py-1.5 text-left text-sm hover:bg-slate-50" onClick={()=>{ setSeleccion(opt); setSearch(opt.jugador?.nombre || opt.jugador?.alias || ''); setOpciones([]); }}>
+                        {opt.jugador?.nombre || opt.jugador?.alias || opt._id}
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
+                {seleccion ? <p className="mt-1 text-xs text-slate-600">Seleccionado: {seleccion.jugador?.nombre || seleccion.jugador?.alias}</p> : null}
+              </div>
               <select className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm" value={estado} onChange={(e)=>setEstado(e.target.value as any)}>
                 <option value="aceptado">aceptado</option>
                 <option value="baja">baja</option>
@@ -90,11 +119,12 @@ export default function JugadoresTemporadaModal({ isOpen, onClose, participacion
                 <option value="entrenador">entrenador</option>
               </select>
               <button className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-700 disabled:opacity-50" onClick={async ()=>{
-                if (!participacion?._id || !jugadorEquipoId) return;
-                const nuevo = await createJugadorTemporada({ jugadorEquipo: jugadorEquipoId, participacionTemporada: participacion._id, estado, rol });
+                if (!participacion?._id || !seleccion?._id) return;
+                const nuevo = await createJugadorTemporada({ jugadorEquipo: seleccion._id, participacionTemporada: participacion._id, estado, rol });
                 setItems((prev)=> [nuevo, ...prev]);
-                setJugadorEquipoId('');
-              }}>Agregar</button>
+                setSeleccion(null);
+                setSearch('');
+              }} disabled={!seleccion?._id}>Agregar</button>
             </div>
           </div>
         </div> as any
