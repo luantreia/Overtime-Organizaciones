@@ -1,6 +1,8 @@
 import type { FC, ReactNode } from 'react';
 import ModalBase from '../ModalBase/ModalBase';
 
+type ModalSize = 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full';
+
 type ConfirmModalProps = {
   isOpen: boolean;
   title?: ReactNode;
@@ -12,6 +14,7 @@ type ConfirmModalProps = {
   variant?: 'danger' | 'primary' | 'default';
   showCancel?: boolean;
   showConfirm?: boolean;
+  size?: ModalSize;
 };
 
 const ConfirmModal: FC<ConfirmModalProps> = ({
@@ -25,6 +28,7 @@ const ConfirmModal: FC<ConfirmModalProps> = ({
   variant = 'default',
   showCancel = true,
   showConfirm = true,
+  size = 'sm',
 }) => {
   const confirmClasses =
     variant === 'danger'
@@ -34,7 +38,7 @@ const ConfirmModal: FC<ConfirmModalProps> = ({
       : 'bg-slate-600 hover:bg-slate-700';
 
   return (
-    <ModalBase isOpen={isOpen} onClose={onCancel} title={title} size="sm">
+    <ModalBase isOpen={isOpen} onClose={onCancel} title={title} size={size}>
       <div className="p-4">
         <div className="text-sm text-slate-700">
           {typeof message === 'string' ? <p>{message}</p> : message}

@@ -1,0 +1,34 @@
+{
+  "name": "estadisticas-partido-modal",
+  "version": "1.0.0",
+  "description": "Componentes reutilizables para mostrar estadísticas de partidos de softball/béisbol",
+  "main": "index.ts",
+  "scripts": {
+    "build": "tsc",
+    "lint": "eslint . --ext .ts,.tsx"
+  },
+  "dependencies": {
+    "react": "^18.0.0",
+    "recharts": "^2.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.0.0",
+    "typescript": "^4.9.0",
+    "tailwindcss": "^3.0.0"
+  },
+  "peerDependencies": {
+    "react": ">=16.8.0",
+    "react-dom": ">=16.8.0"
+  },
+  "keywords": [
+    "react",
+    "typescript",
+    "estadisticas",
+    "softball",
+    "beisbol",
+    "partidos",
+    "charts"
+  ],
+  "author": "Tu Nombre",
+  "license": "MIT"
+}

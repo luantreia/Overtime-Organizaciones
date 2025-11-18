@@ -3,12 +3,16 @@ import { useOrganizacion } from '../../../app/providers/OrganizacionContext';
 import { listCompetenciasByOrganizacion, BackendCompetencia } from '../../competencias/services/competenciasService';
 import { getPartidosPorCompetencia } from '../../partidos/services/partidoService';
 import type { Partido } from '../../../types';
+// Removed charts per request
+import { TopPartidosDiferencia } from '../components/TopPartidosDiferencia';
+import { TablaStandings } from '../components/TablaStandings';
 
 const EstadisticasOrgPage = () => {
   const { organizacionSeleccionada } = useOrganizacion();
   const [competencias, setCompetencias] = useState<BackendCompetencia[]>([]);
   const [competenciaId, setCompetenciaId] = useState<string>('');
   const [partidos, setPartidos] = useState<Partido[]>([]);
+  const [fase, setFase] = useState<string>('');
 
   useEffect(() => {
     const orgId = organizacionSeleccionada?.id;
@@ -32,6 +36,7 @@ const EstadisticasOrgPage = () => {
   useEffect(() => {
     if (!competenciaId) {
       setPartidos([]);
+      setFase('');
       return;
     }
     let cancel = false;
@@ -44,19 +49,63 @@ const EstadisticasOrgPage = () => {
     return () => { cancel = true; };
   }, [competenciaId]);
 
-  const resumen = useMemo(() => {
-    const finalizados = partidos.filter(p => p.estado === 'finalizado');
-    const pendientes = partidos.filter(p => p.estado === 'pendiente');
-    const confirmados = partidos.filter(p => p.estado === 'confirmado');
+  // Fases disponibles derivadas de los partidos cargados
+  const fasesDisponibles = useMemo(() => {
+    const set = new Set<string>();
+    partidos.forEach((p) => {
+      if (p.etapa && typeof p.etapa === 'string' && p.etapa.trim()) set.add(p.etapa);
+    });
+    return Array.from(set);
+  }, [partidos]);
 
-    const puntosTotales = finalizados.reduce((acc, p) => acc + (p.resultado?.puntosEquipo ?? 0), 0);
-    const puntosRivalTotales = finalizados.reduce((acc, p) => acc + (p.resultado?.puntosRival ?? 0), 0);
+  // Partidos filtrados por fase (si se selecciona)
+  const partidosFiltrados = useMemo(() => {
+    if (!fase) return partidos;
+    return partidos.filter((p) => (p.etapa ?? '') === fase);
+  }, [partidos, fase]);
+
+  const resumen = useMemo(() => {
+    const finalizados = partidosFiltrados.filter((p) => p.estado === 'finalizado');
+    const pendientes = partidosFiltrados.filter((p) => p.estado === 'pendiente');
+    const confirmados = partidosFiltrados.filter((p) => p.estado === 'confirmado');
+
+    const wins = finalizados.filter(
+      (p) => (p.resultado?.puntosEquipo ?? 0) > (p.resultado?.puntosRival ?? 0),
+    ).length;
+    const draws = finalizados.filter(
+      (p) => (p.resultado?.puntosEquipo ?? 0) === (p.resultado?.puntosRival ?? 0),
+    ).length;
+    const losses = finalizados.filter(
+      (p) => (p.resultado?.puntosEquipo ?? 0) < (p.resultado?.puntosRival ?? 0),
+    ).length;
+
+    const puntosFavor = finalizados.reduce(
+      (acc, p) => acc + (p.resultado?.puntosEquipo ?? 0),
+      0,
+    );
+    const puntosContra = finalizados.reduce(
+      (acc, p) => acc + (p.resultado?.puntosRival ?? 0),
+      0,
+    );
+    const diferencia = puntosFavor - puntosContra;
+
     const efectividad = finalizados.length
-      ? Math.round((finalizados.filter(p => (p.resultado?.puntosEquipo ?? 0) > (p.resultado?.puntosRival ?? 0)).length / finalizados.length) * 100)
+      ? Math.round((wins / finalizados.length) * 100)
       : 0;
 
-    return { finalizados: finalizados.length, pendientes: pendientes.length, confirmados: confirmados.length, puntosTotales, puntosRivalTotales, efectividad };
-  }, [partidos]);
+    return {
+      finalizados: finalizados.length,
+      pendientes: pendientes.length,
+      confirmados: confirmados.length,
+      puntosFavor,
+      puntosContra,
+      diferencia,
+      efectividad,
+      w: wins,
+      d: draws,
+      l: losses,
+    };
+  }, [partidosFiltrados]);
 
   if (!organizacionSeleccionada) {
     return (
@@ -88,22 +137,25 @@ const EstadisticasOrgPage = () => {
               ))}
             </select>
           </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium text-slate-600">Fase/Etapa</label>
+            <select
+              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
+              value={fase}
+              onChange={(e) => setFase(e.target.value)}
+            >
+              <option value="">Todas</option>
+              {fasesDisponibles.map((f) => (
+                <option key={f} value={f}>{f}</option>
+              ))}
+            </select>
+          </div>
         </div>
       </section>
 
-      <section className="grid gap-4 md:grid-cols-3">
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-card">
-          <p className="text-xs uppercase tracking-wide text-slate-400">Partidos finalizados</p>
-          <p className="mt-1 text-2xl font-semibold text-slate-900">{resumen.finalizados}</p>
-        </div>
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-card">
-          <p className="text-xs uppercase tracking-wide text-slate-400">Efectividad</p>
-          <p className="mt-1 text-2xl font-semibold text-slate-900">{resumen.efectividad}%</p>
-        </div>
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-card">
-          <p className="text-xs uppercase tracking-wide text-slate-400">Puntos a favor</p>
-          <p className="mt-1 text-2xl font-semibold text-slate-900">{resumen.puntosTotales}</p>
-        </div>
+      <section className="grid gap-4 md:grid-cols-2">
+        <TopPartidosDiferencia partidos={partidosFiltrados} />
+        <TablaStandings partidos={partidosFiltrados} />
       </section>
     </div>
   );

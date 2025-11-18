@@ -10,6 +10,7 @@ const links = [
   { to: '/partidos', label: 'Partidos' },
   { to: '/estadisticas', label: 'Estadísticas' },
   { to: '/notificaciones', label: 'Notificaciones' },
+  { to: '/notificaciones/solicitudes', label: 'Solicitudes' },
   { to: '/perfil', label: 'Perfil' },
 ];
 

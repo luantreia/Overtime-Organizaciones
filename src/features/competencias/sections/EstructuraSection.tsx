@@ -5,6 +5,7 @@ import CrearFaseModal from '../modals/CrearFaseModal';
 import JugadoresTemporadaModal from '../modals/JugadoresTemporadaModal';
 import GestionEquiposTemporadaModal from '../modals/GestionEquiposTemporadaModal';
 import GestionParticipantesFaseModal from '../modals/GestionFaseModal';
+import { TablaPosiciones } from '../../../shared/components/TablaPosiciones';
 
 type Props = {
   esAdmin: boolean;
@@ -114,6 +115,20 @@ export default function EstructuraSection(props: Props) {
                         <button disabled={!esAdmin} className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50" onClick={() => setOpenGestionParticipantesFase({ open: true, fase: f, temporadaId: t._id })}>Gestionar</button>
                       </div>
                     </div>
+                    {/* Tabla de posiciones */}
+                    <TablaPosiciones participaciones={(participacionesFasePorId[f._id] || []).map(p => ({
+                      id: p._id,
+                      participacionTemporada: p.participacionTemporada as any, // Asumir populate
+                      grupo: p.grupo,
+                      division: p.division,
+                      puntos: (p as any).puntos || 0,
+                      partidosJugados: (p as any).partidosJugados || 0,
+                      partidosGanados: (p as any).partidosGanados || 0,
+                      partidosPerdidos: (p as any).partidosPerdidos || 0,
+                      partidosEmpatados: (p as any).partidosEmpatados || 0,
+                      diferenciaPuntos: (p as any).diferenciaPuntos || 0,
+                      posicion: (p as any).posicion,
+                    }))} />
                     {/* Participantes y altas gestionados por modal */}
                   </li>
                 ))}

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { ChangeEvent, FormEvent } from 'react';
 import { crearPartidoAmistoso } from '../../services/partidoService';
-import { obtenerOpcionesEquipos, type EquipoOpcion } from '../../../equipo/services/equipoService';
+import { obtenerOpcionesEquipos, type EquipoOpcion } from '../../../equipos/services/equipoService';
 
 const MODALIDAD_OPCIONES = ['Foam', 'Cloth'] as const;
 const CATEGORIA_OPCIONES = ['Masculino', 'Femenino', 'Mixto', 'Libre'] as const;

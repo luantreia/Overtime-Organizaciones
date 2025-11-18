@@ -19,7 +19,7 @@ export async function crearSolicitudParticipacionTemporada(temporada: string, eq
   return authFetch<{ _id: string }>(`/solicitudes-edicion`, {
     method: 'POST',
     body: {
-      tipo: 'contratoEquipoCompetencia',
+      tipo: 'participacion-temporada-crear',
       entidad: null,
       datosPropuestos: { temporada, equipo },
     },

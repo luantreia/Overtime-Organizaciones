@@ -151,46 +151,50 @@ export default function GestionParticipantesFaseModal({ isOpen, onClose, esAdmin
   const seccionAgregarVisible = esAdmin && opcionesAgregar.length > 0 && !!fase?._id;
 
   const contenido = (
-    <div className="space-y-4">
+    <div className="max-h-[80vh] overflow-y-auto space-y-6">
       {notice ? (
-        <div className="rounded border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-800">{notice}</div>
+        <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 font-medium">
+          {notice}
+        </div>
       ) : null}
-      {/* Listado según tipo */}
-      {tipo === 'liga' ? (
-        <FaseLigaSection
-          participantes={items}
-          esAdmin={esAdmin}
-          onUpdate={async (id: string, body: Partial<{ division: string }>) => {
-            await updateParticipacionFase(id, body);
-            setItems((prev)=> prev.map(p=> p._id===id ? ({...p, ...body} as any) : p));
-            setNotice('Cambios guardados'); setTimeout(()=> setNotice(''), 1200);
-          }}
-          onDelete={async (id: string) => {
-            if (!window.confirm('¿Eliminar este participante de la fase?')) return;
-            await deleteParticipacionFase(id);
-            setItems((prev)=> prev.filter(p=> p._id !== id));
-            setNotice('Participante eliminado'); setTimeout(()=> setNotice(''), 1200);
-          }}
-        />
-      ) : tipo === 'grupo' ? (
-        <FaseGruposSection
-          participantes={items}
-          esAdmin={esAdmin}
-          onUpdate={async (id: string, body: Partial<{ grupo: string }>) => {
-            await updateParticipacionFase(id, body);
-            setItems((prev)=> prev.map(p=> p._id===id ? ({...p, ...body} as any) : p));
-            setNotice('Cambios guardados'); setTimeout(()=> setNotice(''), 1200);
-          }}
-          onDelete={async (id: string) => {
-            if (!window.confirm('¿Eliminar este participante de la fase?')) return;
-            await deleteParticipacionFase(id);
-            setItems((prev)=> prev.filter(p=> p._id !== id));
-            setNotice('Participante eliminado'); setTimeout(()=> setNotice(''), 1200);
-          }}
-        />
-      ) : (tipo === 'playoff' || tipo === 'promocion') ? (
-        <>
-          <div className="flex items-center justify-between">
+
+      {/* Sección Participantes */}
+      <section className="space-y-4">
+        <h3 className="text-lg font-semibold text-slate-900 border-b border-slate-200 pb-2">Participantes de la Fase</h3>
+        {tipo === 'liga' ? (
+          <FaseLigaSection
+            participantes={items}
+            esAdmin={esAdmin}
+            onUpdate={async (id: string, body: Partial<{ division: string }>) => {
+              await updateParticipacionFase(id, body);
+              setItems((prev)=> prev.map(p=> p._id===id ? ({...p, ...body} as any) : p));
+              setNotice('Cambios guardados'); setTimeout(()=> setNotice(''), 1200);
+            }}
+            onDelete={async (id: string) => {
+              if (!window.confirm('¿Eliminar este participante de la fase?')) return;
+              await deleteParticipacionFase(id);
+              setItems((prev)=> prev.filter(p=> p._id !== id));
+              setNotice('Participante eliminado'); setTimeout(()=> setNotice(''), 1200);
+            }}
+          />
+        ) : tipo === 'grupo' ? (
+          <FaseGruposSection
+            participantes={items}
+            esAdmin={esAdmin}
+            onUpdate={async (id: string, body: Partial<{ grupo: string }>) => {
+              await updateParticipacionFase(id, body);
+              setItems((prev)=> prev.map(p=> p._id===id ? ({...p, ...body} as any) : p));
+              setNotice('Cambios guardados'); setTimeout(()=> setNotice(''), 1200);
+            }}
+            onDelete={async (id: string) => {
+              if (!window.confirm('¿Eliminar este participante de la fase?')) return;
+              await deleteParticipacionFase(id);
+              setItems((prev)=> prev.filter(p=> p._id !== id));
+              setNotice('Participante eliminado'); setTimeout(()=> setNotice(''), 1200);
+            }}
+          />
+        ) : (tipo === 'playoff' || tipo === 'promocion') ? (
+          <>
             <FasePlayoffSection
               participantes={items}
               esAdmin={esAdmin}
@@ -206,32 +210,106 @@ export default function GestionParticipantesFaseModal({ isOpen, onClose, esAdmin
                 setNotice('Participante eliminado'); setTimeout(()=> setNotice(''), 1200);
               }}
             />
-          </div>
-          {esAdmin ? (
-            <div className="flex justify-end">
-              <button type="button" className="rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-brand-700" onClick={() => { if (fase?._id) { void onGenerarLlave?.(fase._id); } }}>Generar llave</button>
-            </div>
-          ) : null}
-
-          <div className="mt-4 space-y-2">
-            <h5 className="text-xs font-semibold text-slate-700">Partidos de la fase</h5>
-            <ul className="divide-y divide-slate-200 rounded-lg border border-slate-200 bg-white">
-              {partidos.map((p) => (
-                <li key={p.id} className="flex items-center justify-between px-3 py-2 text-xs">
-                  <span className="truncate">{p.rival ? p.rival : 'Partido'} · {p.fecha}{p.hora ? ` ${p.hora}` : ''}</span>
-                  <span className="text-slate-500">{p.estado}</span>
-                </li>
-              ))}
-              {partidos.length === 0 ? (
-                <li className="px-3 py-2 text-xs text-slate-500">Sin partidos</li>
-              ) : null}
-            </ul>
-
             {esAdmin ? (
-              <div className="rounded-lg border border-slate-200 bg-white p-3">
-                <h6 className="text-xs font-semibold text-slate-700">Agregar partido</h6>
-                <div className="mt-2 grid gap-2 sm:grid-cols-6">
-                  <select className="rounded border border-slate-200 bg-white px-2 py-1 text-xs" value={nuevoLocal} onChange={(e)=> setNuevoLocal(e.target.value)}>
+              <div className="flex justify-end pt-4">
+                <button type="button" className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-700 transition" onClick={() => { if (fase?._id) { void onGenerarLlave?.(fase._id); } }}>Generar Llave</button>
+              </div>
+            ) : null}
+          </>
+        ) : (
+          <FaseGruposSection participantes={items} esAdmin={esAdmin} onUpdate={async (id: string, body: Partial<{ grupo: string }>) => { await updateParticipacionFase(id, body); setItems((prev)=> prev.map(p=> p._id===id ? ({...p, ...body} as any) : p)); setNotice('Cambios guardados'); setTimeout(()=> setNotice(''), 1200); }} onDelete={async (id: string) => { if (!window.confirm('¿Eliminar este participante de la fase?')) return; await deleteParticipacionFase(id); setItems((prev)=> prev.filter(p=> p._id !== id)); setNotice('Participante eliminado'); setTimeout(()=> setNotice(''), 1200); }} />
+        )}
+      </section>
+
+      {/* Sección Partidos */}
+      <section className="space-y-4">
+        <details className="group">
+          <summary className="cursor-pointer text-lg font-semibold text-slate-900 border-b border-slate-200 pb-2 group-open:border-brand-500 transition">
+            Partidos de la Fase
+            <span className="ml-2 text-sm text-slate-500">({partidos.length} partidos)</span>
+          </summary>
+          <div className="mt-4 space-y-4">
+            {(tipo === 'playoff' || tipo === 'promocion') && Object.keys(porEtapa).length > 0 ? (
+              <div>
+                <h5 className="text-sm font-semibold text-slate-700 mb-3">Bracket por Etapa</h5>
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  {ordenEtapas.filter(e => porEtapa[e]?.length).map((e) => (
+                    <div key={e} className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+                      <p className="text-sm font-semibold capitalize text-slate-700 mb-3">{e.replace('_', ' ')}</p>
+                      <ul className="space-y-3">
+                        {porEtapa[e].map((p) => (
+                          <li key={p.id} className="rounded border border-slate-100 bg-slate-50 p-3 text-sm">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="truncate pr-2 font-medium">{p.localNombre || 'Local'}</span>
+                              <span className="text-slate-400 text-xs">vs</span>
+                              <span className="truncate pl-2 font-medium">{p.visitanteNombre || p.rival || 'Visitante'}</span>
+                              <div className="relative ml-2">
+                                <button type="button" className="rounded border border-slate-200 px-2 py-1 text-xs hover:bg-slate-100 transition" onClick={(e)=>{ e.stopPropagation(); setMenuAbiertoId(menuAbiertoId === p.id ? null : p.id); }}>
+                                  ⋯
+                                </button>
+                                {menuAbiertoId === p.id ? (
+                                  <div className="absolute right-0 z-10 mt-1 w-40 rounded border border-slate-200 bg-white shadow-lg">
+                                    <button className="block w-full px-3 py-2 text-left text-sm hover:bg-slate-50" onClick={()=>{ setPartidoInfoId(p.id); setInfoModalAbierto(true); setMenuAbiertoId(null); }}>Información</button>
+                                    <button className="block w-full px-3 py-2 text-left text-sm hover:bg-slate-50" onClick={()=>{ setPartidoSetsId(p.id); setGestionSetsAbierto(true); setMenuAbiertoId(null); }}>Gestionar Sets</button>
+                                    <button className="block w-full px-3 py-2 text-left text-sm hover:bg-slate-50" onClick={()=>{ setPartidoAlineacionId(p.id); setAlineacionModalAbierto(true); setMenuAbiertoId(null); }}>Alineación</button>
+                                  </div>
+                                ) : null}
+                              </div>
+                            </div>
+                            <div className="text-xs text-slate-500">{p.fecha}{p.hora ? ` ${p.hora}` : ''} · {p.estado}</div>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+
+            <div>
+              <h5 className="text-sm font-semibold text-slate-700 mb-3">Lista por Fecha (Agrupada)</h5>
+              <div className="space-y-4">
+                {(tipo === 'grupo' ? Object.entries(porGrupo) : tipo === 'liga' ? Object.entries(porDivision) : (Object.keys(porGrupo).some(k => k !== '—') ? Object.entries(porGrupo) : Object.entries(porDivision)))
+                  .map(([key, arr]) => (
+                    <div key={key} className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+                      <p className="text-sm font-semibold text-slate-700 mb-3">{tipo === 'grupo' ? `Grupo ${key}` : tipo === 'liga' ? `División ${key}` : (key !== '—' ? `Grupo ${key}` : 'General')}</p>
+                      <ul className="divide-y divide-slate-100">
+                        {arr.map((p) => (
+                          <li key={p.id} className="flex items-center justify-between py-3 text-sm">
+                            <span className="truncate pr-2 flex-1">{p.localNombre || 'Local'} vs {p.visitanteNombre || p.rival || 'Visitante'}</span>
+                            <div className="flex items-center gap-3">
+                              <span className="text-slate-500 text-xs">{p.fecha}{p.hora ? ` ${p.hora}` : ''}</span>
+                              <span className="text-xs text-slate-400">{p.estado}</span>
+                              <div className="relative">
+                                <button type="button" className="rounded border border-slate-200 px-2 py-1 text-xs hover:bg-slate-100 transition" onClick={(e)=>{ e.stopPropagation(); setMenuAbiertoId(menuAbiertoId === p.id ? null : p.id); }}>
+                                  ⋯
+                                </button>
+                                {menuAbiertoId === p.id ? (
+                                  <div className="absolute right-0 z-10 mt-1 w-40 rounded border border-slate-200 bg-white shadow-lg">
+                                    <button className="block w-full px-3 py-2 text-left text-sm hover:bg-slate-50" onClick={()=>{ setPartidoInfoId(p.id); setInfoModalAbierto(true); setMenuAbiertoId(null); }}>Información</button>
+                                    <button className="block w-full px-3 py-2 text-left text-sm hover:bg-slate-50" onClick={()=>{ setPartidoSetsId(p.id); setGestionSetsAbierto(true); setMenuAbiertoId(null); }}>Gestionar Sets</button>
+                                    <button className="block w-full px-3 py-2 text-left text-sm hover:bg-slate-50" onClick={()=>{ setPartidoAlineacionId(p.id); setAlineacionModalAbierto(true); setMenuAbiertoId(null); }}>Alineación</button>
+                                  </div>
+                                ) : null}
+                              </div>
+                            </div>
+                          </li>
+                        ))}
+                        {arr.length === 0 ? (
+                          <li className="py-3 text-sm text-slate-500">Sin partidos</li>
+                        ) : null}
+                      </ul>
+                    </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Agregar partido en playoffs */}
+            {(tipo === 'playoff' || tipo === 'promocion') && esAdmin ? (
+              <div className="rounded-lg border border-slate-200 bg-white p-4">
+                <h6 className="text-sm font-semibold text-slate-700 mb-3">Agregar Partido</h6>
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
+                  <select className="rounded border border-slate-200 bg-white px-3 py-2 text-sm" value={nuevoLocal} onChange={(e)=> setNuevoLocal(e.target.value)}>
                     <option value="">Local…</option>
                     {items.map((pf: any) => {
                       const eq = (pf?.participacionTemporada?.equipo as any);
@@ -240,7 +318,7 @@ export default function GestionParticipantesFaseModal({ isOpen, onClose, esAdmin
                       return <option key={pf._id} value={id}>{nombre}</option>;
                     })}
                   </select>
-                  <select className="rounded border border-slate-200 bg-white px-2 py-1 text-xs" value={nuevoVisitante} onChange={(e)=> setNuevoVisitante(e.target.value)}>
+                  <select className="rounded border border-slate-200 bg-white px-3 py-2 text-sm" value={nuevoVisitante} onChange={(e)=> setNuevoVisitante(e.target.value)}>
                     <option value="">Visitante…</option>
                     {items.map((pf: any) => {
                       const eq = (pf?.participacionTemporada?.equipo as any);
@@ -249,7 +327,7 @@ export default function GestionParticipantesFaseModal({ isOpen, onClose, esAdmin
                       return <option key={pf._id} value={id}>{nombre}</option>;
                     })}
                   </select>
-                  <select className="rounded border border-slate-200 bg-white px-2 py-1 text-xs" value={nuevaEtapa} onChange={(e)=> setNuevaEtapa(e.target.value)}>
+                  <select className="rounded border border-slate-200 bg-white px-3 py-2 text-sm" value={nuevaEtapa} onChange={(e)=> setNuevaEtapa(e.target.value)}>
                     <option value="">Etapa…</option>
                     <option value="octavos">Octavos</option>
                     <option value="cuartos">Cuartos</option>
@@ -259,159 +337,84 @@ export default function GestionParticipantesFaseModal({ isOpen, onClose, esAdmin
                     <option value="repechaje">Repechaje</option>
                     <option value="otro">Otro</option>
                   </select>
-                  <input type="date" className="rounded border border-slate-200 bg-white px-2 py-1 text-xs" value={nuevaFecha} onChange={(e)=> setNuevaFecha(e.target.value)} />
-                  <input type="time" className="rounded border border-slate-200 bg-white px-2 py-1 text-xs" value={nuevaHora} onChange={(e)=> setNuevaHora(e.target.value)} />
-                  <div className="flex items-center justify-end">
-                    <button
-                      type="button"
-                      className="rounded bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-700 disabled:opacity-50"
-                      disabled={!nuevoLocal || !nuevoVisitante || !nuevaFecha}
-                      onClick={async ()=>{
-                        if (!fase?._id) return;
-                        await crearPartidoCompetencia({ equipoLocalId: nuevoLocal, equipoVisitanteId: nuevoVisitante, fecha: nuevaFecha, hora: nuevaHora || undefined, faseId: fase._id, etapa: nuevaEtapa || undefined, modalidad: modalidadComp, categoria: categoriaComp });
-                        setNuevoLocal(''); setNuevoVisitante(''); setNuevaFecha(''); setNuevaHora(''); setNuevaEtapa('');
-                        const lista = await getPartidosPorFase(fase._id);
-                        setPartidos(lista);
-                        setNotice('Partido creado'); setTimeout(()=> setNotice(''), 1200);
-                      }}
-                    >
-                      Agregar
-                    </button>
-                  </div>
+                  <input type="date" className="rounded border border-slate-200 bg-white px-3 py-2 text-sm" value={nuevaFecha} onChange={(e)=> setNuevaFecha(e.target.value)} />
+                  <input type="time" className="rounded border border-slate-200 bg-white px-3 py-2 text-sm" value={nuevaHora} onChange={(e)=> setNuevaHora(e.target.value)} />
+                  <button
+                    type="button"
+                    className="rounded bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50 transition"
+                    disabled={!nuevoLocal || !nuevoVisitante || !nuevaFecha}
+                    onClick={async ()=>{
+                      if (!fase?._id) return;
+                      await crearPartidoCompetencia({ equipoLocalId: nuevoLocal, equipoVisitanteId: nuevoVisitante, fecha: nuevaFecha, hora: nuevaHora || undefined, faseId: fase._id, etapa: nuevaEtapa || undefined, modalidad: modalidadComp, categoria: categoriaComp });
+                      setNuevoLocal(''); setNuevoVisitante(''); setNuevaFecha(''); setNuevaHora(''); setNuevaEtapa('');
+                      const lista = await getPartidosPorFase(fase._id);
+                      setPartidos(lista);
+                      setNotice('Partido creado'); setTimeout(()=> setNotice(''), 1200);
+                    }}
+                  >
+                    Agregar
+                  </button>
                 </div>
               </div>
             ) : null}
           </div>
-        </>
-      ) : (
-        <FaseGruposSection participantes={items} esAdmin={esAdmin} onUpdate={async (id: string, body: Partial<{ grupo: string }>) => { await updateParticipacionFase(id, body); setItems((prev)=> prev.map(p=> p._id===id ? ({...p, ...body} as any) : p)); setNotice('Cambios guardados'); setTimeout(()=> setNotice(''), 1200); }} onDelete={async (id: string) => { if (!window.confirm('¿Eliminar este participante de la fase?')) return; await deleteParticipacionFase(id); setItems((prev)=> prev.filter(p=> p._id !== id)); setNotice('Participante eliminado'); setTimeout(()=> setNotice(''), 1200); }} />
-      )}
+        </details>
+      </section>
 
-      {/* Sección de Partidos: bracket por etapa (playoffs) y lista agrupada */}
-      <div className="mt-6 space-y-3">
-        <div className="flex items-start justify-between gap-3">
-          <h4 className="text-sm font-medium text-slate-800">Partidos</h4>
-          <HelpBadge label="Ayuda partidos">
-            <ul className="list-disc pl-4">
-              <li>En <strong>Playoffs</strong> se muestran columnas por <strong>Etapa</strong> (octavos, cuartos, etc.).</li>
-              <li>Debajo verás la <strong>lista por fecha</strong> agrupada por <strong>Grupo</strong> o <strong>División</strong>.</li>
-              <li>Podés crear partidos manualmente en la sección de Playoffs y asignar <strong>Etapa</strong>.</li>
-            </ul>
-          </HelpBadge>
-        </div>
+      {/* Agregar Participante */}
+      {seccionAgregarVisible ? (
+        <section className="space-y-4">
+          <h3 className="text-lg font-semibold text-slate-900 border-b border-slate-200 pb-2">Agregar Participante</h3>
+          <div className="rounded-lg border border-slate-200 bg-white p-4">
+            <div className="grid gap-3 sm:grid-cols-4">
+              <select
+                className="sm:col-span-2 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
+                value={seleccionPT}
+                onChange={(e) => setSeleccionPT(e.target.value)}
+              >
+                <option value="">Seleccionar participante…</option>
+                {opcionesAgregar.map((pt) => (
+                  <option key={pt._id} value={pt._id}>{typeof pt.equipo === 'string' ? pt.equipo : (pt.equipo as any)?.nombre || pt._id}</option>
+                ))}
+              </select>
+              {tipo === 'grupo' ? (
+                <input placeholder="Grupo" className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm" value={grupo} onChange={(e)=>setGrupo(e.target.value)} />
+              ) : null}
+              {tipo === 'liga' ? (
+                <input placeholder="División" className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm" value={division} onChange={(e)=>setDivision(e.target.value)} />
+              ) : null}
+              <button
+                type="button"
+                className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-700 disabled:opacity-50 transition"
+                disabled={!seleccionPT}
+                onClick={async () => {
+                  if (!fase?._id || !seleccionPT) return;
 
-        {(tipo === 'playoff' || tipo === 'promocion') && Object.keys(porEtapa).length > 0 ? (
-          <div>
-            <h5 className="text-xs font-semibold text-slate-700">Bracket por etapa</h5>
-            <div className="mt-2 grid gap-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {ordenEtapas.filter(e => porEtapa[e]?.length).map((e) => (
-                <div key={e} className="rounded-lg border border-slate-200 bg-white p-3">
-                  <p className="text-xs font-semibold capitalize text-slate-700">{e.replace('_', ' ')}</p>
-                  <ul className="mt-2 space-y-2">
-                    {porEtapa[e].map((p) => (
-                      <li key={p.id} className="rounded border border-slate-200 bg-slate-50 p-2 text-xs">
-                        <div className="flex items-center justify-between">
-                          <span className="truncate pr-2">{p.localNombre || 'Local'}</span>
-                          <span className="text-slate-400">vs</span>
-                          <span className="truncate pl-2">{p.visitanteNombre || p.rival || 'Visitante'}</span>
-                          <div className="relative ml-2">
-                            <button type="button" className="rounded border border-slate-200 px-2 py-0.5 text-[11px] hover:bg-slate-100" onClick={(e)=>{ e.stopPropagation(); setMenuAbiertoId(menuAbiertoId === p.id ? null : p.id); }}>
-                              Acciones ▾
-                            </button>
-                            {menuAbiertoId === p.id ? (
-                              <div className="absolute right-0 z-10 mt-1 w-36 rounded border border-slate-200 bg-white shadow">
-                                <button className="block w-full px-3 py-1 text-left text-xs hover:bg-slate-50" onClick={()=>{ setPartidoInfoId(p.id); setInfoModalAbierto(true); setMenuAbiertoId(null); }}>Información</button>
-                                <button className="block w-full px-3 py-1 text-left text-xs hover:bg-slate-50" onClick={()=>{ setPartidoSetsId(p.id); setGestionSetsAbierto(true); setMenuAbiertoId(null); }}>Gestionar sets</button>
-                                <button className="block w-full px-3 py-1 text-left text-xs hover:bg-slate-50" onClick={()=>{ setPartidoAlineacionId(p.id); setAlineacionModalAbierto(true); setMenuAbiertoId(null); }}>Alineación</button>
-                              </div>
-                            ) : null}
-                          </div>
-                        </div>
-                        <div className="mt-1 text-[11px] text-slate-500">{p.fecha}{p.hora ? ` ${p.hora}` : ''}</div>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
+                  // Validación para fase tipo liga: requiere división
+                  if (tipo === 'liga' && !division.trim()) {
+                    setNotice('Debe especificar una división para fases tipo liga');
+                    setTimeout(() => setNotice(''), 3000);
+                    return;
+                  }
+
+                  // Validación para fase tipo grupo: requiere grupo
+                  if (tipo === 'grupo' && !grupo.trim()) {
+                    setNotice('Debe especificar un grupo para fases tipo grupo');
+                    setTimeout(() => setNotice(''), 3000);
+                    return;
+                  }
+
+                  await onAgregar(fase._id, seleccionPT, { grupo: grupo || undefined, division: division || undefined });
+                  setSeleccionPT('');
+                  setGrupo('');
+                  setDivision('');
+                }}
+              >
+                Agregar
+              </button>
             </div>
           </div>
-        ) : null}
-
-        <div>
-          <h5 className="text-xs font-semibold text-slate-700">Lista por fecha (agrupada)</h5>
-          <div className="mt-2 space-y-3">
-            {(tipo === 'grupo' ? Object.entries(porGrupo) : tipo === 'liga' ? Object.entries(porDivision) : (Object.keys(porGrupo).some(k => k !== '—') ? Object.entries(porGrupo) : Object.entries(porDivision)))
-              .map(([key, arr]) => (
-                <div key={key} className="rounded-lg border border-slate-200 bg-white p-3">
-                  <p className="text-xs font-semibold text-slate-700">{tipo === 'grupo' ? `Grupo ${key}` : tipo === 'liga' ? `División ${key}` : (key !== '—' ? `Grupo ${key}` : 'General')}</p>
-                  <ul className="mt-2 divide-y divide-slate-200">
-                    {arr.map((p) => (
-                      <li key={p.id} className="flex items-center justify-between py-1 text-xs">
-                        <span className="truncate pr-2">{p.localNombre || 'Local'} vs {p.visitanteNombre || p.rival || 'Visitante'}</span>
-                        <div className="flex items-center gap-2">
-                          <span className="text-slate-500">{p.fecha}{p.hora ? ` ${p.hora}` : ''}</span>
-                          <div className="relative">
-                            <button type="button" className="rounded border border-slate-200 px-2 py-0.5 text-[11px] hover:bg-slate-100" onClick={(e)=>{ e.stopPropagation(); setMenuAbiertoId(menuAbiertoId === p.id ? null : p.id); }}>
-                              Acciones ▾
-                            </button>
-                            {menuAbiertoId === p.id ? (
-                              <div className="absolute right-0 z-10 mt-1 w-36 rounded border border-slate-200 bg-white shadow">
-                                <button className="block w-full px-3 py-1 text-left text-xs hover:bg-slate-50" onClick={()=>{ setPartidoInfoId(p.id); setInfoModalAbierto(true); setMenuAbiertoId(null); }}>Información</button>
-                                <button className="block w-full px-3 py-1 text-left text-xs hover:bg-slate-50" onClick={()=>{ setPartidoSetsId(p.id); setGestionSetsAbierto(true); setMenuAbiertoId(null); }}>Gestionar sets</button>
-                                <button className="block w-full px-3 py-1 text-left text-xs hover:bg-slate-50" onClick={()=>{ setPartidoAlineacionId(p.id); setAlineacionModalAbierto(true); setMenuAbiertoId(null); }}>Alineación</button>
-                              </div>
-                            ) : null}
-                          </div>
-                        </div>
-                      </li>
-                    ))}
-                    {arr.length === 0 ? (
-                      <li className="py-1 text-xs text-slate-500">Sin partidos</li>
-                    ) : null}
-                  </ul>
-                </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Agregar participante */}
-      {seccionAgregarVisible ? (
-        <div className="rounded-lg border border-slate-200 bg-white p-3">
-          <h4 className="text-sm font-medium text-slate-800">Agregar a fase</h4>
-          <div className="mt-2 grid gap-2 sm:grid-cols-4">
-            <select
-              className="sm:col-span-2 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
-              value={seleccionPT}
-              onChange={(e) => setSeleccionPT(e.target.value)}
-            >
-              <option value="">Seleccionar participante…</option>
-              {opcionesAgregar.map((pt) => (
-                <option key={pt._id} value={pt._id}>{typeof pt.equipo === 'string' ? pt.equipo : (pt.equipo as any)?.nombre || pt._id}</option>
-              ))}
-            </select>
-            {tipo === 'grupo' ? (
-              <input placeholder="Grupo" className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm" value={grupo} onChange={(e)=>setGrupo(e.target.value)} />
-            ) : null}
-            {tipo === 'liga' ? (
-              <input placeholder="División" className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm" value={division} onChange={(e)=>setDivision(e.target.value)} />
-            ) : null}
-            <button
-              type="button"
-              className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-700 disabled:opacity-50"
-              disabled={!seleccionPT}
-              onClick={async () => {
-                if (!fase?._id || !seleccionPT) return;
-                await onAgregar(fase._id, seleccionPT, { grupo: grupo || undefined, division: division || undefined });
-                setSeleccionPT('');
-                setGrupo('');
-                setDivision('');
-              }}
-            >
-              Agregar
-            </button>
-          </div>
-        </div>
+        </section>
       ) : null}
     </div>
   );
@@ -427,6 +430,7 @@ export default function GestionParticipantesFaseModal({ isOpen, onClose, esAdmin
         variant="primary"
         onConfirm={onClose}
         onCancel={onClose}
+        size="2xl"
       />
 
       <ModalInformacionPartido
