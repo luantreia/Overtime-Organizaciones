@@ -5,8 +5,8 @@ import type { BackendParticipacionTemporada } from '../services';
 import { listJugadorTemporadaByParticipacion, updateJugadorTemporada, deleteJugadorTemporada, type BackendJugadorTemporada, opcionesJugadorTemporada, type JugadorEquipoOpcion } from '../services/jugadorTemporadaService';
 import { crearSolicitud } from '../../solicitudes/services/solicitudesEdicionService';
 
-// NOTE: Para agregar un jugador a la temporada, se crea una solicitud que debe ser aprobada por los administradores
-// usando la función genérica crearSolicitud del servicio de solicitudes edición
+// NOTE: Para agregar jugadores a la temporada, se pueden seleccionar múltiples jugadores
+// y crear solicitudes que deben ser aprobadas por los administradores
 
 type Props = {
   isOpen: boolean;
@@ -17,9 +17,9 @@ type Props = {
 export default function JugadoresTemporadaModal({ isOpen, onClose, participacion }: Props) {
   const [items, setItems] = useState<BackendJugadorTemporada[]>([]);
   const [loading, setLoading] = useState(false);
-  const [search, setSearch] = useState('');
   const [opciones, setOpciones] = useState<JugadorEquipoOpcion[]>([]);
-  const [seleccion, setSeleccion] = useState<JugadorEquipoOpcion | null>(null);
+  const [opcionesLoading, setOpcionesLoading] = useState(false);
+  const [seleccionados, setSeleccionados] = useState<Set<string>>(new Set());
   const [estado, setEstado] = useState<'aceptado' | 'baja' | 'suspendido'>('aceptado');
   const [rol, setRol] = useState<'jugador' | 'entrenador'>('jugador');
   const { addToast } = useToast();
@@ -45,13 +45,19 @@ export default function JugadoresTemporadaModal({ isOpen, onClose, participacion
     void run();
   }, [participacion?._id]);
 
-  const buscarOpciones = async (q: string) => {
-    setSearch(q);
-    setSeleccion(null);
-    if (!q || q.trim().length < 2 || !equipoId || !participacion?._id) { setOpciones([]); return; }
-    const opts = await opcionesJugadorTemporada(equipoId, participacion._id, q.trim());
-    setOpciones(opts);
-  };
+  useEffect(() => {
+    const run = async () => {
+      if (!isOpen || !equipoId || !participacion?._id) return;
+      setOpcionesLoading(true);
+      try {
+        const opts = await opcionesJugadorTemporada(equipoId, participacion._id);
+        setOpciones(opts);
+      } finally {
+        setOpcionesLoading(false);
+      }
+    };
+    void run();
+  }, [isOpen, equipoId, participacion?._id]);
 
   return (
     <ConfirmModal
@@ -100,22 +106,40 @@ export default function JugadoresTemporadaModal({ isOpen, onClose, participacion
             </ul>
           )}
 
-          <div className="rounded-lg border border-slate-200 bg-white p-3">
-            <h4 className="text-sm font-medium text-slate-800">Solicitar jugador</h4>
-            <div className="mt-2 grid gap-2 sm:grid-cols-4">
-              <div className="sm:col-span-2">
-                <input className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm" placeholder="Buscar jugador por nombre o alias" value={search} onChange={(e)=>{ void buscarOpciones(e.target.value); }} />
-                {opciones.length > 0 ? (
-                  <div className="mt-1 max-h-40 overflow-auto rounded-md border border-slate-200 bg-white">
-                    {opciones.map(opt => (
-                      <button key={opt._id} type="button" className="block w-full px-3 py-1.5 text-left text-sm hover:bg-slate-50" onClick={()=>{ setSeleccion(opt); setSearch(opt.jugador?.nombre || opt.jugador?.alias || ''); setOpciones([]); }}>
-                        {opt.jugador?.nombre || opt.jugador?.alias || opt._id}
-                      </button>
-                    ))}
-                  </div>
-                ) : null}
-                {seleccion ? <p className="mt-1 text-xs text-slate-600">Seleccionado: {seleccion.jugador?.nombre || seleccion.jugador?.alias}</p> : null}
-              </div>
+                    <div className="rounded-lg border border-slate-200 bg-white p-3">
+            <h4 className="text-sm font-medium text-slate-800">Solicitar jugadores</h4>
+            <div className="mt-2 space-y-2">
+              {opcionesLoading ? (
+                <p className="text-sm text-slate-500">Cargando opciones...</p>
+              ) : opciones.length === 0 ? (
+                <p className="text-sm text-slate-500">No hay jugadores disponibles</p>
+              ) : (
+                <div className="max-h-40 overflow-auto space-y-1">
+                  {opciones.map((opt) => (
+                    <label key={opt._id} className="flex items-center space-x-2 text-sm">
+                      <input
+                        type="checkbox"
+                        checked={seleccionados.has(opt._id)}
+                        onChange={(e) => {
+                          const newSeleccionados = new Set(seleccionados);
+                          if (e.target.checked) {
+                            newSeleccionados.add(opt._id);
+                          } else {
+                            newSeleccionados.delete(opt._id);
+                          }
+                          setSeleccionados(newSeleccionados);
+                        }}
+                        className="rounded border-slate-300 text-brand-600 focus:ring-brand-500"
+                      />
+                      <span className="truncate">
+                        {opt.jugador?.nombre || opt.jugador?.alias || 'Jugador sin nombre'}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="mt-3 grid gap-2 sm:grid-cols-3">
               <select className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm" value={estado} onChange={(e)=>setEstado(e.target.value as any)}>
                 <option value="aceptado">aceptado</option>
                 <option value="baja">baja</option>
@@ -125,18 +149,31 @@ export default function JugadoresTemporadaModal({ isOpen, onClose, participacion
                 <option value="jugador">jugador</option>
                 <option value="entrenador">entrenador</option>
               </select>
-              <button className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-700 disabled:opacity-50" onClick={async ()=>{
-                if (!participacion?._id || !seleccion?._id) return;
-                await crearSolicitud('jugador-temporada-crear', {
-                  jugadorEquipoId: seleccion._id,
-                  participacionTemporadaId: participacion._id,
-                  estado,
-                  rol
-                });
-                addToast({ type: 'success', title: 'Solicitud enviada a administradores' });
-                setSeleccion(null);
-                setSearch('');
-              }} disabled={!seleccion?._id}>Solicitar</button>
+              <button 
+                className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-700 disabled:opacity-50" 
+                onClick={async ()=>{
+                  if (!participacion?._id || seleccionados.size === 0) return;
+                  
+                  const solicitudes = Array.from(seleccionados).map(jugadorEquipoId => 
+                    crearSolicitud('jugador-temporada-crear', {
+                      jugadorEquipoId,
+                      participacionTemporadaId: participacion._id,
+                      estado,
+                      rol
+                    })
+                  );
+                  
+                  await Promise.all(solicitudes);
+                  addToast({ 
+                    type: 'success', 
+                    title: `${seleccionados.size} solicitud${seleccionados.size > 1 ? 'es' : ''} enviada${seleccionados.size > 1 ? 's' : ''} a administradores` 
+                  });
+                  setSeleccionados(new Set());
+                }} 
+                disabled={seleccionados.size === 0}
+              >
+                Solicitar ({seleccionados.size})
+              </button>
             </div>
           </div>
         </div> as any
