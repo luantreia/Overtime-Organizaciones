@@ -21,7 +21,7 @@ export async function crearSolicitudParticipacionTemporada(temporada: string, eq
     body: {
       tipo: 'participacion-temporada-crear',
       entidad: null,
-      datosPropuestos: { temporada, equipo },
+      datosPropuestos: { temporadaId: temporada, equipoId: equipo },
     },
   });
 }
