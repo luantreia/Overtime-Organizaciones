@@ -2,7 +2,7 @@ import { authFetch } from '../../../utils/authFetch';
 
 export type BackendJugadorTemporada = {
   _id: string;
-  jugadorEquipo: string;
+  jugadorEquipo: string | { _id: string; jugador: { _id: string; nombre?: string; alias?: string }; equipo: string };
   jugador?: string;
   participacionTemporada: string;
   estado?: 'aceptado' | 'baja' | 'suspendido';

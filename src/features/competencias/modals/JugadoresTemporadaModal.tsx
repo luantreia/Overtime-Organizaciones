@@ -64,7 +64,11 @@ export default function JugadoresTemporadaModal({ isOpen, onClose, participacion
               {items.map((it) => (
                 <li key={it._id} className="flex items-center justify-between py-2 text-sm">
                   <div className="min-w-0">
-                    <p className="truncate font-medium text-slate-800">{it.jugadorEquipo}</p>
+                    <p className="truncate font-medium text-slate-800">
+                      {typeof it.jugadorEquipo === 'string' 
+                        ? it.jugadorEquipo 
+                        : (it.jugadorEquipo?.jugador?.nombre || it.jugadorEquipo?.jugador?.alias || 'Jugador sin nombre')}
+                    </p>
                     <p className="truncate text-xs text-slate-500">Estado: {it.estado} · Rol: {it.rol}</p>
                   </div>
                   <div className="flex gap-2">
