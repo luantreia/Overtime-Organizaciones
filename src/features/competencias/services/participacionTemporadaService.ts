@@ -1,4 +1,5 @@
 import { authFetch } from '../../../utils/authFetch';
+import { crearSolicitud } from '../../solicitudes/services/solicitudesEdicionService';
 
 export type BackendParticipacionTemporada = {
   _id: string;
@@ -16,13 +17,9 @@ export async function crearParticipacionTemporadaDirect(payload: { temporada: st
 }
 
 export async function crearSolicitudParticipacionTemporada(temporada: string, equipo: string) {
-  return authFetch<{ _id: string }>(`/solicitudes-edicion`, {
-    method: 'POST',
-    body: {
-      tipo: 'participacion-temporada-crear',
-      entidad: null,
-      datosPropuestos: { temporadaId: temporada, equipoId: equipo },
-    },
+  return crearSolicitud('participacion-temporada-crear', {
+    temporadaId: temporada,
+    equipoId: equipo
   });
 }
 

@@ -33,3 +33,18 @@ export const actualizarSolicitud = async (
 export const cancelarSolicitud = async (id: string) => {
   return authFetch<{ message: string }>(`/solicitudes-edicion/${id}`, { method: 'DELETE' });
 };
+
+export const crearSolicitud = async (
+  tipo: SolicitudEdicionTipo,
+  datosPropuestos: Record<string, any>,
+  entidad?: string | null
+) => {
+  return authFetch<{ _id: string }>(`/solicitudes-edicion`, {
+    method: 'POST',
+    body: {
+      tipo,
+      entidad: entidad || null,
+      datosPropuestos,
+    },
+  });
+};

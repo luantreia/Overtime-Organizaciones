@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import ConfirmModal from '../../../shared/components/ConfirmModal/ConfirmModal';
+import { useToast } from '../../../shared/components/Toast/ToastProvider';
 import type { BackendParticipacionTemporada } from '../services';
-import { listJugadorTemporadaByParticipacion, createJugadorTemporada, updateJugadorTemporada, deleteJugadorTemporada, type BackendJugadorTemporada, opcionesJugadorTemporada, type JugadorEquipoOpcion } from '../services/jugadorTemporadaService';
+import { listJugadorTemporadaByParticipacion, updateJugadorTemporada, deleteJugadorTemporada, type BackendJugadorTemporada, opcionesJugadorTemporada, type JugadorEquipoOpcion } from '../services/jugadorTemporadaService';
+import { crearSolicitud } from '../../solicitudes/services/solicitudesEdicionService';
 
-// NOTE: Para crear jugador-temporada necesitamos un jugadorEquipoId. Este modal asume que ya existe esa relación
-// y recibe un campo de texto para pegar/ingresar el jugadorEquipoId. Se puede mejorar con un selector luego.
+// NOTE: Para agregar un jugador a la temporada, se crea una solicitud que debe ser aprobada por los administradores
+// usando la función genérica crearSolicitud del servicio de solicitudes edición
 
 type Props = {
   isOpen: boolean;
@@ -20,6 +22,7 @@ export default function JugadoresTemporadaModal({ isOpen, onClose, participacion
   const [seleccion, setSeleccion] = useState<JugadorEquipoOpcion | null>(null);
   const [estado, setEstado] = useState<'aceptado' | 'baja' | 'suspendido'>('aceptado');
   const [rol, setRol] = useState<'jugador' | 'entrenador'>('jugador');
+  const { addToast } = useToast();
 
   const equipoId = useMemo(() => {
     const eq = participacion?.equipo as any;
@@ -94,7 +97,7 @@ export default function JugadoresTemporadaModal({ isOpen, onClose, participacion
           )}
 
           <div className="rounded-lg border border-slate-200 bg-white p-3">
-            <h4 className="text-sm font-medium text-slate-800">Agregar jugador</h4>
+            <h4 className="text-sm font-medium text-slate-800">Solicitar jugador</h4>
             <div className="mt-2 grid gap-2 sm:grid-cols-4">
               <div className="sm:col-span-2">
                 <input className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm" placeholder="Buscar jugador por nombre o alias" value={search} onChange={(e)=>{ void buscarOpciones(e.target.value); }} />
@@ -120,11 +123,16 @@ export default function JugadoresTemporadaModal({ isOpen, onClose, participacion
               </select>
               <button className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-700 disabled:opacity-50" onClick={async ()=>{
                 if (!participacion?._id || !seleccion?._id) return;
-                const nuevo = await createJugadorTemporada({ jugadorEquipo: seleccion._id, participacionTemporada: participacion._id, estado, rol });
-                setItems((prev)=> [nuevo, ...prev]);
+                await crearSolicitud('jugador-temporada-crear', {
+                  jugadorEquipoId: seleccion._id,
+                  participacionTemporadaId: participacion._id,
+                  estado,
+                  rol
+                });
+                addToast({ type: 'success', title: 'Solicitud enviada a administradores' });
                 setSeleccion(null);
                 setSearch('');
-              }} disabled={!seleccion?._id}>Agregar</button>
+              }} disabled={!seleccion?._id}>Solicitar</button>
             </div>
           </div>
         </div> as any
