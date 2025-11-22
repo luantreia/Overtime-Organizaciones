@@ -2,6 +2,9 @@ import { useEffect, useMemo, useState } from 'react';
 import  ModalBase  from '../../../../shared/components/ModalBase/ModalBase';
 import { getAlineacion, guardarAlineacion, crearJugadorPartido, eliminarJugadorPartido, getPartidoDetallado } from '../../services/partidoService';
 import { getJugadoresEquipo } from '../../../jugadores/services/jugadorEquipoService';
+import { getFaseById } from '../../../competencias/services/fasesService';
+import { listParticipacionesByTemporada } from '../../../competencias/services/participacionTemporadaService';
+import { listJugadorTemporadaByParticipacion } from '../../../competencias/services/jugadorTemporadaService';
 import type { Jugador, JugadorPartido } from '../../../../types';
 import { useToast } from '../../../../shared/components/Toast/ToastProvider';
 
@@ -54,6 +57,43 @@ const buildInitialRoles = (alineacion: JugadorPartido[]): Record<string, RolAlin
 const isRolAsignable = (rol: RolAlineacion): rol is Exclude<RolAlineacion, 'ninguno'> =>
   rol === 'jugador' || rol === 'entrenador';
 
+// Helper para obtener jugadores elegibles (contrato activo o inscritos en temporada)
+const getJugadoresElegibles = async (equipoId: string, partido: any): Promise<JugadorOption[]> => {
+  if (!equipoId) return [];
+  
+  // Si el partido tiene fase, intentamos buscar jugadores inscritos en la temporada
+  if (partido.fase) {
+    try {
+      const fase = await getFaseById(partido.fase);
+      if (fase && fase.temporada) {
+        const participaciones = await listParticipacionesByTemporada(fase.temporada);
+        const miParticipacion = participaciones.find(p => 
+          (typeof p.equipo === 'string' ? p.equipo : p.equipo._id) === equipoId
+        );
+        
+        if (miParticipacion) {
+          const jugadoresTemp = await listJugadorTemporadaByParticipacion(miParticipacion._id);
+          return jugadoresTemp.map(jt => {
+            const je = jt.jugadorEquipo as any;
+            const j = je.jugador || {};
+            return {
+              id: j._id || j.id,
+              nombre: j.nombre || j.alias || 'Jugador',
+              numeroCamiseta: (jt as any).numeroCamiseta
+            };
+          });
+        }
+      }
+    } catch (e) {
+      console.error("Error fetching competition players, falling back to active contracts", e);
+    }
+  }
+  
+  // Fallback: jugadores con contrato activo
+  const jugadores = await getJugadoresEquipo({ equipoId, estado: 'activo' });
+  return jugadores.map(mapJugadorOption);
+};
+
 export const ModalAlineacionPartido = ({
   partidoId,
   equipoId,
@@ -95,8 +135,8 @@ export const ModalAlineacionPartido = ({
 
         const [alineacionActual, jugadoresEquipoLocal, jugadoresEquipoVisitante] = await Promise.all([
           getAlineacion(partidoId),
-          localId ? getJugadoresEquipo({ equipoId: localId, estado: 'activo' }) : Promise.resolve([] as Jugador[]),
-          visitanteId ? getJugadoresEquipo({ equipoId: visitanteId, estado: 'activo' }) : Promise.resolve([] as Jugador[]),
+          localId ? getJugadoresElegibles(localId, partido) : Promise.resolve([] as JugadorOption[]),
+          visitanteId ? getJugadoresElegibles(visitanteId, partido) : Promise.resolve([] as JugadorOption[]),
         ]);
 
         if (!isActive) return;
@@ -107,8 +147,8 @@ export const ModalAlineacionPartido = ({
         setEquipoLocalNombre(equipoLocalNombre);
         setEquipoVisitanteNombre(equipoVisitanteNombre);
 
-        const opcionesLocal = jugadoresEquipoLocal.map(mapJugadorOption);
-        const opcionesVisitante = jugadoresEquipoVisitante.map(mapJugadorOption);
+        const opcionesLocal = jugadoresEquipoLocal;
+        const opcionesVisitante = jugadoresEquipoVisitante;
 
         const extrasLocal = alineacionActual
           .filter((item) => (typeof item.equipo === 'string' ? item.equipo === localId : (item.equipo as any)?._id === localId))
