@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useSolicitudes } from '../context/SolicitudesContext';
-import { useToast } from '../../components/Toast/ToastProvider';
+import { useToast } from '../../../components/Toast/ToastProvider';
 import {
   ISolicitudContexto,
   ISolicitudOpciones,
   ISolicitudCrearPayload,
   SolicitudEdicionTipo,
 } from '../types/solicitudesEdicion';
-import ModalBase from '../../components/ModalBase/ModalBase';
+import ModalBase from '../../../components/ModalBase/ModalBase';
 
 interface SolicitudModalProps {
   isOpen: boolean;
