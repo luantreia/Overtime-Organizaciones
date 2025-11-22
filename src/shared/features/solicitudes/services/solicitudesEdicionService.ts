@@ -1,4 +1,4 @@
-import { authFetch } from '../../utils/authFetch';
+import { authFetch } from '../../../utils/authFetch';
 import type {
   ISolicitudEdicion,
   ISolicitudOpciones,
