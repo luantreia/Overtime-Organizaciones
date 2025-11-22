@@ -55,7 +55,7 @@ const labelTipo = (t: SolicitudEdicionTipo) => {
 export default function NotificacionesPage() {
   const { addToast } = useToast();
   const { user } = useAuth();
-  const { organizaciones } = useOrganizacion();
+  const { organizacionSeleccionada } = useOrganizacion();
   const [searchParams, setSearchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -75,7 +75,6 @@ export default function NotificacionesPage() {
   const [fMostrarSoloMias, setFMostrarSoloMias] = useState<boolean>(
     searchParams.get('soloMias') === 'true'
   );
-  const [fEntidad, setFEntidad] = useState<string>(searchParams.get('entidad') || 'todas');
 
   const cargar = useCallback(async () => {
     try {
@@ -85,7 +84,7 @@ export default function NotificacionesPage() {
       const params: any = {};
       if (fEstado !== 'todos') params.estado = fEstado;
       params.scope = fMostrarSoloMias ? 'mine' : 'related';
-      if (fEntidad !== 'todas') params.entidad = fEntidad;
+      if (organizacionSeleccionada) params.entidad = organizacionSeleccionada.id;
       
       const data = await getSolicitudesEdicion(params);
       const allowedTipos = new Set<SolicitudEdicionTipo>([
@@ -101,7 +100,7 @@ export default function NotificacionesPage() {
     } finally {
       setLoading(false);
     }
-  }, [fEstado, fMostrarSoloMias, fEntidad]);
+  }, [fEstado, fMostrarSoloMias, organizacionSeleccionada]);
 
   useEffect(() => { void cargar(); }, [cargar]);
 
@@ -215,18 +214,6 @@ export default function NotificacionesPage() {
             <option>Participaciones Jugador-Temporada</option>
           </select>
           
-          {/* Filtro de Entidad (Organizaciones) */}
-          <select 
-            value={fEntidad} 
-            onChange={(e) => setFEntidad(e.target.value)} 
-            className="rounded-lg border-slate-300 text-sm"
-          >
-            <option value="todas">Todas mis organizaciones</option>
-            {organizaciones.map(org => (
-               <option key={org.id} value={org.id}>{org.nombre}</option>
-            ))}
-          </select>
-
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
