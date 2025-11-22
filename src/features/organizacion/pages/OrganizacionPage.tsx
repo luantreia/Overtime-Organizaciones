@@ -1,8 +1,19 @@
+import { useState } from 'react';
 import { useOrganizacion } from '../../../app/providers/OrganizacionContext';
-import OrganizacionAdmins from '../components/OrganizacionAdmins';
+import ModalGestionAdministradoresEntidad from '../../../shared/components/modalGestionAdministradoresEntidad/ModalGestionAdministradoresEntidad';
+import { addOrganizacionAdministrador, getOrganizacionAdministradores, removeOrganizacionAdministrador } from '../services/organizacionService';
 
 const OrganizacionPage = () => {
   const { organizacionSeleccionada } = useOrganizacion();
+  const [modalAdminsOpen, setModalAdminsOpen] = useState(false);
+
+  const handleAddAdmin = async (entityId: string, data: { email: string }) => {
+    await addOrganizacionAdministrador(entityId, { email: data.email });
+  };
+
+  const handleRemoveAdmin = async (entityId: string, adminId: string) => {
+    await removeOrganizacionAdministrador(entityId, adminId);
+  };
 
   if (!organizacionSeleccionada) {
     return (
@@ -43,9 +54,32 @@ const OrganizacionPage = () => {
             <a href="/notificaciones" className="rounded-lg border border-slate-200 bg-white px-4 py-3 text-center font-medium text-slate-700 hover:bg-slate-50">Notificaciones</a>
           </div>
         </div>
+
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-card">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-slate-900">Administradores</h2>
+            <button
+              onClick={() => setModalAdminsOpen(true)}
+              className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-700"
+            >
+              Administrar
+            </button>
+          </div>
+          <p className="mt-2 text-sm text-slate-500">
+            Gestioná los administradores de esta organización
+          </p>
+        </div>
       </section>
 
-      <OrganizacionAdmins />
+      <ModalGestionAdministradoresEntidad
+        isOpen={modalAdminsOpen}
+        onClose={() => setModalAdminsOpen(false)}
+        entityId={organizacionSeleccionada.id}
+        title="Administradores de la organización"
+        addFunction={handleAddAdmin}
+        getFunction={getOrganizacionAdministradores}
+        removeFunction={handleRemoveAdmin}
+      />
     </div>
   );
 };

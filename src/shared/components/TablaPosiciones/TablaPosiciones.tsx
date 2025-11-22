@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { authFetch } from '../../../utils/authFetch';
+import { authFetch } from '../../utils/authFetch';
 
 interface ParticipacionFase {
   id: string;

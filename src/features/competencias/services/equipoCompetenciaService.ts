@@ -1,4 +1,4 @@
-import { authFetch } from '../../../utils/authFetch';
+import { authFetch } from '../../../shared/utils/authFetch';
 import type { EquipoCompetencia, SolicitudCompetencia } from '../../../types';
 
 type EquipoCompetenciaQuery = {

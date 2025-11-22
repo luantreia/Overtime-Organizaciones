@@ -1,4 +1,4 @@
-import { authFetch } from '../../../utils/authFetch';
+import { authFetch } from '../../../shared/utils/authFetch';
 import type { Organizacion } from '../../../types';
 
 type BackendOrganizacion = {

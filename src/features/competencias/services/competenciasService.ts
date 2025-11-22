@@ -1,4 +1,4 @@
-import { authFetch } from '../../../utils/authFetch';
+import { authFetch } from '../../../shared/utils/authFetch';
 
 export type BackendCompetencia = {
   _id: string;

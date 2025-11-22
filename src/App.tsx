@@ -9,7 +9,6 @@ import DashboardOrgPage from './features/dashboard/pages/DashboardOrgPage';
 import PartidosPage from './features/partidos/pages/PartidosPage';
 import EstadisticasOrgPage from './features/estadisticas/pages/EstadisticasOrgPage';
 import NotificacionesOrgPage from './features/notificaciones/pages/NotificacionesOrgPage';
-import NotificacionesSolicitudesPage from './features/solicitudes/pages/NotificacionesPage';
 import CompetenciasOrgPage from './features/competencias/pages/CompetenciasOrgPage';
 import CompetenciaDetallePage from './features/competencias/pages/CompetenciaDetallePage';
 
@@ -86,14 +85,6 @@ const App = () => {
             element={
               <ProtectedRoute>
                 <NotificacionesOrgPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/notificaciones/solicitudes"
-            element={
-              <ProtectedRoute>
-                <NotificacionesSolicitudesPage />
               </ProtectedRoute>
             }
           />

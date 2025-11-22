@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type FC } from 'react';
-import { authFetch } from '../../../../utils/authFetch';
+import { authFetch } from '../../../../shared/utils/authFetch';
 import { getEstadisticasJugadorPartidoManualPorEquipo } from '../../services/estadisticasService';
 import { formatNumber } from '../../../../utils/formatNumber';
 

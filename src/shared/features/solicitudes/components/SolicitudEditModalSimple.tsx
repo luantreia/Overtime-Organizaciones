@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import type { SolicitudEdicion } from '../../../types/solicitudesEdicion';
-import { actualizarSolicitud } from '../services/solicitudesEdicionService';
+import type { SolicitudEdicion } from '../types/solicitudesEdicion';
+import { actualizarSolicitudEdicion as actualizarSolicitud } from '../services/solicitudesEdicionService';
 
 interface Props {
   solicitud: SolicitudEdicion | null;
@@ -23,8 +23,10 @@ export default function SolicitudEditModalSimple({ solicitud, onClose, onSaved }
   const handleSave = async () => {
     try {
       setLoading(true);
-      const updated = await actualizarSolicitud(solicitud._id, { datosPropuestos: datos as any });
-      onSaved(updated);
+      const updated = await actualizarSolicitud(solicitud._id, { 
+        datosPropuestos: datos as any 
+      });
+      onSaved({ ...updated, id: updated._id }); // Agregar la propiedad id
       onClose();
     } catch (err: any) {
       alert(err?.message || 'Error');

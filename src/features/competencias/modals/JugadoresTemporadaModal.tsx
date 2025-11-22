@@ -3,7 +3,7 @@ import ConfirmModal from '../../../shared/components/ConfirmModal/ConfirmModal';
 import { useToast } from '../../../shared/components/Toast/ToastProvider';
 import type { BackendParticipacionTemporada } from '../services';
 import { listJugadorTemporadaByParticipacion, updateJugadorTemporada, deleteJugadorTemporada, type BackendJugadorTemporada, opcionesJugadorTemporada, type JugadorEquipoOpcion } from '../services/jugadorTemporadaService';
-import { crearSolicitud } from '../../solicitudes/services/solicitudesEdicionService';
+import { crearSolicitudEdicion } from '../../../shared/features/solicitudes';
 
 // NOTE: Para agregar jugadores a la temporada, se pueden seleccionar múltiples jugadores
 // y crear solicitudes que deben ser aprobadas por los administradores
@@ -155,11 +155,14 @@ export default function JugadoresTemporadaModal({ isOpen, onClose, participacion
                   if (!participacion?._id || seleccionados.size === 0) return;
                   
                   const solicitudes = Array.from(seleccionados).map(jugadorEquipoId => 
-                    crearSolicitud('jugador-temporada-crear', {
-                      jugadorEquipoId,
-                      participacionTemporadaId: participacion._id,
-                      estado,
-                      rol
+                    crearSolicitudEdicion({
+                      tipo: 'jugador-temporada-crear',
+                      datosPropuestos: {
+                        jugadorEquipoId,
+                        participacionTemporadaId: participacion._id,
+                        estado,
+                        rol
+                      }
                     })
                   );
                   

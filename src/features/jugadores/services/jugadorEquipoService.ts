@@ -1,4 +1,4 @@
-import { authFetch } from '../../../utils/authFetch';
+import { authFetch } from '../../../shared/utils/authFetch';
 import type { Jugador, SolicitudJugador, ContratoJugadorResumen, EstadoJugador } from '../../../types';
 
 type GetJugadoresQuery = {

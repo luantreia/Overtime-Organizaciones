@@ -1,3 +1,12 @@
+// =====================================================================================
+// TYPES CONSOLIDADOS - overtime-gestion-organizaciones
+// Ubicación: shared/utils/types/types.ts
+// =====================================================================================
+
+// ========================================
+// TIPOS GENERALES DE USUARIO Y ENTIDADES
+// ========================================
+
 export type RolUsuario = 'manager' | 'adminEquipo' | 'jugador' | 'lector' | 'editor' | 'admin';
 
 export interface Usuario {
@@ -6,6 +15,16 @@ export interface Usuario {
   email: string;
   rol: RolUsuario;
 }
+
+export interface AdminUser {
+  _id: string;
+  nombre?: string;
+  email?: string;
+}
+
+// ========================================
+// TIPOS DE EQUIPOS Y ORGANIZACIONES
+// ========================================
 
 export interface Equipo {
   id: string;
@@ -23,6 +42,10 @@ export interface Organizacion {
   descripcion?: string;
 }
 
+// ========================================
+// TIPOS DE JUGADORES
+// ========================================
+
 export type EstadoJugador = 'activo' | 'pendiente' | 'baja';
 
 export interface Jugador {
@@ -36,7 +59,18 @@ export interface Jugador {
   fechaInicio?: string;
   fechaFin?: string | null;
   contratoId?: string;
+  creadoPor?: string;
+  administradores?: string[];
+  alias?: string;
+  fechaNacimiento?: string;
+  genero?: string;
+  foto?: string;
+  nacionalidad?: string;
 }
+
+// ========================================
+// TIPOS DE SOLICITUDES DE JUGADORES
+// ========================================
 
 export interface SolicitudJugador {
   id: string;
@@ -45,6 +79,10 @@ export interface SolicitudJugador {
   mensaje?: string;
   origen?: 'equipo' | 'jugador';
   fechaSolicitud?: string;
+  solicitadoPor?: string;
+  equipo?: { id: string; nombre?: string; creadoPor?: string; administradores?: string[] };
+  fechaInicio?: string;
+  fechaFin?: string | null;
 }
 
 export interface ContratoJugadorResumen {
@@ -59,12 +97,36 @@ export interface ContratoJugadorResumen {
   fechaAceptacion?: string;
 }
 
+// ========================================
+// TIPOS DE COMPETENCIAS Y TEMPORADAS
+// ========================================
+
 export interface Competencia {
   id: string;
   nombre: string;
   estado: 'activa' | 'finalizada' | 'inscripcion';
   faseActual?: string;
   posicionActual?: number;
+}
+
+export interface TemporadaJugador {
+  id: string;
+  nombre?: string;
+  competencia: {
+    id?: string;
+    nombre?: string;
+    modalidad?: string;
+    categoria?: string;
+  };
+  equipo: {
+    id?: string;
+    nombre?: string;
+  };
+  fechaInicio?: string;
+  fechaFin?: string | null;
+  estado?: 'activo' | 'baja' | string;
+  rol?: string;
+  descripcion?: string;
 }
 
 export interface EquipoCompetencia {
@@ -74,6 +136,10 @@ export interface EquipoCompetencia {
   estado: 'pendiente' | 'aceptado' | 'rechazado';
   fixtureUrl?: string;
 }
+
+// ========================================
+// TIPOS DE PARTIDOS
+// ========================================
 
 export type EstadoPartido = 'pendiente' | 'confirmado' | 'finalizado' | 'cancelado';
 
@@ -114,6 +180,10 @@ export interface SolicitudCompetencia {
   fechaSolicitud: string;
 }
 
+// ========================================
+// TIPOS DE ESTADÍSTICAS
+// ========================================
+
 export interface EstadisticaJugador {
   jugador: Jugador;
   partidosJugados: number;
@@ -145,16 +215,4 @@ export interface Notificacion {
   fecha: string;
   leida: boolean;
   relacionadoId?: string;
-}
-
-export type SolicitudEdicionEstado = 'pendiente' | 'aceptado' | 'rechazado';
-
-export interface SolicitudEdicion {
-  id: string;
-  tipo: string;
-  entidad?: string | null;
-  datosPropuestos: Record<string, unknown>;
-  estado: SolicitudEdicionEstado;
-  creadoPor: string;
-  fechaCreacion?: string;
 }
