@@ -75,6 +75,7 @@ export default function NotificacionesPage() {
   const [fMostrarSoloMias, setFMostrarSoloMias] = useState<boolean>(
     searchParams.get('soloMias') === 'true'
   );
+  const [fEntidad, setFEntidad] = useState<string>(searchParams.get('entidad') || 'todas');
 
   const cargar = useCallback(async () => {
     try {
