@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import  ModalBase  from '../../../../shared/components/ModalBase/ModalBase';
-import { getAlineacion, guardarAlineacion, crearJugadorPartido, eliminarJugadorPartido, getPartidoDetallado } from '../../services/partidoService';
+import { getAlineacion, guardarAlineacion, crearJugadorPartido, eliminarJugadorPartido, getPartidoDetallado, getRankedMatchDetail } from '../../services/partidoService';
 import { getJugadoresEquipo } from '../../../jugadores/services/jugadorEquipoService';
 import { getFaseById } from '../../../competencias/services/fasesService';
 import { listParticipacionesByTemporada } from '../../../competencias/services/participacionTemporadaService';
@@ -112,6 +112,9 @@ export const ModalAlineacionPartido = ({
   const [equipoLocalNombre, setEquipoLocalNombre] = useState<string>('Equipo Local');
   const [equipoVisitanteNombre, setEquipoVisitanteNombre] = useState<string>('Equipo Visitante');
   const [alineacion, setAlineacion] = useState<JugadorPartido[]>([]);
+  const [isRanked, setIsRanked] = useState<boolean>(false);
+  const [rankedTeams, setRankedTeams] = useState<Array<{ color: 'rojo' | 'azul'; players: Array<{ id: string; nombre: string }> }>>([]);
+  const [rankedPlayers, setRankedPlayers] = useState<Array<{ id: string; nombre: string; pre?: number; post?: number; delta?: number; color?: 'rojo' | 'azul' | null }>>([]);
   const [rolesPorJugador, setRolesPorJugador] = useState<Record<string, RolAlineacion>>({});
   const [jugadorPartidoPorJugador, setJugadorPartidoPorJugador] = useState<Record<string, string>>({});
   const [nuevoJugadorLocalId, setNuevoJugadorLocalId] = useState<string>('');
@@ -133,11 +136,41 @@ export const ModalAlineacionPartido = ({
         const equipoLocalNombre = (typeof partido.equipoLocal === 'string') ? 'Local' : (partido.equipoLocal?.nombre ?? 'Local');
         const equipoVisitanteNombre = (typeof partido.equipoVisitante === 'string') ? 'Visitante' : (partido.equipoVisitante?.nombre ?? 'Visitante');
 
-        const [alineacionActual, jugadoresEquipoLocal, jugadoresEquipoVisitante] = await Promise.all([
-          getAlineacion(partidoId),
-          localId ? getJugadoresElegibles(localId, partido) : Promise.resolve([] as JugadorOption[]),
-          visitanteId ? getJugadoresElegibles(visitanteId, partido) : Promise.resolve([] as JugadorOption[]),
-        ]);
+        let alineacionActual: JugadorPartido[] = [];
+        let jugadoresEquipoLocal: JugadorOption[] = [];
+        let jugadoresEquipoVisitante: JugadorOption[] = [];
+
+        // Detect ranked and branch data source
+        const rankedFlag = (partido as any).isRanked === true;
+        setIsRanked(rankedFlag);
+        if (rankedFlag) {
+          const ranked = await getRankedMatchDetail(partidoId);
+          const teams = Array.isArray(ranked.teams) ? ranked.teams : [];
+          const players = Array.isArray(ranked.players) ? ranked.players : [];
+          const normalizeName = (p: any): { id: string; nombre: string } => {
+            if (!p) return { id: '', nombre: 'Jugador' };
+            if (typeof p === 'string') return { id: p, nombre: 'Jugador' };
+            return { id: p._id, nombre: p.nombre ?? p.alias ?? 'Jugador' };
+          };
+          setRankedTeams(teams.map(t => ({
+            color: t.color,
+            players: (t.players || []).map(normalizeName).filter(x => x.id),
+          })));
+          setRankedPlayers(players.map(mp => ({
+            id: typeof mp.playerId === 'string' ? mp.playerId : (mp.playerId?._id ?? ''),
+            nombre: typeof mp.playerId === 'string' ? 'Jugador' : (mp.playerId?.nombre ?? mp.playerId?.alias ?? 'Jugador'),
+            pre: mp.preRating,
+            post: mp.postRating,
+            delta: mp.delta,
+            color: mp.teamColor ?? null,
+          })).filter(x => x.id));
+        } else {
+          [alineacionActual, jugadoresEquipoLocal, jugadoresEquipoVisitante] = await Promise.all([
+            getAlineacion(partidoId),
+            localId ? getJugadoresElegibles(localId, partido) : Promise.resolve([] as JugadorOption[]),
+            visitanteId ? getJugadoresElegibles(visitanteId, partido) : Promise.resolve([] as JugadorOption[]),
+          ]);
+        }
 
         if (!isActive) return;
 
@@ -160,17 +193,19 @@ export const ModalAlineacionPartido = ({
           .filter((item) => !opcionesVisitante.some((op) => op.id === getJugadorId((item as any).jugador)))
           .map((item) => ({ id: getJugadorId((item as any).jugador), nombre: getJugadorNombre((item as any).jugador) }));
 
-        setJugadoresLocal([...opcionesLocal, ...extrasLocal]);
-        setJugadoresVisitante([...opcionesVisitante, ...extrasVisitante]);
-        setRolesPorJugador(buildInitialRoles(alineacionActual));
-        setJugadorPartidoPorJugador(
-          alineacionActual.reduce<Record<string, string>>((acc, it) => {
-            const jpId = (it as any)._id ?? (it as any).id;
-            const jugadorId = getJugadorId((it as any).jugador);
-            if (jpId && jugadorId) acc[jugadorId] = jpId as string;
-            return acc;
-          }, {})
-        );
+        if (!rankedFlag) {
+          setJugadoresLocal([...opcionesLocal, ...extrasLocal]);
+          setJugadoresVisitante([...opcionesVisitante, ...extrasVisitante]);
+          setRolesPorJugador(buildInitialRoles(alineacionActual));
+          setJugadorPartidoPorJugador(
+            alineacionActual.reduce<Record<string, string>>((acc, it) => {
+              const jpId = (it as any)._id ?? (it as any).id;
+              const jugadorId = getJugadorId((it as any).jugador);
+              if (jpId && jugadorId) acc[jugadorId] = jpId as string;
+              return acc;
+            }, {})
+          );
+        }
       } catch (err) {
         if (!isActive) return;
         console.error('Error al cargar alineación:', err);
@@ -298,12 +333,13 @@ export const ModalAlineacionPartido = ({
     <ModalBase
       isOpen={isOpen}
       onClose={handleCerrar}
-      title="Gestionar jugadores del partido"
-      subtitle="Agregá, quitá o cambiá el rol de los jugadores"
+      title={isRanked ? 'Alineación (Ranked)' : 'Gestionar jugadores del partido'}
+      subtitle={isRanked ? 'Jugadores asignados por ranked con rating Δ' : 'Agregá, quitá o cambiá el rol de los jugadores'}
       size="lg"
       bodyClassName="p-0"
     >
       <div className="space-y-6 p-6">
+        {!isRanked && (
         <div className="grid gap-4 md:grid-cols-2">
           <div className="rounded-xl border border-slate-200 bg-white p-4">
             <p className="mb-2 text-sm font-medium text-slate-800">Agregar al {equipoLocalNombre}</p>
@@ -357,6 +393,7 @@ export const ModalAlineacionPartido = ({
             </div>
           </div>
         </div>
+        )}
         {error ? (
           <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
             {error}
@@ -371,10 +408,17 @@ export const ModalAlineacionPartido = ({
           </div>
         ) : (
           <>
-            <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-              <p>Seleccioná el rol para cada jugador. Podés agregar jugadores por equipo o quitarlos del partido.</p>
-            </div>
+            {!isRanked ? (
+              <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+                <p>Seleccioná el rol para cada jugador. Podés agregar jugadores por equipo o quitarlos del partido.</p>
+              </div>
+            ) : (
+              <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+                <p>Vista de alineación ranked. Muestra Rojo/Azul y cambios de rating.</p>
+              </div>
+            )}
 
+            {!isRanked ? (
             <div className="grid gap-4 lg:grid-cols-2">
               {/* Local */}
               <div className="space-y-3">
@@ -462,13 +506,72 @@ export const ModalAlineacionPartido = ({
                   })}
               </div>
             </div>
+            ) : (
+              <div className="grid gap-4 lg:grid-cols-2">
+                {/* Rojo */}
+                <div className="space-y-3">
+                  <h3 className="text-sm font-semibold text-slate-800">Rojo</h3>
+                  {rankedTeams.find(t => t.color === 'rojo')?.players.length ? null : (
+                    <p className="text-sm text-slate-500">Sin jugadores asignados.</p>
+                  )}
+                  {rankedTeams.find(t => t.color === 'rojo')?.players.map(p => {
+                    const snap = rankedPlayers.find(rp => rp.id === p.id);
+                    return (
+                      <div key={p.id} className="flex items-start justify-between rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+                        <div className="min-w-0 w-1/2 pr-2">
+                          <p className="text-sm font-medium text-slate-900 whitespace-normal">{p.nombre}</p>
+                        </div>
+                        <div className="flex w-1/2 flex-wrap items-center justify-end gap-2">
+                          {snap ? (
+                            <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ${snap.delta && snap.delta > 0 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : snap.delta && snap.delta < 0 ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-slate-50 text-slate-700 border border-slate-200'}`}>
+                              {snap.pre ?? '—'} → {snap.post ?? '—'} ({snap.delta ?? 0 >= 0 ? '+' : ''}{snap.delta ?? 0})
+                            </span>
+                          ) : (
+                            <span className="text-xs text-slate-500">Sin datos de rating</span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
 
-            <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 shadow-sm">
-              <p className="font-medium text-slate-900">Resumen</p>
-              <ul className="mt-2 space-y-1 text-sm">
-                <li>Jugadores asignados: {jugadoresConRol.length}</li>
-              </ul>
-            </div>
+                {/* Azul */}
+                <div className="space-y-3">
+                  <h3 className="text-sm font-semibold text-slate-800">Azul</h3>
+                  {rankedTeams.find(t => t.color === 'azul')?.players.length ? null : (
+                    <p className="text-sm text-slate-500">Sin jugadores asignados.</p>
+                  )}
+                  {rankedTeams.find(t => t.color === 'azul')?.players.map(p => {
+                    const snap = rankedPlayers.find(rp => rp.id === p.id);
+                    return (
+                      <div key={p.id} className="flex items-start justify-between rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+                        <div className="min-w-0 w-1/2 pr-2">
+                          <p className="text-sm font-medium text-slate-900 whitespace-normal">{p.nombre}</p>
+                        </div>
+                        <div className="flex w-1/2 flex-wrap items-center justify-end gap-2">
+                          {snap ? (
+                            <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ${snap.delta && snap.delta > 0 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : snap.delta && snap.delta < 0 ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-slate-50 text-slate-700 border border-slate-200'}`}>
+                              {snap.pre ?? '—'} → {snap.post ?? '—'} ({snap.delta ?? 0 >= 0 ? '+' : ''}{snap.delta ?? 0})
+                            </span>
+                          ) : (
+                            <span className="text-xs text-slate-500">Sin datos de rating</span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {!isRanked && (
+              <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 shadow-sm">
+                <p className="font-medium text-slate-900">Resumen</p>
+                <ul className="mt-2 space-y-1 text-sm">
+                  <li>Jugadores asignados: {jugadoresConRol.length}</li>
+                </ul>
+              </div>
+            )}
           </>
         )}
 
@@ -481,14 +584,16 @@ export const ModalAlineacionPartido = ({
           >
             Cancelar
           </button>
-          <button
-            type="button"
-            onClick={handleGuardar}
-            disabled={saving || loading}
-            className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700 disabled:cursor-not-allowed disabled:bg-brand-300"
-          >
-            {saving ? 'Guardando…' : 'Guardar cambios'}
-          </button>
+          {!isRanked && (
+            <button
+              type="button"
+              onClick={handleGuardar}
+              disabled={saving || loading}
+              className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700 disabled:cursor-not-allowed disabled:bg-brand-300"
+            >
+              {saving ? 'Guardando…' : 'Guardar cambios'}
+            </button>
+          )}
         </div>
       </div>
     </ModalBase>

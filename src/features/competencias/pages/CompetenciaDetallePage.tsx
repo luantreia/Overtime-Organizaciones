@@ -11,19 +11,21 @@ import PartidosSection from '../sections/PartidosSection';
 import ConfirmEliminarTemporadaModal from '../modals/ConfirmEliminarTemporadaModal';
 import ConfirmEliminarFaseModal from '../modals/ConfirmEliminarFaseModal';
 import ConfirmEliminarCompetenciaModal from '../modals/ConfirmEliminarCompetenciaModal';
+import CompetenciaRankedSection from '../sections/CompetenciaRankedSection';
 
 const CompetenciaDetallePage = () => {
   const { id: competenciaId } = useParams<{ id: string }>();
   const [temporadas, setTemporadas] = useState<BackendTemporada[]>([]);
   const [fasesPorTemporada, setFasesPorTemporada] = useState<Record<string, BackendFase[]>>({});
   const [loading, setLoading] = useState(false);
-  const [tab, setTab] = useState<'general' | 'estructura' | 'partidos'>('estructura');
+  const [tab, setTab] = useState<'general' | 'estructura' | 'partidos' | 'ranked'>('estructura');
 
   // detalle competencia y admins
   const [nombre, setNombre] = useState('');
   const [modalidad, setModalidad] = useState<'Foam' | 'Cloth' | ''>('');
   const [categoria, setCategoria] = useState<'Masculino' | 'Femenino' | 'Mixto' | 'Libre' | ''>('');
   const [tipo, setTipo] = useState<'liga' | 'torneo' | 'otro' | ''>('');
+  const [rankedEnabled, setRankedEnabled] = useState<boolean>(false);
   const [fechaInicio, setFechaInicio] = useState('');
   const [fechaFin, setFechaFin] = useState('');
   const [descripcion, setDescripcion] = useState('');
@@ -78,6 +80,7 @@ const CompetenciaDetallePage = () => {
         setFechaInicio(detalle.fechaInicio ? detalle.fechaInicio.slice(0, 10) : '');
         setFechaFin(detalle.fechaFin ? detalle.fechaFin.slice(0, 10) : '');
         setDescripcion((detalle as any).descripcion ?? '');
+        setRankedEnabled(Boolean((detalle as any).rankedEnabled));
         setEsAdminBackend(Boolean((detalle as any).esAdmin));
         if ((detalle as any).administradores) {
           setAdmins(((detalle as any).administradores as AdminUser[]) || []);
@@ -182,6 +185,7 @@ const CompetenciaDetallePage = () => {
         fechaInicio: fechaInicio || undefined,
         fechaFin: fechaFin || undefined,
         descripcion,
+        rankedEnabled,
       });
       addToast({ type: 'success', title: 'Competencia actualizada' });
     } finally {
@@ -286,14 +290,14 @@ const CompetenciaDetallePage = () => {
         <h1 className="text-2xl font-semibold text-slate-900">{nombre || 'Competencia'}</h1>
         <p className="text-sm text-slate-500">Administración y estructura</p>
         <div className="mt-2 flex gap-2 text-sm">
-          {(['general','estructura','partidos'] as const).map(t => (
+          {(['general','estructura','partidos', ...(rankedEnabled ? ['ranked'] as const : [])] as const).map(t => (
             <button
               key={t}
               type="button"
               onClick={() => setTab(t)}
               className={`rounded-lg px-3 py-1.5 ${tab===t ? 'bg-brand-100 text-brand-700' : 'border border-slate-200 text-slate-700 hover:bg-slate-50'}`}
             >
-              {t === 'general' ? 'General' : t === 'estructura' ? 'Temporadas/Fases' : 'Partidos'}
+              {t === 'general' ? 'General' : t === 'estructura' ? 'Temporadas/Fases' : t === 'partidos' ? 'Partidos' : 'Ranked'}
             </button>
           ))}
         </div>
@@ -315,6 +319,8 @@ const CompetenciaDetallePage = () => {
           setFechaFin={setFechaFin}
           descripcion={descripcion}
           setDescripcion={setDescripcion}
+          rankedEnabled={rankedEnabled}
+          setRankedEnabled={setRankedEnabled}
           esAdmin={esAdmin}
           saving={saving}
           onSubmit={guardarGeneral}
@@ -353,6 +359,10 @@ const CompetenciaDetallePage = () => {
 
       {tab === 'partidos' ? (
         <PartidosSection partidos={partidos} filtroEstado={filtroEstado} setFiltroEstado={setFiltroEstado} />
+      ) : null}
+
+      {tab === 'ranked' ? (
+        <CompetenciaRankedSection competenciaId={competenciaId} modalidad={modalidad} categoria={categoria} />
       ) : null}
 
       {confirmEliminarTemp ? (

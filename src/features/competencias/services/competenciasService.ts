@@ -11,6 +11,7 @@ export type BackendCompetencia = {
   fechaInicio?: string;
   fechaFin?: string;
   descripcion?: string;
+  rankedEnabled?: boolean;
 };
 
 export type AdminUser = { _id: string; email?: string; nombre?: string };
@@ -42,6 +43,7 @@ export type CrearCompetenciaPayload = {
   fechaInicio: string;
   fechaFin?: string;
   descripcion?: string;
+  rankedEnabled?: boolean;
 };
 
 export async function crearCompetencia(payload: CrearCompetenciaPayload): Promise<BackendCompetencia> {

@@ -408,6 +408,25 @@ export const actualizarEstadisticasEquipoPartido = (
 export const getPartidoDetallado = (partidoId: string) =>
   authFetch<PartidoDetallado>(`/partidos/${partidoId}`);
 
+// Ranked match detail: includes teams and per-player snapshots
+export type RankedMatchPlayer = {
+  _id: string;
+  playerId: { _id: string; nombre?: string; alias?: string } | string;
+  preRating?: number;
+  postRating?: number;
+  delta?: number;
+  teamColor?: 'rojo' | 'azul' | null;
+};
+
+export type RankedMatchTeam = {
+  _id: string;
+  color: 'rojo' | 'azul';
+  players: Array<{ _id: string; nombre?: string; alias?: string } | string>;
+};
+
+export const getRankedMatchDetail = (partidoId: string) =>
+  authFetch<{ ok: boolean; partido: any; teams: RankedMatchTeam[]; players: RankedMatchPlayer[] }>(`/ranked/match/${partidoId}`);
+
 export const obtenerSetsDePartido = (partidoId: string) =>
   authFetch<SetPartido[]>(`/set-partido?partido=${partidoId}`);
 

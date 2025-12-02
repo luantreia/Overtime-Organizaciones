@@ -15,6 +15,8 @@ type Props = {
   setFechaFin: (v: string) => void;
   descripcion: string;
   setDescripcion: (v: string) => void;
+  rankedEnabled: boolean;
+  setRankedEnabled: (v: boolean) => void;
   esAdmin: boolean;
   saving: boolean;
   onSubmit: (e: React.FormEvent) => void;
@@ -35,6 +37,7 @@ export default function GeneralSection(props: Props) {
     fechaInicio, setFechaInicio,
     fechaFin, setFechaFin,
     descripcion, setDescripcion,
+    rankedEnabled, setRankedEnabled,
     esAdmin, saving, onSubmit,
     adminEmail, setAdminEmail,
     admins, onAgregarAdmin, onQuitarAdmin,
@@ -89,6 +92,13 @@ export default function GeneralSection(props: Props) {
             <label className="mb-1 block text-xs font-medium text-slate-600">Descripción</label>
             <textarea className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm" rows={2} value={descripcion} onChange={(e)=>setDescripcion(e.target.value)} />
           </div>
+            <div className="md:col-span-3">
+              <label className="mb-1 block text-xs font-medium text-slate-600">Ranked (opt-in por competencia)</label>
+              <label className="inline-flex items-center gap-2 text-sm">
+                <input type="checkbox" checked={rankedEnabled} onChange={(e)=>setRankedEnabled(e.target.checked)} />
+                <span>Habilitar pestaña Ranked y ranking por competencia</span>
+              </label>
+            </div>
           <div className="md:col-span-3 flex items-center justify-between">
             <button disabled={!esAdmin || saving} className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-700 disabled:opacity-50" type="submit">
               {saving ? 'Guardando…' : 'Guardar cambios'}

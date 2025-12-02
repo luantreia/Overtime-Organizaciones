@@ -94,20 +94,42 @@ const ModalCapturaSetEstadisticas = ({
         const visitanteId = extractEquipoId(partido?.equipoVisitante);
         const optsLocal: Array<{ value: string; label: string }> = [];
         const optsVisit: Array<{ value: string; label: string }> = [];
+
+        // Check for Ranked Match context
+        const isRanked = (partido as any)?.isRanked === true;
+        const rankedMeta = (partido as any)?.rankedMeta;
+        const colorLocal = rankedMeta?.teamColors?.local; // e.g. "rojo"
+        const colorVisitante = rankedMeta?.teamColors?.visitante; // e.g. "azul"
+
         data.forEach((jp) => {
           const jpId = jp._id;
           const jugadorId = typeof jp.jugador === 'string' ? jp.jugador : jp.jugador?._id;
           const jugadorNombre = typeof jp.jugador === 'string' ? 'Jugador' : (jp.jugador?.fullName || jp.jugador?.nombre || 'Jugador');
+          
           if (jpId && jugadorId) {
             mapa[jpId] = jugadorId;
             mapaReverse[jugadorId] = jpId;
           }
+
           const equipoRef = jp.equipo as any;
           const eqId = typeof equipoRef === 'string' ? equipoRef : equipoRef?._id;
-          if (jugadorId && eqId) {
+          const teamColor = (jp as any).teamColor; // "rojo" or "azul" in Ranked
+
+          if (jugadorId) {
             const opt = { value: jugadorId, label: jugadorNombre };
-            if (eqId === localId) optsLocal.push(opt);
-            else if (eqId === visitanteId) optsVisit.push(opt);
+
+            if (isRanked && teamColor) {
+              // Logic for Ranked Matches based on teamColor
+              if (teamColor === colorLocal) {
+                optsLocal.push(opt);
+              } else if (teamColor === colorVisitante) {
+                optsVisit.push(opt);
+              }
+            } else if (eqId) {
+              // Standard Logic based on Team ID
+              if (eqId === localId) optsLocal.push(opt);
+              else if (eqId === visitanteId) optsVisit.push(opt);
+            }
           }
         });
         setMapJpToJugador(mapa);
@@ -319,8 +341,20 @@ const ModalCapturaSetEstadisticas = ({
             {(() => {
               const equipoLocalId = extractEquipoId(partido?.equipoLocal) ?? 'local';
               const equipoVisitanteId = extractEquipoId(partido?.equipoVisitante) ?? 'visitante';
-              const equipoLocalNombre = extractEquipoNombre(partido?.equipoLocal, 'Equipo Local');
-              const equipoVisitanteNombre = extractEquipoNombre(partido?.equipoVisitante, 'Equipo Visitante');
+              
+              const isRanked = (partido as any)?.isRanked === true;
+              const rankedMeta = (partido as any)?.rankedMeta;
+              
+              let equipoLocalNombre = extractEquipoNombre(partido?.equipoLocal, 'Equipo Local');
+              let equipoVisitanteNombre = extractEquipoNombre(partido?.equipoVisitante, 'Equipo Visitante');
+
+              if (isRanked) {
+                 const colorLocal = rankedMeta?.teamColors?.local || 'rojo';
+                 const colorVisitante = rankedMeta?.teamColors?.visitante || 'azul';
+                 equipoLocalNombre = colorLocal.charAt(0).toUpperCase() + colorLocal.slice(1);
+                 equipoVisitanteNombre = colorVisitante.charAt(0).toUpperCase() + colorVisitante.slice(1);
+              }
+
               const local = (equiposDelSet[equipoLocalId] ?? []) as Row[];
               const visitante = (equiposDelSet[equipoVisitanteId] ?? []) as Row[];
               return (

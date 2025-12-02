@@ -23,8 +23,8 @@ export default function Navbar() {
 
   return (
     <header className="border-b border-slate-200 bg-white/70 backdrop-blur">
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 py-4">
-        <div className="flex items-center gap-3">
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-4">
+        <div className="flex items-center gap-3 shrink-0">
           <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-500 font-bold text-white shadow shadow-brand-500/40">
             🏢
           </span>
@@ -34,7 +34,7 @@ export default function Navbar() {
           </div>
         </div>
 
-        <nav className="hidden flex-1 items-center justify-center gap-2 text-sm font-medium text-slate-600 lg:flex">
+        <nav className="hidden flex-1 items-center justify-center gap-1 text-sm font-medium text-slate-600 xl:flex">
           {links.map((l) => (
             <NavLink key={l.to} to={l.to} className={navLinkClass} onClick={() => setOpen(false)}>
               {l.label}
@@ -42,7 +42,7 @@ export default function Navbar() {
           ))}
         </nav>
 
-        <div className="hidden items-center gap-3 lg:flex">
+        <div className="hidden items-center gap-3 lg:flex flex-1 justify-end">
           <OrganizationSelector />
           {isAuthenticated ? (
             <button
@@ -98,3 +98,5 @@ export default function Navbar() {
     </header>
   );
 }
+
+

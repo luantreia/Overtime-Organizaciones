@@ -6,6 +6,7 @@ import { getPartidos } from '../../partidos/services/partidoService';
 // Ranking reusable section
 import { SeccionTop5estadisticasDirectas } from '../../estadisticas/components/sections/SeccionTop5estadisticasDirectas';
 import { getSolicitudesJugadores } from '../../jugadores/services/jugadorEquipoService';
+import { getEstadisticasEquipo } from '../../estadisticas/services/estadisticasService';
 import type {
   EstadisticaEquipoResumen,
   EstadisticaJugador,
@@ -39,9 +40,10 @@ const DashboardPage = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const [partidos, solicitudes] = await Promise.all([
+        const [partidos, solicitudes, stats] = await Promise.all([
           getPartidos({ equipoId: organizacionSeleccionada.id, estado: 'pendiente' }),
           getSolicitudesJugadores(organizacionId),
+          getEstadisticasEquipo(organizacionId),
         ]);
 
         if (isCancelled) return;
@@ -51,6 +53,8 @@ const DashboardPage = () => {
           .slice(0, 5);
         setProximosPartidos(partidosOrdenados);
         setSolicitudesPendientes(solicitudes);
+        setResumenEquipo(stats.resumen);
+        setRankingJugadores(stats.jugadores);
         setError(null);
       } catch (err) {
         console.error(err);
