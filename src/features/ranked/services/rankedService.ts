@@ -59,3 +59,9 @@ export async function markMatchAsRanked(partidoId: string) {
     method: 'POST',
   });
 }
+
+export async function revertMatch(partidoId: string) {
+  return authFetch<{ ok: boolean; message: string }>(`${BASE}/match/${partidoId}/revert`, {
+    method: 'POST',
+  });
+}

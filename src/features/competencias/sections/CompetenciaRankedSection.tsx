@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { autoAssign, assignTeams, createRankedMatch, finalizeMatch, getLeaderboard, markMatchAsRanked, listJugadores } from '../../ranked/services/rankedService';
+import { autoAssign, assignTeams, createRankedMatch, finalizeMatch, getLeaderboard, markMatchAsRanked, listJugadores, revertMatch } from '../../ranked/services/rankedService';
 import { crearJugadorCompetencia, listJugadoresCompetencia } from '../../jugadores/services/jugadorCompetenciaService';
 import { listTemporadasByCompetencia, type BackendTemporada } from '../services';
 
@@ -25,6 +25,7 @@ export default function CompetenciaRankedSection({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [convertId, setConvertId] = useState<string>('');
+  const [revertId, setRevertId] = useState<string>('');
   const [nuevoJugadorId, setNuevoJugadorId] = useState<string>('');
   const [showAll, setShowAll] = useState<boolean>(false);
   const [presentes, setPresentes] = useState<string[]>([]);
@@ -233,6 +234,26 @@ export default function CompetenciaRankedSection({
       // no-op; user can now finalizar ese partido desde donde corresponda o usar esta vista para nuevos.
     } catch (e: any) {
       setError(e.message || 'Error marcando partido como ranked');
+    } finally { setBusy(false); }
+  }
+
+  async function onRevertMatch() {
+    if (!revertId.trim()) return;
+    setBusy(true); setError(null);
+    try {
+      await revertMatch(revertId.trim());
+      setRevertId('');
+      // refresh leaderboard
+      const lb = await getLeaderboard({ 
+        modalidad: modalidad as string, 
+        categoria: categoria as string, 
+        competition: competenciaId, 
+        season: selectedTemporada || undefined,
+        limit: 20 
+      });
+      setBoard(lb.items);
+    } catch (e: any) {
+      setError(e.message || 'Error revirtiendo partido');
     } finally { setBusy(false); }
   }
 
@@ -454,6 +475,15 @@ export default function CompetenciaRankedSection({
           <input value={convertId} onChange={(e)=>setConvertId(e.target.value)} placeholder="ID de partido" className="flex-1 rounded-md border px-2 py-1 text-sm" />
           <button onClick={onMarkAsRanked} disabled={busy || !convertId.trim()} className="rounded-md border px-3 py-2 text-sm">Marcar como ranked</button>
         </div>
+      </section>
+
+      <section className="rounded-lg border border-slate-200 bg-white p-4">
+        <h2 className="mb-2 text-sm font-semibold text-red-700">Revertir partido ranked (Admin)</h2>
+        <div className="flex items-center gap-2">
+          <input value={revertId} onChange={(e)=>setRevertId(e.target.value)} placeholder="ID de partido a revertir" className="flex-1 rounded-md border px-2 py-1 text-sm" />
+          <button onClick={onRevertMatch} disabled={busy || !revertId.trim()} className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 hover:bg-red-100">Revertir Stats</button>
+        </div>
+        <p className="mt-1 text-xs text-slate-500">Esto restará los puntos ganados/perdidos a los jugadores y eliminará el registro del historial.</p>
       </section>
     </div>
   );
