@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { autoAssign, assignTeams, createRankedMatch, finalizeMatch, getLeaderboard, markMatchAsRanked, listJugadores, revertMatch } from '../../ranked/services/rankedService';
-import { crearJugadorCompetencia, listJugadoresCompetencia } from '../../jugadores/services/jugadorCompetenciaService';
+import { crearJugadorCompetencia, listJugadoresCompetencia, eliminarJugadorCompetencia } from '../../jugadores/services/jugadorCompetenciaService';
 import { listTemporadasByCompetencia, type BackendTemporada } from '../services';
 
 export default function CompetenciaRankedSection({
@@ -13,8 +13,8 @@ export default function CompetenciaRankedSection({
   categoria: 'Masculino' | 'Femenino' | 'Mixto' | 'Libre' | '';
 }) {
   const [matchId, setMatchId] = useState<string | null>(null);
-  const [players, setPlayers] = useState<Array<{ _id: string; nombre: string }>>([]);
-  const [compPlayers, setCompPlayers] = useState<Array<{ _id: string; nombre: string }>>([]);
+  const [players, setPlayers] = useState<Array<{ _id: string; nombre: string; jcId?: string }>>([]);
+  const [compPlayers, setCompPlayers] = useState<Array<{ _id: string; nombre: string; jcId?: string }>>([]);
   const [allPlayers, setAllPlayers] = useState<Array<{ _id: string; nombre: string }>>([]);
   const [filter, setFilter] = useState('');
   const [selected, setSelected] = useState<string[]>([]);
@@ -54,7 +54,7 @@ export default function CompetenciaRankedSection({
           .map((jc) => {
             const j = jc.jugador as any;
             const nombre = [j?.nombre, j?.apellido].filter(Boolean).join(' ') || j?._id || '';
-            return { _id: (j?._id ?? j) as string, nombre };
+            return { _id: (j?._id ?? j) as string, nombre, jcId: jc._id };
           })
           .filter((p) => p._id);
         const seen = new Set<string>();
@@ -63,12 +63,13 @@ export default function CompetenciaRankedSection({
 
         // all players (for adding or broader selection)
         const all = await listJugadores(200);
-        const mappedAll = (Array.isArray(all) ? all : [])
+        const rawItems = Array.isArray(all) ? all : (all as any).items || [];
+        const mappedAll = rawItems
           .map((j: any) => {
             const nombre = [j?.nombre, j?.apellido].filter(Boolean).join(' ') || j?.apodo || j?._id || '';
             return { _id: j?._id as string, nombre };
           })
-          .filter((p) => p._id);
+          .filter((p: any) => p._id);
         setAllPlayers(mappedAll);
 
         // auto-enable showAll only if competencia has none yet
@@ -257,6 +258,24 @@ export default function CompetenciaRankedSection({
     } finally { setBusy(false); }
   }
 
+  async function onEliminarJugador(playerId: string) {
+    if (!competenciaId) return;
+    const player = compPlayers.find(p => p._id === playerId);
+    if (!player || !player.jcId) {
+      setError('No se encontró la relación de competencia para este jugador');
+      return;
+    }
+    if (!window.confirm(`¿Seguro que deseas eliminar a ${player.nombre} de la competencia?`)) return;
+
+    setBusy(true); setError(null);
+    try {
+      await eliminarJugadorCompetencia(player.jcId);
+      setCompPlayers((prev) => prev.filter((p) => p._id !== playerId));
+    } catch (e: any) {
+      setError(e.message || 'Error eliminando jugador de la competencia');
+    } finally { setBusy(false); }
+  }
+
   async function onAgregarJugadorCompetencia() {
     if (!competenciaId || !nuevoJugadorId.trim()) return;
     setBusy(true); setError(null);
@@ -267,7 +286,7 @@ export default function CompetenciaRankedSection({
       const mapped = items.map((jc) => {
         const j = jc.jugador as any;
         const nombre = [j?.nombre, j?.apellido].filter(Boolean).join(' ') || j?._id || '';
-        return { _id: (j?._id ?? j) as string, nombre };
+        return { _id: (j?._id ?? j) as string, nombre, jcId: jc._id };
       }).filter((p) => p._id);
       const seen = new Set<string>();
       const unique = mapped.filter((p) => (seen.has(p._id) ? false : (seen.add(p._id), true)));
@@ -364,7 +383,7 @@ export default function CompetenciaRankedSection({
                         const mapped = items.map((jc) => {
                           const j = jc.jugador as any;
                           const nombre = [j?.nombre, j?.apellido].filter(Boolean).join(' ') || j?._id || '';
-                          return { _id: (j?._id ?? j) as string, nombre };
+                          return { _id: (j?._id ?? j) as string, nombre, jcId: jc._id };
                         }).filter((x) => x._id);
                         const seen = new Set<string>();
                         const unique = mapped.filter((x) => (seen.has(x._id) ? false : (seen.add(x._id), true)));
@@ -374,6 +393,13 @@ export default function CompetenciaRankedSection({
                       }
                     }}
                   >Agregar</button>
+                )}
+                {compPlayers.some(cp => cp._id === p._id) && (
+                  <button
+                    type="button"
+                    className="shrink-0 rounded border border-red-200 bg-red-50 px-2 py-0.5 text-xs text-red-700 hover:bg-red-100"
+                    onClick={() => onEliminarJugador(p._id)}
+                  >Quitar</button>
                 )}
                 </div>
               </div>
