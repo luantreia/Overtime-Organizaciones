@@ -290,13 +290,29 @@ const mapPartido = (partido: BackendPartido, contextoEquipoId?: string): Partido
   return mapped;
 };
 
+type PaginatedResponse<T> = {
+  items: T[];
+  total: number;
+  page: number;
+  limit: number;
+  pages: number;
+};
+
+const handlePartidosResponse = (response: BackendPartido[] | PaginatedResponse<BackendPartido>): BackendPartido[] => {
+  if (Array.isArray(response)) {
+    return response;
+  }
+  return response.items || [];
+};
+
 export const getPartidos = async ({ equipoId, estado, competenciaId }: PartidoQuery): Promise<Partido[]> => {
   const params = new URLSearchParams();
   if (equipoId) params.set('equipo', equipoId);
   if (estado) params.set('estado', estado);
   if (competenciaId) params.set('competencia', competenciaId);
 
-  const partidos = await authFetch<BackendPartido[]>(`/partidos?${params.toString()}`);
+  const response = await authFetch<BackendPartido[] | PaginatedResponse<BackendPartido>>(`/partidos?${params.toString()}`);
+  const partidos = handlePartidosResponse(response);
   return partidos.map((partido) => mapPartido(partido, equipoId));
 };
 
@@ -308,14 +324,16 @@ export const getPartido = async (partidoId: string, equipoId?: string): Promise<
 export const getPartidosPorCompetencia = async (competenciaId: string): Promise<Partido[]> => {
   const params = new URLSearchParams();
   if (competenciaId) params.set('competencia', competenciaId);
-  const partidos = await authFetch<BackendPartido[]>(`/partidos?${params.toString()}`);
+  const response = await authFetch<BackendPartido[] | PaginatedResponse<BackendPartido>>(`/partidos?${params.toString()}`);
+  const partidos = handlePartidosResponse(response);
   return partidos.map((partido) => mapPartido(partido));
 };
 
 export const getPartidosPorFase = async (faseId: string): Promise<Partido[]> => {
   const params = new URLSearchParams();
   if (faseId) params.set('fase', faseId);
-  const partidos = await authFetch<BackendPartido[]>(`/partidos?${params.toString()}`);
+  const response = await authFetch<BackendPartido[] | PaginatedResponse<BackendPartido>>(`/partidos?${params.toString()}`);
+  const partidos = handlePartidosResponse(response);
   return partidos.map((partido) => mapPartido(partido));
 };
 
