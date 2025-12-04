@@ -195,15 +195,15 @@ const mapEquipoNombre = (equipo?: BackendEquipoRef | string): { id: string; nomb
 export const mapEstadoPartido = (estado?: BackendPartido['estado']): Partido['estado'] => {
   switch (estado) {
     case 'programado':
-      return 'pendiente';
+      return 'programado';
     case 'en_juego':
-      return 'confirmado';
+      return 'en_juego';
     case 'finalizado':
       return 'finalizado';
     case 'cancelado':
       return 'cancelado';
     default:
-      return 'pendiente';
+      return 'programado';
   }
 };
 
@@ -211,12 +211,12 @@ export const mapEstadoPartidoToBackend = (
   estado?: Partido['estado'] | BackendPartido['estado'],
 ): BackendPartido['estado'] => {
   switch (estado) {
-    case 'pendiente':
     case 'programado':
+    case 'pendiente':
     case undefined:
       return 'programado';
-    case 'confirmado':
     case 'en_juego':
+    case 'confirmado':
       return 'en_juego';
     case 'finalizado':
       return 'finalizado';

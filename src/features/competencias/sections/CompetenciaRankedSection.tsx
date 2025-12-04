@@ -63,7 +63,7 @@ export default function CompetenciaRankedSection({
 
         // all players (for adding or broader selection)
         const all = await listJugadores(200);
-        const mappedAll = (all as any[])
+        const mappedAll = (Array.isArray(all) ? all : [])
           .map((j: any) => {
             const nombre = [j?.nombre, j?.apellido].filter(Boolean).join(' ') || j?.apodo || j?._id || '';
             return { _id: j?._id as string, nombre };

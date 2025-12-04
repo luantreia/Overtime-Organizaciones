@@ -66,8 +66,8 @@ const EstadisticasOrgPage = () => {
 
   const resumen = useMemo(() => {
     const finalizados = partidosFiltrados.filter((p) => p.estado === 'finalizado');
-    const pendientes = partidosFiltrados.filter((p) => p.estado === 'pendiente');
-    const confirmados = partidosFiltrados.filter((p) => p.estado === 'confirmado');
+    const pendientes = partidosFiltrados.filter((p) => p.estado === 'programado');
+    const confirmados = partidosFiltrados.filter((p) => p.estado === 'en_juego');
 
     const wins = finalizados.filter(
       (p) => (p.resultado?.puntosEquipo ?? 0) > (p.resultado?.puntosRival ?? 0),

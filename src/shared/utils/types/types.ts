@@ -141,7 +141,7 @@ export interface EquipoCompetencia {
 // TIPOS DE PARTIDOS
 // ========================================
 
-export type EstadoPartido = 'pendiente' | 'confirmado' | 'finalizado' | 'cancelado';
+export type EstadoPartido = 'programado' | 'en_juego' | 'finalizado' | 'cancelado' | 'proximamente';
 
 export interface SetPartido {
   _id: string;
@@ -169,6 +169,18 @@ export interface Partido {
     puntosEquipo: number;
     puntosRival: number;
   };
+  equipoLocal?: {
+    id: string;
+    nombre: string;
+    escudo?: string;
+  };
+  equipoVisitante?: {
+    id: string;
+    nombre: string;
+    escudo?: string;
+  };
+  marcadorLocal?: number;
+  marcadorVisitante?: number;
   sets?: SetPartido[];
 }
 
