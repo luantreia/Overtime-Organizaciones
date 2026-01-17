@@ -84,3 +84,9 @@ export async function resetAllRankings() {
     method: 'POST',
   });
 }
+
+export async function recalculateGlobalRankings() {
+  return authFetch<{ ok: boolean; message: string }>(`${BASE}/recalculate-global`, {
+    method: 'POST',
+  });
+}

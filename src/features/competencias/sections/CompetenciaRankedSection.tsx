@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { autoAssign, assignTeams, createRankedMatch, finalizeMatch, getLeaderboard, markMatchAsRanked, listJugadores, revertMatch, deleteRankedMatch, resetAllRankings, resetScopeRankings } from '../../ranked/services/rankedService';
+import { autoAssign, assignTeams, createRankedMatch, finalizeMatch, getLeaderboard, markMatchAsRanked, listJugadores, revertMatch, deleteRankedMatch, resetAllRankings, resetScopeRankings, recalculateGlobalRankings } from '../../ranked/services/rankedService';
 import { crearJugadorCompetencia, listJugadoresCompetencia, eliminarJugadorCompetencia } from '../../jugadores/services/jugadorCompetenciaService';
 import { listTemporadasByCompetencia, type BackendTemporada } from '../services';
 
@@ -359,6 +359,19 @@ export default function CompetenciaRankedSection({
     } finally { setBusy(false); }
   }
 
+  async function onRecalculateGlobalRankings() {
+    if (!window.confirm('¿Estás seguro de que deseas volver a generar el ranking y ELO global? Esta operación puede ser intensiva.')) return;
+    setBusy(true); setError(null);
+    try {
+      await recalculateGlobalRankings();
+      alert('Ranking y ELO global regenerado con éxito.');
+      // Optionally, refresh leaderboard after recalculation
+      // refreshLeaderboard(); 
+    } catch (e: any) {
+      setError(e.message || 'Error al regenerar ranking global');
+    } finally { setBusy(false); }
+  }
+
   const nameById = (id: string) => players.find((p) => p._id === id)?.nombre || id;
 
   return (
@@ -600,13 +613,22 @@ export default function CompetenciaRankedSection({
           Borra TODOS los PlayerRating, MatchPlayer de TODO EL SISTEMA y marca todos los partidos ranked como no-aplicados. 
           Útil si los ratings quedaron inconsistentes por errores globales. Tendrás que volver a finalizar cada partido ranked de todas las competencias.
         </p>
-        <button 
-          onClick={onResetAllRankings} 
-          disabled={busy} 
-          className="rounded-md border-2 border-red-500 bg-red-100 px-4 py-2 text-sm font-semibold text-red-800 hover:bg-red-200 disabled:opacity-50"
-        >
-          Resetear TODOS los rankings del sistema
-        </button>
+        <div className="flex gap-2">
+          <button 
+            onClick={onResetAllRankings} 
+            disabled={busy} 
+            className="rounded-md border-2 border-red-500 bg-red-100 px-4 py-2 text-sm font-semibold text-red-800 hover:bg-red-200 disabled:opacity-50"
+          >
+            Resetear TODOS los rankings del sistema
+          </button>
+          <button
+            className="rounded-md border-2 border-orange-500 bg-orange-100 px-4 py-2 text-sm font-semibold text-orange-800 hover:bg-orange-200 disabled:opacity-50"
+            onClick={onRecalculateGlobalRankings}
+            disabled={busy}
+          >
+            Regenerar Ranking Global
+          </button>
+        </div>
       </section>
     </div>
   );
