@@ -1,11 +1,7 @@
 import { useOrganizacion } from '../../../app/providers/OrganizacionContext';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import PartidoCard from '../../../shared/components/PartidoCard/PartidoCard';
 import {
-  actualizarPartido,
-  getAlineacion,
-  getPartido,
-  getPartidos,
   getPartidosPorFase,
   getPartidosPorCompetencia,
 } from '../services/partidoService';
@@ -24,11 +20,8 @@ const PartidosPage = () => {
   const token = useToken();
   const { organizacionSeleccionada } = useOrganizacion();
   const { addToast } = useToast();
-  const [seleccionado, setSeleccionado] = useState<Partido | null>(null);
   const [todos, setTodos] = useState<Partido[]>([]);
-  const [alineacion, setAlineacion] = useState<JugadorPartido[]>([]);
   const [loading, setLoading] = useState(false);
-  const [detalleLoading, setDetalleLoading] = useState(false);
   const [modalAdminAbierto, setModalAdminAbierto] = useState(false);
   const [partidoAdminId, setPartidoAdminId] = useState<string | null>(null);
   const [alineacionModalAbierto, setAlineacionModalAbierto] = useState(false);
@@ -75,12 +68,11 @@ const PartidosPage = () => {
     } finally {
       setLoading(false);
     }
-  }, [competenciaId, faseId, organizacionSeleccionada?.id]);
+  }, [competenciaId, faseId, organizacionSeleccionada?.id, addToast]);
 
   useEffect(() => {
     if (!competenciaId && !faseId && !organizacionSeleccionada?.id) {
       setTodos([]);
-      setSeleccionado(null);
       return;
     }
     void refreshPartidos();
@@ -126,20 +118,11 @@ const PartidosPage = () => {
 
   const handleSeleccionar = async (partidoId: string) => {
     try {
-      setDetalleLoading(true);
-      const [detalle, jugadores] = await Promise.all([
-        getPartido(partidoId),
-        getAlineacion(partidoId),
-      ]);
-      setSeleccionado(detalle);
-      setAlineacion(jugadores);
       setPartidoAdminId(partidoId);
       setModalAdminAbierto(true);
     } catch (error) {
       console.error(error);
       addToast({ type: 'error', title: 'Error', message: 'No pudimos cargar el detalle del partido' });
-    } finally {
-      setDetalleLoading(false);
     }
   };
 
@@ -164,7 +147,7 @@ const PartidosPage = () => {
   };
 
   const handleAlineacionActualizada = (jugadores: JugadorPartido[]) => {
-    setAlineacion(jugadores);
+    // setAlineacion(jugadores); // No longer needed as we don't store local alignment state
   };
 
   return (
