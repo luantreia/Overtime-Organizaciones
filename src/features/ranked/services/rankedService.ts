@@ -71,3 +71,16 @@ export async function revertMatch(partidoId: string) {
     method: 'POST',
   });
 }
+
+export async function resetScopeRankings(params: { competenciaId: string; temporadaId?: string; modalidad: string; categoria: string }) {
+  return authFetch<{ ok: boolean; message: string; deleted: { playerRatings: number; matchPlayers: number }; updated: { matches: number } }>(`${BASE}/reset-scope`, {
+    method: 'POST',
+    body: params,
+  });
+}
+
+export async function resetAllRankings() {
+  return authFetch<{ ok: boolean; message: string }>(`${BASE}/dev/reset-all`, {
+    method: 'POST',
+  });
+}

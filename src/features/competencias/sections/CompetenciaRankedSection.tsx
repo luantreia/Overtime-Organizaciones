@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { autoAssign, assignTeams, createRankedMatch, finalizeMatch, getLeaderboard, markMatchAsRanked, listJugadores, revertMatch, deleteRankedMatch } from '../../ranked/services/rankedService';
+import { autoAssign, assignTeams, createRankedMatch, finalizeMatch, getLeaderboard, markMatchAsRanked, listJugadores, revertMatch, deleteRankedMatch, resetAllRankings, resetScopeRankings } from '../../ranked/services/rankedService';
 import { crearJugadorCompetencia, listJugadoresCompetencia, eliminarJugadorCompetencia } from '../../jugadores/services/jugadorCompetenciaService';
 import { listTemporadasByCompetencia, type BackendTemporada } from '../services';
 
@@ -270,6 +270,56 @@ export default function CompetenciaRankedSection({
     } finally { setBusy(false); }
   }
 
+  async function onResetAllRankings() {
+    if (!window.confirm('⚠️ ADVERTENCIA: Esto eliminará TODOS los rankings (PlayerRating, MatchPlayer) y marcará todos los partidos ranked como no-aplicados. Tendrás que volver a finalizar cada partido. ¿Continuar?')) return;
+    setBusy(true); setError(null);
+    try {
+      await resetAllRankings();
+      // refresh leaderboard (debería estar vacío)
+      const lb = await getLeaderboard({ 
+        modalidad: modalidad as string, 
+        categoria: categoria as string, 
+        competition: competenciaId, 
+        season: selectedTemporada || undefined,
+        limit: 20 
+      });
+      setBoard(lb.items);
+      alert('Todos los rankings han sido reseteados. Los partidos ranked existentes deben ser finalizados nuevamente.');
+    } catch (e: any) {
+      setError(e.message || 'Error reseteando rankings');
+    } finally { setBusy(false); }
+  }
+
+  async function onResetScopeRankings() {
+    if (!modalidad || !categoria) {
+      setError('Se requiere modalidad y categoría para resetear el scope');
+      return;
+    }
+    const scope = `${modalidad} - ${categoria}${selectedTemporada ? ` - Temporada seleccionada` : ' - Sin temporada'}`;
+    if (!window.confirm(`⚠️ Esto eliminará los rankings solo de: ${scope} en esta competencia. ¿Continuar?`)) return;
+    setBusy(true); setError(null);
+    try {
+      const result = await resetScopeRankings({
+        competenciaId,
+        temporadaId: selectedTemporada || undefined,
+        modalidad: modalidad as string,
+        categoria: categoria as string
+      });
+      // refresh leaderboard
+      const lb = await getLeaderboard({ 
+        modalidad: modalidad as string, 
+        categoria: categoria as string, 
+        competition: competenciaId, 
+        season: selectedTemporada || undefined,
+        limit: 20 
+      });
+      setBoard(lb.items);
+      alert(`Scope reseteado: ${result.deleted.playerRatings} ratings, ${result.deleted.matchPlayers} participaciones, ${result.updated.matches} partidos desmarcados.`);
+    } catch (e: any) {
+      setError(e.message || 'Error reseteando scope');
+    } finally { setBusy(false); }
+  }
+
   async function onEliminarJugador(playerId: string) {
     if (!competenciaId) return;
     const player = compPlayers.find(p => p._id === playerId);
@@ -527,6 +577,36 @@ export default function CompetenciaRankedSection({
           <button onClick={onRevertMatch} disabled={busy || !revertId.trim()} className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 hover:bg-red-100">Revertir Stats</button>
         </div>
         <p className="mt-1 text-xs text-slate-500">Esto restará los puntos ganados/perdidos a los jugadores y eliminará el registro del historial.</p>
+      </section>
+
+      <section className="rounded-lg border border-amber-300 bg-amber-50 p-4">
+        <h2 className="mb-2 text-sm font-semibold text-amber-800">🎯 Reset de esta competencia/temporada</h2>
+        <p className="mb-3 text-xs text-amber-700">
+          Resetea solo los rankings de: <strong>{modalidad} - {categoria}</strong>{selectedTemporada ? ' en la temporada seleccionada' : ' (sin temporada)'}.
+          Los partidos ranked de este scope serán desmarcados y tendrás que finalizarlos nuevamente.
+        </p>
+        <button 
+          onClick={onResetScopeRankings} 
+          disabled={busy || !modalidad || !categoria} 
+          className="rounded-md border-2 border-amber-500 bg-amber-100 px-4 py-2 text-sm font-semibold text-amber-800 hover:bg-amber-200 disabled:opacity-50"
+        >
+          Resetear este scope
+        </button>
+      </section>
+
+      <section className="rounded-lg border border-red-300 bg-red-50 p-4">
+        <h2 className="mb-2 text-sm font-semibold text-red-800">⚠️ Reset completo de rankings (Peligroso)</h2>
+        <p className="mb-3 text-xs text-red-700">
+          Borra TODOS los PlayerRating, MatchPlayer de TODO EL SISTEMA y marca todos los partidos ranked como no-aplicados. 
+          Útil si los ratings quedaron inconsistentes por errores globales. Tendrás que volver a finalizar cada partido ranked de todas las competencias.
+        </p>
+        <button 
+          onClick={onResetAllRankings} 
+          disabled={busy} 
+          className="rounded-md border-2 border-red-500 bg-red-100 px-4 py-2 text-sm font-semibold text-red-800 hover:bg-red-200 disabled:opacity-50"
+        >
+          Resetear TODOS los rankings del sistema
+        </button>
       </section>
     </div>
   );
