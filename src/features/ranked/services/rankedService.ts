@@ -37,6 +37,12 @@ export async function getRankedMatch(partidoId: string) {
   return authFetch<{ ok: boolean; partido: any; teams: any[] }>(`${BASE}/match/${partidoId}`);
 }
 
+export async function deleteRankedMatch(partidoId: string) {
+  return authFetch<{ ok: boolean }>(`/api/partidos/${partidoId}`, {
+    method: 'DELETE',
+  });
+}
+
 export async function getLeaderboard(params: { modalidad: string; categoria: string; competition?: string; season?: string; minMatches?: number; limit?: number }) {
   const sp = new URLSearchParams({
     modalidad: params.modalidad,

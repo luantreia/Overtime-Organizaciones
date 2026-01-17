@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { autoAssign, assignTeams, createRankedMatch, finalizeMatch, getLeaderboard, markMatchAsRanked, listJugadores, revertMatch } from '../../ranked/services/rankedService';
+import { autoAssign, assignTeams, createRankedMatch, finalizeMatch, getLeaderboard, markMatchAsRanked, listJugadores, revertMatch, deleteRankedMatch } from '../../ranked/services/rankedService';
 import { crearJugadorCompetencia, listJugadoresCompetencia, eliminarJugadorCompetencia } from '../../jugadores/services/jugadorCompetenciaService';
 import { listTemporadasByCompetencia, type BackendTemporada } from '../services';
 
@@ -177,6 +177,18 @@ export default function CompetenciaRankedSection({
     } finally { setBusy(false); }
   }
 
+  async function onCancel() {
+    if (!matchId) return;
+    if (!window.confirm('¿Estás seguro de que deseas eliminar este partido? No se aplicarán cambios a los ratings.')) return;
+    setBusy(true); setError(null);
+    try {
+      await deleteRankedMatch(matchId);
+      setMatchId(null); setSelected([]); setRojo([]); setAzul([]); setScore({ local: 0, visitante: 0 });
+    } catch (e: any) {
+      setError(e.message || 'Error eliminando partido');
+    } finally { setBusy(false); }
+  }
+
   async function onSaveAssign() {
     if (!matchId) return;
     setBusy(true); setError(null);
@@ -340,7 +352,12 @@ export default function CompetenciaRankedSection({
                 type="button"
                 onClick={() => { setMatchId(null); setSelected([]); setRojo([]); setAzul([]); setScore({ local: 0, visitante: 0 }); }}
                 className="rounded-md border px-3 py-2 text-sm"
-              >Nuevo partido</button>
+              >Abandonar (No borrar)</button>
+              <button
+                type="button"
+                onClick={onCancel}
+                className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600 hover:bg-red-100"
+              >Eliminar partido</button>
             </>
           )}
         </div>
