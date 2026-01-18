@@ -27,7 +27,6 @@ const TOKEN_STORAGE_KEY = 'overtime_token';
 const REFRESH_TOKEN_STORAGE_KEY = 'overtime_refresh_token';
 
 const getStoredToken = () => localStorage.getItem(TOKEN_STORAGE_KEY);
-const getStoredRefreshToken = () => localStorage.getItem(REFRESH_TOKEN_STORAGE_KEY);
 
 const setStoredToken = (token: string | null) => {
   if (token) {
@@ -54,7 +53,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [token, setToken] = useState<string | null>(() => getStoredToken());
-  const [refreshToken, setRefreshToken] = useState<string | null>(() => getStoredRefreshToken());
 
   const handleProfileLoad = useCallback(async () => {
     try {
@@ -68,7 +66,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       setStoredToken(null);
       setStoredRefreshToken(null);
       setToken(null);
-      setRefreshToken(null);
     } finally {
       setLoading(false);
     }
@@ -89,7 +86,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       setStoredToken(accessToken);
       setStoredRefreshToken(rt);
       setToken(accessToken);
-      setRefreshToken(rt ?? null);
       setUser(user);
       setError(null);
     } catch (err) {
@@ -99,7 +95,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       setStoredToken(null);
       setStoredRefreshToken(null);
       setToken(null);
-      setRefreshToken(null);
       throw err;
     } finally {
       setLoading(false);
@@ -111,7 +106,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     setStoredRefreshToken(null);
     setUser(null);
     setToken(null);
-    setRefreshToken(null);
   }, []);
 
   const refreshProfile = useCallback(async () => {

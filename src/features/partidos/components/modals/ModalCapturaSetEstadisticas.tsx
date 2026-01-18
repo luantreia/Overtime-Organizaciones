@@ -52,10 +52,6 @@ const ModalCapturaSetEstadisticas = ({
   const [mapJpToStatId, setMapJpToStatId] = useState<Record<string, string>>({});
 
   const setsOrdenados = useMemo(() => [...sets].sort((a, b) => a.numeroSet - b.numeroSet), [sets]);
-  const setActual = useMemo(
-    () => setsOrdenados.find((s) => String(s.numeroSet) === numeroSetSeleccionado),
-    [setsOrdenados, numeroSetSeleccionado],
-  );
 
   const cargarSets = useCallback(async () => {
     try {
@@ -144,7 +140,7 @@ const ModalCapturaSetEstadisticas = ({
     return () => {
       cancelado = true;
     };
-  }, [isOpen, partidoId, partido?.equipoLocal, partido?.equipoVisitante]);
+  }, [isOpen, partidoId, partido]);
 
   // Cargar estadísticas del set seleccionado y prellenar filas (incluye JugadorPartido sin stats con ceros)
   useEffect(() => {
@@ -209,7 +205,7 @@ const ModalCapturaSetEstadisticas = ({
     return () => {
       cancelado = true;
     };
-  }, [isOpen, numeroSetSeleccionado, partido?.equipoLocal, partido?.equipoVisitante, sets, opcionesLocal, opcionesVisitante, mapJugadorToJp]);
+  }, [isOpen, numeroSetSeleccionado, partido, sets, opcionesLocal, opcionesVisitante, mapJugadorToJp]);
 
   const equiposDelSet = useMemo(() => {
     const localId = extractEquipoId(partido?.equipoLocal) ?? 'local';

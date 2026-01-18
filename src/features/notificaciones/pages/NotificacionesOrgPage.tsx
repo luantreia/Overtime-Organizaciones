@@ -2,7 +2,6 @@ import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { getSolicitudesEdicion, actualizarSolicitudEdicion, getSolicitudAprobadores } from '../../../shared/features/solicitudes/services/solicitudesEdicionService';
 import { useToast } from '../../../shared/components/Toast/ToastProvider';
-import { useAuth } from '../../../app/providers/AuthContext';
 import { useOrganizacion } from '../../../app/providers/OrganizacionContext';
 import SolicitudEditModalSimple from '../../../shared/features/solicitudes/components/SolicitudEditModalSimple';
 import type { SolicitudEdicion, SolicitudEdicionTipo, SolicitudEdicionEstado } from '../../../shared/features/solicitudes/types/solicitudesEdicion';
@@ -54,7 +53,6 @@ const labelTipo = (t: SolicitudEdicionTipo) => {
 
 export default function NotificacionesPage() {
   const { addToast } = useToast();
-  const { user } = useAuth();
   const { organizacionSeleccionada } = useOrganizacion();
   const [searchParams, setSearchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
@@ -75,7 +73,7 @@ export default function NotificacionesPage() {
   const [fMostrarSoloMias, setFMostrarSoloMias] = useState<boolean>(
     searchParams.get('soloMias') === 'true'
   );
-  const [fEntidad, setFEntidad] = useState<string>(searchParams.get('entidad') || 'todas');
+  const [fEntidad] = useState<string>(searchParams.get('entidad') || 'todas');
 
   const cargar = useCallback(async () => {
     try {
@@ -352,7 +350,6 @@ export default function NotificacionesPage() {
 interface AprobarButtonProps { solicitud: SolicitudEdicion; accionando: string | null; onAprobar: () => void; }
 const AprobarButton: React.FC<AprobarButtonProps> = ({ solicitud, accionando, onAprobar }) => {
   const { addToast } = useToast();
-  const { user } = useAuth();
   const [puedeAprobar, setPuedeAprobar] = useState<boolean | null>(null);
   const [loadingAprobadores, setLoadingAprobadores] = useState(false);
 

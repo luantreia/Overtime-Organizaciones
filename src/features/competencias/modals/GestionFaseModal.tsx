@@ -7,7 +7,6 @@ import FasePlayoffSection from './sections/FasePlayoffSection';
 import { updateParticipacionFase, deleteParticipacionFase } from '../services/participacionFaseService';
 import { getPartidosPorFase, crearPartidoCompetencia } from '../../partidos/services/partidoService';
 import type { Partido } from '../../../types';
-import HelpBadge from '../../../shared/components/HelpBadge/HelpBadge';
 import ModalInformacionPartido from '../../partidos/components/modals/ModalInformacionPartido';
 import ModalAlineacionPartido from '../../partidos/components/modals/ModalAlineacionPartido';
 import ModalGestionSets from '../../partidos/components/modals/ModalGestionSets';
@@ -25,15 +24,6 @@ type Props = {
   onAgregar: (faseId: string, ptId: string, opts?: { grupo?: string; division?: string }) => void | Promise<void>;
   onGenerarLlave?: (faseId: string) => void | Promise<void>;
 };
-
-function equipoNombreFromPf(pf: BackendParticipacionFase): string {
-  const pt: any = (pf as any).participacionTemporada;
-  if (!pt) return pf._id;
-  if (typeof pt === 'string') return pt;
-  const eq = pt.equipo;
-  if (typeof eq === 'string') return eq;
-  return (eq && (eq as any).nombre) || pf._id;
-}
 
 export default function GestionParticipantesFaseModal({ isOpen, onClose, esAdmin, fase, temporadaId, participantesFase, participantesTemporada, onAgregar, onGenerarLlave }: Props) {
   const [seleccionPT, setSeleccionPT] = useState('');
@@ -95,18 +85,6 @@ export default function GestionParticipantesFaseModal({ isOpen, onClose, esAdmin
   const opcionesAgregar = useMemo(() => (participantesTemporada || []).filter((pt) => !existentes.has(pt._id)), [participantesTemporada, existentes]);
 
   const tipo = (fase as any)?.tipo as string | undefined;
-
-  const divisiones = useMemo(() => {
-    const set = new Set<string>();
-    (items || []).forEach((pf: any) => { if (pf?.division) set.add(pf.division); });
-    return Array.from(set);
-  }, [items]);
-
-  const grupos = useMemo(() => {
-    const set = new Set<string>();
-    (items || []).forEach((pf: any) => { if (pf?.grupo) set.add(pf.grupo); });
-    return Array.from(set);
-  }, [items]);
 
   const partidosOrdenados = useMemo(() => {
     const toTime = (p: Partido) => {

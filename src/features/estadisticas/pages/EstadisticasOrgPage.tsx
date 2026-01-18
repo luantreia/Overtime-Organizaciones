@@ -31,7 +31,7 @@ const EstadisticasOrgPage = () => {
     };
     run();
     return () => { cancel = true; };
-  }, [organizacionSeleccionada?.id]);
+  }, [organizacionSeleccionada?.id, competenciaId]);
 
   useEffect(() => {
     if (!competenciaId) {
@@ -63,49 +63,6 @@ const EstadisticasOrgPage = () => {
     if (!fase) return partidos;
     return partidos.filter((p) => (p.etapa ?? '') === fase);
   }, [partidos, fase]);
-
-  const resumen = useMemo(() => {
-    const finalizados = partidosFiltrados.filter((p) => p.estado === 'finalizado');
-    const pendientes = partidosFiltrados.filter((p) => p.estado === 'programado');
-    const confirmados = partidosFiltrados.filter((p) => p.estado === 'en_juego');
-
-    const wins = finalizados.filter(
-      (p) => (p.resultado?.puntosEquipo ?? 0) > (p.resultado?.puntosRival ?? 0),
-    ).length;
-    const draws = finalizados.filter(
-      (p) => (p.resultado?.puntosEquipo ?? 0) === (p.resultado?.puntosRival ?? 0),
-    ).length;
-    const losses = finalizados.filter(
-      (p) => (p.resultado?.puntosEquipo ?? 0) < (p.resultado?.puntosRival ?? 0),
-    ).length;
-
-    const puntosFavor = finalizados.reduce(
-      (acc, p) => acc + (p.resultado?.puntosEquipo ?? 0),
-      0,
-    );
-    const puntosContra = finalizados.reduce(
-      (acc, p) => acc + (p.resultado?.puntosRival ?? 0),
-      0,
-    );
-    const diferencia = puntosFavor - puntosContra;
-
-    const efectividad = finalizados.length
-      ? Math.round((wins / finalizados.length) * 100)
-      : 0;
-
-    return {
-      finalizados: finalizados.length,
-      pendientes: pendientes.length,
-      confirmados: confirmados.length,
-      puntosFavor,
-      puntosContra,
-      diferencia,
-      efectividad,
-      w: wins,
-      d: draws,
-      l: losses,
-    };
-  }, [partidosFiltrados]);
 
   if (!organizacionSeleccionada) {
     return (

@@ -2,7 +2,6 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import PerfilPage from './features/perfil/pages/PerfilPage';
 import LoginPage from './features/auth/pages/LoginPage';
 import ProtectedRoute from './app/routes/ProtectedRoute';
-import { useAuth } from './app/providers/AuthContext';
 import OrganizacionPage from './features/organizacion/pages/OrganizacionPage';
 import Navbar from './app/layout/Navbar';
 import DashboardOrgPage from './features/dashboard/pages/DashboardOrgPage';
@@ -12,19 +11,7 @@ import NotificacionesOrgPage from './features/notificaciones/pages/Notificacione
 import CompetenciasOrgPage from './features/competencias/pages/CompetenciasOrgPage';
 import CompetenciaDetallePage from './features/competencias/pages/CompetenciaDetallePage';
 
-const navLinks = [
-  { to: '/dashboard', label: 'Dashboard' },
-  { to: '/organizacion', label: 'Organización' },
-  { to: '/competencias', label: 'Competencias' },
-  { to: '/partidos', label: 'Partidos' },
-  { to: '/estadisticas', label: 'Estadísticas' },
-  { to: '/notificaciones', label: 'Notificaciones' },
-  { to: '/perfil', label: 'Perfil' },
-];
-
 const App = () => {
-  const { isAuthenticated, logout } = useAuth();
-
   return (
     <div className="flex min-h-screen flex-col bg-slate-50">
       <Navbar />

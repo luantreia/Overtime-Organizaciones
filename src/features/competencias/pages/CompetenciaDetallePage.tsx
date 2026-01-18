@@ -38,10 +38,6 @@ const CompetenciaDetallePage = () => {
   const [partidos, setPartidos] = useState<Partido[]>([]);
   const [filtroEstado, setFiltroEstado] = useState<string>('');
 
-  const [tempNombre, setTempNombre] = useState('Temporada');
-  const [tempFechaInicio, setTempFechaInicio] = useState('');
-  const [tempFechaFin, setTempFechaFin] = useState('');
-
   // participaciones
   const [participacionesTemporada, setParticipacionesTemporada] = useState<Record<string, BackendParticipacionTemporada[]>>({});
   const [participacionesFase, setParticipacionesFase] = useState<Record<string, BackendParticipacionFase[]>>({});
@@ -125,23 +121,6 @@ const CompetenciaDetallePage = () => {
     };
     void run();
   }, [competenciaId]);
-
-  const onCrearTemporada = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!competenciaId || !tempNombre || !tempFechaInicio) return;
-    await crearTemporada({ competencia: competenciaId, nombre: tempNombre, fechaInicio: tempFechaInicio, fechaFin: tempFechaFin });
-    // refresh
-    const temps = await listTemporadasByCompetencia(competenciaId);
-    setTemporadas(temps);
-  };
-
-  const onCrearFase = async (temporadaId: string) => {
-    const nombre = window.prompt('Nombre de la fase:') || '';
-    if (!nombre) return;
-    await crearFase({ temporada: temporadaId, nombre });
-    const fases = await listFasesByTemporada(temporadaId);
-    setFasesPorTemporada((prev) => ({ ...prev, [temporadaId]: fases }));
-  };
 
   const onGenerarFixture = async (faseId: string) => {
     await generarFixture(faseId);

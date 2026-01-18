@@ -223,7 +223,7 @@ export const ModalAlineacionPartido = ({
     return () => {
       isActive = false;
     };
-  }, [equipoId, isOpen, partidoId]);
+  }, [equipoId, isOpen, partidoId, addToast]);
 
   const handleChangeRol = (jugadorId: string, rol: RolAlineacion) => {
     setRolesPorJugador((prev) => ({
@@ -524,7 +524,7 @@ export const ModalAlineacionPartido = ({
                         <div className="flex w-1/2 flex-wrap items-center justify-end gap-2">
                           {snap ? (
                             <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ${snap.delta && snap.delta > 0 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : snap.delta && snap.delta < 0 ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-slate-50 text-slate-700 border border-slate-200'}`}>
-                              {snap.pre ?? '—'} → {snap.post ?? '—'} ({snap.delta ?? 0 >= 0 ? '+' : ''}{snap.delta ?? 0})
+                              {snap.pre ?? '—'} → {snap.post ?? '—'} ({(snap.delta ?? 0) >= 0 ? '+' : ''}{snap.delta ?? 0})
                             </span>
                           ) : (
                             <span className="text-xs text-slate-500">Sin datos de rating</span>
@@ -551,7 +551,7 @@ export const ModalAlineacionPartido = ({
                         <div className="flex w-1/2 flex-wrap items-center justify-end gap-2">
                           {snap ? (
                             <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ${snap.delta && snap.delta > 0 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : snap.delta && snap.delta < 0 ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-slate-50 text-slate-700 border border-slate-200'}`}>
-                              {snap.pre ?? '—'} → {snap.post ?? '—'} ({snap.delta ?? 0 >= 0 ? '+' : ''}{snap.delta ?? 0})
+                              {snap.pre ?? '—'} → {snap.post ?? '—'} ({(snap.delta ?? 0) >= 0 ? '+' : ''}{snap.delta ?? 0})
                             </span>
                           ) : (
                             <span className="text-xs text-slate-500">Sin datos de rating</span>
