@@ -43,8 +43,27 @@ const DashboardOrgPage = () => {
     <div className="space-y-8">
       <header className="flex flex-col gap-2">
         <h1 className="text-2xl font-semibold text-slate-900">{organizacionSeleccionada.nombre}</h1>
-        <p className="text-sm text-slate-500">Resumen de competencias</p>
+        <p className="text-sm text-slate-500">Resumen y accesos directos</p>
       </header>
+
+      <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <a href="/competencias" className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white p-6 shadow-card transition hover:border-brand-300 hover:bg-brand-50">
+          <span className="text-2xl">🏆</span>
+          <span className="font-semibold text-slate-900">Competencias</span>
+        </a>
+        <a href="/partidos" className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white p-6 shadow-card transition hover:border-brand-300 hover:bg-brand-50">
+          <span className="text-2xl">📅</span>
+          <span className="font-semibold text-slate-900">Partidos</span>
+        </a>
+        <a href="/estadisticas" className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white p-6 shadow-card transition hover:border-brand-300 hover:bg-brand-50">
+          <span className="text-2xl">📊</span>
+          <span className="font-semibold text-slate-900">Estadísticas</span>
+        </a>
+        <a href="/notificaciones" className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white p-6 shadow-card transition hover:border-brand-300 hover:bg-brand-50">
+          <span className="text-2xl">🔔</span>
+          <span className="font-semibold text-slate-900">Notificaciones</span>
+        </a>
+      </section>
 
       {loading ? (
         <p className="text-sm text-slate-500">Cargando…</p>

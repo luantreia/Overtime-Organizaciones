@@ -46,16 +46,6 @@ const OrganizacionPage = () => {
         </div>
 
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-card">
-          <h2 className="text-lg font-semibold text-slate-900">Accesos rápidos</h2>
-          <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
-            <a href="/competencias" className="rounded-lg border border-slate-200 bg-white px-4 py-3 text-center font-medium text-slate-700 hover:bg-slate-50">Competencias</a>
-            <a href="/partidos" className="rounded-lg border border-slate-200 bg-white px-4 py-3 text-center font-medium text-slate-700 hover:bg-slate-50">Partidos</a>
-            <a href="/estadisticas" className="rounded-lg border border-slate-200 bg-white px-4 py-3 text-center font-medium text-slate-700 hover:bg-slate-50">Estadísticas</a>
-            <a href="/notificaciones" className="rounded-lg border border-slate-200 bg-white px-4 py-3 text-center font-medium text-slate-700 hover:bg-slate-50">Notificaciones</a>
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-card">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-slate-900">Administradores</h2>
             <button
