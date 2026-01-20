@@ -154,25 +154,59 @@ const PartidosPage = () => {
     <div className="space-y-8">
       <header className="flex flex-col gap-2">
         <h1 className="text-2xl font-semibold text-slate-900">Partidos</h1>
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-wrap items-center gap-2 text-sm text-slate-500">
-            <span>Filtros:</span>
-            <select className="rounded border border-slate-200 bg-white px-2 py-1 text-xs" value={competenciaId} onChange={(e)=> setCompetenciaId(e.target.value)}>
-              <option value="">Competencia…</option>
+        <p className="text-sm text-slate-500">
+          Gestioná los encuentros de las competencias de {organizacionSeleccionada?.nombre}
+        </p>
+      </header>
+
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-card">
+        <div className="grid gap-4 md:grid-cols-4 items-end">
+          <div>
+            <label className="mb-1 block text-xs font-medium text-slate-600">Competencia</label>
+            <select 
+              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm" 
+              value={competenciaId} 
+              onChange={(e)=> setCompetenciaId(e.target.value)}
+            >
+              <option value="">Todas las competencias</option>
               {competencias.map(c => (<option key={c._id} value={c._id}>{c.nombre || c._id}</option>))}
             </select>
-            <select className="rounded border border-slate-200 bg-white px-2 py-1 text-xs" value={temporadaId} onChange={(e)=> setTemporadaId(e.target.value)} disabled={!competenciaId}>
-              <option value="">Temporada…</option>
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium text-slate-600">Temporada</label>
+            <select 
+              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm" 
+              value={temporadaId} 
+              onChange={(e)=> setTemporadaId(e.target.value)} 
+              disabled={!competenciaId}
+            >
+              <option value="">Todas las temporadas</option>
               {temporadas.map(t => (<option key={t._id} value={t._id}>{t.nombre || t._id}</option>))}
             </select>
-            <select className="rounded border border-slate-200 bg-white px-2 py-1 text-xs" value={faseId} onChange={(e)=> setFaseId(e.target.value)} disabled={!temporadaId}>
-              <option value="">Fase…</option>
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium text-slate-600">Fase / Etapa</label>
+            <select 
+              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm" 
+              value={faseId} 
+              onChange={(e)=> setFaseId(e.target.value)} 
+              disabled={!temporadaId}
+            >
+              <option value="">Todas las fases</option>
               {fases.map(f => (<option key={f._id} value={f._id}>{f.nombre || f._id}</option>))}
             </select>
-            <button type="button" className="rounded border border-slate-200 px-2 py-1 text-xs hover:bg-slate-50" onClick={()=>{ setCompetenciaId(''); setTemporadaId(''); setFaseId(''); setPage(1); }}>Limpiar filtros</button>
+          </div>
+          <div className="flex">
+            <button 
+              type="button" 
+              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 transition shadow-sm"
+              onClick={()=>{ setCompetenciaId(''); setTemporadaId(''); setFaseId(''); setPage(1); }}
+            >
+              Limpiar filtros
+            </button>
           </div>
         </div>
-      </header>
+      </section>
 
       {modalAdminAbierto && partidoAdminId ? (
         <ModalPartidoAdmin

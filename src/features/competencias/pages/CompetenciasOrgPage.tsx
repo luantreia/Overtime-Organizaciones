@@ -93,7 +93,7 @@ const CompetenciasOrgPage = () => {
       </header>
 
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-card">
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-4 items-end">
           <div className="md:col-span-2">
             <label className="mb-1 block text-xs font-medium text-slate-600">Buscar</label>
             <input
@@ -110,13 +110,22 @@ const CompetenciasOrgPage = () => {
               value={estado}
               onChange={(e) => { setEstado(e.target.value); setPage(1); }}
             >
-              <option value="">Todos</option>
+              <option value="">Todos los estados</option>
               <option value="en_creacion">En creación</option>
               <option value="programada">Programada</option>
               <option value="en_curso">En curso</option>
               <option value="finalizada">Finalizada</option>
               <option value="cancelada">Cancelada</option>
             </select>
+          </div>
+          <div className="flex">
+            <button 
+              type="button" 
+              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 transition shadow-sm"
+              onClick={()=>{ setBusqueda(''); setEstado(''); setPage(1); }}
+            >
+              Limpiar filtros
+            </button>
           </div>
         </div>
       </section>

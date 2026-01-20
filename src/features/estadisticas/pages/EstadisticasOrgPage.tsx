@@ -77,12 +77,14 @@ const EstadisticasOrgPage = () => {
     <div className="space-y-8">
       <header className="flex flex-col gap-2">
         <h1 className="text-2xl font-semibold text-slate-900">Estadísticas</h1>
-        <p className="text-sm text-slate-500">Resumen por competencia</p>
+        <p className="text-sm text-slate-500">
+          Analizá los resultados y el rendimiento de las competencias de {organizacionSeleccionada?.nombre}
+        </p>
       </header>
 
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-card">
-        <div className="grid gap-4 md:grid-cols-3">
-          <div>
+        <div className="grid gap-4 md:grid-cols-4 items-end">
+          <div className="md:col-span-2">
             <label className="mb-1 block text-xs font-medium text-slate-600">Competencia</label>
             <select
               className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
@@ -95,17 +97,26 @@ const EstadisticasOrgPage = () => {
             </select>
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-slate-600">Fase/Etapa</label>
+            <label className="mb-1 block text-xs font-medium text-slate-600">Fase / Etapa</label>
             <select
               className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
               value={fase}
               onChange={(e) => setFase(e.target.value)}
             >
-              <option value="">Todas</option>
+              <option value="">Todas las fases</option>
               {fasesDisponibles.map((f) => (
                 <option key={f} value={f}>{f}</option>
               ))}
             </select>
+          </div>
+          <div className="flex">
+            <button 
+              type="button" 
+              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 transition shadow-sm"
+              onClick={()=>{ setFase(''); }}
+            >
+              Limpiar fase
+            </button>
           </div>
         </div>
       </section>

@@ -193,43 +193,82 @@ export default function NotificacionesPage() {
   return (
     <>
       <div className="space-y-6">
-      <header className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold text-slate-900">Notificaciones</h1>
-          <p className="text-sm text-slate-500">Gestioná todas las solicitudes por categoría.</p>
+      <header className="flex flex-col gap-2">
+        <h1 className="text-2xl font-semibold text-slate-900">Notificaciones</h1>
+        <p className="text-sm text-slate-500">
+          Gestioná las solicitudes de edición y creación de {organizacionSeleccionada?.nombre}
+        </p>
+      </header>
+
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-card">
+        <div className="grid gap-4 md:grid-cols-4 items-end">
+          <div>
+            <label className="mb-1 block text-xs font-medium text-slate-600">Estado</label>
+            <select 
+              value={fEstado} 
+              onChange={(e) => setFEstado(e.target.value as any)} 
+              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
+            >
+              <option value="todos">Todos los estados</option>
+              <option value="pendiente">Pendiente</option>
+              <option value="aceptado">Aceptado</option>
+              <option value="rechazado">Rechazado</option>
+              <option value="cancelado">Cancelado</option>
+            </select>
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium text-slate-600">Categoría</label>
+            <select 
+              value={fCategoria} 
+              onChange={(e) => setFCategoria(e.target.value)} 
+              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
+            >
+              <option>Todas</option>
+              <option>Solicitudes de usuarios</option>
+              <option>Participaciones Temporada</option>
+              <option>Participaciones Jugador-Temporada</option>
+            </select>
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium text-slate-600">Buscar</label>
+            <input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Buscar por contenido…"
+              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
+            />
+          </div>
+          <div className="flex gap-2">
+            <button 
+              onClick={() => void cargar()} 
+              className="flex-1 rounded-lg bg-brand-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-700 transition"
+            >
+              🔄 Recargar
+            </button>
+          </div>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <select value={fEstado} onChange={(e) => setFEstado(e.target.value as any)} className="rounded-lg border-slate-300 text-sm">
-            <option value="todos">Todos los estados</option>
-            <option value="pendiente">Pendiente</option>
-            <option value="aceptado">Aceptado</option>
-            <option value="rechazado">Rechazado</option>
-            <option value="cancelado">Cancelado</option>
-          </select>
-          <select value={fCategoria} onChange={(e) => setFCategoria(e.target.value)} className="rounded-lg border-slate-300 text-sm">
-            <option>Todas</option>
-            <option>Solicitudes de usuarios</option>
-            <option>Participaciones Temporada</option>
-            <option>Participaciones Jugador-Temporada</option>
-          </select>
-          
-          <input
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Buscar…"
-            className="w-48 rounded-lg border-slate-300 text-sm"
-          />
-          <label className="inline-flex items-center gap-2 text-sm text-slate-600">
-            <input type="checkbox" checked={fMostrarSoloMias} onChange={(e) => setFMostrarSoloMias(e.target.checked)} />
+        
+        <div className="mt-4 flex flex-wrap gap-4 border-t border-slate-100 pt-4">
+          <label className="inline-flex cursor-pointer items-center gap-2 text-sm text-slate-600 hover:text-slate-900 transition">
+            <input 
+              type="checkbox" 
+              className="rounded border-slate-300 text-brand-600 focus:ring-brand-500"
+              checked={fMostrarSoloMias} 
+              onChange={(e) => setFMostrarSoloMias(e.target.checked)} 
+            />
             Solo mis solicitudes
           </label>
-          <label className="inline-flex items-center gap-2 text-sm text-slate-600">
-            <input type="checkbox" checked={autoRefresh} onChange={(e) => setAutoRefresh(e.target.checked)} />
+          <label className="inline-flex cursor-pointer items-center gap-2 text-sm text-slate-600 hover:text-slate-900 transition">
+            <input 
+              type="checkbox" 
+              className="rounded border-slate-300 text-brand-600 focus:ring-brand-500"
+              checked={autoRefresh} 
+              onChange={(e) => setAutoRefresh(e.target.checked)} 
+            />
             Auto-refresh 30s
           </label>
-          <button onClick={() => void cargar()} className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50">Recargar</button>
         </div>
-      </header>
+      </section>
 
       {loading ? (
         <div className="rounded-xl border border-slate-200 bg-white p-6 text-sm text-slate-600">Cargando…</div>
