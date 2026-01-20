@@ -17,6 +17,7 @@ const CompetenciasOrgPage = () => {
     tipo: 'liga',
   });
   const [creating, setCreating] = useState(false);
+  const [showForm, setShowForm] = useState(false);
   const [busqueda, setBusqueda] = useState('');
   const [estado, setEstado] = useState('');
   const [page, setPage] = useState(1);
@@ -56,6 +57,7 @@ const CompetenciasOrgPage = () => {
         descripcion: form.descripcion,
       });
       setForm({ modalidad: 'Foam', categoria: 'Mixto', tipo: 'liga' });
+      setShowForm(false);
       await refresh(organizacionSeleccionada.id);
     } finally {
       setCreating(false);
@@ -73,9 +75,21 @@ const CompetenciasOrgPage = () => {
 
   return (
     <div className="space-y-8">
-      <header className="flex flex-col gap-2">
-        <h1 className="text-2xl font-semibold text-slate-900">Competencias</h1>
-        <p className="text-sm text-slate-500">Gestioná competencias de {organizacionSeleccionada.nombre}</p>
+      <header className="flex items-center justify-between gap-4">
+        <div className="flex flex-col gap-2">
+          <h1 className="text-2xl font-semibold text-slate-900">Competencias</h1>
+          <p className="text-sm text-slate-500">Gestioná competencias de {organizacionSeleccionada.nombre}</p>
+        </div>
+        <button
+          onClick={() => setShowForm(!showForm)}
+          className={`inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition shadow-sm ${
+            showForm 
+              ? 'bg-slate-100 text-slate-700 hover:bg-slate-200' 
+              : 'bg-brand-600 text-white hover:bg-brand-700'
+          }`}
+        >
+          {showForm ? '✖ Cancelar' : '➕ Nueva Competencia'}
+        </button>
       </header>
 
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-card">
@@ -107,86 +121,88 @@ const CompetenciasOrgPage = () => {
         </div>
       </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-card">
-        <h2 className="text-lg font-semibold text-slate-900">Crear competencia</h2>
-        <form className="mt-4 grid gap-4 md:grid-cols-3" onSubmit={onSubmit}>
-          <div>
-            <label className="mb-1 block text-xs font-medium text-slate-600">Modalidad</label>
-            <select
-              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
-              value={form.modalidad ?? ''}
-              onChange={(e) => setForm((prev) => ({ ...prev, modalidad: e.target.value as any }))}
-              required
-            >
-              <option value="Foam">Foam</option>
-              <option value="Cloth">Cloth</option>
-            </select>
-          </div>
-          <div>
-            <label className="mb-1 block text-xs font-medium text-slate-600">Categoría</label>
-            <select
-              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
-              value={form.categoria ?? ''}
-              onChange={(e) => setForm((prev) => ({ ...prev, categoria: e.target.value as any }))}
-              required
-            >
-              <option value="Masculino">Masculino</option>
-              <option value="Femenino">Femenino</option>
-              <option value="Mixto">Mixto</option>
-              <option value="Libre">Libre</option>
-            </select>
-          </div>
-          <div>
-            <label className="mb-1 block text-xs font-medium text-slate-600">Tipo</label>
-            <select
-              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
-              value={form.tipo ?? ''}
-              onChange={(e) => setForm((prev) => ({ ...prev, tipo: e.target.value as any }))}
-            >
-              <option value="liga">Liga</option>
-              <option value="torneo">Torneo</option>
-              <option value="otro">Otro</option>
-            </select>
-          </div>
-          <div>
-            <label className="mb-1 block text-xs font-medium text-slate-600">Fecha inicio</label>
-            <input
-              type="date"
-              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
-              value={form.fechaInicio ?? ''}
-              onChange={(e) => setForm((prev) => ({ ...prev, fechaInicio: e.target.value }))}
-              required
-            />
-          </div>
-          <div>
-            <label className="mb-1 block text-xs font-medium text-slate-600">Fecha fin</label>
-            <input
-              type="date"
-              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
-              value={form.fechaFin ?? ''}
-              onChange={(e) => setForm((prev) => ({ ...prev, fechaFin: e.target.value }))}
-            />
-          </div>
-          <div className="md:col-span-3">
-            <label className="mb-1 block text-xs font-medium text-slate-600">Descripción</label>
-            <textarea
-              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
-              rows={2}
-              value={form.descripcion ?? ''}
-              onChange={(e) => setForm((prev) => ({ ...prev, descripcion: e.target.value }))}
-            />
-          </div>
-          <div className="md:col-span-3 flex items-center justify-end gap-3">
-            <button
-              type="submit"
-              disabled={creating}
-              className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-700 disabled:opacity-50"
-            >
-              {creating ? 'Creando…' : 'Crear'}
-            </button>
-          </div>
-        </form>
-      </section>
+      {showForm && (
+        <section className="rounded-2xl border border-brand-200 bg-brand-50/30 p-6 shadow-card animate-in fade-in slide-in-from-top-4 duration-300">
+          <h2 className="text-lg font-semibold text-slate-900">Crear competencia</h2>
+          <form className="mt-4 grid gap-4 md:grid-cols-3" onSubmit={onSubmit}>
+            <div>
+              <label className="mb-1 block text-xs font-medium text-slate-600">Modalidad</label>
+              <select
+                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
+                value={form.modalidad ?? ''}
+                onChange={(e) => setForm((prev) => ({ ...prev, modalidad: e.target.value as any }))}
+                required
+              >
+                <option value="Foam">Foam</option>
+                <option value="Cloth">Cloth</option>
+              </select>
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-medium text-slate-600">Categoría</label>
+              <select
+                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
+                value={form.categoria ?? ''}
+                onChange={(e) => setForm((prev) => ({ ...prev, categoria: e.target.value as any }))}
+                required
+              >
+                <option value="Masculino">Masculino</option>
+                <option value="Femenino">Femenino</option>
+                <option value="Mixto">Mixto</option>
+                <option value="Libre">Libre</option>
+              </select>
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-medium text-slate-600">Tipo</label>
+              <select
+                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
+                value={form.tipo ?? ''}
+                onChange={(e) => setForm((prev) => ({ ...prev, tipo: e.target.value as any }))}
+              >
+                <option value="liga">Liga</option>
+                <option value="torneo">Torneo</option>
+                <option value="otro">Otro</option>
+              </select>
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-medium text-slate-600">Fecha inicio</label>
+              <input
+                type="date"
+                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
+                value={form.fechaInicio ?? ''}
+                onChange={(e) => setForm((prev) => ({ ...prev, fechaInicio: e.target.value }))}
+                required
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-medium text-slate-600">Fecha fin</label>
+              <input
+                type="date"
+                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
+                value={form.fechaFin ?? ''}
+                onChange={(e) => setForm((prev) => ({ ...prev, fechaFin: e.target.value }))}
+              />
+            </div>
+            <div className="md:col-span-3">
+              <label className="mb-1 block text-xs font-medium text-slate-600">Descripción</label>
+              <textarea
+                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
+                rows={2}
+                value={form.descripcion ?? ''}
+                onChange={(e) => setForm((prev) => ({ ...prev, descripcion: e.target.value }))}
+              />
+            </div>
+            <div className="md:col-span-3 flex items-center justify-end gap-3">
+              <button
+                type="submit"
+                disabled={creating}
+                className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-700 disabled:opacity-50"
+              >
+                {creating ? 'Creando…' : 'Crear Competencia'}
+              </button>
+            </div>
+          </form>
+        </section>
+      )}
 
       <section className="space-y-4">
         {loading ? (
