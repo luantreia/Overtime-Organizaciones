@@ -41,7 +41,7 @@ const PartidoCard = ({ partido, variante = 'proximo', actions, onClick }: Partid
 
   const estado = partido.estado || 'programado';
   const badge = badgeStyles[estado as keyof typeof badgeStyles] || badgeStyles.programado;
-  const mostrarMarcador = estado === 'finalizado' || estado === 'en_juego';
+  const mostrarMarcador = estado === 'finalizado' || estado === 'en_juego' || !!partido.resultado || (partido.marcadorLocal !== undefined && partido.marcadorLocal !== null);
 
   const handleKeyDown = (event: KeyboardEvent<HTMLElement>) => {
     if (!onClick) return;
@@ -93,7 +93,7 @@ const PartidoCard = ({ partido, variante = 'proximo', actions, onClick }: Partid
         <div className="flex flex-col items-center gap-2 w-1/3 text-center">
           {renderEscudo(partido.equipoLocal, 'L')}
           <span className="text-sm font-semibold text-slate-900 line-clamp-2 leading-tight">
-            {partido.equipoLocal?.nombre || 'Local'}
+            {partido.equipoLocal?.nombre || partido.localNombre || 'Local'}
           </span>
         </div>
 
@@ -101,9 +101,9 @@ const PartidoCard = ({ partido, variante = 'proximo', actions, onClick }: Partid
         <div className="flex flex-col items-center justify-center w-1/3">
           {mostrarMarcador ? (
             <div className="flex items-center gap-3 text-2xl font-bold text-slate-900">
-              <span>{partido.marcadorLocal ?? 0}</span>
+              <span>{partido.marcadorLocal ?? partido.resultado?.puntosEquipo ?? 0}</span>
               <span className="text-slate-300">-</span>
-              <span>{partido.marcadorVisitante ?? 0}</span>
+              <span>{partido.marcadorVisitante ?? partido.resultado?.puntosRival ?? 0}</span>
             </div>
           ) : (
             <span className="text-xl font-bold text-slate-300">VS</span>
@@ -119,7 +119,7 @@ const PartidoCard = ({ partido, variante = 'proximo', actions, onClick }: Partid
         <div className="flex flex-col items-center gap-2 w-1/3 text-center">
           {renderEscudo(partido.equipoVisitante, 'V')}
           <span className="text-sm font-semibold text-slate-900 line-clamp-2 leading-tight">
-            {partido.equipoVisitante?.nombre || partido.rival || 'Visitante'}
+            {partido.equipoVisitante?.nombre || partido.visitanteNombre || partido.rival || 'Visitante'}
           </span>
         </div>
       </div>

@@ -195,8 +195,10 @@ const mapEquipoNombre = (equipo?: BackendEquipoRef | string): { id: string; nomb
 export const mapEstadoPartido = (estado?: BackendPartido['estado']): Partido['estado'] => {
   switch (estado) {
     case 'programado':
+    case 'pendiente':
       return 'programado';
     case 'en_juego':
+    case 'confirmado':
       return 'en_juego';
     case 'finalizado':
       return 'finalizado';
@@ -276,6 +278,10 @@ const mapPartido = (partido: BackendPartido, contextoEquipoId?: string): Partido
     visitanteNombre: visitante?.nombre,
     grupo: (partido as any).grupo ?? null,
     division: (partido as any).division ?? null,
+    equipoLocal: local ? { id: local.id, nombre: local.nombre } : undefined,
+    equipoVisitante: visitante ? { id: visitante.id, nombre: visitante.nombre } : undefined,
+    marcadorLocal: partido.marcadorLocal,
+    marcadorVisitante: partido.marcadorVisitante,
   };
 
   const tieneMarcador = (partido.marcadorLocal !== undefined && partido.marcadorLocal !== null)
