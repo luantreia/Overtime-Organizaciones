@@ -137,6 +137,8 @@ type BackendCompetencia = {
 type BackendEquipoRef = {
   _id: string;
   nombre?: string;
+  escudo?: string;
+  logoUrl?: string;
 };
 
 export type EquipoRef = BackendEquipoRef | string | null | undefined;
@@ -184,12 +186,16 @@ const mapCompetencia = (data?: BackendPartido['competencia']): Competencia | und
   };
 };
 
-const mapEquipoNombre = (equipo?: BackendEquipoRef | string): { id: string; nombre: string } | undefined => {
+const mapEquipoNombre = (equipo?: BackendEquipoRef | string): { id: string; nombre: string; escudo?: string } | undefined => {
   if (!equipo) return undefined;
   if (typeof equipo === 'string') {
     return { id: equipo, nombre: 'Equipo' };
   }
-  return { id: equipo._id, nombre: equipo.nombre ?? 'Equipo' };
+  return { 
+    id: equipo._id, 
+    nombre: equipo.nombre ?? 'Equipo',
+    escudo: equipo.escudo ?? equipo.logoUrl 
+  };
 };
 
 export const mapEstadoPartido = (estado?: BackendPartido['estado']): Partido['estado'] => {
@@ -278,8 +284,8 @@ const mapPartido = (partido: BackendPartido, contextoEquipoId?: string): Partido
     visitanteNombre: visitante?.nombre,
     grupo: (partido as any).grupo ?? null,
     division: (partido as any).division ?? null,
-    equipoLocal: local ? { id: local.id, nombre: local.nombre } : undefined,
-    equipoVisitante: visitante ? { id: visitante.id, nombre: visitante.nombre } : undefined,
+    equipoLocal: local ? { id: local.id, nombre: local.nombre, escudo: local.escudo } : undefined,
+    equipoVisitante: visitante ? { id: visitante.id, nombre: visitante.nombre, escudo: visitante.escudo } : undefined,
     marcadorLocal: partido.marcadorLocal,
     marcadorVisitante: partido.marcadorVisitante,
   };

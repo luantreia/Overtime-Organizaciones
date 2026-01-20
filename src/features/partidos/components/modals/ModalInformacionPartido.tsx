@@ -388,9 +388,13 @@ const ModalInformacionPartido = ({ partidoId, isOpen, onClose }: ModalInformacio
               <div className="space-y-4">
                 <div className="flex items-center justify-center gap-8 py-6 rounded-xl bg-slate-50 border border-slate-100">
                   <div className="flex flex-col items-center gap-2 w-1/3 text-center">
-                    <div className="h-16 w-16 flex items-center justify-center rounded-full bg-blue-100 text-blue-600 font-bold text-2xl">
-                        {(partido.equipoLocal as any)?.nombre?.charAt(0) || 'L'}
-                    </div>
+                    {(partido.equipoLocal as any)?.escudo ? (
+                      <img src={(partido.equipoLocal as any).escudo} alt="Local" className="h-16 w-16 object-contain" />
+                    ) : (
+                      <div className="h-16 w-16 flex items-center justify-center rounded-full bg-blue-100 text-blue-600 font-bold text-2xl">
+                          {(partido.equipoLocal as any)?.nombre?.charAt(0) || 'L'}
+                      </div>
+                    )}
                     <span className="font-bold text-slate-900">
                         {(partido.equipoLocal as any)?.nombre || 'Local'}
                     </span>
@@ -406,9 +410,13 @@ const ModalInformacionPartido = ({ partidoId, isOpen, onClose }: ModalInformacio
                   </div>
 
                   <div className="flex flex-col items-center gap-2 w-1/3 text-center">
-                    <div className="h-16 w-16 flex items-center justify-center rounded-full bg-red-100 text-red-600 font-bold text-2xl">
-                        {(partido.equipoVisitante as any)?.nombre?.charAt(0) || 'V'}
-                    </div>
+                    {(partido.equipoVisitante as any)?.escudo ? (
+                      <img src={(partido.equipoVisitante as any).escudo} alt="Visitante" className="h-16 w-16 object-contain" />
+                    ) : (
+                      <div className="h-16 w-16 flex items-center justify-center rounded-full bg-red-100 text-red-600 font-bold text-2xl">
+                          {(partido.equipoVisitante as any)?.nombre?.charAt(0) || 'V'}
+                      </div>
+                    )}
                     <span className="font-bold text-slate-900">
                         {(partido.equipoVisitante as any)?.nombre || 'Visitante'}
                     </span>

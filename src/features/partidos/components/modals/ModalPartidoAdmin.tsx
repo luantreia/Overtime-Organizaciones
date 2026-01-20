@@ -221,6 +221,13 @@ export const ModalPartidoAdmin = ({ partidoId, token, onClose, onPartidoEliminad
         {/* Scoreboard Header */}
         <div className="flex items-center justify-center gap-6 py-4 rounded-xl bg-slate-50 border border-slate-100">
           <div className="flex flex-col items-center gap-1 w-1/3 text-center">
+            {(partido.equipoLocal as any)?.escudo ? (
+                <img src={(partido.equipoLocal as any).escudo} alt="Local" className="h-10 w-10 object-contain" />
+            ) : (
+                <div className="h-10 w-10 flex items-center justify-center rounded-full bg-blue-100 text-blue-600 font-bold text-sm">
+                    {(partido.equipoLocal as any)?.nombre?.charAt(0) || 'L'}
+                </div>
+            )}
             <span className="text-sm font-bold text-slate-900 truncate max-w-full">
                 {(partido.equipoLocal as any)?.nombre || 'Local'}
             </span>
@@ -235,6 +242,13 @@ export const ModalPartidoAdmin = ({ partidoId, token, onClose, onPartidoEliminad
           </div>
 
           <div className="flex flex-col items-center gap-1 w-1/3 text-center">
+            {(partido.equipoVisitante as any)?.escudo ? (
+                <img src={(partido.equipoVisitante as any).escudo} alt="Visitante" className="h-10 w-10 object-contain" />
+            ) : (
+                <div className="h-10 w-10 flex items-center justify-center rounded-full bg-red-100 text-red-600 font-bold text-sm">
+                    {(partido.equipoVisitante as any)?.nombre?.charAt(0) || 'V'}
+                </div>
+            )}
             <span className="text-sm font-bold text-slate-900 truncate max-w-full">
                 {(partido.equipoVisitante as any)?.nombre || 'Visitante'}
             </span>
