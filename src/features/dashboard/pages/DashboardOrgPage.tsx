@@ -42,9 +42,18 @@ const DashboardOrgPage = () => {
 
   return (
     <div className="space-y-8">
-      <header className="flex flex-col gap-2">
-        <h1 className="text-2xl font-semibold text-slate-900">{organizacionSeleccionada.nombre}</h1>
-        <p className="text-sm text-slate-500">Resumen y accesos directos</p>
+      <header className="flex items-center gap-4">
+        {organizacionSeleccionada.logoUrl && (
+          <img
+            src={organizacionSeleccionada.logoUrl}
+            alt={organizacionSeleccionada.nombre}
+            className="h-16 w-16 rounded-xl object-contain bg-white border border-slate-200 p-1 shadow-sm"
+          />
+        )}
+        <div className="flex flex-col gap-1">
+          <h1 className="text-2xl font-semibold text-slate-900">{organizacionSeleccionada.nombre}</h1>
+          <p className="text-sm text-slate-500">Resumen y accesos directos</p>
+        </div>
       </header>
 
       <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

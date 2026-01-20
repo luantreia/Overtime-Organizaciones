@@ -15,6 +15,7 @@ const mapOrganizacion = (o: BackendOrganizacion): Organizacion => ({
   nombre: o.nombre,
   descripcion: o.descripcion,
   logoUrl: o.logo,
+  sitioWeb: o.sitioWeb,
 });
 
 export async function getOrganizacionesDelUsuario(): Promise<Organizacion[]> {

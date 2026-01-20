@@ -26,22 +26,47 @@ const OrganizacionPage = () => {
 
   return (
     <div className="space-y-8">
-      <header className="flex flex-col gap-2">
-        <h1 className="text-2xl font-semibold text-slate-900">{organizacionSeleccionada.nombre}</h1>
-        <p className="text-sm text-slate-500">Panel de organización</p>
+      <header className="flex items-center gap-4">
+        {organizacionSeleccionada.logoUrl && (
+          <img
+            src={organizacionSeleccionada.logoUrl}
+            alt={organizacionSeleccionada.nombre}
+            className="h-16 w-16 rounded-xl object-contain bg-white border border-slate-200 p-1 shadow-sm"
+          />
+        )}
+        <div className="flex flex-col gap-1">
+          <h1 className="text-2xl font-semibold text-slate-900">{organizacionSeleccionada.nombre}</h1>
+          <p className="text-sm text-slate-500">Panel de organización</p>
+        </div>
       </header>
 
       <section className="grid gap-4 md:grid-cols-2">
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-card">
           <h2 className="text-lg font-semibold text-slate-900">Información general</h2>
-          <div className="mt-4 space-y-2 text-sm text-slate-700">
-            <p><span className="text-slate-500">ID:</span> {organizacionSeleccionada.id}</p>
-            {organizacionSeleccionada.descripcion ? (
-              <p><span className="text-slate-500">Descripción:</span> {organizacionSeleccionada.descripcion}</p>
-            ) : null}
-            {organizacionSeleccionada.responsables?.length ? (
-              <p><span className="text-slate-500">Responsables:</span> {organizacionSeleccionada.responsables.join(', ')}</p>
-            ) : null}
+          <div className="mt-4 space-y-3 text-sm text-slate-700">
+            <p className="flex flex-col">
+              <span className="text-xs font-medium uppercase tracking-wider text-slate-500">ID</span>
+              <span className="text-slate-900">{organizacionSeleccionada.id}</span>
+            </p>
+            {organizacionSeleccionada.descripcion && (
+              <p className="flex flex-col">
+                <span className="text-xs font-medium uppercase tracking-wider text-slate-500">Descripción</span>
+                <span className="text-slate-900">{organizacionSeleccionada.descripcion}</span>
+              </p>
+            )}
+            {organizacionSeleccionada.sitioWeb && (
+              <p className="flex flex-col">
+                <span className="text-xs font-medium uppercase tracking-wider text-slate-500">Sitio Web</span>
+                <a 
+                  href={organizacionSeleccionada.sitioWeb.startsWith('http') ? organizacionSeleccionada.sitioWeb : `https://${organizacionSeleccionada.sitioWeb}`} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-brand-600 hover:underline"
+                >
+                  {organizacionSeleccionada.sitioWeb}
+                </a>
+              </p>
+            )}
           </div>
         </div>
 

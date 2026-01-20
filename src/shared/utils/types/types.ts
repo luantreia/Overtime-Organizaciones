@@ -38,8 +38,8 @@ export interface Organizacion {
   id: string;
   nombre: string;
   logoUrl?: string;
-  responsables?: string[];
   descripcion?: string;
+  sitioWeb?: string;
 }
 
 // ========================================
