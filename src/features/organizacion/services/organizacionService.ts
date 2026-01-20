@@ -23,6 +23,20 @@ export async function getOrganizacionesDelUsuario(): Promise<Organizacion[]> {
   return data.map(mapOrganizacion);
 }
 
+export async function updateOrganizacion(id: string, payload: Partial<Organizacion>): Promise<Organizacion> {
+  const backendPayload = {
+    nombre: payload.nombre,
+    descripcion: payload.descripcion,
+    logo: payload.logoUrl,
+    sitioWeb: payload.sitioWeb,
+  };
+  const data = await authFetch<BackendOrganizacion>(`/organizaciones/${id}`, {
+    method: 'PUT',
+    body: backendPayload,
+  });
+  return mapOrganizacion(data);
+}
+
 export type AdminUser = { _id: string; email?: string; nombre?: string };
 
 export async function getOrganizacionAdministradores(id: string): Promise<{ administradores: AdminUser[] }> {
