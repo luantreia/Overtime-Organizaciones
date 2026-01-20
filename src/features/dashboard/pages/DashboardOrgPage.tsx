@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useOrganizacion } from '../../../app/providers/OrganizacionContext';
 import { listCompetenciasByOrganizacion, BackendCompetencia } from '../../competencias/services/competenciasService';
 
@@ -70,14 +71,23 @@ const DashboardOrgPage = () => {
       ) : (
         <section className="grid gap-4 md:grid-cols-2">
           {competencias.map((c) => (
-            <div key={c._id} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-card">
-              <h2 className="text-lg font-semibold text-slate-900">{c.nombre ?? 'Competencia'}</h2>
-              <div className="mt-2 text-sm text-slate-600">
-                <p>Modalidad: {c.modalidad ?? '—'}</p>
-                <p>Categoría: {c.categoria ?? '—'}</p>
-                <p>Estado: {c.estado ?? '—'}</p>
+            <Link 
+              key={c._id} 
+              to={`/competencias/${c._id}`}
+              className="group rounded-2xl border border-slate-200 bg-white p-6 shadow-card transition hover:border-brand-300 hover:shadow-md"
+            >
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-slate-900 group-hover:text-brand-600 transition-colors">
+                  {c.nombre ?? 'Competencia'}
+                </h2>
+                <span className="text-xl group-hover:translate-x-1 transition-transform">→</span>
               </div>
-            </div>
+              <div className="mt-2 text-sm text-slate-600">
+                <p><span className="text-slate-400">Modalidad:</span> {c.modalidad ?? '—'}</p>
+                <p><span className="text-slate-400">Categoría:</span> {c.categoria ?? '—'}</p>
+                <p><span className="text-slate-400">Estado:</span> <span className="capitalize">{c.estado?.replace('_', ' ') ?? '—'}</span></p>
+              </div>
+            </Link>
           ))}
           {competencias.length === 0 ? (
             <p className="rounded-2xl border border-dashed border-slate-200 px-4 py-6 text-sm text-slate-500">Sin competencias</p>
