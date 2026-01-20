@@ -144,9 +144,7 @@ const ModalEstadisticasGeneralesCaptura: React.FC<ModalEstadisticasGeneralesCapt
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
             <div className="space-y-2">
               <h3 className="text-base sm:text-lg font-semibold text-blue-800">
-                {partido?.equipoLocal && typeof partido.equipoLocal !== 'string'
-                  ? partido.equipoLocal.nombre || 'Local'
-                  : 'Local'}
+                {(partido?.equipoLocal as any)?.nombre || (typeof partido?.equipoLocal === 'string' ? 'Equipo Local' : 'Local')}
               </h3>
               <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3 max-h-[70vh] overflow-y-auto pr-1">
                 {jugadoresLocal.map((j, idx) => {
@@ -174,9 +172,7 @@ const ModalEstadisticasGeneralesCaptura: React.FC<ModalEstadisticasGeneralesCapt
 
             <div className="space-y-2">
               <h3 className="text-base sm:text-lg font-semibold text-red-800">
-                {partido?.equipoVisitante && typeof partido.equipoVisitante !== 'string'
-                  ? partido.equipoVisitante.nombre || 'Visitante'
-                  : 'Visitante'}
+                {(partido?.equipoVisitante as any)?.nombre || (typeof partido?.equipoVisitante === 'string' ? 'Equipo Visitante' : 'Visitante')}
               </h3>
               <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3 max-h-[70vh] overflow-y-auto pr-1">
                 {jugadoresVisitante.map((j, idx) => {

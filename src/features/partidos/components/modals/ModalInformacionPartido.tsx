@@ -385,25 +385,53 @@ const ModalInformacionPartido = ({ partidoId, isOpen, onClose }: ModalInformacio
                 </div>
               </div>
             ) : (
-              <div className="space-y-2">
-                <p><strong>Nombre:</strong> {partido.nombrePartido || 'No especificado'}</p>
-                <p><strong>Fecha:</strong> {partido.fecha ? new Date(partido.fecha).toLocaleString() : 'No especificada'}</p>
-                <p><strong>Ubicación:</strong> {partido.ubicacion || 'No especificada'}</p>
-                <p><strong>Estado:</strong> {partido.estado || 'No especificado'}</p>
-                <p><strong>Modalidad:</strong> {partido.modalidad || 'No especificada'}</p>
-                <p><strong>Categoría:</strong> {partido.categoria || 'No especificada'}</p>
-                <p>
-                  <strong>Competencia:</strong>{' '}
-                  {typeof partido.competencia === 'string'
-                    ? partido.competencia
-                    : partido.competencia?.nombre || 'No especificada'}
-                </p>
-                <p><strong>Etapa:</strong> {(partido as any).etapa || '—'}</p>
-                <p><strong>Grupo:</strong> {(partido as any).grupo || '—'}</p>
-                <p><strong>División:</strong> {(partido as any).division || '—'}</p>
-                <p>
-                  <strong>Marcador:</strong> {partido.marcadorLocal} - {partido.marcadorVisitante}
-                </p>
+              <div className="space-y-4">
+                <div className="flex items-center justify-center gap-8 py-6 rounded-xl bg-slate-50 border border-slate-100">
+                  <div className="flex flex-col items-center gap-2 w-1/3 text-center">
+                    <div className="h-16 w-16 flex items-center justify-center rounded-full bg-blue-100 text-blue-600 font-bold text-2xl">
+                        {(partido.equipoLocal as any)?.nombre?.charAt(0) || 'L'}
+                    </div>
+                    <span className="font-bold text-slate-900">
+                        {(partido.equipoLocal as any)?.nombre || 'Local'}
+                    </span>
+                  </div>
+
+                  <div className="flex flex-col items-center gap-1">
+                    <div className="text-3xl font-black text-slate-900 flex items-center gap-4">
+                        <span>{partido.marcadorLocal ?? 0}</span>
+                        <span className="text-slate-300">-</span>
+                        <span>{partido.marcadorVisitante ?? 0}</span>
+                    </div>
+                    <span className="text-xs font-bold uppercase tracking-widest text-slate-400">Marcador</span>
+                  </div>
+
+                  <div className="flex flex-col items-center gap-2 w-1/3 text-center">
+                    <div className="h-16 w-16 flex items-center justify-center rounded-full bg-red-100 text-red-600 font-bold text-2xl">
+                        {(partido.equipoVisitante as any)?.nombre?.charAt(0) || 'V'}
+                    </div>
+                    <span className="font-bold text-slate-900">
+                        {(partido.equipoVisitante as any)?.nombre || 'Visitante'}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 p-4 text-sm">
+                    <p><strong className="text-slate-500">Nombre:</strong> {partido.nombrePartido || 'No especificado'}</p>
+                    <p><strong className="text-slate-500">Fecha:</strong> {partido.fecha ? new Date(partido.fecha).toLocaleString() : 'No especificada'}</p>
+                    <p><strong className="text-slate-500">Ubicación:</strong> {partido.ubicacion || 'No especificada'}</p>
+                    <p><strong className="text-slate-500">Estado:</strong> <span className="capitalize">{partido.estado || 'No especificado'}</span></p>
+                    <p><strong className="text-slate-500">Modalidad:</strong> {partido.modalidad || 'No especificada'}</p>
+                    <p><strong className="text-slate-500">Categoría:</strong> {partido.categoria || 'No especificada'}</p>
+                    <p className="md:col-span-2">
+                        <strong className="text-slate-500">Competencia:</strong>{' '}
+                        {typeof partido.competencia === 'string'
+                            ? partido.competencia
+                            : partido.competencia?.nombre || 'No especificada'}
+                    </p>
+                    <p><strong className="text-slate-500">Etapa:</strong> {(partido as any).etapa || '—'}</p>
+                    <p><strong className="text-slate-500">Grupo:</strong> {(partido as any).grupo || '—'}</p>
+                    <p><strong className="text-slate-500">División:</strong> {(partido as any).division || '—'}</p>
+                </div>
               </div>
             )}
           </div>

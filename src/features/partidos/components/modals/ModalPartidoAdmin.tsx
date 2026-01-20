@@ -216,8 +216,31 @@ export const ModalPartidoAdmin = ({ partidoId, token, onClose, onPartidoEliminad
   }
 
   return (
-    <ModalBase title={`Estadísticas del Partido: ${partido.nombrePartido || 'Sin nombre'}`} onClose={onClose} size="xl" isOpen>
-      <div>
+    <ModalBase title={`Estadísticas: ${partido.nombrePartido || 'Partido'}`} onClose={onClose} size="xl" isOpen>
+      <div className="space-y-6">
+        {/* Scoreboard Header */}
+        <div className="flex items-center justify-center gap-6 py-4 rounded-xl bg-slate-50 border border-slate-100">
+          <div className="flex flex-col items-center gap-1 w-1/3 text-center">
+            <span className="text-sm font-bold text-slate-900 truncate max-w-full">
+                {(partido.equipoLocal as any)?.nombre || 'Local'}
+            </span>
+          </div>
+
+          <div className="flex flex-col items-center">
+            <div className="text-2xl font-black text-slate-900 flex items-center gap-3">
+                <span>{partido.marcadorLocal ?? 0}</span>
+                <span className="text-slate-300">-</span>
+                <span>{partido.marcadorVisitante ?? 0}</span>
+            </div>
+          </div>
+
+          <div className="flex flex-col items-center gap-1 w-1/3 text-center">
+            <span className="text-sm font-bold text-slate-900 truncate max-w-full">
+                {(partido.equipoVisitante as any)?.nombre || 'Visitante'}
+            </span>
+          </div>
+        </div>
+
         <div className="bg-white rounded-lg p-2 sm:p-1">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-base font-semibold">Vistas</h3>
