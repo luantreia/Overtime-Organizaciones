@@ -51,7 +51,6 @@ export default function CompetenciaRankedSection({
   
   const [convertId, setConvertId] = useState<string>('');
   const [revertId, setRevertId] = useState<string>('');
-  const [nuevoJugadorId, setNuevoJugadorId] = useState<string>('');
   const [showAll, setShowAll] = useState<boolean>(false);
   const [priorizarNoJugados, setPriorizarNoJugados] = useState<boolean>(true);
   const [recentMatches, setRecentMatches] = useState<any[]>([]);
@@ -333,12 +332,10 @@ export default function CompetenciaRankedSection({
     );
   };
 
-  const onAgregarJugadorCompetencia = async (id?: string) => {
-    const targetId = id || nuevoJugadorId.trim();
-    if (!targetId) return;
+  const onAgregarJugadorCompetencia = async (id: string) => {
+    if (!id) return;
     try {
-      await crearJugadorCompetencia({ jugador: targetId, competencia: competenciaId });
-      setNuevoJugadorId('');
+      await crearJugadorCompetencia({ jugador: id, competencia: competenciaId });
       const items = await listJugadoresCompetencia(competenciaId);
       const mapped = items.map((jc) => {
         const j = jc.jugador as any;
@@ -470,9 +467,6 @@ export default function CompetenciaRankedSection({
               setShowAll={setShowAll}
               onAgregarJugador={onAgregarJugadorCompetencia}
               onEliminarJugador={onEliminarJugador}
-              nuevoJugadorId={nuevoJugadorId}
-              setNuevoJugadorId={setNuevoJugadorId}
-              onAgregarNuevoJugador={() => onAgregarJugadorCompetencia()}
               onQuickAddPlayer={onQuickAddPlayer}
               onChooseForNext={onChooseForNextMatch}
               onMarkAllPresent={() => markAllPresent(compPlayers.map(p => p._id))}

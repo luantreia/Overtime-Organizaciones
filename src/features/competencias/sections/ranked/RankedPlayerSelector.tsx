@@ -27,10 +27,12 @@ interface RankedPlayerSelectorProps {
   setShowAll: (val: boolean) => void;
   onAgregarJugador: (id: string) => void;
   onEliminarJugador: (id: string) => void;
-  nuevoJugadorId: string;
-  setNuevoJugadorId: (id: string) => void;
-  onAgregarNuevoJugador: () => void;
-  onQuickAddPlayer: (datos: { nombre: string; alias?: string; genero?: string }) => Promise<void>;
+  onQuickAddPlayer: (datos: { 
+    nombre: string; 
+    alias?: string; 
+    genero?: string; 
+    fechaNacimiento?: string;
+  }) => Promise<void>;
   onChooseForNext: () => void;
   onMarkAllPresent: () => void;
   onClearPresentes: () => void;
@@ -58,9 +60,6 @@ export const RankedPlayerSelector: React.FC<RankedPlayerSelectorProps> = ({
   setShowAll,
   onAgregarJugador,
   onEliminarJugador,
-  nuevoJugadorId,
-  setNuevoJugadorId,
-  onAgregarNuevoJugador,
   onQuickAddPlayer,
   onChooseForNext,
   onMarkAllPresent,
@@ -242,18 +241,15 @@ export const RankedPlayerSelector: React.FC<RankedPlayerSelectorProps> = ({
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5 pt-2 border-t">
-          <input 
-            value={nuevoJugadorId} 
-            onChange={(e) => setNuevoJugadorId(e.target.value)} 
-            placeholder="ID..." 
-            className="flex-1 rounded-md border px-2 py-1 text-[10px] min-w-0" 
-          />
-          <Button size="sm" variant="outline" className="h-7 px-2 text-[9px] whitespace-nowrap" onClick={onAgregarNuevoJugador} disabled={busy || !nuevoJugadorId.trim()}>
-            + Comp.
-          </Button>
-          <Button size="sm" variant="primary" className="h-7 px-2 text-[9px] whitespace-nowrap" onClick={() => setIsQuickAddOpen(true)} disabled={busy}>
-            + Nuevo
+        <div className="pt-2 border-t">
+          <Button 
+            size="sm" 
+            variant="primary" 
+            className="w-full h-8 text-[10px] font-bold uppercase tracking-wider" 
+            onClick={() => setIsQuickAddOpen(true)} 
+            disabled={busy}
+          >
+            + Crear Nuevo Jugador
           </Button>
         </div>
 
