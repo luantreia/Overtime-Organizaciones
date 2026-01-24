@@ -282,9 +282,21 @@ export function useRankedMatch({
 
   const onFinalizeMatch = async (afkIds?: string[]) => {
     if (!matchId || busy) return;
+    
+    const currentPlayers = [...rojo, ...azul];
+    if (currentPlayers.length === 0) {
+      onError?.('No puedes finalizar un partido sin jugadores en los equipos');
+      return;
+    }
+
     setBusy(true);
     try {
-      const currentPlayers = [...rojo, ...azul];
+      // Garantizamos que los equipos estén guardados en el servidor antes de finalizar
+      // Esto asegura que el backend cuente los PJs correctamente
+      if (!isBasicMode) {
+        await apiAssignTeams(matchId, rojo, azul);
+      }
+      
       syncMatchAttendance(matchId, currentPlayers);
 
       await apiFinalizeMatch(matchId, score.local, score.visitante, sets, afkIds, user?.id || 'org-ui', startTime || undefined);
