@@ -48,6 +48,21 @@ export default function CompetenciaRankedSection({
   const [board, setBoard] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  // Auto-dismiss notifications
+  useEffect(() => {
+    if (success) {
+      const timer = setTimeout(() => setSuccess(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [success]);
+
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => setError(null), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [error]);
   
   const [convertId, setConvertId] = useState<string>('');
   const [revertId, setRevertId] = useState<string>('');
@@ -156,10 +171,9 @@ export default function CompetenciaRankedSection({
     incrementPlayedCount,
     onSuccess: (msg) => { 
       setSuccess(msg); 
-      setTimeout(() => setSuccess(null), 3000); 
       fetchRecentMatches();
     },
-    onError: (err) => { setError(err); setTimeout(() => setError(null), 5000); },
+    onError: (err) => { setError(err); },
     onFinalized: () => {
       fetchLeaderboard();
       fetchRecentMatches();
