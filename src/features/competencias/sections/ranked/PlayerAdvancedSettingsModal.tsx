@@ -156,11 +156,16 @@ export const PlayerAdvancedSettingsModal: React.FC<PlayerAdvancedSettingsModalPr
                                    <p className="text-[9px] text-slate-400">ID: {(h.partidoId?._id || h.partidoId || '').slice(-6)}</p>
                                 </td>
                                 <td className="p-2 text-center">
-                                   {(h.win === true || (h.win === undefined && h.delta > 0)) ? (
-                                     <span className="text-emerald-600 font-black">W</span>
-                                   ) : (
-                                     <span className="text-red-400 font-bold">L</span>
-                                   )}
+                                   <div className="flex flex-col items-center gap-1">
+                                      {(h.win === true || (h.win === undefined && h.delta > 0)) ? (
+                                        <span className="text-emerald-600 font-black">W</span>
+                                      ) : (
+                                        <span className="text-red-400 font-bold">L</span>
+                                      )}
+                                      {h.isAFK && (
+                                        <span className="bg-red-500 text-white text-[8px] px-1 rounded font-bold animate-pulse">AFK</span>
+                                      )}
+                                   </div>
                                 </td>
                                 <td className="p-2 text-center">
                                    <span className={`px-1 rounded text-[10px] font-bold ${h.teamColor === 'rojo' ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600'}`}>
@@ -168,9 +173,12 @@ export const PlayerAdvancedSettingsModal: React.FC<PlayerAdvancedSettingsModalPr
                                    </span>
                                 </td>
                                 <td className="p-2 text-center font-black">
-                                   <span className={h.delta > 0 ? 'text-emerald-500' : 'text-red-500'}>
-                                      {h.delta > 0 ? `+${h.delta}` : h.delta}
-                                   </span>
+                                   <div className="flex flex-col items-center">
+                                      <span className={h.delta > 0 ? 'text-emerald-500' : 'text-red-500'}>
+                                         {h.delta > 0 ? `+${h.delta}` : h.delta}
+                                      </span>
+                                      {h.isAFK && <span className="text-[7px] text-red-400 font-bold uppercase leading-none mt-0.5" title="Se aplicó penalización doble por abandono">(Penalización)</span>}
+                                   </div>
                                 </td>
                                 <td className="p-2 text-center text-slate-500">
                                    {h.partidoId?.marcadorLocal} - {h.partidoId?.marcadorVisitante}
