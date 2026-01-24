@@ -170,7 +170,7 @@ export function useRankedMatch({
         setIsBasicMode(!!parsed.isBasicMode);
       }
     } catch { }
-  }, [persistenceKey, matchId]);
+  }, [persistenceKey, matchId, setStartTime]);
 
   // Save to localStorage
   useEffect(() => {
@@ -195,7 +195,7 @@ export function useRankedMatch({
     setPjMarked(false);
     // Note: we keep isBasicMode preference
     localStorage.removeItem(persistenceKey);
-  }, [persistenceKey]);
+  }, [persistenceKey, setStartTime]);
 
   const onCreateMatch = async () => {
     if (busy) return;
