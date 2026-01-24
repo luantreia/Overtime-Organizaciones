@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Button } from '../../../../shared/components/ui';
 import { getPlayerRatingDetail, recalculatePlayerRating, deletePlayerRating } from '../../../ranked/services/rankedService';
 
@@ -31,7 +31,7 @@ export const PlayerAdvancedSettingsModal: React.FC<PlayerAdvancedSettingsModalPr
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchDetail = async () => {
+  const fetchDetail = useCallback(async () => {
     setLoading(true);
     try {
       const res = await getPlayerRatingDetail(playerId, {
@@ -47,13 +47,13 @@ export const PlayerAdvancedSettingsModal: React.FC<PlayerAdvancedSettingsModalPr
     } finally {
       setLoading(false);
     }
-  };
+  }, [playerId, modalidad, categoria, competenciaId, seasonId]);
 
   useEffect(() => {
     if (isOpen && playerId) {
       fetchDetail();
     }
-  }, [isOpen, playerId]);
+  }, [isOpen, playerId, fetchDetail]);
 
   const handleRecalculate = async () => {
     setBusy(true);
