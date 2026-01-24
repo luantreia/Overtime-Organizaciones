@@ -156,7 +156,7 @@ export const PlayerAdvancedSettingsModal: React.FC<PlayerAdvancedSettingsModalPr
                                    <p className="text-[9px] text-slate-400">ID: {(h.partidoId?._id || h.partidoId || '').slice(-6)}</p>
                                 </td>
                                 <td className="p-2 text-center">
-                                   {h.win ? (
+                                   {(h.win === true || (h.win === undefined && h.delta > 0)) ? (
                                      <span className="text-emerald-600 font-black">W</span>
                                    ) : (
                                      <span className="text-red-400 font-bold">L</span>
