@@ -4,8 +4,6 @@ import {
   EllipsisVerticalIcon, 
   TrashIcon, 
   UserPlusIcon,
-  CheckCircleIcon,
-  XMarkIcon
 } from '@heroicons/react/20/solid';
 import { Button } from '../../../../shared/components/ui';
 import { QuickAddPlayerModal } from './QuickAddPlayerModal';
