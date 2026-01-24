@@ -420,15 +420,31 @@ export default function CompetenciaRankedSection({
     <div className="space-y-6 pb-20">
       {/* Notifications */}
       {error && (
-        <div className="fixed top-4 right-4 z-50 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700 shadow-lg animate-in fade-in slide-in-from-top-4">
-          <p className="font-bold">Error</p>
-          <p>{error}</p>
+        <div 
+          onClick={() => setError(null)}
+          className="fixed top-4 right-4 z-[100] cursor-pointer rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700 shadow-lg animate-in fade-in slide-in-from-top-4 min-w-[200px]"
+        >
+          <div className="flex justify-between items-start gap-4">
+            <div>
+              <p className="font-bold">Error</p>
+              <p>{error}</p>
+            </div>
+            <span className="text-red-400 font-bold">×</span>
+          </div>
         </div>
       )}
       {success && (
-        <div className="fixed top-4 right-4 z-50 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-700 shadow-lg animate-in fade-in slide-in-from-top-4">
-          <p className="font-bold">Éxito</p>
-          <p>{success}</p>
+        <div 
+          onClick={() => setSuccess(null)}
+          className="fixed top-4 right-4 z-[100] cursor-pointer rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-700 shadow-lg animate-in fade-in slide-in-from-top-4 min-w-[200px]"
+        >
+          <div className="flex justify-between items-start gap-4">
+            <div>
+              <p className="font-bold">Éxito</p>
+              <p>{success}</p>
+            </div>
+            <span className="text-emerald-400 font-bold">×</span>
+          </div>
         </div>
       )}
 
