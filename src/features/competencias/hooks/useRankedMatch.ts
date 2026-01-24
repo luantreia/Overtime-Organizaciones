@@ -41,6 +41,7 @@ export function useRankedMatch({
   const [sets, setSets] = useState<{ winner: 'local' | 'visitante'; time: number }[]>([]);
   const [startTime, setStartTime] = useState<number | null>(null);
   const [pjMarked, setPjMarked] = useState<boolean>(false);
+  const [markedPlayers, setMarkedPlayers] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
 
   const persistenceKey = useMemo(() => `rankedMatch:${competenciaId}`, [competenciaId]);
@@ -58,6 +59,7 @@ export function useRankedMatch({
         setSets(parsed.sets || []);
         setStartTime(parsed.startTime || null);
         setPjMarked(!!parsed.pjMarked);
+        setMarkedPlayers(parsed.markedPlayers || []);
       }
     } catch { }
   }, [persistenceKey]);
@@ -65,8 +67,8 @@ export function useRankedMatch({
   // Save to localStorage
   useEffect(() => {
     if (!competenciaId) return;
-    localStorage.setItem(persistenceKey, JSON.stringify({ matchId, rojo, azul, score, sets, startTime, pjMarked }));
-  }, [matchId, rojo, azul, score, sets, startTime, pjMarked, persistenceKey, competenciaId]);
+    localStorage.setItem(persistenceKey, JSON.stringify({ matchId, rojo, azul, score, sets, startTime, pjMarked, markedPlayers }));
+  }, [matchId, rojo, azul, score, sets, startTime, pjMarked, markedPlayers, persistenceKey, competenciaId]);
 
   const resetMatchState = useCallback(() => {
     setMatchId(null);
@@ -76,6 +78,7 @@ export function useRankedMatch({
     setSets([]);
     setStartTime(null);
     setPjMarked(false);
+    setMarkedPlayers([]);
     localStorage.removeItem(persistenceKey);
   }, [persistenceKey]);
 
@@ -192,14 +195,20 @@ export function useRankedMatch({
     try {
       await apiAssignTeams(matchId, rojo, azul);
       
-      // Increment PJ only the first time assignment is confirmed
-      if (!pjMarked) {
-        const playedNow = new Set<string>([...rojo, ...azul]);
-        if (playedNow.size > 0) {
-          incrementPlayedCount(playedNow);
-          setPjMarked(true);
-        }
-      }
+      const currentPlayers = [...rojo, ...azul];
+      const prevMarked = new Set(markedPlayers);
+      const nextMarked = new Set(currentPlayers);
+
+      // Players to remove (were marked but aren't in match anymore)
+      const toRemove = markedPlayers.filter(id => !nextMarked.has(id));
+      // Players to add (are in match now but weren't marked)
+      const toAdd = currentPlayers.filter(id => !prevMarked.has(id));
+
+      if (toRemove.length > 0) decrementPlayedCount(toRemove);
+      if (toAdd.length > 0) incrementPlayedCount(toAdd);
+
+      setMarkedPlayers(currentPlayers);
+      if (currentPlayers.length > 0) setPjMarked(true);
 
       if (!startTime) {
         setStartTime(Date.now());
@@ -217,14 +226,17 @@ export function useRankedMatch({
     if (!matchId) return;
     setBusy(true);
     try {
-      // Safety: ensure PJ is marked if they skipped assignment confirmation
-      if (!pjMarked) {
-        const playedNow = new Set<string>([...rojo, ...azul]);
-        if (playedNow.size > 0) {
-          incrementPlayedCount(playedNow);
-          setPjMarked(true);
-        }
-      }
+      // Safety: ensure PJ is correctly marked for current players if They finalize without saving first
+      const currentPlayers = [...rojo, ...azul];
+      const prevMarked = new Set(markedPlayers);
+      const nextMarked = new Set(currentPlayers);
+
+      const toRemove = markedPlayers.filter(id => !nextMarked.has(id));
+      const toAdd = currentPlayers.filter(id => !prevMarked.has(id));
+
+      if (toRemove.length > 0) decrementPlayedCount(toRemove);
+      if (toAdd.length > 0) incrementPlayedCount(toAdd);
+      // No need to setMarkedPlayers here as match is finishing
 
       await apiFinalizeMatch(matchId, score.local, score.visitante, sets, afkIds, user?.id || 'org-ui');
       onSuccess?.('Partido finalizado con éxito');
@@ -243,12 +255,9 @@ export function useRankedMatch({
     try {
       await deleteRankedMatch(matchId);
       
-      // Only revert if we already incremented the PJ counter
-      if (pjMarked) {
-        const playersToRevert = new Set<string>([...rojo, ...azul]);
-        if (playersToRevert.size > 0) {
-          decrementPlayedCount(playersToRevert);
-        }
+      // Revert PJ for players who were actually marked
+      if (markedPlayers.length > 0) {
+        decrementPlayedCount(markedPlayers);
       }
 
       resetMatchState();
@@ -279,6 +288,12 @@ export function useRankedMatch({
     setSets(existingSets);
     setStartTime(null); // Timer doesn't make sense for old matches
     
+    // When loading a match, assume these players have already been 
+    // counted in the current session attendance to avoid double-counting 
+    const currentPlayers = [...rojoIds, ...azulIds];
+    setMarkedPlayers(currentPlayers);
+    if (currentPlayers.length > 0) setPjMarked(true);
+
     // Ensure players are marked present when loading a match
     if (markAsPresent) {
       markAsPresent([...rojoIds, ...azulIds]);
