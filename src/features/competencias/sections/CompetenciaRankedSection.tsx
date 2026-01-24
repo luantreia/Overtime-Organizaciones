@@ -122,8 +122,7 @@ export default function CompetenciaRankedSection({
     onSaveAssignment,
     onFinalizeMatch,
     onCancelMatch,
-    abandonMatch,
-    setMatchId
+    abandonMatch
   } = useRankedMatch({
     competenciaId,
     modalidad,
