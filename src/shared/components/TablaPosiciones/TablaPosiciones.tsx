@@ -77,36 +77,38 @@ export const TablaPosiciones: React.FC<TablaPosicionesProps> = ({ faseId, partic
           <h3 className="text-lg font-bold mb-4">
             {key === 'general' ? 'Tabla General' : `Grupo/División: ${key}`}
           </h3>
-          <table className="min-w-full bg-white border border-gray-300">
-            <thead>
-              <tr className="bg-gray-100">
-                <th className="py-2 px-4 border">Pos</th>
-                <th className="py-2 px-4 border">Equipo</th>
-                <th className="py-2 px-4 border">PJ</th>
-                <th className="py-2 px-4 border">PG</th>
-                <th className="py-2 px-4 border">PP</th>
-                <th className="py-2 px-4 border">PE</th>
-                <th className="py-2 px-4 border">Dif</th>
-                <th className="py-2 px-4 border">Pts</th>
-              </tr>
-            </thead>
-            <tbody>
-              {lista.map((p, index) => (
-                <tr key={p.id} className="hover:bg-gray-50">
-                  <td className="py-2 px-4 border text-center">{index + 1}</td>
-                  <td className="py-2 px-4 border">
-                    {p.participacionTemporada?.equipo?.nombre || 'Equipo desconocido'}
-                  </td>
-                  <td className="py-2 px-4 border text-center">{p.partidosJugados}</td>
-                  <td className="py-2 px-4 border text-center">{p.partidosGanados}</td>
-                  <td className="py-2 px-4 border text-center">{p.partidosPerdidos}</td>
-                  <td className="py-2 px-4 border text-center">{p.partidosEmpatados}</td>
-                  <td className="py-2 px-4 border text-center">{p.diferenciaPuntos}</td>
-                  <td className="py-2 px-4 border text-center font-bold">{p.puntos}</td>
+          <div className="overflow-x-auto">
+            <table className="min-w-full bg-white border border-gray-300 text-xs sm:text-sm">
+              <thead>
+                <tr className="bg-gray-100">
+                  <th className="py-2 px-1 sm:px-4 border text-center">Pos</th>
+                  <th className="py-2 px-2 sm:px-4 border text-left">Equipo</th>
+                  <th className="py-2 px-1 sm:px-4 border text-center">PJ</th>
+                  <th className="py-2 px-1 sm:px-4 border text-center hidden sm:table-cell">PG</th>
+                  <th className="py-2 px-1 sm:px-4 border text-center hidden sm:table-cell">PP</th>
+                  <th className="py-2 px-1 sm:px-4 border text-center hidden sm:table-cell">PE</th>
+                  <th className="py-2 px-1 sm:px-4 border text-center hidden md:table-cell">Dif</th>
+                  <th className="py-2 px-1 sm:px-4 border text-center font-bold">Pts</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {lista.map((p, index) => (
+                  <tr key={p.id} className="hover:bg-gray-50">
+                    <td className="py-2 px-1 sm:px-4 border text-center font-medium">{index + 1}</td>
+                    <td className="py-2 px-2 sm:px-4 border truncate max-w-[100px] sm:max-w-none">
+                      {p.participacionTemporada?.equipo?.nombre || 'Equipo desconocido'}
+                    </td>
+                    <td className="py-2 px-1 sm:px-4 border text-center">{p.partidosJugados}</td>
+                    <td className="py-2 px-1 sm:px-4 border text-center hidden sm:table-cell">{p.partidosGanados}</td>
+                    <td className="py-2 px-1 sm:px-4 border text-center hidden sm:table-cell">{p.partidosPerdidos}</td>
+                    <td className="py-2 px-1 sm:px-4 border text-center hidden sm:table-cell">{p.partidosEmpatados}</td>
+                    <td className="py-2 px-1 sm:px-4 border text-center hidden md:table-cell">{p.diferenciaPuntos}</td>
+                    <td className="py-2 px-1 sm:px-4 border text-center font-bold bg-slate-50">{p.puntos}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       ))}
     </div>

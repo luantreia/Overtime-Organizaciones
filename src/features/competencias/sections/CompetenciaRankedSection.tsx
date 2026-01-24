@@ -396,22 +396,25 @@ export default function CompetenciaRankedSection({
       )}
 
       {/* Header Config */}
-      <Card className="p-4 border-slate-100 shadow-sm">
-        <div className="flex flex-wrap items-end gap-3">
-          <div className="space-y-1">
-            <label className="text-[10px] uppercase tracking-wider font-bold text-slate-500">Modalidad</label>
-            <div className="h-9 px-3 flex items-center bg-slate-50 rounded border text-sm font-medium text-slate-700">{modalidad || 'N/A'}</div>
+      <Card className="p-3 sm:p-4 border-slate-100 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-end gap-3">
+          <div className="flex gap-3">
+            <div className="flex-1 space-y-1">
+              <label className="text-[10px] uppercase tracking-wider font-bold text-slate-500">Modalidad</label>
+              <div className="h-9 px-3 flex items-center bg-slate-50 rounded border text-xs sm:text-sm font-medium text-slate-700">{modalidad || 'N/A'}</div>
+            </div>
+            <div className="flex-1 space-y-1">
+              <label className="text-[10px] uppercase tracking-wider font-bold text-slate-500">Categoría</label>
+              <div className="h-9 px-3 flex items-center bg-slate-50 rounded border text-xs sm:text-sm font-medium text-slate-700">{categoria || 'N/A'}</div>
+            </div>
           </div>
-          <div className="space-y-1">
-            <label className="text-[10px] uppercase tracking-wider font-bold text-slate-500">Categoría</label>
-            <div className="h-9 px-3 flex items-center bg-slate-50 rounded border text-sm font-medium text-slate-700">{categoria || 'N/A'}</div>
-          </div>
+          
           <div className="space-y-1">
             <label className="text-[10px] uppercase tracking-wider font-bold text-slate-500">Temporada</label>
             <select 
               value={selectedTemporada} 
               onChange={(e) => setSelectedTemporada(e.target.value)}
-              className="h-9 w-40 rounded-md border border-slate-200 bg-white px-2 py-1 text-sm outline-none focus:ring-2 focus:ring-brand-500 transition-shadow disabled:bg-slate-50 disabled:text-slate-400"
+              className="h-9 w-full sm:w-40 rounded-md border border-slate-200 bg-white px-2 py-1 text-xs sm:text-sm outline-none focus:ring-2 focus:ring-brand-500 transition-shadow disabled:bg-slate-50 disabled:text-slate-400"
               disabled={busy || !!matchId}
             >
               <option value="">Sin temporada (Global)</option>
@@ -421,24 +424,28 @@ export default function CompetenciaRankedSection({
             </select>
           </div>
 
-          {!matchId ? (
-            <Button 
-              variant="primary" 
-              onClick={onCreateMatch} 
-              disabled={busy || !modalidad || !categoria}
-              className="px-6"
-            >
-              Iniciar sesión Ranked
-            </Button>
-          ) : (
-            <div className="flex gap-2 items-center bg-brand-50 rounded-lg p-1 pr-3 border border-brand-100">
-               <span className="bg-brand-500 text-white text-[10px] font-bold px-2 py-1 rounded-md ml-1 animate-pulse">EN CURSO</span>
-               <span className="text-[10px] text-brand-700 font-medium">ID: {matchId.slice(-6)}</span>
-               <div className="h-4 w-[1px] bg-brand-200 mx-1" />
-               <button onClick={abandonMatch} className="text-[10px] text-slate-500 hover:text-slate-700 font-bold uppercase tracking-tight">Abandonar</button>
-               <button onClick={() => showConfirm('¿Eliminar Partido?', 'Se perderá el progreso de este partido.', onCancelMatch)} className="text-[10px] text-red-500 hover:text-red-700 font-bold uppercase tracking-tight">Eliminar</button>
-            </div>
-          )}
+          <div className="flex-1 flex items-end">
+            {!matchId ? (
+              <Button 
+                variant="primary" 
+                onClick={onCreateMatch} 
+                disabled={busy || !modalidad || !categoria}
+                className="w-full sm:w-auto px-6 whitespace-nowrap"
+              >
+                Iniciar sesión Ranked
+              </Button>
+            ) : (
+              <div className="flex flex-wrap gap-2 items-center bg-brand-50 rounded-lg p-1.5 pr-3 border border-brand-100 w-full sm:w-auto">
+                 <span className="bg-brand-500 text-white text-[9px] sm:text-[10px] font-bold px-2 py-1 rounded ml-1 animate-pulse uppercase">EN CURSO</span>
+                 <span className="text-[9px] sm:text-[10px] text-brand-700 font-medium">ID: {matchId.slice(-6).toUpperCase()}</span>
+                 <div className="hidden sm:block h-4 w-[1px] bg-brand-200 mx-1" />
+                 <div className="flex gap-3 ml-auto sm:ml-0">
+                   <button onClick={abandonMatch} className="text-[9px] sm:text-[10px] text-slate-500 hover:text-slate-700 font-bold uppercase tracking-tight">Abandonar</button>
+                   <button onClick={() => showConfirm('¿Eliminar Partido?', 'Se perderá el progreso de este partido.', onCancelMatch)} className="text-[9px] sm:text-[10px] text-red-500 hover:text-red-700 font-bold uppercase tracking-tight">Eliminar</button>
+                 </div>
+              </div>
+            )}
+          </div>
         </div>
       </Card>
 

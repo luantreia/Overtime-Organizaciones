@@ -42,12 +42,12 @@ export default function PartidosSection({ partidos, filtroEstado, setFiltroEstad
   const partidosFiltrados = !filtroEstado ? partidos : partidos.filter((p) => p.estado === filtroEstado);
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-card">
-      <div className="mb-6 flex items-end justify-between gap-3">
-        <div>
+    <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-6 shadow-card">
+      <div className="mb-6 flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+        <div className="w-full sm:w-auto">
           <label className="mb-1 block text-xs font-medium text-slate-600">Estado</label>
           <select 
-            className="w-48 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:border-brand-500 focus:ring-brand-500" 
+            className="w-full sm:w-48 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:border-brand-500 focus:ring-brand-500" 
             value={filtroEstado} 
             onChange={(e)=>setFiltroEstado(e.target.value)}
           >

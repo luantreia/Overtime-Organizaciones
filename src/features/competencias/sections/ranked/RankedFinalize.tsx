@@ -72,55 +72,51 @@ export const RankedFinalize: React.FC<RankedFinalizeProps> = ({
           )}
         </div>
         
-        <div className="flex items-center gap-2 justify-center py-4">
+        <div className="flex items-center gap-1 sm:gap-4 justify-center py-4 bg-white/40 rounded-lg">
           {/* Rojo Team */}
-          <div className="flex flex-col items-center gap-2">
-            <span className="text-[10px] font-bold text-red-600 tracking-widest">ROJO</span>
-            <div className="flex items-center gap-2">
+          <div className="flex flex-col items-center gap-1.5 sm:gap-2">
+            <span className="text-[9px] sm:text-[10px] font-bold text-red-600 tracking-widest leading-none">ROJO</span>
+            <div className="flex items-center gap-1 sm:gap-2">
               <button 
                 onClick={() => adjustScore('local', -1)} 
-                className="w-8 h-8 flex items-center justify-center rounded-full bg-white border border-slate-200 text-slate-500 hover:bg-slate-50 active:scale-95"
+                className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-full bg-white border border-slate-200 text-slate-500 hover:bg-slate-50 active:scale-95 text-xs sm:text-base"
                 disabled={!matchActive}
-                title="Ajuste fino -1"
               >
                 -
               </button>
-              <div className="w-16 h-16 flex items-center justify-center text-4xl font-black rounded-xl bg-white border shadow-sm text-slate-900 tabular-nums">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 flex items-center justify-center text-2xl sm:text-4xl font-black rounded-lg sm:rounded-xl bg-white border shadow-sm text-slate-900 tabular-nums">
                 {score.local}
               </div>
               <button 
                 onClick={() => addSet('local')} 
-                className="w-12 h-12 flex items-center justify-center rounded-full bg-red-600 text-white shadow-lg hover:bg-red-700 active:scale-90 transition-all font-bold text-2xl"
+                className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center rounded-full bg-red-600 text-white shadow-lg hover:bg-red-700 active:scale-90 transition-all font-bold text-xl sm:text-2xl"
                 disabled={!matchActive}
-                title="Ganar Set Rojo"
               >
                 +
               </button>
             </div>
           </div>
 
-          <div className="mx-4 text-2xl font-bold text-slate-200">VS</div>
+          <div className="mx-1 sm:mx-4 text-xs sm:text-2xl font-bold text-slate-300">VS</div>
 
           {/* Azul Team */}
-          <div className="flex flex-col items-center gap-2">
-            <span className="text-[10px] font-bold text-blue-600 tracking-widest">AZUL</span>
-            <div className="flex items-center gap-2">
+          <div className="flex flex-col items-center gap-1.5 sm:gap-2">
+            <span className="text-[9px] sm:text-[10px] font-bold text-blue-600 tracking-widest leading-none">AZUL</span>
+            <div className="flex items-center gap-1 sm:gap-2">
               <button 
                 onClick={() => addSet('visitante')} 
-                className="w-12 h-12 flex items-center justify-center rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 active:scale-90 transition-all font-bold text-2xl"
+                className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 active:scale-90 transition-all font-bold text-xl sm:text-2xl"
                 disabled={!matchActive}
-                title="Ganar Set Azul"
               >
                 +
               </button>
-              <div className="w-16 h-16 flex items-center justify-center text-4xl font-black rounded-xl bg-white border shadow-sm text-slate-900 tabular-nums">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 flex items-center justify-center text-2xl sm:text-4xl font-black rounded-lg sm:rounded-xl bg-white border shadow-sm text-slate-900 tabular-nums">
                 {score.visitante}
               </div>
               <button 
                 onClick={() => adjustScore('visitante', -1)} 
-                className="w-8 h-8 flex items-center justify-center rounded-full bg-white border border-slate-200 text-slate-500 hover:bg-slate-50 active:scale-95"
+                className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-full bg-white border border-slate-200 text-slate-500 hover:bg-slate-50 active:scale-95 text-xs sm:text-base"
                 disabled={!matchActive}
-                title="Ajuste fino -1"
               >
                 -
               </button>

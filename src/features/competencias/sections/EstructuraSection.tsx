@@ -85,13 +85,13 @@ export default function EstructuraSection(props: Props) {
           <p className="rounded-2xl border border-dashed border-slate-200 px-4 py-6 text-sm text-slate-500">Sin temporadas</p>
         ) : (
           temporadas.map((t) => (
-            <div key={t._id} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-card">
-              <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <div key={t._id} className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-6 shadow-card">
+              <div className="mb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <h3 className="text-lg font-semibold text-slate-900">{t.nombre}</h3>
-                <div className="flex gap-2">
-                  <button disabled={!esAdmin} className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50" onClick={() => setOpenCrearFase({ open: true, temporadaId: t._id })}>Crear fase</button>
-                  <button disabled={!esAdmin} className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50" onClick={() => onEditarTemporada(t)}>Editar</button>
-                  <button disabled={!esAdmin} className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-100 disabled:opacity-50" onClick={() => onEliminarTemporada(t)}>Eliminar</button>
+                <div className="flex flex-wrap gap-2">
+                  <button disabled={!esAdmin} className="flex-1 sm:flex-none rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50 text-center" onClick={() => setOpenCrearFase({ open: true, temporadaId: t._id })}>Crear fase</button>
+                  <button disabled={!esAdmin} className="flex-1 sm:flex-none rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50 text-center" onClick={() => onEditarTemporada(t)}>Editar</button>
+                  <button disabled={!esAdmin} className="flex-1 sm:flex-none rounded-lg border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-100 disabled:opacity-50 text-center" onClick={() => onEliminarTemporada(t)}>Eliminar</button>
                 </div>
               </div>
 
@@ -106,13 +106,15 @@ export default function EstructuraSection(props: Props) {
               <ul className="mt-2 divide-y divide-slate-200">
                 {(fasesPorTemporada[t._id] || []).map((f) => (
                   <li key={f._id} className="py-2 text-sm">
-                    <div className="flex items-center justify-between">
-                      <span>{f.nombre ?? 'Fase'}</span>
-                      <div className="flex gap-2">
-                        <button disabled={!esAdmin} className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50" onClick={() => onGenerarFixture(f._id)}>Generar fixture</button>
-                        <button disabled={!esAdmin} className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50" onClick={() => onEditarFase(f, t._id)}>Editar</button>
-                        <button disabled={!esAdmin} className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-100 disabled:opacity-50" onClick={() => onEliminarFase(f, t._id)}>Eliminar</button>
-                        <button disabled={!esAdmin} className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50" onClick={() => setOpenGestionParticipantesFase({ open: true, fase: f, temporadaId: t._id })}>Gestionar</button>
+                    <div className="flex flex-col gap-2 py-2">
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium">{f.nombre ?? 'Fase'}</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+                        <button disabled={!esAdmin} className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50 text-center" onClick={() => onGenerarFixture(f._id)}>Generar fixture</button>
+                        <button disabled={!esAdmin} className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50 text-center" onClick={() => onEditarFase(f, t._id)}>Editar</button>
+                        <button disabled={!esAdmin} className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-100 disabled:opacity-50 text-center" onClick={() => onEliminarFase(f, t._id)}>Eliminar</button>
+                        <button disabled={!esAdmin} className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50 text-center" onClick={() => setOpenGestionParticipantesFase({ open: true, fase: f, temporadaId: t._id })}>Gestionar</button>
                       </div>
                     </div>
                     {/* Tabla de posiciones */}

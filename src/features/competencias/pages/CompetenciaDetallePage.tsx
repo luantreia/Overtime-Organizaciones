@@ -268,13 +268,13 @@ const CompetenciaDetallePage = () => {
         </nav>
         <h1 className="text-2xl font-semibold text-slate-900">{nombre || 'Competencia'}</h1>
         <p className="text-sm text-slate-500">Administración y estructura</p>
-        <div className="mt-2 flex gap-2 text-sm">
+        <div className="mt-2 flex gap-2 text-sm overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0 sm:overflow-visible">
           {(['general','estructura','partidos', ...(rankedEnabled ? ['ranked'] as const : [])] as const).map(t => (
             <button
               key={t}
               type="button"
               onClick={() => setTab(t)}
-              className={`rounded-lg px-3 py-1.5 ${tab===t ? 'bg-brand-100 text-brand-700' : 'border border-slate-200 text-slate-700 hover:bg-slate-50'}`}
+              className={`rounded-lg px-3 py-1.5 whitespace-nowrap ${tab===t ? 'bg-brand-100 text-brand-700' : 'border border-slate-200 text-slate-700 hover:bg-slate-50'}`}
             >
               {t === 'general' ? 'General' : t === 'estructura' ? 'Temporadas/Fases' : t === 'partidos' ? 'Partidos' : 'Ranked'}
             </button>

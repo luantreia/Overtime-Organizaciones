@@ -40,29 +40,29 @@ export const RankedAdminTools: React.FC<RankedAdminToolsProps> = ({
 
   return (
     <div className="space-y-4">
-      <Card className="p-4 border-slate-100 shadow-sm bg-white">
-        <h3 className="mb-3 text-sm font-bold text-slate-700 flex items-center justify-between">
+      <Card className="p-3 sm:p-4 border-slate-100 shadow-sm bg-white">
+        <h3 className="mb-3 text-[11px] sm:text-sm font-bold text-slate-700 flex items-center justify-between">
           <span>Historial Reciente (Corrección Rápida)</span>
-          <span className="text-[10px] text-slate-400 font-normal uppercase">Últimos {recentMatches.length}</span>
+          <span className="text-[9px] sm:text-[10px] text-slate-400 font-normal uppercase">Últimos {recentMatches.length}</span>
         </h3>
         <div className="space-y-2">
           {recentMatches.length === 0 ? (
             <p className="text-xs text-slate-400 italic py-2 text-center">No hay partidos recientes para corregir</p>
           ) : (
             recentMatches.map((m) => (
-              <div key={m._id} className="flex items-center justify-between p-2 rounded-lg border border-slate-50 bg-slate-50/50 hover:bg-slate-50 transition-colors">
-                <div className="flex flex-col">
-                  <span className="text-[10px] font-mono text-slate-400 uppercase">ID: {m._id.slice(-6)}</span>
+              <div key={m._id} className="flex items-center justify-between p-1.5 sm:p-2 rounded-lg border border-slate-50 bg-slate-50/50 hover:bg-slate-50 transition-colors">
+                <div className="flex flex-col min-w-0">
+                  <span className="text-[8px] sm:text-[10px] font-mono text-slate-400 uppercase truncate">ID: {m._id.slice(-6).toUpperCase()}</span>
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-bold text-red-600">{m.marcadorLocal}</span>
-                    <span className="text-xs text-slate-300">-</span>
-                    <span className="text-sm font-bold text-blue-600">{m.marcadorVisitante}</span>
+                    <span className="text-sm font-black text-red-600 leading-none">{m.marcadorLocal}</span>
+                    <span className="text-xs text-slate-300 leading-none">-</span>
+                    <span className="text-sm font-black text-blue-600 leading-none">{m.marcadorVisitante}</span>
                   </div>
                 </div>
                 <Button 
                   size="sm" 
                   variant="outline" 
-                  className="h-7 text-[10px] border-slate-200 bg-white"
+                  className="h-7 text-[10px] sm:text-xs border-slate-200 bg-white"
                   onClick={() => onEditResult(m)}
                   disabled={busy}
                 >
@@ -76,37 +76,37 @@ export const RankedAdminTools: React.FC<RankedAdminToolsProps> = ({
 
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        className="flex w-full items-center justify-between rounded-lg border border-slate-200 bg-white p-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+        className="flex w-full items-center justify-between rounded-lg border border-slate-200 bg-white p-3 text-xs sm:text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
       >
         <span className="flex items-center gap-2">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
           </svg>
-          Configuración Avanzada y Herramientas Admin
+          Herramientas Avanzadas
         </span>
-        <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 sm:h-5 sm:w-5 text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
         </svg>
       </button>
 
       {isOpen && (
-        <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
-          <Card className="p-4 border-amber-100 bg-amber-50/10">
-            <h3 className="mb-3 text-sm font-bold text-slate-700">Mantenimiento de Partidos</h3>
+        <div className="space-y-3 animate-in fade-in slide-in-from-top-2 duration-200">
+          <Card className="p-3 sm:p-4 border-amber-100 bg-amber-50/10">
+            <h3 className="mb-3 text-[11px] font-bold text-slate-500 uppercase tracking-widest">Mantenimiento</h3>
             <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <label className="text-[10px] uppercase tracking-wider font-bold text-slate-500">Forzar Conversion Ranked</label>
+              <div className="space-y-1.5">
+                <label className="text-[9px] uppercase tracking-wider font-extrabold text-slate-400">Forzar Conversion Ranked</label>
                 <div className="flex gap-2">
-                  <input value={convertId} onChange={(e)=>setConvertId(e.target.value)} placeholder="ID de partido" className="flex-1 rounded-md border px-2 py-1 text-sm outline-none focus:ring-1 focus:ring-brand-500" />
-                  <Button size="sm" onClick={onMarkAsRanked} disabled={busy || !convertId.trim()}>Marcar</Button>
+                  <input value={convertId} onChange={(e)=>setConvertId(e.target.value)} placeholder="Part. ID" className="flex-1 rounded-md border px-2 py-1 text-xs outline-none focus:ring-1 focus:ring-brand-500 min-w-0" />
+                  <Button size="sm" onClick={onMarkAsRanked} disabled={busy || !convertId.trim()} className="h-8 text-[10px] px-2">Marcar</Button>
                 </div>
               </div>
-              <div className="space-y-2">
-                <label className="text-[10px] uppercase tracking-wider font-bold text-red-600">Revertir MMR Partido</label>
+              <div className="space-y-1.5">
+                <label className="text-[9px] uppercase tracking-wider font-extrabold text-red-600">Revertir MMR Partido</label>
                 <div className="flex gap-2">
-                  <input value={revertId} onChange={(e)=>setRevertId(e.target.value)} placeholder="ID de partido" className="flex-1 rounded-md border px-2 py-1 text-sm outline-none focus:ring-1 focus:ring-red-500" />
-                  <Button size="sm" variant="outline" className="text-red-600 border-red-200 hover:bg-red-50" onClick={onRevertMatch} disabled={busy || !revertId.trim()}>Revertir</Button>
+                  <input value={revertId} onChange={(e)=>setRevertId(e.target.value)} placeholder="Part. ID" className="flex-1 rounded-md border px-2 py-1 text-xs outline-none focus:ring-1 focus:ring-red-500 min-w-0" />
+                  <Button size="sm" variant="outline" className="h-8 text-[10px] px-2 text-red-600 border-red-200 hover:bg-red-50" onClick={onRevertMatch} disabled={busy || !revertId.trim()}>Revertir</Button>
                 </div>
               </div>
             </div>
