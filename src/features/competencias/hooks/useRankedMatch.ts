@@ -91,6 +91,7 @@ export function useRankedMatch({
   }, [persistenceKey]);
 
   const onCreateMatch = async () => {
+    if (busy) return;
     if (!competenciaId || !modalidad || !categoria) {
       onError?.('Faltan datos de competencia, modalidad o categoría');
       return;
@@ -118,7 +119,7 @@ export function useRankedMatch({
   };
 
   const onAutoAssign = async (presentes: string[], playedCounts: Record<string, number>) => {
-    if (!matchId) return;
+    if (!matchId || busy) return;
 
     // Logic: If teams already have players, only fill gaps instead of reshuffling everything.
     const hasInitialPlayers = rojo.length > 0 || azul.length > 0;
@@ -198,7 +199,7 @@ export function useRankedMatch({
   };
 
   const onSaveAssignment = async () => {
-    if (!matchId) return;
+    if (!matchId || busy) return;
     setBusy(true);
     try {
       await apiAssignTeams(matchId, rojo, azul);
@@ -222,7 +223,7 @@ export function useRankedMatch({
   };
 
   const onFinalizeMatch = async (afkIds?: string[]) => {
-    if (!matchId) return;
+    if (!matchId || busy) return;
     setBusy(true);
     try {
       const currentPlayers = [...rojo, ...azul];
@@ -240,7 +241,7 @@ export function useRankedMatch({
   };
 
   const onCancelMatch = async () => {
-    if (!matchId) return;
+    if (!matchId || busy) return;
     setBusy(true);
     try {
       await deleteRankedMatch(matchId);
@@ -302,7 +303,7 @@ export function useRankedMatch({
   };
 
   const addSet = async (winner: 'local' | 'visitante') => {
-    if (!matchId) return;
+    if (!matchId || busy) return;
     const elapsed = startTime ? Date.now() - startTime : 0;
     const lastSetTime = sets.length > 0 ? sets[sets.length - 1].time : 0;
     const currentSetDuration = elapsed - lastSetTime;
@@ -322,6 +323,8 @@ export function useRankedMatch({
         [winner]: prev[winner] + 1
       }));
     } catch (e: any) {
+      console.error('Error adding set:', e);
+      // Recovery logic similar to ControlPage if needed, but here we usually show error
       onError?.(e.message || 'Error al guardar set en servidor');
     } finally {
       setBusy(false);
@@ -329,7 +332,7 @@ export function useRankedMatch({
   };
 
   const removeLastSet = async () => {
-    if (sets.length === 0) return;
+    if (sets.length === 0 || busy) return;
     const last = sets[sets.length - 1];
     
     if (last._id) {

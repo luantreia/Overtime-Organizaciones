@@ -194,7 +194,8 @@ export const RankedFinalize: React.FC<RankedFinalizeProps> = ({
           {sets.length > 0 && matchActive && (
             <button 
               onClick={removeLastSet}
-              className="text-[10px] text-slate-400 hover:text-red-500 underline transition-colors"
+              disabled={busy}
+              className="text-[10px] text-slate-400 hover:text-red-500 underline transition-colors disabled:opacity-50"
             >
               Deshacer último set
             </button>
@@ -209,7 +210,7 @@ export const RankedFinalize: React.FC<RankedFinalizeProps> = ({
               <button 
                 onClick={() => adjustScore('local', -1)} 
                 className="w-6 h-6 sm:w-8 sm:h-8 flex items-center justify-center rounded-full bg-white border border-slate-200 text-slate-500 hover:bg-slate-50 active:scale-95 text-[10px] sm:text-base"
-                disabled={!matchActive}
+                disabled={!matchActive || busy}
               >
                 -
               </button>
@@ -219,7 +220,7 @@ export const RankedFinalize: React.FC<RankedFinalizeProps> = ({
               <button 
                 onClick={() => addSet('local')} 
                 className="w-8 h-8 sm:w-12 sm:h-12 flex items-center justify-center rounded-full bg-red-600 text-white shadow-lg hover:bg-red-700 active:scale-90 transition-all font-bold text-lg sm:text-2xl"
-                disabled={!matchActive}
+                disabled={!matchActive || busy}
               >
                 +
               </button>
@@ -235,7 +236,7 @@ export const RankedFinalize: React.FC<RankedFinalizeProps> = ({
               <button 
                 onClick={() => addSet('visitante')} 
                 className="w-8 h-8 sm:w-12 sm:h-12 flex items-center justify-center rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 active:scale-90 transition-all font-bold text-lg sm:text-2xl"
-                disabled={!matchActive}
+                disabled={!matchActive || busy}
               >
                 +
               </button>
@@ -245,7 +246,7 @@ export const RankedFinalize: React.FC<RankedFinalizeProps> = ({
               <button 
                 onClick={() => adjustScore('visitante', -1)} 
                 className="w-6 h-6 sm:w-8 sm:h-8 flex items-center justify-center rounded-full bg-white border border-slate-200 text-slate-500 hover:bg-slate-50 active:scale-95 text-[10px] sm:text-base"
-                disabled={!matchActive}
+                disabled={!matchActive || busy}
               >
                 -
               </button>

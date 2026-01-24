@@ -188,6 +188,7 @@ export default function CompetenciaRankedSection({
   });
 
   const handleEditResult = async (m: any) => {
+    if (loadingMatch) return;
     const matchId = m.id || m._id;
     const isFinalizado = m.estado === 'finalizado';
     
