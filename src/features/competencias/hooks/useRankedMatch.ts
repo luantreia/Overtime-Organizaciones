@@ -263,12 +263,6 @@ export function useRankedMatch({
       syncMatchAttendance(matchId, currentPlayers);
       if (currentPlayers.length > 0) setPjMarked(true);
 
-      if (!startTime) {
-        const now = Date.now();
-        setStartTime(now);
-        apiStartMatchTimer(matchId, now).catch(console.error);
-      }
-      
       onSuccess?.('Asignación de equipos guardada');
     } catch (e: any) {
       onError?.(e.message || 'Error guardando equipos');
