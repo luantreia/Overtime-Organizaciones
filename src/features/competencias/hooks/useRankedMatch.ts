@@ -7,6 +7,9 @@ import {
   finalizeMatch as apiFinalizeMatch, 
   startMatchTimer as apiStartMatchTimer,
   updateMatchConfig as apiUpdateMatchConfig,
+  createSet as apiCreateSet,
+  finishSet as apiFinishSet,
+  deleteSet as apiDeleteSet,
   deleteRankedMatch,
   Modalidad,
   Categoria
@@ -40,7 +43,7 @@ export function useRankedMatch({
   const [rojo, setRojo] = useState<string[]>([]);
   const [azul, setAzul] = useState<string[]>([]);
   const [score, setScore] = useState({ local: 0, visitante: 0 });
-  const [sets, setSets] = useState<{ winner: 'local' | 'visitante'; time: number }[]>([]);
+  const [sets, setSets] = useState<{ _id?: string; winner: 'local' | 'visitante'; time: number }[]>([]);
   const [startTime, setStartTime] = useState<number | null>(null);
   const [matchConfig, setMatchConfig] = useState<{ matchDuration: number; setDuration: number; suddenDeathLimit: number }>({
     matchDuration: 1200,
@@ -298,25 +301,59 @@ export function useRankedMatch({
     }));
   };
 
-  const addSet = (winner: 'local' | 'visitante') => {
+  const addSet = async (winner: 'local' | 'visitante') => {
+    if (!matchId) return;
     const elapsed = startTime ? Date.now() - startTime : 0;
-    setSets(prev => [...prev, { winner, time: elapsed }]);
-    setScore(prev => ({
-      ...prev,
-      [winner]: prev[winner] + 1
-    }));
+    const lastSetTime = sets.length > 0 ? sets[sets.length - 1].time : 0;
+    const currentSetDuration = elapsed - lastSetTime;
+    
+    setBusy(true);
+    try {
+      // 1. Create set in DB
+      const nextSetNum = sets.length + 1;
+      const newSetDoc = await apiCreateSet(matchId, nextSetNum);
+      
+      // 2. Finish it immediately
+      await apiFinishSet(newSetDoc._id, winner, Math.floor(currentSetDuration / 1000));
+
+      setSets(prev => [...prev, { _id: newSetDoc._id, winner, time: elapsed }]);
+      setScore(prev => ({
+        ...prev,
+        [winner]: prev[winner] + 1
+      }));
+    } catch (e: any) {
+      onError?.(e.message || 'Error al guardar set en servidor');
+    } finally {
+      setBusy(false);
+    }
   };
 
-  const removeLastSet = () => {
-    setSets(prev => {
-      if (prev.length === 0) return prev;
-      const last = prev[prev.length - 1];
+  const removeLastSet = async () => {
+    if (sets.length === 0) return;
+    const last = sets[sets.length - 1];
+    
+    if (last._id) {
+      setBusy(true);
+      try {
+        await apiDeleteSet(last._id);
+        setSets(prev => prev.slice(0, -1));
+        setScore(s => ({
+          ...s,
+          [last.winner]: Math.max(0, s[last.winner] - 1)
+        }));
+      } catch (e: any) {
+        onError?.(e.message || 'Error al eliminar set de servidor');
+      } finally {
+        setBusy(false);
+      }
+    } else {
+      // Local only fallback (shouldn't happen with new logic)
+      setSets(prev => prev.slice(0, -1));
       setScore(s => ({
         ...s,
         [last.winner]: Math.max(0, s[last.winner] - 1)
       }));
-      return prev.slice(0, -1);
-    });
+    }
   };
 
   return {

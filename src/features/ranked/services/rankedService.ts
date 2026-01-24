@@ -51,6 +51,31 @@ export async function getRankedMatch(partidoId: string) {
   return authFetch<{ ok: boolean; partido: any; teams: any[] }>(`${BASE}/match/${partidoId}`);
 }
 
+export async function createSet(partidoId: string, numeroSet: number) {
+  return authFetch<any>(`/api/set-partido`, {
+    method: 'POST',
+    body: { partido: partidoId, numeroSet, estadoSet: 'en_juego', ganadorSet: 'pendiente' }
+  });
+}
+
+export async function finishSet(setId: string, winner: 'local' | 'visitante', durationSeconds: number) {
+  return authFetch<any>(`/api/set-partido/${setId}`, {
+    method: 'PUT',
+    body: { ganadorSet: winner, estadoSet: 'finalizado', timerSetValue: 0, timerSetRunning: false, lastSetDuration: durationSeconds }
+  });
+}
+
+export async function deleteSetsOfMatch(partidoId: string) {
+  // We can't delete all sets easily with one call without a custom endpoint, 
+  // but we can at least implement a way to delete the last one.
+}
+
+export async function deleteSet(setId: string) {
+  return authFetch<any>(`/api/set-partido/${setId}`, {
+    method: 'DELETE'
+  });
+}
+
 export async function deleteRankedMatch(partidoId: string) {
   return authFetch<{ ok: boolean }>(`/api/partidos/${partidoId}`, {
     method: 'DELETE',

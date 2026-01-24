@@ -202,10 +202,16 @@ export default function CompetenciaRankedSection({
         const eqL = m.rojoPlayers || [];
         const eqV = m.azulPlayers || [];
         // El backend puede llamar al campo 'sets' o 'setDetalles'
-        const setsData = (m.sets || []).map((s: any) => ({
-           winner: s.ganadorSet === 'local' ? 'local' : 'visitante',
-           time: s.duracionReal ? s.duracionReal * 1000 : 0
-        }));
+        let cumulativeTime = 0;
+        const setsData = (m.sets || []).map((s: any) => {
+           const durationMs = (s.duracionReal || 0) * 1000;
+           cumulativeTime += durationMs;
+           return {
+             _id: s._id,
+             winner: s.ganadorSet === 'local' ? 'local' : 'visitante',
+             time: cumulativeTime
+           };
+        });
 
         const externalStartTime = m.rankedMeta?.startTime ? new Date(m.rankedMeta.startTime).getTime() : null;
 
