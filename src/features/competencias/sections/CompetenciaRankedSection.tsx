@@ -168,29 +168,43 @@ export default function CompetenciaRankedSection({
 
   const handleEditResult = async (m: any) => {
     const matchId = m.id || m._id;
-    showConfirm(
-      'Corregir Resultado',
-      `Se revertirán los puntos actuales del partido ${(matchId || '').slice(-6)} para editarlos. ¿Continuar?`,
-      async () => {
-        try {
+    const isFinalizado = m.estado === 'finalizado';
+    
+    const proceed = async () => {
+      try {
+        if (isFinalizado) {
           await revertMatch(matchId);
-          
-          // Buscamos los IDs de los jugadores de los equipos
-          const eqL = m.rojoPlayers || [];
-          const eqV = m.azulPlayers || [];
-          // El backend puede llamar al campo 'sets' o 'setDetalles'
-          const setsData = (m.sets || []).map((s: any) => ({
-             winner: s.ganadorSet === 'local' ? 'local' : 'visitante',
-             time: s.duracionReal ? s.duracionReal * 1000 : 0
-          }));
-
-          loadMatch(matchId, eqL, eqV, { local: m.marcadorLocal || 0, visitante: m.marcadorVisitante || 0 }, setsData);
-          setSuccess('Partido cargado para corrección');
-        } catch (e: any) {
-          setError(e.message || 'Error al cargar para edición');
         }
+        
+        // Buscamos los IDs de los jugadores de los equipos
+        const eqL = m.rojoPlayers || [];
+        const eqV = m.azulPlayers || [];
+        // El backend puede llamar al campo 'sets' o 'setDetalles'
+        const setsData = (m.sets || []).map((s: any) => ({
+           winner: s.ganadorSet === 'local' ? 'local' : 'visitante',
+           time: s.duracionReal ? s.duracionReal * 1000 : 0
+        }));
+
+        const markPresentBatch = (ids: string[]) => {
+          ids.forEach(id => togglePresente(id, true));
+        };
+
+        loadMatch(matchId, eqL, eqV, { local: m.marcadorLocal || 0, visitante: m.marcadorVisitante || 0 }, setsData, markPresentBatch);
+        setSuccess(isFinalizado ? 'Partido cargado para corrección' : 'Partido cargado para continuar');
+      } catch (e: any) {
+        setError(e.message || 'Error al cargar el partido');
       }
-    );
+    };
+
+    if (isFinalizado) {
+      showConfirm(
+        'Corregir Resultado',
+        `Se revertirán los puntos actuales del partido ${(matchId || '').slice(-6)} para editarlos. ¿Continuar?`,
+        proceed
+      );
+    } else {
+      proceed();
+    }
   };
 
   // Initial Data Fetching

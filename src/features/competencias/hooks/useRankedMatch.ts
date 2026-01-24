@@ -186,13 +186,25 @@ export function useRankedMatch({
     resetMatchState();
   };
 
-  const loadMatch = async (id: string, rojoIds: string[], azulIds: string[], currentScore: { local: number; visitante: number }, existingSets: any[] = []) => {
+  const loadMatch = async (
+    id: string, 
+    rojoIds: string[], 
+    azulIds: string[], 
+    currentScore: { local: number; visitante: number }, 
+    existingSets: any[] = [],
+    markAsPresent?: (ids: string[]) => void
+  ) => {
     setMatchId(id);
     setRojo(rojoIds);
     setAzul(azulIds);
     setScore(currentScore);
     setSets(existingSets);
     setStartTime(null); // Timer doesn't make sense for old matches
+    
+    // Ensure players are marked present when loading a match
+    if (markAsPresent) {
+      markAsPresent([...rojoIds, ...azulIds]);
+    }
   };
 
   const adjustScore = (team: 'local' | 'visitante', delta: number) => {
