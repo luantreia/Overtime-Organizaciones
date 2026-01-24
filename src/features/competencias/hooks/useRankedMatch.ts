@@ -52,11 +52,13 @@ export function useRankedMatch({
     suddenDeathLimit: 180
   });
   const [pjMarked, setPjMarked] = useState<boolean>(false);
+  const [isBasicMode, setIsBasicMode] = useState<boolean>(false);
   const [busy, setBusy] = useState(false);
 
   const persistenceKey = useMemo(() => `rankedMatch:${competenciaId}`, [competenciaId]);
 
   const syncWithServer = useCallback(async (id: string) => {
+    if (isBasicMode) return; // Skip sync in basic mode
     try {
       const { partido, sets: serverSets } = await apiGetRankedMatch(id);
       
@@ -127,6 +129,7 @@ export function useRankedMatch({
         setStartTime(parsed.startTime || null);
         setMatchConfig(parsed.matchConfig || { matchDuration: 1200, setDuration: 180, suddenDeathLimit: 180 });
         setPjMarked(!!parsed.pjMarked);
+        setIsBasicMode(!!parsed.isBasicMode);
       }
     } catch { }
   }, [persistenceKey, matchId]);
@@ -134,8 +137,10 @@ export function useRankedMatch({
   // Save to localStorage
   useEffect(() => {
     if (!competenciaId) return;
-    localStorage.setItem(persistenceKey, JSON.stringify({ matchId, rojo, azul, score, sets, startTime, matchConfig, pjMarked }));
-  }, [matchId, rojo, azul, score, sets, startTime, matchConfig, pjMarked, persistenceKey, competenciaId]);
+    localStorage.setItem(persistenceKey, JSON.stringify({ 
+      matchId, rojo, azul, score, sets, startTime, matchConfig, pjMarked, isBasicMode 
+    }));
+  }, [matchId, rojo, azul, score, sets, startTime, matchConfig, pjMarked, isBasicMode, persistenceKey, competenciaId]);
 
   const resetMatchState = useCallback(() => {
     setMatchId(null);
@@ -145,6 +150,7 @@ export function useRankedMatch({
     setSets([]);
     setStartTime(null);
     setPjMarked(false);
+    // Note: we keep isBasicMode preference
     localStorage.removeItem(persistenceKey);
   }, [persistenceKey]);
 
@@ -349,23 +355,17 @@ export function useRankedMatch({
   };
 
   const adjustScore = async (team: 'local' | 'visitante', delta: number) => {
-    if (!matchId) {
-      setScore(prev => ({
-        ...prev,
-        [team]: Math.max(0, prev[team] + delta)
-      }));
+    const newScore = { ...score };
+    newScore[team] = Math.max(0, newScore[team] + delta);
+    setScore(newScore);
+
+    if (!matchId || isBasicMode) {
       return;
     }
 
     setBusy(true);
     try {
-      const newScore = { ...score };
-      newScore[team] = Math.max(0, newScore[team] + delta);
-      
       const res = await apiUpdateScore(matchId, newScore.local, newScore.visitante);
-      if (res.ok) {
-        setScore(newScore);
-      }
     } catch (e) {
       console.error('Error updating score:', e);
     } finally {
@@ -374,11 +374,21 @@ export function useRankedMatch({
   };
 
   const addSet = async (winner: 'local' | 'visitante') => {
-    if (!matchId || busy) return;
+    if (!matchId) return;
     const elapsed = startTime ? Date.now() - startTime : 0;
     const lastSetTime = sets.length > 0 ? sets[sets.length - 1].time : 0;
     const currentSetDuration = elapsed - lastSetTime;
     
+    // In Basic Mode, we only update local state
+    if (isBasicMode) {
+      setSets(prev => [...prev, { _id: `temp-${Date.now()}`, winner, time: elapsed }]);
+      setScore(prev => ({
+        ...prev,
+        [winner]: prev[winner] + 1
+      }));
+      return;
+    }
+
     setBusy(true);
     try {
       // 1. Create set in DB
@@ -419,10 +429,19 @@ export function useRankedMatch({
   };
 
   const removeLastSet = async () => {
-    if (sets.length === 0 || busy) return;
+    if (sets.length === 0) return;
     const last = sets[sets.length - 1];
     
-    if (last._id) {
+    if (isBasicMode) {
+      setSets(prev => prev.slice(0, -1));
+      setScore(s => ({
+        ...s,
+        [last.winner]: Math.max(0, s[last.winner] - 1)
+      }));
+      return;
+    }
+
+    if (last._id && !last._id.startsWith('temp-')) {
       setBusy(true);
       try {
         await apiDeleteSet(last._id);
@@ -437,7 +456,7 @@ export function useRankedMatch({
         setBusy(false);
       }
     } else {
-      // Local only fallback (shouldn't happen with new logic)
+      // Local fallback
       setSets(prev => prev.slice(0, -1));
       setScore(s => ({
         ...s,
@@ -458,6 +477,8 @@ export function useRankedMatch({
     addSet,
     removeLastSet,
     busy,
+    isBasicMode,
+    setIsBasicMode,
     onCreateMatch,
     onAutoAssign,
     onSaveAssignment,

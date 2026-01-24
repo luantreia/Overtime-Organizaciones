@@ -169,6 +169,8 @@ export default function CompetenciaRankedSection({
     setStartTime,
     startTimer,
     matchConfig,
+    isBasicMode,
+    setIsBasicMode,
     onUpdateConfig
   } = useRankedMatch({
     competenciaId,
@@ -514,6 +516,24 @@ export default function CompetenciaRankedSection({
             </select>
           </div>
 
+          <div className="space-y-1">
+            <label className="text-[10px] uppercase tracking-wider font-bold text-slate-500">Modo de Gestión</label>
+            <div className="flex items-center h-9 bg-slate-50 border border-slate-200 rounded-md p-1 gap-1">
+              <button 
+                onClick={() => setIsBasicMode(false)}
+                className={`flex-1 px-2 py-1 rounded text-[10px] font-bold transition-all ${!isBasicMode ? 'bg-white shadow-sm text-brand-600' : 'text-slate-400'}`}
+              >
+                SYNC
+              </button>
+              <button 
+                onClick={() => setIsBasicMode(true)}
+                className={`flex-1 px-2 py-1 rounded text-[10px] font-bold transition-all ${isBasicMode ? 'bg-white shadow-sm text-brand-600' : 'text-slate-400'}`}
+              >
+                LOCAL
+              </button>
+            </div>
+          </div>
+
           <div className="flex-1 flex items-end">
             {!matchId ? (
               <Button 
@@ -614,6 +634,7 @@ export default function CompetenciaRankedSection({
             nameById={nameById}
             matchId={matchId}
             matchConfig={matchConfig}
+            isBasicMode={isBasicMode}
             onUpdateConfig={onUpdateConfig}
           />
         </div>

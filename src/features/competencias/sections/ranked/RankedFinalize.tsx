@@ -29,6 +29,7 @@ interface RankedFinalizeProps {
   nameById?: (id: string) => string;
   matchId?: string | null;
   matchConfig?: { matchDuration: number; setDuration: number; suddenDeathLimit: number };
+  isBasicMode?: boolean;
   onUpdateConfig?: (config: Partial<{ matchDuration: number; setDuration: number; suddenDeathLimit: number }>) => Promise<void>;
 }
 
@@ -57,6 +58,7 @@ export const RankedFinalize: React.FC<RankedFinalizeProps> = ({
   nameById = (id) => id,
   matchId,
   matchConfig,
+  isBasicMode,
   onUpdateConfig
 }) => {
   const [selectedPlayer, setSelectedPlayer] = useState<{ id: string; name: string; competenciaId?: string; temporadaId?: string } | null>(null);
@@ -151,7 +153,14 @@ export const RankedFinalize: React.FC<RankedFinalizeProps> = ({
     <div className="space-y-4">
       <Card className="p-4 border-emerald-100 bg-emerald-50/20">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-bold text-emerald-800">Cancha en Vivo</h2>
+          <div className="flex items-center gap-2">
+            <h2 className="text-sm font-bold text-emerald-800">Cancha en Vivo</h2>
+            {isBasicMode && (
+              <span className="bg-amber-100 text-amber-700 text-[9px] px-1.5 py-0.5 rounded font-black uppercase tracking-tighter border border-amber-200">
+                Modo Local
+              </span>
+            )}
+          </div>
           {matchActive && (
             <div className="flex items-center gap-2">
               <button 
