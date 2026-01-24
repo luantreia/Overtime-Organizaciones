@@ -129,14 +129,23 @@ export function useRankedMatch({
       const toAddRojo: string[] = [];
       const toAddAzul: string[] = [];
 
-      // Fill alternating to try some balance, though purely based on PJ here
-      sorted.forEach((pid, idx) => {
-        if (idx % 2 === 0) {
-          if (toAddRojo.length < neededRojo) toAddRojo.push(pid);
-          else if (toAddAzul.length < neededAzul) toAddAzul.push(pid);
+      // Fill based on current balance
+      sorted.forEach((pid) => {
+        const currentRojo = rojo.length + toAddRojo.length;
+        const currentAzul = azul.length + toAddAzul.length;
+
+        if (currentRojo <= currentAzul) {
+          if (toAddRojo.length < neededRojo) {
+            toAddRojo.push(pid);
+          } else if (toAddAzul.length < neededAzul) {
+            toAddAzul.push(pid);
+          }
         } else {
-          if (toAddAzul.length < neededAzul) toAddAzul.push(pid);
-          else if (toAddRojo.length < neededRojo) toAddRojo.push(pid);
+          if (toAddAzul.length < neededAzul) {
+            toAddAzul.push(pid);
+          } else if (toAddRojo.length < neededRojo) {
+            toAddRojo.push(pid);
+          }
         }
       });
 

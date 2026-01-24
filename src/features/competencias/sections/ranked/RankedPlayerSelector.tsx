@@ -36,6 +36,7 @@ interface RankedPlayerSelectorProps {
   onChooseForNext: () => void;
   onMarkAllPresent: () => void;
   onClearPresentes: () => void;
+  onClearSelected: () => void;
   onResetPJHoy: () => void;
   priorizarNoJugados: boolean;
   setPriorizarNoJugados: (val: boolean) => void;
@@ -64,6 +65,7 @@ export const RankedPlayerSelector: React.FC<RankedPlayerSelectorProps> = ({
   onChooseForNext,
   onMarkAllPresent,
   onClearPresentes,
+  onClearSelected,
   onResetPJHoy,
   priorizarNoJugados,
   setPriorizarNoJugados,
@@ -278,7 +280,8 @@ export const RankedPlayerSelector: React.FC<RankedPlayerSelectorProps> = ({
           </div>
           <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
             <button type="button" className="text-[9px] text-slate-500 hover:text-brand-600" onClick={onMarkAllPresent}>Todos presentes</button>
-            <button type="button" className="text-[9px] text-slate-500 hover:text-brand-600" onClick={onClearPresentes}>Limpiar lista</button>
+            <button type="button" className="text-[9px] text-slate-500 hover:text-brand-600" onClick={onClearPresentes}>Limpiar presentes</button>
+            <button type="button" className="text-[9px] text-slate-500 hover:text-brand-600" onClick={onClearSelected} disabled={selected.length === 0}>Deseleccionar ({selected.length})</button>
             <button type="button" className="text-[9px] text-red-500 hover:text-red-700 font-medium" onClick={onResetPJHoy}>Reset PJ diario</button>
           </div>
         </div>

@@ -524,6 +524,7 @@ export default function CompetenciaRankedSection({
               onChooseForNext={onChooseForNextMatch}
               onMarkAllPresent={() => markAllPresent(compPlayers.map(p => p._id))}
               onClearPresentes={clearPresentes}
+              onClearSelected={() => setSelected([])}
               onResetPJHoy={() => showConfirm('Reset PJ', '¿Reiniciar contadores de partidos jugados hoy?', resetPlayedCounts)}
               priorizarNoJugados={priorizarNoJugados}
               setPriorizarNoJugados={setPriorizarNoJugados}
