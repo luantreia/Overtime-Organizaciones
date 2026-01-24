@@ -51,11 +51,12 @@ export const RankedAdminTools: React.FC<RankedAdminToolsProps> = ({
           ) : (
             recentMatches.map((m) => {
               const isFinalizado = m.estado === 'finalizado';
+              const matchId = (m.id || m._id || '').toString();
               return (
-                <div key={m._id} className="flex items-center justify-between p-1.5 sm:p-2 rounded-lg border border-slate-50 bg-slate-50/50 hover:bg-slate-50 transition-colors">
+                <div key={matchId} className="flex items-center justify-between p-1.5 sm:p-2 rounded-lg border border-slate-50 bg-slate-50/50 hover:bg-slate-50 transition-colors">
                   <div className="flex flex-col min-w-0">
                     <div className="flex items-center gap-1.5 overflow-hidden">
-                      <span className="text-[8px] sm:text-[10px] font-mono text-slate-400 uppercase truncate">ID: {m._id.slice(-6).toUpperCase()}</span>
+                      <span className="text-[8px] sm:text-[10px] font-mono text-slate-400 uppercase truncate">ID: {matchId.slice(-6).toUpperCase()}</span>
                       <span className={`text-[7px] sm:text-[8px] font-bold px-1 rounded uppercase tracking-tighter shrink-0 ${
                         isFinalizado ? 'bg-slate-200 text-slate-600' : 'bg-emerald-100 text-emerald-700 animate-pulse'
                       }`}>

@@ -167,12 +167,13 @@ export default function CompetenciaRankedSection({
   });
 
   const handleEditResult = async (m: any) => {
+    const matchId = m.id || m._id;
     showConfirm(
       'Corregir Resultado',
-      `Se revertirán los puntos actuales del partido ${m._id.slice(-6)} para editarlos. ¿Continuar?`,
+      `Se revertirán los puntos actuales del partido ${(matchId || '').slice(-6)} para editarlos. ¿Continuar?`,
       async () => {
         try {
-          await revertMatch(m._id);
+          await revertMatch(matchId);
           
           // Buscamos los IDs de los jugadores de los equipos
           const eqL = m.rojoPlayers || [];
@@ -183,7 +184,7 @@ export default function CompetenciaRankedSection({
              time: s.duracionReal ? s.duracionReal * 1000 : 0
           }));
 
-          loadMatch(m._id, eqL, eqV, { local: m.marcadorLocal || 0, visitante: m.marcadorVisitante || 0 }, setsData);
+          loadMatch(matchId, eqL, eqV, { local: m.marcadorLocal || 0, visitante: m.marcadorVisitante || 0 }, setsData);
           setSuccess('Partido cargado para corrección');
         } catch (e: any) {
           setError(e.message || 'Error al cargar para edición');
