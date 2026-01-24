@@ -79,6 +79,7 @@ export function useAttendance(competenciaId: string) {
   return {
     presentes,
     setPresentes,
+    togglePresente,
     playedCounts,
     syncMatchAttendance,
     removeMatchAttendance,

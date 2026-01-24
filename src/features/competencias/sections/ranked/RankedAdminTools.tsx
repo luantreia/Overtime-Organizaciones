@@ -12,6 +12,7 @@ interface RankedAdminToolsProps {
   onResetAllRankings: () => void;
   onRecalculateGlobalRankings: () => void;
   onSyncWins: () => void;
+  onCleanupGhosts: () => void;
   busy: boolean;
   modalidad: string;
   categoria: string;
@@ -31,6 +32,7 @@ export const RankedAdminTools: React.FC<RankedAdminToolsProps> = ({
   onResetAllRankings,
   onRecalculateGlobalRankings,
   onSyncWins,
+  onCleanupGhosts,
   busy,
   modalidad,
   categoria,
@@ -108,6 +110,20 @@ export const RankedAdminTools: React.FC<RankedAdminToolsProps> = ({
           <Card className="p-3 sm:p-4 border-amber-100 bg-amber-50/10">
             <h3 className="mb-3 text-[11px] font-bold text-slate-500 uppercase tracking-widest">Mantenimiento</h3>
             <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5 col-span-2">
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  className="w-full flex items-center justify-center gap-2 text-[10px] font-bold border-amber-300 bg-white"
+                  onClick={onCleanupGhosts}
+                  disabled={busy}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                  Limpiar "Fantasmas" (0 PJ)
+                </Button>
+              </div>
               <div className="space-y-1.5">
                 <label className="text-[9px] uppercase tracking-wider font-extrabold text-slate-400">Forzar Conversion Ranked</label>
                 <div className="flex gap-2">
@@ -177,6 +193,15 @@ export const RankedAdminTools: React.FC<RankedAdminToolsProps> = ({
                   disabled={busy}
                 >
                   Sincronizar Winrates
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  className="text-slate-700 border-slate-500 bg-slate-50 hover:bg-slate-100"
+                  onClick={onCleanupGhosts} 
+                  disabled={busy}
+                >
+                  Limpiar "0 PJ"
                 </Button>
               </div>
             </div>

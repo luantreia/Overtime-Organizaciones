@@ -143,3 +143,17 @@ export async function deleteMatchPlayerSnapshot(id: string) {
     method: 'DELETE',
   });
 }
+
+export async function bulkDeletePlayerRatings(payload: { playerIds: string[]; competition?: string; season?: string; modalidad: string; categoria: string }) {
+  return authFetch<{ ok: boolean; deletedRating: number; deletedHistory: number }>(`${BASE}/players/bulk-delete-rating`, {
+    method: 'POST',
+    body: payload,
+  });
+}
+
+export async function cleanupGhostPlayers(params: { competition?: string; season?: string; modalidad?: string; categoria?: string }) {
+  return authFetch<{ ok: boolean; deletedCount: number }>(`${BASE}/cleanup-ghosts`, {
+    method: 'POST',
+    body: params,
+  });
+}

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Button, Card } from '../../../../shared/components/ui';
 import { MatchTimer } from './MatchTimer';
 import { PlayerAdvancedSettingsModal } from './PlayerAdvancedSettingsModal';
+import { bulkDeletePlayerRatings } from '../../../ranked/services/rankedService';
 
 interface RankedFinalizeProps {
   score: { local: number; visitante: number };
@@ -50,6 +51,43 @@ export const RankedFinalize: React.FC<RankedFinalizeProps> = ({
 }) => {
   const [selectedPlayer, setSelectedPlayer] = useState<{ id: string; name: string; competenciaId?: string; temporadaId?: string } | null>(null);
   const [afkPlayers, setAfkPlayers] = useState<string[]>([]);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [deleting, setDeleting] = useState(false);
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.length === board.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(board.map(r => r.playerId));
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (!selectedIds.length) return;
+    if (!window.confirm(`¿Eliminar ${selectedIds.length} registros del leaderboard? Se borrarán sus puntos y PJs.`)) return;
+
+    try {
+      setDeleting(true);
+      await bulkDeletePlayerRatings({
+        playerIds: selectedIds,
+        modalidad,
+        categoria,
+        competition: lbScope === 'competition' ? competenciaId : undefined,
+        season: lbScope === 'competition' ? (seasonId || undefined) : undefined
+      });
+      setSelectedIds([]);
+      onRefreshLeaderboard?.();
+    } catch (err) {
+      console.error('Error deleting:', err);
+      alert('Error al borrar los registros');
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   const toggleAFK = (id: string) => {
     setAfkPlayers(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
@@ -202,23 +240,51 @@ export const RankedFinalize: React.FC<RankedFinalizeProps> = ({
           </div>
           <div className="flex bg-slate-100 p-0.5 rounded-lg border border-slate-200">
             <button 
-              onClick={() => setLbScope('competition')}
+              onClick={() => {
+                setLbScope('competition');
+                setSelectedIds([]);
+              }}
               className={`px-2 py-1 text-[9px] font-bold rounded-md transition-all ${lbScope === 'competition' ? 'bg-white text-brand-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
             >
               COMP.
             </button>
             <button 
-              onClick={() => setLbScope('global')}
+              onClick={() => {
+                setLbScope('global');
+                setSelectedIds([]);
+              }}
               className={`px-2 py-1 text-[9px] font-bold rounded-md transition-all ${lbScope === 'global' ? 'bg-white text-brand-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
             >
               GLOBAL
             </button>
           </div>
         </div>
+
+        {selectedIds.length > 0 && (
+          <div className="mb-2 p-2 bg-red-50 border border-red-100 rounded-lg flex items-center justify-between animate-in fade-in slide-in-from-top-1">
+            <span className="text-[10px] font-bold text-red-700">{selectedIds.length} seleccionados</span>
+            <button
+              onClick={handleBulkDelete}
+              disabled={deleting}
+              className="px-2 py-1 bg-red-600 text-white rounded text-[10px] font-bold hover:bg-red-700 disabled:opacity-50 transition-colors"
+            >
+              {deleting ? 'Borrando...' : 'Borrar de Tabla'}
+            </button>
+          </div>
+        )}
+
         <div className="max-h-80 overflow-auto rounded border border-slate-100">
           <table className="w-full text-left text-xs">
             <thead className="sticky top-0 bg-slate-50 border-b border-slate-100">
               <tr>
+                <th className="px-2 py-2 w-6 text-center">
+                  <input 
+                    type="checkbox" 
+                    className="rounded border-slate-300 text-brand-600"
+                    checked={board.length > 0 && selectedIds.length === board.length}
+                    onChange={toggleSelectAll}
+                  />
+                </th>
                 <th className="px-2 py-2 font-bold text-slate-600 text-center w-8">#</th>
                 <th className="px-3 py-2 font-bold text-slate-600">Jugador</th>
                 <th className="px-2 py-2 font-bold text-slate-600 text-center">MMR</th>
@@ -234,7 +300,15 @@ export const RankedFinalize: React.FC<RankedFinalizeProps> = ({
                 </tr>
               ) : (
                 board.map((r, idx) => (
-                  <tr key={r.playerId} className="hover:bg-slate-50 transition-colors group">
+                  <tr key={r.playerId} className={`hover:bg-slate-50 transition-colors group ${selectedIds.includes(r.playerId) ? 'bg-brand-50/50' : ''}`}>
+                    <td className="px-2 py-2 text-center">
+                      <input 
+                        type="checkbox" 
+                        className="rounded border-slate-300 text-brand-600"
+                        checked={selectedIds.includes(r.playerId)}
+                        onChange={() => toggleSelect(r.playerId)}
+                      />
+                    </td>
                     <td className="px-2 py-2 text-center text-[10px] font-bold text-slate-400 border-r border-slate-50">{idx + 1}</td>
                     <td className="px-2 sm:px-3 py-2 min-w-0">
                       <div className="flex items-center gap-1">

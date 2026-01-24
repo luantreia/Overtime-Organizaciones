@@ -8,7 +8,8 @@ import {
   resetAllRankings, 
   resetScopeRankings, 
   recalculateGlobalRankings,
-  syncAllWins
+  syncAllWins,
+  cleanupGhostPlayers
 } from '../../ranked/services/rankedService';
 import { 
   crearJugadorCompetencia, 
@@ -601,6 +602,24 @@ export default function CompetenciaRankedSection({
                setSuccess(`Winrates sincronizados (${res.updatedCount} jugadores)`);
                fetchLeaderboard();
              } catch(e: any) { setError(e.message); }
+          }}
+          onCleanupGhosts={async () => {
+            showConfirm(
+              '¿Limpiar Fantasmas?',
+              'Se eliminarán del ranking todos los jugadores con 0 partidos en este scope.',
+              async () => {
+                try {
+                  const res = await cleanupGhostPlayers({
+                    competition: competenciaId,
+                    season: selectedTemporada || undefined,
+                    modalidad,
+                    categoria
+                  });
+                  setSuccess(`Se eliminaron ${res.deletedCount} registros vacíos.`);
+                  fetchLeaderboard();
+                } catch(e: any) { setError(e.message); }
+              }
+            );
           }}
           busy={busy}
           modalidad={modalidad}
