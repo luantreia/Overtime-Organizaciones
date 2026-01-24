@@ -194,15 +194,6 @@ export const RankedAdminTools: React.FC<RankedAdminToolsProps> = ({
                 >
                   Sincronizar Winrates
                 </Button>
-                <Button 
-                  size="sm" 
-                  variant="outline" 
-                  className="text-slate-700 border-slate-500 bg-slate-50 hover:bg-slate-100"
-                  onClick={onCleanupGhosts} 
-                  disabled={busy}
-                >
-                  Limpiar "0 PJ"
-                </Button>
               </div>
             </div>
           </Card>
