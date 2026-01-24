@@ -93,7 +93,7 @@ export function useRankedMatch({
     } catch (e) {
       console.error('Error in syncWithServer:', e);
     }
-  }, []);
+  }, [isBasicMode]);
 
   // Polling for Interoperability
   useEffect(() => {
@@ -365,7 +365,7 @@ export function useRankedMatch({
 
     setBusy(true);
     try {
-      const res = await apiUpdateScore(matchId, newScore.local, newScore.visitante);
+      await apiUpdateScore(matchId, newScore.local, newScore.visitante);
     } catch (e) {
       console.error('Error updating score:', e);
     } finally {
