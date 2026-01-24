@@ -7,6 +7,7 @@ interface MatchTimerProps {
   getEffectiveElapsed?: () => number;
   sets?: { winner: string; time: number }[];
   suddenDeathLimit?: number;
+  setDuration?: number;
   currentSetStartTime?: number;
   isWaitingForNextSet?: boolean;
 }
@@ -18,6 +19,7 @@ export const MatchTimer: React.FC<MatchTimerProps> = ({
   getEffectiveElapsed,
   sets = [], 
   suddenDeathLimit = 180,
+  setDuration = 180,
   currentSetStartTime = 0,
   isWaitingForNextSet = false
 }) => {
@@ -81,12 +83,12 @@ export const MatchTimer: React.FC<MatchTimerProps> = ({
     : Math.max(0, elapsed - Math.floor(currentSetStartTime / 1000));
 
   // Countdown logic: suddenDeathLimit is the starting point
-  const setRemaining = suddenDeathLimit - currentSetElapsed;
-  const isSuddenDeath = suddenDeathLimit > 0 && setRemaining <= 0;
+  const setRemaining = setDuration - currentSetElapsed;
+  const isSuddenDeath = suddenDeathLimit > 0 && currentSetElapsed >= suddenDeathLimit;
 
-  // Display: count down till zero, then count up for sudden death
+  // Display: count down till zero (based on setDuration), then switch logic if needed
   const displaySeconds = isSuddenDeath 
-    ? Math.abs(setRemaining) 
+    ? (currentSetElapsed - suddenDeathLimit) 
     : Math.max(0, setRemaining);
 
   const setMin = Math.floor(displaySeconds / 60);

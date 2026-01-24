@@ -620,19 +620,32 @@ export function useRankedMatch({
     setStartTime,
     isPaused,
     accumulatedTime,
+    currentSetStartTime,
+    isWaitingForNextSet,
     getEffectiveElapsed,
     togglePause,
     startTimer,
     matchConfig,
-    onUpdateConfig: async (newConfig: Partial<{ matchDuration: number; setDuration: number; suddenDeathLimit: number }>) => {
+    onUpdateConfig: async (newConfig: Partial<{ 
+      matchDuration: number; 
+      setDuration: number; 
+      suddenDeathLimit: number;
+      autoPauseGlobal?: boolean;
+    }>) => {
       if (!matchId) return;
+      if (isBasicMode) {
+        setMatchConfig(prev => ({ ...prev, ...newConfig }));
+        onSuccess?.('Configuración local actualizada');
+        return;
+      }
       try {
         const res = await apiUpdateMatchConfig(matchId, newConfig);
         setMatchConfig(prev => ({
           ...prev,
           matchDuration: res.rankedMeta.matchDuration ?? prev.matchDuration,
           setDuration: res.rankedMeta.setDuration ?? prev.setDuration,
-          suddenDeathLimit: res.rankedMeta.suddenDeathLimit ?? prev.suddenDeathLimit
+          suddenDeathLimit: res.rankedMeta.suddenDeathLimit ?? prev.suddenDeathLimit,
+          autoPauseGlobal: res.rankedMeta.autoPauseGlobal ?? prev.autoPauseGlobal
         }));
         onSuccess?.('Configuración actualizada');
       } catch (e: any) {

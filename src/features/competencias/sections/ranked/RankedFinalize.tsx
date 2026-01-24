@@ -34,9 +34,19 @@ interface RankedFinalizeProps {
   azulIds?: string[];
   nameById?: (id: string) => string;
   matchId?: string | null;
-  matchConfig?: { matchDuration: number; setDuration: number; suddenDeathLimit: number };
+  matchConfig?: { 
+    matchDuration: number; 
+    setDuration: number; 
+    suddenDeathLimit: number;
+    autoPauseGlobal?: boolean;
+  };
   isBasicMode?: boolean;
-  onUpdateConfig?: (config: Partial<{ matchDuration: number; setDuration: number; suddenDeathLimit: number }>) => Promise<void>;
+  onUpdateConfig?: (config: Partial<{ 
+    matchDuration: number; 
+    setDuration: number; 
+    suddenDeathLimit: number;
+    autoPauseGlobal?: boolean;
+  }>) => Promise<void>;
 }
 
 export const RankedFinalize: React.FC<RankedFinalizeProps> = ({
@@ -80,7 +90,12 @@ export const RankedFinalize: React.FC<RankedFinalizeProps> = ({
   const [deleting, setDeleting] = useState(false);
 
   // local states for config form
-  const [localConfig, setLocalConfig] = useState(matchConfig || { matchDuration: 1200, setDuration: 180, suddenDeathLimit: 180 });
+  const [localConfig, setLocalConfig] = useState(matchConfig || { 
+    matchDuration: 1200, 
+    setDuration: 180, 
+    suddenDeathLimit: 180,
+    autoPauseGlobal: false 
+  });
 
   React.useEffect(() => {
     if (matchConfig) setLocalConfig(matchConfig);
@@ -217,7 +232,7 @@ export const RankedFinalize: React.FC<RankedFinalizeProps> = ({
                   </button>
                 )}
 
-                <MatchTimer 
+                  <MatchTimer 
                   startTime={startTime} 
                   accumulatedTime={accumulatedTime}
                   isPaused={isPaused}
@@ -226,6 +241,7 @@ export const RankedFinalize: React.FC<RankedFinalizeProps> = ({
                   currentSetStartTime={currentSetStartTime}
                   isWaitingForNextSet={isWaitingForNextSet}
                   suddenDeathLimit={matchConfig?.suddenDeathLimit} 
+                  setDuration={matchConfig?.setDuration}
                 />
                 {startTime && (
                   <button 
@@ -584,7 +600,22 @@ export const RankedFinalize: React.FC<RankedFinalizeProps> = ({
 
                   <div className="space-y-1.5">
                     <div className="flex justify-between items-center">
-                      <span className="text-xs font-bold text-slate-600">Tiempo de Set / Inicio Súbita</span>
+                      <span className="text-xs font-bold text-slate-600">Tiempo por Set</span>
+                      <span className="text-xs font-mono text-brand-600 font-bold">
+                        {Math.floor(localConfig.setDuration / 60)}:{String(localConfig.setDuration % 60).padStart(2, '0')}
+                      </span>
+                    </div>
+                    <input 
+                      type="range" min="60" max="600" step="30"
+                      value={localConfig.setDuration}
+                      onChange={(e) => setLocalConfig({...localConfig, setDuration: parseInt(e.target.value)})}
+                      className="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-brand-600"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs font-bold text-slate-600">Inicio Muerte Súbita</span>
                       <span className="text-xs font-mono text-amber-600 font-bold">
                         {localConfig.suddenDeathLimit === 0 ? 'Sin Límite' : `${Math.floor(localConfig.suddenDeathLimit / 60)}:${String(localConfig.suddenDeathLimit % 60).padStart(2,'0')}`}
                       </span>
@@ -594,11 +625,11 @@ export const RankedFinalize: React.FC<RankedFinalizeProps> = ({
                       value={localConfig.suddenDeathLimit}
                       onChange={(e) => {
                         const val = parseInt(e.target.value);
-                        setLocalConfig({...localConfig, suddenDeathLimit: val, setDuration: val});
+                        setLocalConfig({...localConfig, suddenDeathLimit: val});
                       }}
                       className="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-amber-600"
                     />
-                    <p className="text-[9px] text-slate-400 italic">Al llegar a 00:00 el reloj cambiará a naranja y contará hacia adelante (Muerte Súbita).</p>
+                    <p className="text-[9px] text-slate-400 italic">Al llegar a este tiempo el reloj cambiará a naranja y contará hacia adelante.</p>
                   </div>
 
                   <div className="space-y-2 pt-2 border-t border-slate-50">
