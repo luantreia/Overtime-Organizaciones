@@ -1,4 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, Fragment } from 'react';
+import { Menu, Transition } from '@headlessui/react';
+import { 
+  EllipsisVerticalIcon, 
+  TrashIcon, 
+  UserPlusIcon,
+  CheckCircleIcon,
+  XMarkIcon
+} from '@heroicons/react/20/solid';
 import { Button } from '../../../../shared/components/ui';
 import { QuickAddPlayerModal } from './QuickAddPlayerModal';
 
@@ -101,7 +109,7 @@ export const RankedPlayerSelector: React.FC<RankedPlayerSelectorProps> = ({
         />
       </div>
 
-      <div className="h-64 sm:h-80 overflow-auto rounded border">
+      <div className="h-64 sm:h-80 overflow-auto rounded border divide-y">
         {filtered.map((p) => {
           const isCompPlayer = compPlayers.some(cp => cp._id === p._id);
           const isPresent = presentes.includes(p._id);
@@ -109,58 +117,91 @@ export const RankedPlayerSelector: React.FC<RankedPlayerSelectorProps> = ({
           const pjHoy = playedCounts[p._id] || 0;
 
           return (
-            <div key={p._id} className="flex flex-col gap-1.5 border-b px-2 py-2 text-sm hover:bg-slate-50">
+            <div key={p._id} className="flex flex-col gap-1 px-3 py-2 text-sm hover:bg-slate-50 transition-colors">
               <div className="flex items-center justify-between gap-2 min-w-0">
                 <label className="flex items-center gap-2 cursor-pointer min-w-0 flex-1">
                   <input 
                     type="checkbox" 
                     checked={isSelected} 
                     onChange={() => toggleSelect(p._id)} 
-                    className="rounded text-brand-600 shrink-0"
+                    className="rounded text-brand-600 focus:ring-brand-500 h-3.5 w-3.5"
                   />
-                  <span className="truncate text-xs sm:text-sm font-medium">{p.nombre}</span>
+                  <span className="truncate text-[11px] sm:text-xs font-bold text-slate-700">{p.nombre}</span>
                 </label>
                 
-                <div className="flex gap-1 shrink-0">
-                  {showAll && !isCompPlayer && (
-                    <button
-                      type="button"
-                      className="rounded border border-slate-200 bg-white px-1.5 py-0.5 text-[10px] hover:bg-slate-50 font-bold text-brand-600"
-                      onClick={() => onAgregarJugador(p._id)}
-                      disabled={busy}
+                <div className="flex items-center gap-1 shrink-0">
+                  <Menu as="div" className="relative inline-block text-left">
+                    <Menu.Button className="flex items-center rounded-full p-1 text-slate-400 hover:text-brand-600 hover:bg-slate-100 transition-colors">
+                      <EllipsisVerticalIcon className="h-4 w-4" />
+                    </Menu.Button>
+                    <Transition
+                      as={Fragment}
+                      enter="transition ease-out duration-100"
+                      enterFrom="transform opacity-0 scale-95"
+                      enterTo="transform opacity-100 scale-100"
+                      leave="transition ease-in duration-75"
+                      leaveFrom="transform opacity-100 scale-100"
+                      leaveTo="transform opacity-0 scale-95"
                     >
-                      Añadir
-                    </button>
-                  )}
-                  {isCompPlayer && (
-                    <button
-                      type="button"
-                      className="rounded border border-rose-100 bg-rose-50 px-1.5 py-0.5 text-[10px] text-rose-600 hover:bg-rose-100"
-                      onClick={() => onEliminarJugador(p._id)}
-                      disabled={busy}
-                    >
-                      Quitar
-                    </button>
-                  )}
+                      <Menu.Items className="absolute right-0 z-10 mt-1 w-32 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                        <div className="py-1">
+                          {showAll && !isCompPlayer ? (
+                            <Menu.Item>
+                              {({ active }) => (
+                                <button
+                                  onClick={() => onAgregarJugador(p._id)}
+                                  className={`${
+                                    active ? 'bg-slate-100 text-brand-700' : 'text-slate-700'
+                                  } flex w-full items-center px-3 py-1.5 text-[10px] font-medium`}
+                                >
+                                  <UserPlusIcon className="mr-2 h-3.5 w-3.5 text-brand-500" />
+                                  Añadir a Competencia
+                                </button>
+                              )}
+                            </Menu.Item>
+                          ) : isCompPlayer ? (
+                            <Menu.Item>
+                              {({ active }) => (
+                                <button
+                                  onClick={() => onEliminarJugador(p._id)}
+                                  className={`${
+                                    active ? 'bg-rose-50 text-rose-700' : 'text-rose-700'
+                                  } flex w-full items-center px-3 py-1.5 text-[10px] font-medium`}
+                                >
+                                  <TrashIcon className="mr-2 h-3.5 w-3.5 text-rose-500" />
+                                  Quitar
+                                </button>
+                              )}
+                            </Menu.Item>
+                          ) : null}
+                        </div>
+                      </Menu.Items>
+                    </Transition>
+                  </Menu>
                 </div>
               </div>
               
-              <div className="flex items-center justify-between gap-2 bg-slate-50/50 p-1 rounded">
-                <label className="flex items-center gap-1.5 text-[10px] text-slate-500 cursor-pointer">
-                  <input 
-                    type="checkbox" 
-                    checked={isPresent} 
-                    onChange={(e) => togglePresente(p._id, e.target.checked)} 
-                    className="rounded text-brand-600 shrink-0"
-                  />
-                  <span className="font-semibold uppercase tracking-tight">{isPresent ? 'Presente' : 'Ausente'}</span>
-                </label>
+              <div className="flex items-center justify-between gap-2 mt-0.5">
+                <div className="flex items-center gap-1.5">
+                  {pjHoy > 0 && (
+                    <span className="flex items-center gap-1 rounded bg-blue-50 px-1.5 py-0.5 text-[9px] font-bold text-blue-600 border border-blue-100">
+                      PJ: {pjHoy}
+                    </span>
+                  )}
+                </div>
 
-                {pjHoy > 0 && (
-                  <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-black text-blue-700">
-                    PJ: {pjHoy}
-                  </span>
-                )}
+                <button 
+                  type="button"
+                  onClick={() => togglePresente(p._id, !isPresent)}
+                  className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase transition-all border ${
+                    isPresent 
+                      ? 'bg-green-50 text-green-700 border-green-200' 
+                      : 'bg-rose-50 text-rose-600 border-rose-100'
+                  }`}
+                >
+                  <span className={`h-1.5 w-1.5 rounded-full ${isPresent ? 'bg-green-500 animate-pulse' : 'bg-rose-500'}`} />
+                  {isPresent ? 'Presente' : 'Ausente'}
+                </button>
               </div>
             </div>
           );
