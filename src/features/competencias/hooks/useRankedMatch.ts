@@ -110,13 +110,13 @@ export function useRankedMatch({
       
       // Update teams if they are in the response
       if (partido.rojoPlayers || partido.azulPlayers) {
-         setRojo(partido.rojoPlayers || []);
-         setAzul(partido.azulPlayers || []);
+         setRojo((partido.rojoPlayers || []).map((p: any) => typeof p === 'string' ? p : (p._id || p.id)).filter(Boolean));
+         setAzul((partido.azulPlayers || []).map((p: any) => typeof p === 'string' ? p : (p._id || p.id)).filter(Boolean));
       } else if (partido.matchTeams) {
          const r = partido.matchTeams.find((t: any) => t.color === 'rojo');
          const a = partido.matchTeams.find((t: any) => t.color === 'azul');
-         if (r) setRojo(r.players || []);
-         if (a) setAzul(a.players || []);
+         if (r) setRojo((r.players || []).map((p: any) => typeof p === 'string' ? p : (p._id || p.id)).filter(Boolean));
+         if (a) setAzul((a.players || []).map((p: any) => typeof p === 'string' ? p : (p._id || p.id)).filter(Boolean));
       }
 
       // Update score if matched from server

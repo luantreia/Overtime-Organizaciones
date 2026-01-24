@@ -223,13 +223,17 @@ export default function CompetenciaRankedSection({
         if (!partido) throw new Error('No se encontró el partido');
 
         // Robust player extraction checking multiple possible locations
-        const eqL = partido.rojoPlayers || 
+        const rawL = partido.rojoPlayers || 
                     teams?.find((t: any) => t.color === 'rojo')?.players || 
                     partido.matchTeams?.find((t: any) => t.color === 'rojo')?.players || [];
                     
-        const eqV = partido.azulPlayers || 
+        const rawV = partido.azulPlayers || 
                     teams?.find((t: any) => t.color === 'azul')?.players || 
                     partido.matchTeams?.find((t: any) => t.color === 'azul')?.players || [];
+
+        // Normalize to strings (IDs) to prevent React Error #31 and split() errors
+        const eqL = rawL.map((p: any) => typeof p === 'string' ? p : (p?._id || p?.id || '')).filter(Boolean);
+        const eqV = rawV.map((p: any) => typeof p === 'string' ? p : (p?._id || p?.id || '')).filter(Boolean);
 
         let cumulativeTime = 0;
         const setsData = (serverSets || []).map((s: any) => {

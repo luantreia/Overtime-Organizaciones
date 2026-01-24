@@ -39,8 +39,14 @@ export const TeamBuilder: React.FC<TeamBuilderProps> = ({
             ) : (
               <ul className="space-y-1">
                 {rojo.map((id) => (
-                  <li key={id} className="group flex items-center justify-between rounded bg-white px-2 py-1 sm:py-1.5 text-xs shadow-sm ring-1 ring-red-100">
-                    <span className="font-medium truncate pr-2">{nameById(id)}</span>
+                  <li key={typeof id === 'string' ? id : ((id as any)?._id || Math.random().toString())} className="group flex items-center justify-between rounded bg-white px-2 py-1 sm:py-1.5 text-xs shadow-sm ring-1 ring-red-100">
+                    <span className="font-medium truncate pr-2">
+                       {(() => {
+                         const name = nameById(id);
+                         if (typeof name !== 'string') return (name as any)?.nombre || 'Jugador';
+                         return name;
+                       })()}
+                    </span>
                     <button 
                       type="button" 
                       className="text-[9px] text-red-400 hover:text-red-600 font-bold uppercase transition-colors" 
@@ -69,8 +75,14 @@ export const TeamBuilder: React.FC<TeamBuilderProps> = ({
             ) : (
               <ul className="space-y-1">
                 {azul.map((id) => (
-                  <li key={id} className="group flex items-center justify-between rounded bg-white px-2 py-1 sm:py-1.5 text-xs shadow-sm ring-1 ring-blue-100">
-                    <span className="font-medium truncate pr-2">{nameById(id)}</span>
+                  <li key={typeof id === 'string' ? id : ((id as any)?._id || Math.random().toString())} className="group flex items-center justify-between rounded bg-white px-2 py-1 sm:py-1.5 text-xs shadow-sm ring-1 ring-blue-100">
+                    <span className="font-medium truncate pr-2">
+                       {(() => {
+                         const name = nameById(id);
+                         if (typeof name !== 'string') return (name as any)?.nombre || 'Jugador';
+                         return name;
+                       })()}
+                    </span>
                     <button 
                       type="button" 
                       className="text-[9px] text-blue-400 hover:text-blue-600 font-bold uppercase transition-colors" 

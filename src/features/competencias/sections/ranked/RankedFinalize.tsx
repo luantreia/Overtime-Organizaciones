@@ -380,7 +380,12 @@ export const RankedFinalize: React.FC<RankedFinalizeProps> = ({
                         : 'bg-white border-slate-200 text-slate-500 hover:border-red-200 hover:text-red-500'
                     }`}
                   >
-                    {nameById(id).split(' ')[0]}
+                    {/* Defensive name rendering to avoid React Error #31 and .split crashes */}
+                    {(() => {
+                      const name = nameById(id);
+                      if (typeof name !== 'string') return (name as any)?.nombre || 'Jugador';
+                      return name.split(' ')[0];
+                    })()}
                   </button>
                 );
               })}
