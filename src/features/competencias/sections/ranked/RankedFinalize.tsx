@@ -207,7 +207,7 @@ export const RankedFinalize: React.FC<RankedFinalizeProps> = ({
                         </span>
                         <button 
                            onClick={() => setSelectedPlayer({ id: r.playerId, name: r.playerName || r.nombre || 'Desconocido' })}
-                           className="opacity-0 group-hover:opacity-100 p-0.5 text-slate-300 hover:text-brand-500 transition-all rounded"
+                           className="p-1 text-slate-400 hover:text-brand-500 hover:bg-slate-100 transition-all rounded"
                            title="Ajustes avanzados"
                         >
                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
