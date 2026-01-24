@@ -115,7 +115,7 @@ export const RankedPlayerSelector: React.FC<RankedPlayerSelectorProps> = ({
       </div>
 
       <div className="h-64 sm:h-80 overflow-auto rounded border divide-y">
-        {filtered.map((p) => {
+        {filtered.map((p, idx) => {
           const isCompPlayer = compPlayers.some(cp => cp._id === p._id);
           const isPresent = presentes.includes(p._id);
           const isSelected = selected.includes(p._id);
@@ -124,15 +124,18 @@ export const RankedPlayerSelector: React.FC<RankedPlayerSelectorProps> = ({
           return (
             <div key={p._id} className="flex flex-col gap-1 px-3 py-2 text-sm hover:bg-slate-50 transition-colors">
               <div className="flex items-center justify-between gap-2 min-w-0">
-                <label className="flex items-center gap-2 cursor-pointer min-w-0 flex-1">
-                  <input 
-                    type="checkbox" 
-                    checked={isSelected} 
-                    onChange={() => toggleSelect(p._id)} 
-                    className="rounded text-brand-600 focus:ring-brand-500 h-3.5 w-3.5"
-                  />
-                  <span className="truncate text-[11px] sm:text-xs font-bold text-slate-700">{p.nombre}</span>
-                </label>
+                <div className="flex items-center gap-2 min-w-0 flex-1">
+                  <span className="text-[9px] font-mono text-slate-300 w-4 shrink-0">{idx + 1}</span>
+                  <label className="flex items-center gap-2 cursor-pointer min-w-0 flex-1">
+                    <input 
+                      type="checkbox" 
+                      checked={isSelected} 
+                      onChange={() => toggleSelect(p._id)} 
+                      className="rounded text-brand-600 focus:ring-brand-500 h-3.5 w-3.5"
+                    />
+                    <span className="truncate text-[11px] sm:text-xs font-bold text-slate-700">{p.nombre}</span>
+                  </label>
+                </div>
                 
                 <div className="flex items-center gap-1 shrink-0">
                   <Menu as="div" className="relative inline-block text-left">

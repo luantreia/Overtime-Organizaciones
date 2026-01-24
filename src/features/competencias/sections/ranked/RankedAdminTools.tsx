@@ -42,34 +42,44 @@ export const RankedAdminTools: React.FC<RankedAdminToolsProps> = ({
     <div className="space-y-4">
       <Card className="p-3 sm:p-4 border-slate-100 shadow-sm bg-white">
         <h3 className="mb-3 text-[11px] sm:text-sm font-bold text-slate-700 flex items-center justify-between">
-          <span>Historial Reciente (Corrección Rápida)</span>
-          <span className="text-[9px] sm:text-[10px] text-slate-400 font-normal uppercase">Últimos {recentMatches.length}</span>
+          <span>Historial y Partidos Abiertos</span>
+          <span className="text-[9px] sm:text-[10px] text-slate-400 font-normal uppercase">Mostrando {recentMatches.length}</span>
         </h3>
         <div className="space-y-2">
           {recentMatches.length === 0 ? (
-            <p className="text-xs text-slate-400 italic py-2 text-center">No hay partidos recientes para corregir</p>
+            <p className="text-xs text-slate-400 italic py-2 text-center">No hay partidos registrados en este scope</p>
           ) : (
-            recentMatches.map((m) => (
-              <div key={m._id} className="flex items-center justify-between p-1.5 sm:p-2 rounded-lg border border-slate-50 bg-slate-50/50 hover:bg-slate-50 transition-colors">
-                <div className="flex flex-col min-w-0">
-                  <span className="text-[8px] sm:text-[10px] font-mono text-slate-400 uppercase truncate">ID: {m._id.slice(-6).toUpperCase()}</span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-black text-red-600 leading-none">{m.marcadorLocal}</span>
-                    <span className="text-xs text-slate-300 leading-none">-</span>
-                    <span className="text-sm font-black text-blue-600 leading-none">{m.marcadorVisitante}</span>
+            recentMatches.map((m) => {
+              const isFinalizado = m.estado === 'finalizado';
+              return (
+                <div key={m._id} className="flex items-center justify-between p-1.5 sm:p-2 rounded-lg border border-slate-50 bg-slate-50/50 hover:bg-slate-50 transition-colors">
+                  <div className="flex flex-col min-w-0">
+                    <div className="flex items-center gap-1.5 overflow-hidden">
+                      <span className="text-[8px] sm:text-[10px] font-mono text-slate-400 uppercase truncate">ID: {m._id.slice(-6).toUpperCase()}</span>
+                      <span className={`text-[7px] sm:text-[8px] font-bold px-1 rounded uppercase tracking-tighter shrink-0 ${
+                        isFinalizado ? 'bg-slate-200 text-slate-600' : 'bg-emerald-100 text-emerald-700 animate-pulse'
+                      }`}>
+                        {isFinalizado ? 'Final' : 'Abierto'}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-black text-red-600 leading-none">{m.marcadorLocal}</span>
+                      <span className="text-xs text-slate-300 leading-none">-</span>
+                      <span className="text-sm font-black text-blue-600 leading-none">{m.marcadorVisitante}</span>
+                    </div>
                   </div>
+                  <Button 
+                    size="sm" 
+                    variant={isFinalizado ? 'outline' : 'primary'} 
+                    className={`h-7 text-[10px] sm:text-xs ${isFinalizado ? 'border-slate-200 bg-white' : 'px-4'}`}
+                    onClick={() => onEditResult(m)}
+                    disabled={busy}
+                  >
+                    {isFinalizado ? 'Corregir' : 'Continuar'}
+                  </Button>
                 </div>
-                <Button 
-                  size="sm" 
-                  variant="outline" 
-                  className="h-7 text-[10px] sm:text-xs border-slate-200 bg-white"
-                  onClick={() => onEditResult(m)}
-                  disabled={busy}
-                >
-                  Corregir
-                </Button>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       </Card>

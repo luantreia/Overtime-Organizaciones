@@ -118,12 +118,11 @@ export default function CompetenciaRankedSection({
       const ranked = all
         .filter((m: any) => 
           m.isRanked && 
-          m.estado === 'finalizado' && 
           m.modalidad === modalidad && 
           m.categoria === categoria
         )
         .sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime())
-        .slice(0, 5);
+        .slice(0, 10);
       setRecentMatches(ranked);
     } catch {}
   }, [competenciaId, modalidad, categoria]);
@@ -155,7 +154,11 @@ export default function CompetenciaRankedSection({
     temporadaId: selectedTemporada,
     decrementPlayedCount,
     incrementPlayedCount,
-    onSuccess: (msg) => { setSuccess(msg); setTimeout(() => setSuccess(null), 3000); },
+    onSuccess: (msg) => { 
+      setSuccess(msg); 
+      setTimeout(() => setSuccess(null), 3000); 
+      fetchRecentMatches();
+    },
     onError: (err) => { setError(err); setTimeout(() => setError(null), 5000); },
     onFinalized: () => {
       fetchLeaderboard();
