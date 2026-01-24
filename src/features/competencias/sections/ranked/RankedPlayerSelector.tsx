@@ -109,48 +109,33 @@ export const RankedPlayerSelector: React.FC<RankedPlayerSelectorProps> = ({
           const pjHoy = playedCounts[p._id] || 0;
 
           return (
-            <div key={p._id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-2 border-b px-2 py-1.5 text-sm hover:bg-slate-50">
-              <label className="flex items-center gap-2 cursor-pointer min-w-0">
-                <input 
-                  type="checkbox" 
-                  checked={isSelected} 
-                  onChange={() => toggleSelect(p._id)} 
-                  className="rounded text-brand-600 shrink-0"
-                />
-                <span className="truncate text-xs sm:text-sm">{p.nombre}</span>
-              </label>
-              
-              <div className="flex items-center justify-between sm:justify-end gap-2">
-                <label className="flex items-center gap-1 text-[9px] sm:text-xs text-slate-500 cursor-pointer">
+            <div key={p._id} className="flex flex-col gap-1.5 border-b px-2 py-2 text-sm hover:bg-slate-50">
+              <div className="flex items-center justify-between gap-2 min-w-0">
+                <label className="flex items-center gap-2 cursor-pointer min-w-0 flex-1">
                   <input 
                     type="checkbox" 
-                    checked={isPresent} 
-                    onChange={(e) => togglePresente(p._id, e.target.checked)} 
+                    checked={isSelected} 
+                    onChange={() => toggleSelect(p._id)} 
                     className="rounded text-brand-600 shrink-0"
                   />
-                  <span className="whitespace-nowrap">Presente</span>
-                  {pjHoy > 0 && (
-                    <span className="ml-1 rounded-full bg-blue-100 px-1.5 py-0.5 text-[8px] sm:text-[10px] font-bold text-blue-700">
-                      PJ: {pjHoy}
-                    </span>
-                  )}
+                  <span className="truncate text-xs sm:text-sm font-medium">{p.nombre}</span>
                 </label>
-
-                <div className="flex gap-1">
+                
+                <div className="flex gap-1 shrink-0">
                   {showAll && !isCompPlayer && (
                     <button
                       type="button"
-                      className="shrink-0 rounded border border-slate-200 bg-white px-1.5 py-0.5 text-[9px] sm:text-[10px] hover:bg-slate-50"
+                      className="rounded border border-slate-200 bg-white px-1.5 py-0.5 text-[10px] hover:bg-slate-50 font-bold text-brand-600"
                       onClick={() => onAgregarJugador(p._id)}
                       disabled={busy}
                     >
-                      Agregar
+                      Añadir
                     </button>
                   )}
                   {isCompPlayer && (
                     <button
                       type="button"
-                      className="shrink-0 rounded border border-red-200 bg-red-50 px-1.5 py-0.5 text-[9px] sm:text-[10px] text-red-700 hover:bg-red-100"
+                      className="rounded border border-rose-100 bg-rose-50 px-1.5 py-0.5 text-[10px] text-rose-600 hover:bg-rose-100"
                       onClick={() => onEliminarJugador(p._id)}
                       disabled={busy}
                     >
@@ -158,6 +143,24 @@ export const RankedPlayerSelector: React.FC<RankedPlayerSelectorProps> = ({
                     </button>
                   )}
                 </div>
+              </div>
+              
+              <div className="flex items-center justify-between gap-2 bg-slate-50/50 p-1 rounded">
+                <label className="flex items-center gap-1.5 text-[10px] text-slate-500 cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    checked={isPresent} 
+                    onChange={(e) => togglePresente(p._id, e.target.checked)} 
+                    className="rounded text-brand-600 shrink-0"
+                  />
+                  <span className="font-semibold uppercase tracking-tight">{isPresent ? 'Presente' : 'Ausente'}</span>
+                </label>
+
+                {pjHoy > 0 && (
+                  <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-black text-blue-700">
+                    PJ: {pjHoy}
+                  </span>
+                )}
               </div>
             </div>
           );
@@ -236,10 +239,10 @@ export const RankedPlayerSelector: React.FC<RankedPlayerSelectorProps> = ({
               <span>Priorizar descanso</span>
             </label>
             <Button size="sm" variant="outline" className="text-[9px] h-7 px-2 w-full sm:w-auto" onClick={onChooseForNext}>
-              Pick 12 (Cercanos a 0 PJ)
+              Elegir próximos
             </Button>
           </div>
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 justify-center sm:justify-end border-t pt-2 mt-1">
+          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
             <button type="button" className="text-[9px] text-slate-500 hover:text-brand-600" onClick={onMarkAllPresent}>Todos presentes</button>
             <button type="button" className="text-[9px] text-slate-500 hover:text-brand-600" onClick={onClearPresentes}>Limpiar lista</button>
             <button type="button" className="text-[9px] text-red-500 hover:text-red-700 font-medium" onClick={onResetPJHoy}>Reset PJ diario</button>

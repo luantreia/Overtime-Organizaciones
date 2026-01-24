@@ -26,9 +26,9 @@ export const MatchTimer: React.FC<MatchTimerProps> = ({ startTime }) => {
   const seconds = elapsed % 60;
 
   return (
-    <div className="flex flex-col items-center justify-center p-2 rounded-lg bg-slate-900 text-white font-mono shadow-inner border border-slate-700">
-      <span className="text-[10px] uppercase tracking-widest text-slate-400 font-bold">Tiempo de Juego</span>
-      <span className="text-2xl font-bold">
+    <div className="flex flex-col items-center justify-center p-1.5 sm:p-2 rounded-lg bg-slate-900 text-white font-mono shadow-inner border border-slate-700">
+      <span className="text-[8px] sm:text-[10px] uppercase tracking-widest text-slate-400 font-bold leading-none mb-0.5">Tiempo</span>
+      <span className="text-lg sm:text-2xl font-bold leading-none">
         {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
       </span>
     </div>

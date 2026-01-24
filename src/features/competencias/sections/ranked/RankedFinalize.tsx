@@ -76,24 +76,24 @@ export const RankedFinalize: React.FC<RankedFinalizeProps> = ({
           )}
         </div>
         
-        <div className="flex items-center gap-1 sm:gap-4 justify-center py-4 bg-white/40 rounded-lg">
+        <div className="flex items-center gap-0.5 sm:gap-4 justify-center py-4 bg-white/40 rounded-lg mb-2">
           {/* Rojo Team */}
-          <div className="flex flex-col items-center gap-1.5 sm:gap-2">
-            <span className="text-[9px] sm:text-[10px] font-bold text-red-600 tracking-widest leading-none">ROJO</span>
-            <div className="flex items-center gap-1 sm:gap-2">
+          <div className="flex flex-col items-center gap-1 sm:gap-2">
+            <span className="text-[8px] sm:text-[10px] font-bold text-red-600 tracking-widest leading-none">ROJO</span>
+            <div className="flex items-center gap-0.5 sm:gap-2">
               <button 
                 onClick={() => adjustScore('local', -1)} 
-                className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-full bg-white border border-slate-200 text-slate-500 hover:bg-slate-50 active:scale-95 text-xs sm:text-base"
+                className="w-6 h-6 sm:w-8 sm:h-8 flex items-center justify-center rounded-full bg-white border border-slate-200 text-slate-500 hover:bg-slate-50 active:scale-95 text-[10px] sm:text-base"
                 disabled={!matchActive}
               >
                 -
               </button>
-              <div className="w-12 h-12 sm:w-16 sm:h-16 flex items-center justify-center text-2xl sm:text-4xl font-black rounded-lg sm:rounded-xl bg-white border shadow-sm text-slate-900 tabular-nums">
+              <div className="w-10 h-10 sm:w-16 sm:h-16 flex items-center justify-center text-xl sm:text-4xl font-black rounded-lg bg-white border shadow-sm text-slate-900 tabular-nums">
                 {score.local}
               </div>
               <button 
                 onClick={() => addSet('local')} 
-                className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center rounded-full bg-red-600 text-white shadow-lg hover:bg-red-700 active:scale-90 transition-all font-bold text-xl sm:text-2xl"
+                className="w-8 h-8 sm:w-12 sm:h-12 flex items-center justify-center rounded-full bg-red-600 text-white shadow-lg hover:bg-red-700 active:scale-90 transition-all font-bold text-lg sm:text-2xl"
                 disabled={!matchActive}
               >
                 +
@@ -101,25 +101,25 @@ export const RankedFinalize: React.FC<RankedFinalizeProps> = ({
             </div>
           </div>
 
-          <div className="mx-1 sm:mx-4 text-xs sm:text-2xl font-bold text-slate-300">VS</div>
+          <div className="mx-0.5 sm:mx-4 text-[10px] sm:text-2xl font-bold text-slate-300">VS</div>
 
           {/* Azul Team */}
-          <div className="flex flex-col items-center gap-1.5 sm:gap-2">
-            <span className="text-[9px] sm:text-[10px] font-bold text-blue-600 tracking-widest leading-none">AZUL</span>
-            <div className="flex items-center gap-1 sm:gap-2">
+          <div className="flex flex-col items-center gap-1 sm:gap-2">
+            <span className="text-[8px] sm:text-[10px] font-bold text-blue-600 tracking-widest leading-none">AZUL</span>
+            <div className="flex items-center gap-0.5 sm:gap-2">
               <button 
                 onClick={() => addSet('visitante')} 
-                className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 active:scale-90 transition-all font-bold text-xl sm:text-2xl"
+                className="w-8 h-8 sm:w-12 sm:h-12 flex items-center justify-center rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 active:scale-90 transition-all font-bold text-lg sm:text-2xl"
                 disabled={!matchActive}
               >
                 +
               </button>
-              <div className="w-12 h-12 sm:w-16 sm:h-16 flex items-center justify-center text-2xl sm:text-4xl font-black rounded-lg sm:rounded-xl bg-white border shadow-sm text-slate-900 tabular-nums">
+              <div className="w-10 h-10 sm:w-16 sm:h-16 flex items-center justify-center text-xl sm:text-4xl font-black rounded-lg bg-white border shadow-sm text-slate-900 tabular-nums">
                 {score.visitante}
               </div>
               <button 
                 onClick={() => adjustScore('visitante', -1)} 
-                className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-full bg-white border border-slate-200 text-slate-500 hover:bg-slate-50 active:scale-95 text-xs sm:text-base"
+                className="w-6 h-6 sm:w-8 sm:h-8 flex items-center justify-center rounded-full bg-white border border-slate-200 text-slate-500 hover:bg-slate-50 active:scale-95 text-[10px] sm:text-base"
                 disabled={!matchActive}
               >
                 -
@@ -168,23 +168,25 @@ export const RankedFinalize: React.FC<RankedFinalizeProps> = ({
             <tbody className="divide-y divide-slate-50">
               {board.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="px-3 py-6 text-center text-slate-400 italic">No hay datos en el ranking</td>
+                  <td colSpan={4} className="px-3 py-6 text-center text-slate-400 italic">No hay datos</td>
                 </tr>
               ) : (
                 board.map((r, idx) => (
                   <tr key={r.playerId} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-3 py-2 whitespace-nowrap">
-                      <span className="font-medium text-slate-700">{r.playerName || r.nombre || `ID: ${r.playerId.slice(-4)}`}</span>
+                    <td className="px-2 sm:px-3 py-2 min-w-0 max-w-[80px] sm:max-w-[120px]">
+                      <span className="font-medium text-slate-700 truncate block" title={r.playerName || r.nombre}>
+                        {r.playerName || r.nombre || `ID: ${r.playerId.slice(-4)}`}
+                      </span>
                     </td>
-                    <td className="px-2 py-2 text-center">
-                      <span className="inline-block px-1.5 py-0.5 rounded bg-brand-50 text-brand-700 font-bold">
+                    <td className="px-1 sm:px-2 py-2 text-center">
+                      <span className="inline-block px-1 py-0.5 rounded bg-brand-50 text-brand-700 font-bold text-[10px] sm:text-xs">
                         {Math.round(r.rating)}
                       </span>
                     </td>
-                    <td className="px-2 py-2 text-center text-slate-500">{r.matchesPlayed}</td>
-                    <td className="px-2 py-2 text-center">
+                    <td className="px-1 sm:px-2 py-2 text-center text-slate-500 font-medium">{r.matchesPlayed}</td>
+                    <td className="px-1 sm:px-2 py-2 text-center">
                       {r.lastDelta ? (
-                        <span className={`font-bold ${r.lastDelta > 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+                        <span className={`font-bold text-[10px] sm:text-xs ${r.lastDelta > 0 ? 'text-emerald-500' : 'text-red-500'}`}>
                           {r.lastDelta > 0 ? `+${r.lastDelta}` : r.lastDelta}
                         </span>
                       ) : (

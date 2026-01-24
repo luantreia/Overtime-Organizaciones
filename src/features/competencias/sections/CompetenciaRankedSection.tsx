@@ -451,8 +451,8 @@ export default function CompetenciaRankedSection({
       </Card>
 
       {/* Main Workflow Grid */}
-      <div className="grid gap-6 lg:grid-cols-12">
-        <div className="lg:col-span-4">
+      <div className="grid gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
+        <div>
            <RankedPlayerSelector
               players={players}
               compPlayers={compPlayers}
@@ -488,7 +488,7 @@ export default function CompetenciaRankedSection({
            />
         </div>
 
-        <div className="lg:col-span-4">
+        <div>
           <TeamBuilder 
             rojo={rojo}
             azul={azul}
@@ -501,7 +501,7 @@ export default function CompetenciaRankedSection({
           />
         </div>
 
-        <div className="lg:col-span-4">
+        <div className="md:col-span-2 xl:col-span-1">
           <RankedFinalize 
             score={score}
             sets={sets}
