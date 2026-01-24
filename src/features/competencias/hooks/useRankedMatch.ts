@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useAuth } from '../../../app/providers/AuthContext';
 import { 
   createRankedMatch, 
   autoAssign as apiAutoAssign, 
@@ -32,6 +33,7 @@ export function useRankedMatch({
   incrementPlayedCount,
   decrementPlayedCount,
 }: UseRankedMatchProps) {
+  const { user } = useAuth();
   const [matchId, setMatchId] = useState<string | null>(null);
   const [rojo, setRojo] = useState<string[]>([]);
   const [azul, setAzul] = useState<string[]>([]);
@@ -84,7 +86,7 @@ export function useRankedMatch({
       const r = await createRankedMatch({
         modalidad: modalidad as Modalidad,
         categoria: categoria as Categoria,
-        creadoPor: 'org-ui',
+        creadoPor: user?.id || 'org-ui',
         competenciaId,
         temporadaId: temporadaId || undefined
       });
@@ -146,7 +148,7 @@ export function useRankedMatch({
     if (!matchId) return;
     setBusy(true);
     try {
-      await apiFinalizeMatch(matchId, score.local, score.visitante, sets);
+      await apiFinalizeMatch(matchId, score.local, score.visitante, sets, user?.id || 'org-ui');
       onSuccess?.('Partido finalizado con éxito');
       resetMatchState();
       onFinalized?.();
