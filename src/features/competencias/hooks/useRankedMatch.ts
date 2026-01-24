@@ -47,10 +47,28 @@ export function useRankedMatch({
   const [sets, setSets] = useState<{ _id?: string; winner: 'local' | 'visitante'; time: number }[]>([]);
   
   // Timers State
-  const [startTime, setStartTime] = useState<number | null>(null); // Use this as the REFERENCE for MatchTimer legacy, but we'll use more precise ones:
+  const [startTime, rawSetStartTime] = useState<number | null>(null); // Use this as the REFERENCE for MatchTimer legacy, but we'll use more precise ones:
   const [accumulatedTime, setAccumulatedTime] = useState<number>(0);
   const [lastStartTime, setLastStartTime] = useState<number | null>(null);
   const [isPaused, setIsPaused] = useState<boolean>(true);
+
+  // Wrapper to keep timer states in sync
+  const setStartTime = useCallback((val: number | null) => {
+    rawSetStartTime(val);
+    if (val === null) {
+      setAccumulatedTime(0);
+      setLastStartTime(null);
+    } else if (val) {
+      const totalElapsed = Math.max(0, Date.now() - val);
+      if (isPaused) {
+        setAccumulatedTime(totalElapsed);
+        setLastStartTime(null);
+      } else {
+        setAccumulatedTime(0);
+        setLastStartTime(val);
+      }
+    }
+  }, [isPaused]);
 
   const [matchConfig, setMatchConfig] = useState<{ matchDuration: number; setDuration: number; suddenDeathLimit: number }>({
     matchDuration: 1200,
@@ -563,6 +581,7 @@ export function useRankedMatch({
     adjustScore,
     loadMatch,
     startTime,
+    setStartTime,
     isPaused,
     accumulatedTime,
     getEffectiveElapsed,
