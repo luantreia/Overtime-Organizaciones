@@ -247,8 +247,8 @@ export const RankedFinalize: React.FC<RankedFinalizeProps> = ({
           playerName={selectedPlayer.name}
           modalidad={modalidad}
           categoria={categoria}
-          competenciaId={competenciaId}
-          seasonId={seasonId}
+          competenciaId={lbScope === 'competition' ? competenciaId : ''}
+          seasonId={lbScope === 'competition' ? seasonId : 'null'}
           onUpdated={onRefreshLeaderboard}
         />
       )}
