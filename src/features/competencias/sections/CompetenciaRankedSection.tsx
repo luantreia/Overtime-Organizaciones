@@ -172,11 +172,15 @@ export default function CompetenciaRankedSection({
           await revertMatch(m._id);
           
           // Buscamos los IDs de los jugadores de los equipos
-          // El backend de listPartidos debería traerlos, o los buscamos por matchId
           const eqL = m.rojoPlayers || [];
           const eqV = m.azulPlayers || [];
+          // El backend puede llamar al campo 'sets' o 'setDetalles'
+          const setsData = (m.sets || []).map((s: any) => ({
+             winner: s.ganadorSet === 'local' ? 'local' : 'visitante',
+             time: s.duracionReal ? s.duracionReal * 1000 : 0
+          }));
 
-          loadMatch(m._id, eqL, eqV, { local: m.marcadorLocal || 0, visitante: m.marcadorVisitante || 0 });
+          loadMatch(m._id, eqL, eqV, { local: m.marcadorLocal || 0, visitante: m.marcadorVisitante || 0 }, setsData);
           setSuccess('Partido cargado para corrección');
         } catch (e: any) {
           setError(e.message || 'Error al cargar para edición');

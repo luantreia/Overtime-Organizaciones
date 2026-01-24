@@ -186,11 +186,12 @@ export function useRankedMatch({
     resetMatchState();
   };
 
-  const loadMatch = async (id: string, rojoIds: string[], azulIds: string[], currentScore: { local: number; visitante: number }) => {
+  const loadMatch = async (id: string, rojoIds: string[], azulIds: string[], currentScore: { local: number; visitante: number }, existingSets: any[] = []) => {
     setMatchId(id);
     setRojo(rojoIds);
     setAzul(azulIds);
     setScore(currentScore);
+    setSets(existingSets);
     setStartTime(null); // Timer doesn't make sense for old matches
   };
 

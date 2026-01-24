@@ -20,7 +20,7 @@ export const QuickAddPlayerModal: React.FC<QuickAddPlayerModalProps> = ({
   const [nombre, setNombre] = useState('');
   const [alias, setAlias] = useState('');
   const [fechaNacimiento, setFechaNacimiento] = useState('');
-  const [genero, setGenero] = useState<'Masculino' | 'Femenino' | 'Otro' | ''>('');
+  const [genero, setGenero] = useState<'masculino' | 'femenino' | 'otro' | ''>('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

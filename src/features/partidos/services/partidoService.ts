@@ -288,6 +288,12 @@ const mapPartido = (partido: BackendPartido, contextoEquipoId?: string): Partido
     equipoVisitante: visitante ? { id: visitante.id, nombre: visitante.nombre, escudo: visitante.escudo } : undefined,
     marcadorLocal: partido.marcadorLocal,
     marcadorVisitante: partido.marcadorVisitante,
+    isRanked: (partido as any).isRanked,
+    rojoPlayers: (partido as any).rojoPlayers,
+    azulPlayers: (partido as any).azulPlayers,
+    sets: (partido as any).sets,
+    modalidad: (partido as any).modalidad,
+    categoria: (partido as any).categoria,
   };
 
   const tieneMarcador = (partido.marcadorLocal !== undefined && partido.marcadorLocal !== null)
