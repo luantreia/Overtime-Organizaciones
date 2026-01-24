@@ -475,6 +475,16 @@ export function useRankedMatch({
     }
   }, [isPaused, lastStartTime, getEffectiveElapsed]);
 
+  const startNextSet = useCallback(() => {
+    if (isPaused) {
+      setLastStartTime(Date.now());
+      setIsPaused(false);
+    }
+    const globalTime = getEffectiveElapsed();
+    setCurrentSetStartTime(globalTime);
+    setIsWaitingForNextSet(false);
+  }, [isPaused, getEffectiveElapsed]);
+
   const adjustScore = async (team: 'local' | 'visitante', delta: number) => {
     const newScore = { ...score };
     newScore[team] = Math.max(0, newScore[team] + delta);
@@ -624,6 +634,7 @@ export function useRankedMatch({
     isWaitingForNextSet,
     getEffectiveElapsed,
     togglePause,
+    startNextSet,
     startTimer,
     matchConfig,
     onUpdateConfig: async (newConfig: Partial<{ 

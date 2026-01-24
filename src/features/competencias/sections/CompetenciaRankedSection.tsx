@@ -172,6 +172,7 @@ export default function CompetenciaRankedSection({
     accumulatedTime,
     getEffectiveElapsed,
     togglePause,
+    startNextSet,
     startTimer,
     matchConfig,
     isBasicMode,
@@ -639,6 +640,7 @@ export default function CompetenciaRankedSection({
             isPaused={isPaused}
             getEffectiveElapsed={getEffectiveElapsed}
             togglePause={togglePause}
+            startNextSet={startNextSet}
             setStartTime={(val: number | null) => setStartTime(val)}
             currentSetStartTime={currentSetStartTime}
             isWaitingForNextSet={isWaitingForNextSet}

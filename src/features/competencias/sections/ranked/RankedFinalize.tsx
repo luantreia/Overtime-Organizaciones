@@ -21,6 +21,7 @@ interface RankedFinalizeProps {
   isPaused?: boolean;
   getEffectiveElapsed?: () => number;
   togglePause?: () => void;
+  startNextSet?: () => void;
   setStartTime?: (val: number | null) => void;
   currentSetStartTime?: number;
   isWaitingForNextSet?: boolean;
@@ -66,6 +67,7 @@ export const RankedFinalize: React.FC<RankedFinalizeProps> = ({
   isPaused,
   getEffectiveElapsed,
   togglePause,
+  startNextSet,
   setStartTime,
   currentSetStartTime = 0,
   isWaitingForNextSet = false,
@@ -316,10 +318,10 @@ export const RankedFinalize: React.FC<RankedFinalizeProps> = ({
           </div>
 
           <div className="flex flex-col items-center gap-2 px-1 sm:px-4">
-             {matchActive && isPaused && startTime ? (
+             {matchActive && (isPaused || isWaitingForNextSet) && startTime ? (
                 <div className="flex flex-col items-center gap-1 animate-in zoom-in duration-300">
                   <button 
-                    onClick={togglePause}
+                    onClick={isWaitingForNextSet ? startNextSet : togglePause}
                     className="group relative w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-emerald-500 text-white shadow-xl shadow-emerald-500/20 hover:bg-emerald-600 transition-all flex items-center justify-center"
                   >
                     <div className="absolute inset-0 rounded-full bg-emerald-500 animate-ping opacity-20" />
@@ -327,7 +329,9 @@ export const RankedFinalize: React.FC<RankedFinalizeProps> = ({
                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
                     </svg>
                   </button>
-                  <span className="text-[7px] sm:text-[9px] font-black text-emerald-600 uppercase tracking-tighter">Siguiente Set</span>
+                  <span className="text-[7px] sm:text-[9px] font-black text-emerald-600 uppercase tracking-tighter">
+                    {isWaitingForNextSet ? 'Siguiente Set' : 'Reanudar'}
+                  </span>
                 </div>
              ) : (
                 <span className="text-[10px] sm:text-2xl font-bold text-slate-300">VS</span>
