@@ -55,6 +55,7 @@ export default function CompetenciaRankedSection({
   const [showAll, setShowAll] = useState<boolean>(false);
   const [priorizarNoJugados, setPriorizarNoJugados] = useState<boolean>(true);
   const [recentMatches, setRecentMatches] = useState<any[]>([]);
+  const [lbScope, setLbScope] = useState<'competition' | 'global'>('competition');
 
   // Temporadas
   const [temporadas, setTemporadas] = useState<BackendTemporada[]>([]);
@@ -104,13 +105,13 @@ export default function CompetenciaRankedSection({
       const lb = await getLeaderboard({ 
         modalidad: modalidad as string, 
         categoria: categoria as string, 
-        competition: competenciaId, 
-        season: selectedTemporada || undefined,
+        competition: lbScope === 'competition' ? competenciaId : undefined, 
+        season: lbScope === 'competition' ? (selectedTemporada || undefined) : undefined,
         limit: 20 
       });
       setBoard(lb.items);
     } catch {}
-  }, [modalidad, categoria, competenciaId, selectedTemporada]);
+  }, [modalidad, categoria, competenciaId, selectedTemporada, lbScope]);
 
   const fetchRecentMatches = useCallback(async () => {
     try {
@@ -511,6 +512,8 @@ export default function CompetenciaRankedSection({
             busy={busy}
             matchActive={!!matchId}
             board={board}
+            lbScope={lbScope}
+            setLbScope={setLbScope}
             startTime={startTime}
           />
         </div>

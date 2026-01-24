@@ -52,7 +52,7 @@ export async function getLeaderboard(params: { modalidad: string; categoria: str
   });
   if (params.competition) sp.set('competition', params.competition);
   if (params.season) sp.set('season', params.season);
-  return authFetch<{ ok: boolean; items: Array<{ playerId: string; rating: number; matchesPlayed: number; lastDelta?: number }> }>(`${BASE}/leaderboard?${sp.toString()}`);
+  return authFetch<{ ok: boolean; items: Array<{ playerId: string; rating: number; matchesPlayed: number; lastDelta?: number; playerName?: string; nombre?: string }> }>(`${BASE}/leaderboard?${sp.toString()}`);
 }
 
 export async function listJugadores(limit = 50) {
