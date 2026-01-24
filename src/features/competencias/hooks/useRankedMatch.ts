@@ -5,7 +5,6 @@ import {
   autoAssign as apiAutoAssign, 
   assignTeams as apiAssignTeams, 
   finalizeMatch as apiFinalizeMatch, 
-  startMatchTimer as apiStartMatchTimer,
   updateMatchConfig as apiUpdateMatchConfig,
   getRankedMatch as apiGetRankedMatch,
   updateScore as apiUpdateScore,
@@ -79,10 +78,8 @@ export function useRankedMatch({
         }));
       }
 
-      // Update start time
-      if (partido.rankedMeta?.startTime) {
-        setStartTime(new Date(partido.rankedMeta.startTime).getTime());
-      }
+      // We no longer update start time from server here to keep the 
+      // Organizaciones timer as a purely local indicative timer for the buzzer.
       
       if (partido.rankedMeta) {
         setMatchConfig({
@@ -345,8 +342,9 @@ export function useRankedMatch({
     if (!startTime) {
       const now = Date.now();
       setStartTime(now);
-      // Sync with backend so Mesa de Control can pick it up
-      apiStartMatchTimer(matchId, now).catch(console.error);
+      // Logic: In Organizaciones (Cancha en vivo), the timer is local 
+      // for the buzzer and indicator. We don't notify the server to
+      // let Mesa de Control handle the official time.
     }
   };
 
@@ -469,6 +467,7 @@ export function useRankedMatch({
     adjustScore,
     loadMatch,
     startTime,
+    setStartTime,
     startTimer,
     matchConfig,
     onUpdateConfig: async (newConfig: Partial<{ matchDuration: number; setDuration: number; suddenDeathLimit: number }>) => {

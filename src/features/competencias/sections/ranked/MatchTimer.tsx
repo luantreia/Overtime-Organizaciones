@@ -8,19 +8,45 @@ interface MatchTimerProps {
 
 export const MatchTimer: React.FC<MatchTimerProps> = ({ startTime, sets = [], suddenDeathLimit = 180 }) => {
   const [elapsed, setElapsed] = useState<number>(0);
+  const [hasSounded, setHasSounded] = useState<boolean>(false);
+
+  // Audio for the buzzer
+  const playBuzzer = () => {
+    try {
+      const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3'); // Professional Buzzer Sound
+      audio.volume = 0.5;
+      audio.play();
+    } catch (e) {
+      console.warn('Audio play failed', e);
+    }
+  };
 
   useEffect(() => {
     if (!startTime) {
       setElapsed(0);
+      setHasSounded(false);
       return;
     }
 
     const interval = setInterval(() => {
-      setElapsed(Math.floor((Date.now() - startTime) / 1000));
+      const currentElapsed = Math.floor((Date.now() - startTime) / 1000);
+      setElapsed(currentElapsed);
+
+      // Check for sound trigger (when set time hits limit)
+      const lastSetTime = sets.length > 0 ? Math.floor(sets[sets.length - 1].time / 1000) : 0;
+      const currentSetElapsed = currentElapsed - lastSetTime;
+      
+      if (suddenDeathLimit > 0 && currentSetElapsed >= suddenDeathLimit && !hasSounded) {
+        playBuzzer();
+        setHasSounded(true);
+      } else if (currentSetElapsed < suddenDeathLimit) {
+        // Reset sound flag if we are in a new set or time was edited back
+        setHasSounded(false);
+      }
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [startTime]);
+  }, [startTime, sets, suddenDeathLimit, hasSounded]);
 
   if (!startTime) return null;
 

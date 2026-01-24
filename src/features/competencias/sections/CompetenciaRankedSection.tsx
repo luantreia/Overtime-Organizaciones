@@ -166,6 +166,7 @@ export default function CompetenciaRankedSection({
     adjustScore,
     loadMatch,
     startTime,
+    setStartTime,
     startTimer,
     matchConfig,
     onUpdateConfig
@@ -601,6 +602,7 @@ export default function CompetenciaRankedSection({
             lbScope={lbScope}
             setLbScope={setLbScope}
             startTime={startTime}
+            setStartTime={(val: number | null) => setStartTime(val)}
             startTimer={startTimer}
             onRefreshLeaderboard={fetchLeaderboard}
             competenciaId={competenciaId}
