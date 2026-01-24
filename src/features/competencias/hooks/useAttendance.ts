@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 
 export function useAttendance(competenciaId: string) {
   const [presentes, setPresentes] = useState<string[]>([]);
