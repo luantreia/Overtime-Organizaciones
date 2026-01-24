@@ -2,13 +2,24 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 
 export function useAttendance(competenciaId: string) {
   const [presentes, setPresentes] = useState<string[]>([]);
-  const [playedCounts, setPlayedCounts] = useState<Record<string, number>>({});
+  const [matchParticipations, setMatchParticipations] = useState<Record<string, string[]>>({});
 
   const sessionKey = useMemo(() => {
     const today = new Date();
     const iso = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-    return `rankedSession:${competenciaId}:${iso}`;
+    return `rankedSessionV2:${competenciaId}:${iso}`;
   }, [competenciaId]);
+
+  // Derived playedCounts for backward compatibility and UI
+  const playedCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    Object.values(matchParticipations).forEach((playerIds) => {
+      playerIds.forEach(pid => {
+        counts[pid] = (counts[pid] || 0) + 1;
+      });
+    });
+    return counts;
+  }, [matchParticipations]);
 
   useEffect(() => {
     try {
@@ -16,25 +27,25 @@ export function useAttendance(competenciaId: string) {
       if (raw) {
         const parsed = JSON.parse(raw);
         setPresentes(Array.isArray(parsed.presentes) ? parsed.presentes : []);
-        setPlayedCounts(parsed.playedCounts && typeof parsed.playedCounts === 'object' ? parsed.playedCounts : {});
+        setMatchParticipations(parsed.matchParticipations || {});
       } else {
         setPresentes([]);
-        setPlayedCounts({});
+        setMatchParticipations({});
       }
     } catch {
       setPresentes([]);
-      setPlayedCounts({});
+      setMatchParticipations({});
     }
   }, [sessionKey]);
 
   useEffect(() => {
     if (!competenciaId) return;
     try {
-      localStorage.setItem(sessionKey, JSON.stringify({ presentes, playedCounts }));
+      localStorage.setItem(sessionKey, JSON.stringify({ presentes, matchParticipations }));
     } catch (e) {
       console.error('Error saving attendance to localStorage', e);
     }
-  }, [sessionKey, presentes, playedCounts, competenciaId]);
+  }, [sessionKey, presentes, matchParticipations, competenciaId]);
 
   const togglePresente = useCallback((id: string, isPresent: boolean) => {
     setPresentes((prev) => 
@@ -44,29 +55,24 @@ export function useAttendance(competenciaId: string) {
     );
   }, []);
 
-  const incrementPlayedCount = useCallback((playerIds: Set<string> | string[]) => {
-    setPlayedCounts((prev) => {
+  const syncMatchAttendance = useCallback((matchId: string, playerIds: string[]) => {
+    if (!matchId) return;
+    setMatchParticipations((prev) => ({
+      ...prev,
+      [matchId]: [...new Set(playerIds)]
+    }));
+  }, []);
+
+  const removeMatchAttendance = useCallback((matchId: string) => {
+    if (!matchId) return;
+    setMatchParticipations((prev) => {
       const next = { ...prev };
-      playerIds.forEach((id) => {
-        next[id] = (next[id] || 0) + 1;
-      });
+      delete next[matchId];
       return next;
     });
   }, []);
 
-  const decrementPlayedCount = useCallback((playerIds: Set<string> | string[]) => {
-    setPlayedCounts((prev) => {
-      const next = { ...prev };
-      playerIds.forEach((id) => {
-        if (next[id] && next[id] > 0) {
-          next[id] -= 1;
-        }
-      });
-      return next;
-    });
-  }, []);
-
-  const resetPlayedCounts = useCallback(() => setPlayedCounts({}), []);
+  const resetPlayedCounts = useCallback(() => setMatchParticipations({}), []);
   const clearPresentes = useCallback(() => setPresentes([]), []);
   const markAllPresent = useCallback((playerIds: string[]) => setPresentes(playerIds), []);
 
@@ -74,10 +80,8 @@ export function useAttendance(competenciaId: string) {
     presentes,
     setPresentes,
     playedCounts,
-    setPlayedCounts,
-    togglePresente,
-    incrementPlayedCount,
-    decrementPlayedCount,
+    syncMatchAttendance,
+    removeMatchAttendance,
     resetPlayedCounts,
     clearPresentes,
     markAllPresent

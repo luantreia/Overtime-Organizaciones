@@ -108,8 +108,8 @@ export default function CompetenciaRankedSection({
     presentes, 
     togglePresente, 
     playedCounts, 
-    incrementPlayedCount, 
-    decrementPlayedCount,
+    syncMatchAttendance,
+    removeMatchAttendance,
     resetPlayedCounts, 
     clearPresentes, 
     markAllPresent 
@@ -168,8 +168,8 @@ export default function CompetenciaRankedSection({
     modalidad,
     categoria,
     temporadaId: selectedTemporada,
-    decrementPlayedCount,
-    incrementPlayedCount,
+    syncMatchAttendance,
+    removeMatchAttendance,
     onSuccess: (msg) => { 
       setSuccess(msg); 
       fetchRecentMatches();

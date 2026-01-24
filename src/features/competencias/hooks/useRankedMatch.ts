@@ -18,8 +18,8 @@ interface UseRankedMatchProps {
   onSuccess?: (message: string) => void;
   onError?: (error: string) => void;
   onFinalized?: () => void;
-  incrementPlayedCount: (playerIds: Set<string> | string[]) => void;
-  decrementPlayedCount: (playerIds: Set<string> | string[]) => void;
+  syncMatchAttendance: (matchId: string, playerIds: string[]) => void;
+  removeMatchAttendance: (matchId: string) => void;
 }
 
 export function useRankedMatch({
@@ -30,8 +30,8 @@ export function useRankedMatch({
   onSuccess,
   onError,
   onFinalized,
-  incrementPlayedCount,
-  decrementPlayedCount,
+  syncMatchAttendance,
+  removeMatchAttendance,
 }: UseRankedMatchProps) {
   const { user } = useAuth();
   const [matchId, setMatchId] = useState<string | null>(null);
@@ -41,7 +41,6 @@ export function useRankedMatch({
   const [sets, setSets] = useState<{ winner: 'local' | 'visitante'; time: number }[]>([]);
   const [startTime, setStartTime] = useState<number | null>(null);
   const [pjMarked, setPjMarked] = useState<boolean>(false);
-  const [markedPlayers, setMarkedPlayers] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
 
   const persistenceKey = useMemo(() => `rankedMatch:${competenciaId}`, [competenciaId]);
@@ -59,7 +58,6 @@ export function useRankedMatch({
         setSets(parsed.sets || []);
         setStartTime(parsed.startTime || null);
         setPjMarked(!!parsed.pjMarked);
-        setMarkedPlayers(parsed.markedPlayers || []);
       }
     } catch { }
   }, [persistenceKey]);
@@ -67,8 +65,8 @@ export function useRankedMatch({
   // Save to localStorage
   useEffect(() => {
     if (!competenciaId) return;
-    localStorage.setItem(persistenceKey, JSON.stringify({ matchId, rojo, azul, score, sets, startTime, pjMarked, markedPlayers }));
-  }, [matchId, rojo, azul, score, sets, startTime, pjMarked, markedPlayers, persistenceKey, competenciaId]);
+    localStorage.setItem(persistenceKey, JSON.stringify({ matchId, rojo, azul, score, sets, startTime, pjMarked }));
+  }, [matchId, rojo, azul, score, sets, startTime, pjMarked, persistenceKey, competenciaId]);
 
   const resetMatchState = useCallback(() => {
     setMatchId(null);
@@ -78,7 +76,6 @@ export function useRankedMatch({
     setSets([]);
     setStartTime(null);
     setPjMarked(false);
-    setMarkedPlayers([]);
     localStorage.removeItem(persistenceKey);
   }, [persistenceKey]);
 
@@ -196,18 +193,7 @@ export function useRankedMatch({
       await apiAssignTeams(matchId, rojo, azul);
       
       const currentPlayers = [...rojo, ...azul];
-      const prevMarked = new Set(markedPlayers);
-      const nextMarked = new Set(currentPlayers);
-
-      // Players to remove (were marked but aren't in match anymore)
-      const toRemove = markedPlayers.filter(id => !nextMarked.has(id));
-      // Players to add (are in match now but weren't marked)
-      const toAdd = currentPlayers.filter(id => !prevMarked.has(id));
-
-      if (toRemove.length > 0) decrementPlayedCount(toRemove);
-      if (toAdd.length > 0) incrementPlayedCount(toAdd);
-
-      setMarkedPlayers(currentPlayers);
+      syncMatchAttendance(matchId, currentPlayers);
       if (currentPlayers.length > 0) setPjMarked(true);
 
       if (!startTime) {
@@ -226,17 +212,8 @@ export function useRankedMatch({
     if (!matchId) return;
     setBusy(true);
     try {
-      // Safety: ensure PJ is correctly marked for current players if They finalize without saving first
       const currentPlayers = [...rojo, ...azul];
-      const prevMarked = new Set(markedPlayers);
-      const nextMarked = new Set(currentPlayers);
-
-      const toRemove = markedPlayers.filter(id => !nextMarked.has(id));
-      const toAdd = currentPlayers.filter(id => !prevMarked.has(id));
-
-      if (toRemove.length > 0) decrementPlayedCount(toRemove);
-      if (toAdd.length > 0) incrementPlayedCount(toAdd);
-      // No need to setMarkedPlayers here as match is finishing
+      syncMatchAttendance(matchId, currentPlayers);
 
       await apiFinalizeMatch(matchId, score.local, score.visitante, sets, afkIds, user?.id || 'org-ui');
       onSuccess?.('Partido finalizado con éxito');
@@ -254,12 +231,7 @@ export function useRankedMatch({
     setBusy(true);
     try {
       await deleteRankedMatch(matchId);
-      
-      // Revert PJ for players who were actually marked
-      if (markedPlayers.length > 0) {
-        decrementPlayedCount(markedPlayers);
-      }
-
+      removeMatchAttendance(matchId);
       resetMatchState();
       onSuccess?.('Partido eliminado y estadísticas revertidas');
     } catch (e: any) {
@@ -288,10 +260,8 @@ export function useRankedMatch({
     setSets(existingSets);
     setStartTime(null); // Timer doesn't make sense for old matches
     
-    // When loading a match, assume these players have already been 
-    // counted in the current session attendance to avoid double-counting 
     const currentPlayers = [...rojoIds, ...azulIds];
-    setMarkedPlayers(currentPlayers);
+    syncMatchAttendance(id, currentPlayers);
     if (currentPlayers.length > 0) setPjMarked(true);
 
     // Ensure players are marked present when loading a match
