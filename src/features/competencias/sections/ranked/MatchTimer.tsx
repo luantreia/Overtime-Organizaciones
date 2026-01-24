@@ -2,12 +2,22 @@ import React, { useState, useEffect } from 'react';
 
 interface MatchTimerProps {
   startTime: number | null;
+  accumulatedTime?: number;
+  isPaused?: boolean;
+  getEffectiveElapsed?: () => number;
   sets?: { winner: string; time: number }[];
   suddenDeathLimit?: number;
 }
 
-export const MatchTimer: React.FC<MatchTimerProps> = ({ startTime, sets = [], suddenDeathLimit = 180 }) => {
-  const [elapsed, setElapsed] = useState<number>(0);
+export const MatchTimer: React.FC<MatchTimerProps> = ({ 
+  startTime, 
+  accumulatedTime = 0,
+  isPaused = true,
+  getEffectiveElapsed,
+  sets = [], 
+  suddenDeathLimit = 180 
+}) => {
+  const [elapsed, setElapsed] = useState<number>(accumulatedTime / 1000);
   const [hasSounded, setHasSounded] = useState<boolean>(false);
 
   // Audio for the buzzer
@@ -28,8 +38,16 @@ export const MatchTimer: React.FC<MatchTimerProps> = ({ startTime, sets = [], su
       return;
     }
 
+    if (isPaused) {
+       // If paused, we just set the static elapsed time
+       const totalMs = getEffectiveElapsed ? getEffectiveElapsed() : accumulatedTime;
+       setElapsed(Math.floor(totalMs / 1000));
+       return;
+    }
+
     const interval = setInterval(() => {
-      const currentElapsed = Math.floor((Date.now() - startTime) / 1000);
+      const totalMs = getEffectiveElapsed ? getEffectiveElapsed() : (Date.now() - (startTime || 0));
+      const currentElapsed = Math.floor(totalMs / 1000);
       setElapsed(currentElapsed);
 
       // Check for sound trigger (when set time hits limit)
@@ -46,7 +64,7 @@ export const MatchTimer: React.FC<MatchTimerProps> = ({ startTime, sets = [], su
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [startTime, sets, suddenDeathLimit, hasSounded]);
+  }, [startTime, accumulatedTime, isPaused, getEffectiveElapsed, sets, suddenDeathLimit, hasSounded]);
 
   if (!startTime) return null;
 

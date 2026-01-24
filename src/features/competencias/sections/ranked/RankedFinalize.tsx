@@ -17,6 +17,10 @@ interface RankedFinalizeProps {
   lbScope: 'competition' | 'global';
   setLbScope: (s: 'competition' | 'global') => void;
   startTime: number | null;
+  accumulatedTime?: number;
+  isPaused?: boolean;
+  getEffectiveElapsed?: () => number;
+  togglePause?: () => void;
   setStartTime?: (val: number | null) => void;
   startTimer: () => void;
   onRefreshLeaderboard?: () => void;
@@ -46,6 +50,10 @@ export const RankedFinalize: React.FC<RankedFinalizeProps> = ({
   lbScope,
   setLbScope,
   startTime,
+  accumulatedTime,
+  isPaused,
+  getEffectiveElapsed,
+  togglePause,
   setStartTime,
   startTimer,
   onRefreshLeaderboard,
@@ -183,8 +191,33 @@ export const RankedFinalize: React.FC<RankedFinalizeProps> = ({
                 </button>
               )}
               <div className="flex items-center gap-1">
+                {startTime && (
+                  <button 
+                    onClick={togglePause}
+                    className={`p-1.5 rounded-lg transition-colors shadow-sm border ${
+                      isPaused 
+                        ? 'bg-amber-100 text-amber-700 border-amber-200 hover:bg-amber-200' 
+                        : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200'
+                    }`}
+                    title={isPaused ? "Reanudar partido" : "Pausar partido"}
+                  >
+                    {isPaused ? (
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
+                      </svg>
+                    ) : (
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                    )}
+                  </button>
+                )}
+
                 <MatchTimer 
                   startTime={startTime} 
+                  accumulatedTime={accumulatedTime}
+                  isPaused={isPaused}
+                  getEffectiveElapsed={getEffectiveElapsed}
                   sets={sets} 
                   suddenDeathLimit={matchConfig?.suddenDeathLimit} 
                 />
@@ -260,7 +293,24 @@ export const RankedFinalize: React.FC<RankedFinalizeProps> = ({
             </div>
           </div>
 
-          <div className="mx-0.5 sm:mx-4 text-[10px] sm:text-2xl font-bold text-slate-300">VS</div>
+          <div className="flex flex-col items-center gap-2 px-1 sm:px-4">
+             {matchActive && isPaused && startTime ? (
+                <div className="flex flex-col items-center gap-1 animate-in zoom-in duration-300">
+                  <button 
+                    onClick={togglePause}
+                    className="group relative w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-emerald-500 text-white shadow-xl shadow-emerald-500/20 hover:bg-emerald-600 transition-all flex items-center justify-center"
+                  >
+                    <div className="absolute inset-0 rounded-full bg-emerald-500 animate-ping opacity-20" />
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 sm:h-8 sm:w-8 ml-1" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                  <span className="text-[7px] sm:text-[9px] font-black text-emerald-600 uppercase tracking-tighter">Siguiente Set</span>
+                </div>
+             ) : (
+                <span className="text-[10px] sm:text-2xl font-bold text-slate-300">VS</span>
+             )}
+          </div>
 
           {/* Azul Team */}
           <div className="flex flex-col items-center gap-1 sm:gap-2">

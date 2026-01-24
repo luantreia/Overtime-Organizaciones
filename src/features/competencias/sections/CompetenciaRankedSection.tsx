@@ -629,6 +629,10 @@ export default function CompetenciaRankedSection({
             lbScope={lbScope}
             setLbScope={setLbScope}
             startTime={startTime}
+            accumulatedTime={accumulatedTime}
+            isPaused={isPaused}
+            getEffectiveElapsed={getEffectiveElapsed}
+            togglePause={togglePause}
             setStartTime={(val: number | null) => setStartTime(val)}
             startTimer={startTimer}
             onRefreshLeaderboard={fetchLeaderboard}

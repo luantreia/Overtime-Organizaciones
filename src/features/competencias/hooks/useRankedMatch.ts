@@ -45,7 +45,13 @@ export function useRankedMatch({
   const [azul, setAzul] = useState<string[]>([]);
   const [score, setScore] = useState({ local: 0, visitante: 0 });
   const [sets, setSets] = useState<{ _id?: string; winner: 'local' | 'visitante'; time: number }[]>([]);
-  const [startTime, setStartTime] = useState<number | null>(null);
+  
+  // Timers State
+  const [startTime, setStartTime] = useState<number | null>(null); // Use this as the REFERENCE for MatchTimer legacy, but we'll use more precise ones:
+  const [accumulatedTime, setAccumulatedTime] = useState<number>(0);
+  const [lastStartTime, setLastStartTime] = useState<number | null>(null);
+  const [isPaused, setIsPaused] = useState<boolean>(true);
+
   const [matchConfig, setMatchConfig] = useState<{ matchDuration: number; setDuration: number; suddenDeathLimit: number }>({
     matchDuration: 1200,
     setDuration: 180,
@@ -134,7 +140,13 @@ export function useRankedMatch({
         setAzul(parsed.azul || []);
         setScore(parsed.score || { local: 0, visitante: 0 });
         setSets(parsed.sets || []);
+        
+        // Restore timers
+        setAccumulatedTime(parsed.accumulatedTime || 0);
+        setIsPaused(parsed.isPaused !== undefined ? parsed.isPaused : true);
+        setLastStartTime(parsed.lastStartTime || null);
         setStartTime(parsed.startTime || null);
+
         setMatchConfig(parsed.matchConfig || { matchDuration: 1200, setDuration: 180, suddenDeathLimit: 180 });
         setPjMarked(!!parsed.pjMarked);
         setIsBasicMode(!!parsed.isBasicMode);
@@ -146,9 +158,11 @@ export function useRankedMatch({
   useEffect(() => {
     if (!competenciaId) return;
     localStorage.setItem(persistenceKey, JSON.stringify({ 
-      matchId, rojo, azul, score, sets, startTime, matchConfig, pjMarked, isBasicMode 
+      matchId, rojo, azul, score, sets, startTime, 
+      accumulatedTime, lastStartTime, isPaused,
+      matchConfig, pjMarked, isBasicMode 
     }));
-  }, [matchId, rojo, azul, score, sets, startTime, matchConfig, pjMarked, isBasicMode, persistenceKey, competenciaId]);
+  }, [matchId, rojo, azul, score, sets, startTime, accumulatedTime, lastStartTime, isPaused, matchConfig, pjMarked, isBasicMode, persistenceKey, competenciaId]);
 
   const resetMatchState = useCallback(() => {
     setMatchId(null);
@@ -157,6 +171,9 @@ export function useRankedMatch({
     setScore({ local: 0, visitante: 0 });
     setSets([]);
     setStartTime(null);
+    setAccumulatedTime(0);
+    setLastStartTime(null);
+    setIsPaused(true);
     setPjMarked(false);
     // Note: we keep isBasicMode preference
     localStorage.removeItem(persistenceKey);
@@ -376,14 +393,34 @@ export function useRankedMatch({
 
   const startTimer = () => {
     if (!matchId) return;
+    const now = Date.now();
     if (!startTime) {
-      const now = Date.now();
       setStartTime(now);
-      // Logic: In Organizaciones (Cancha en vivo), the timer is local 
-      // for the buzzer and indicator. We don't notify the server to
-      // let Mesa de Control handle the official time.
     }
+    setLastStartTime(now);
+    setIsPaused(false);
   };
+
+  const togglePause = useCallback(() => {
+    if (isPaused) {
+      // Resume
+      setLastStartTime(Date.now());
+      setIsPaused(false);
+    } else {
+      // Pause
+      if (lastStartTime) {
+        const delta = Date.now() - lastStartTime;
+        setAccumulatedTime(prev => prev + delta);
+      }
+      setIsPaused(true);
+    }
+  }, [isPaused, lastStartTime]);
+
+  const getEffectiveElapsed = useCallback(() => {
+    if (isPaused) return accumulatedTime;
+    if (!lastStartTime) return accumulatedTime;
+    return accumulatedTime + (Date.now() - lastStartTime);
+  }, [isPaused, accumulatedTime, lastStartTime]);
 
   const adjustScore = async (team: 'local' | 'visitante', delta: number) => {
     const newScore = { ...score };
@@ -406,9 +443,16 @@ export function useRankedMatch({
 
   const addSet = async (winner: 'local' | 'visitante') => {
     if (!matchId) return;
-    const elapsed = startTime ? Date.now() - startTime : 0;
+    
+    // Calculate final time for this set before pausing
+    const elapsed = getEffectiveElapsed();
     const lastSetTime = sets.length > 0 ? sets[sets.length - 1].time : 0;
-    const currentSetDuration = elapsed - lastSetTime;
+    const currentSetDurationMs = elapsed - lastSetTime;
+
+    // Automatic Pause (as requested)
+    if (!isPaused) {
+       togglePause();
+    }
     
     // In Basic Mode, we only update local state
     if (isBasicMode) {
@@ -430,14 +474,14 @@ export function useRankedMatch({
       } catch (e: any) {
         if (e.message?.includes('ya cuenta con el set')) {
           // If already exists, sync and abort local push
-          await syncWithServer(matchId);
+          await syncWithServer(matchId, true);
           return;
         }
         throw e;
       }
       
       // 2. Finish it immediately
-      await apiFinishSet(newSetDoc._id, winner, Math.floor(currentSetDuration / 1000));
+      await apiFinishSet(newSetDoc._id, winner, Math.floor(currentSetDurationMs / 1000));
 
       setSets(prev => [...prev, { _id: newSetDoc._id, winner, time: elapsed }]);
       setScore(prev => ({
@@ -446,11 +490,11 @@ export function useRankedMatch({
       }));
       
       // Optional: Sync again to be sure
-      await syncWithServer(matchId);
+      await syncWithServer(matchId, true);
     } catch (e: any) {
       console.error('Error adding set:', e);
       if (e.message?.includes('ya cuenta con el set')) {
-        await syncWithServer(matchId);
+        await syncWithServer(matchId, true);
       } else {
         onError?.(e.message || 'Error al guardar set en servidor');
       }
@@ -519,7 +563,10 @@ export function useRankedMatch({
     adjustScore,
     loadMatch,
     startTime,
-    setStartTime,
+    isPaused,
+    accumulatedTime,
+    getEffectiveElapsed,
+    togglePause,
     startTimer,
     matchConfig,
     onUpdateConfig: async (newConfig: Partial<{ matchDuration: number; setDuration: number; suddenDeathLimit: number }>) => {
