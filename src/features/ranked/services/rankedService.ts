@@ -26,10 +26,10 @@ export async function assignTeams(partidoId: string, rojoPlayers: string[], azul
   });
 }
 
-export async function finalizeMatch(partidoId: string, marcadorLocal: number, marcadorVisitante: number) {
+export async function finalizeMatch(partidoId: string, marcadorLocal: number, marcadorVisitante: number, sets?: any[]) {
   return authFetch<{ ok: boolean; rankedMeta?: any; ratingDeltas?: any[] }>(`${BASE}/match/${partidoId}/finalize`, {
     method: 'POST',
-    body: { marcadorLocal, marcadorVisitante },
+    body: { marcadorLocal, marcadorVisitante, sets },
   });
 }
 

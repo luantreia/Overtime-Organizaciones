@@ -18,6 +18,7 @@ interface UseRankedMatchProps {
   onError?: (error: string) => void;
   onFinalized?: () => void;
   incrementPlayedCount: (playerIds: Set<string> | string[]) => void;
+  decrementPlayedCount: (playerIds: Set<string> | string[]) => void;
 }
 
 export function useRankedMatch({
@@ -28,7 +29,8 @@ export function useRankedMatch({
   onSuccess,
   onError,
   onFinalized,
-  incrementPlayedCount
+  incrementPlayedCount,
+  decrementPlayedCount,
 }: UseRankedMatchProps) {
   const [matchId, setMatchId] = useState<string | null>(null);
   const [rojo, setRojo] = useState<string[]>([]);
@@ -124,11 +126,11 @@ export function useRankedMatch({
     setBusy(true);
     try {
       await apiAssignTeams(matchId, rojo, azul);
-      const playedNow = new Set<string>([...rojo, ...azul]);
-      incrementPlayedCount(playedNow);
       
-      // Start the timer when saving assignment
+      // Increment PJ only the first time assignment is saved (match start)
       if (!startTime) {
+        const playedNow = new Set<string>([...rojo, ...azul]);
+        incrementPlayedCount(playedNow);
         setStartTime(Date.now());
       }
       
@@ -144,7 +146,7 @@ export function useRankedMatch({
     if (!matchId) return;
     setBusy(true);
     try {
-      await apiFinalizeMatch(matchId, score.local, score.visitante);
+      await apiFinalizeMatch(matchId, score.local, score.visitante, sets);
       onSuccess?.('Partido finalizado con éxito');
       resetMatchState();
       onFinalized?.();
@@ -160,8 +162,17 @@ export function useRankedMatch({
     setBusy(true);
     try {
       await deleteRankedMatch(matchId);
+      
+      // Only revert if teams were already confirmed (timer started)
+      if (startTime) {
+        const playersToRevert = new Set<string>([...rojo, ...azul]);
+        if (playersToRevert.size > 0) {
+          decrementPlayedCount(playersToRevert);
+        }
+      }
+
       resetMatchState();
-      onSuccess?.('Partido eliminado');
+      onSuccess?.('Partido eliminado y estadísticas revertidas');
     } catch (e: any) {
       onError?.(e.message || 'Error eliminando partido');
     } finally {

@@ -54,6 +54,18 @@ export function useAttendance(competenciaId: string) {
     });
   };
 
+  const decrementPlayedCount = (playerIds: Set<string> | string[]) => {
+    setPlayedCounts((prev) => {
+      const next = { ...prev };
+      playerIds.forEach((id) => {
+        if (next[id] && next[id] > 0) {
+          next[id] -= 1;
+        }
+      });
+      return next;
+    });
+  };
+
   const resetPlayedCounts = () => setPlayedCounts({});
   const clearPresentes = () => setPresentes([]);
   const markAllPresent = (playerIds: string[]) => setPresentes(playerIds);
@@ -65,6 +77,7 @@ export function useAttendance(competenciaId: string) {
     setPlayedCounts,
     togglePresente,
     incrementPlayedCount,
+    decrementPlayedCount,
     resetPlayedCounts,
     clearPresentes,
     markAllPresent

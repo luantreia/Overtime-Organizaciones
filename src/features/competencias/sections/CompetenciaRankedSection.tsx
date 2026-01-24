@@ -93,6 +93,7 @@ export default function CompetenciaRankedSection({
     togglePresente, 
     playedCounts, 
     incrementPlayedCount, 
+    decrementPlayedCount,
     resetPlayedCounts, 
     clearPresentes, 
     markAllPresent 
@@ -152,6 +153,7 @@ export default function CompetenciaRankedSection({
     modalidad,
     categoria,
     temporadaId: selectedTemporada,
+    decrementPlayedCount,
     incrementPlayedCount,
     onSuccess: (msg) => { setSuccess(msg); setTimeout(() => setSuccess(null), 3000); },
     onError: (err) => { setError(err); setTimeout(() => setError(null), 5000); },
