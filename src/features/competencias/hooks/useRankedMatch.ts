@@ -116,7 +116,13 @@ export function useRankedMatch({
       const raw = localStorage.getItem(persistenceKey);
       if (raw) {
         const parsed = JSON.parse(raw);
-        setMatchId(parsed.matchId || null);
+        // Safety: If we already have a matchId in memory (set by onCreateMatch),
+        // only restore if it's the SAME match. Otherwise, don't restore old state.
+        if (matchId && parsed.matchId && matchId !== parsed.matchId) {
+          return;
+        }
+
+        if (!matchId && parsed.matchId) setMatchId(parsed.matchId);
         setRojo(parsed.rojo || []);
         setAzul(parsed.azul || []);
         setScore(parsed.score || { local: 0, visitante: 0 });
@@ -126,7 +132,7 @@ export function useRankedMatch({
         setPjMarked(!!parsed.pjMarked);
       }
     } catch { }
-  }, [persistenceKey]);
+  }, [persistenceKey, matchId]);
 
   // Save to localStorage
   useEffect(() => {
