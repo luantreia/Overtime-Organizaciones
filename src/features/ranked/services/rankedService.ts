@@ -33,6 +33,13 @@ export async function startMatchTimer(partidoId: string, startTime: number, time
   });
 }
 
+export async function updateMatchConfig(partidoId: string, config: { matchDuration?: number; setDuration?: number; suddenDeathLimit?: number }) {
+  return authFetch<{ ok: boolean; rankedMeta: any }>(`${BASE}/match/${partidoId}/config`, {
+    method: 'PUT',
+    body: config,
+  });
+}
+
 export async function finalizeMatch(partidoId: string, marcadorLocal: number, marcadorVisitante: number, sets?: any[], afkPlayers?: string[], creadoPor?: string, startTime?: number) {
   return authFetch<{ ok: boolean; rankedMeta?: any; ratingDeltas?: any[] }>(`${BASE}/match/${partidoId}/finalize`, {
     method: 'POST',

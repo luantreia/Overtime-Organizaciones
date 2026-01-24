@@ -6,6 +6,7 @@ import {
   assignTeams as apiAssignTeams, 
   finalizeMatch as apiFinalizeMatch, 
   startMatchTimer as apiStartMatchTimer,
+  updateMatchConfig as apiUpdateMatchConfig,
   deleteRankedMatch,
   Modalidad,
   Categoria
@@ -41,6 +42,11 @@ export function useRankedMatch({
   const [score, setScore] = useState({ local: 0, visitante: 0 });
   const [sets, setSets] = useState<{ winner: 'local' | 'visitante'; time: number }[]>([]);
   const [startTime, setStartTime] = useState<number | null>(null);
+  const [matchConfig, setMatchConfig] = useState<{ matchDuration: number; setDuration: number; suddenDeathLimit: number }>({
+    matchDuration: 1200,
+    setDuration: 180,
+    suddenDeathLimit: 180
+  });
   const [pjMarked, setPjMarked] = useState<boolean>(false);
   const [busy, setBusy] = useState(false);
 
@@ -58,6 +64,7 @@ export function useRankedMatch({
         setScore(parsed.score || { local: 0, visitante: 0 });
         setSets(parsed.sets || []);
         setStartTime(parsed.startTime || null);
+        setMatchConfig(parsed.matchConfig || { matchDuration: 1200, setDuration: 180, suddenDeathLimit: 180 });
         setPjMarked(!!parsed.pjMarked);
       }
     } catch { }
@@ -66,8 +73,8 @@ export function useRankedMatch({
   // Save to localStorage
   useEffect(() => {
     if (!competenciaId) return;
-    localStorage.setItem(persistenceKey, JSON.stringify({ matchId, rojo, azul, score, sets, startTime, pjMarked }));
-  }, [matchId, rojo, azul, score, sets, startTime, pjMarked, persistenceKey, competenciaId]);
+    localStorage.setItem(persistenceKey, JSON.stringify({ matchId, rojo, azul, score, sets, startTime, matchConfig, pjMarked }));
+  }, [matchId, rojo, azul, score, sets, startTime, matchConfig, pjMarked, persistenceKey, competenciaId]);
 
   const resetMatchState = useCallback(() => {
     setMatchId(null);
@@ -333,6 +340,22 @@ export function useRankedMatch({
     adjustScore,
     loadMatch,
     startTime,
-    startTimer
+    startTimer,
+    matchConfig,
+    onUpdateConfig: async (newConfig: Partial<{ matchDuration: number; setDuration: number; suddenDeathLimit: number }>) => {
+      if (!matchId) return;
+      try {
+        const res = await apiUpdateMatchConfig(matchId, newConfig);
+        setMatchConfig(prev => ({
+          ...prev,
+          matchDuration: res.rankedMeta.matchDuration ?? prev.matchDuration,
+          setDuration: res.rankedMeta.setDuration ?? prev.setDuration,
+          suddenDeathLimit: res.rankedMeta.suddenDeathLimit ?? prev.suddenDeathLimit
+        }));
+        onSuccess?.('Configuración actualizada');
+      } catch (e: any) {
+        onError?.(e.message || 'Error actualizando configuración');
+      }
+    }
   };
 }

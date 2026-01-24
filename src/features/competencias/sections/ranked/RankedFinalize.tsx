@@ -26,6 +26,9 @@ interface RankedFinalizeProps {
   rojoIds?: string[];
   azulIds?: string[];
   nameById?: (id: string) => string;
+  matchId?: string | null;
+  matchConfig?: { matchDuration: number; setDuration: number; suddenDeathLimit: number };
+  onUpdateConfig?: (config: Partial<{ matchDuration: number; setDuration: number; suddenDeathLimit: number }>) => Promise<void>;
 }
 
 export const RankedFinalize: React.FC<RankedFinalizeProps> = ({
@@ -49,12 +52,43 @@ export const RankedFinalize: React.FC<RankedFinalizeProps> = ({
   seasonId,
   rojoIds = [],
   azulIds = [],
-  nameById = (id) => id
+  nameById = (id) => id,
+  matchId,
+  matchConfig,
+  onUpdateConfig
 }) => {
   const [selectedPlayer, setSelectedPlayer] = useState<{ id: string; name: string; competenciaId?: string; temporadaId?: string } | null>(null);
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const [afkPlayers, setAfkPlayers] = useState<string[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [deleting, setDeleting] = useState(false);
+
+  // local states for config form
+  const [localConfig, setLocalConfig] = useState(matchConfig || { matchDuration: 1200, setDuration: 180, suddenDeathLimit: 180 });
+
+  React.useEffect(() => {
+    if (matchConfig) setLocalConfig(matchConfig);
+  }, [matchConfig]);
+
+  const handleUpdateConfig = async () => {
+    if (onUpdateConfig) {
+      await onUpdateConfig(localConfig);
+      setShowAdvanced(false);
+    }
+  };
+
+  const copyMatchLink = () => {
+    if (!matchId) return;
+    const url = `${window.location.origin.replace('organizaciones', 'partido')}/control?matchId=${matchId}`;
+    navigator.clipboard.writeText(url);
+    alert('Link de Mesa de Control copiado al portapapeles');
+  };
+
+  const openMatchLink = () => {
+    if (!matchId) return;
+    const url = `${window.location.origin.replace('organizaciones', 'partido')}/control?matchId=${matchId}`;
+    window.open(url, '_blank');
+  };
 
   const toggleSelect = (id: string) => {
     setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
@@ -109,6 +143,17 @@ export const RankedFinalize: React.FC<RankedFinalizeProps> = ({
           <h2 className="text-sm font-bold text-emerald-800">Cancha en Vivo</h2>
           {matchActive && (
             <div className="flex items-center gap-2">
+              <button 
+                onClick={() => setShowAdvanced(true)}
+                className="p-1.5 text-emerald-600 hover:bg-emerald-100 rounded-lg transition-colors"
+                title="Opciones Avanzadas"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              </button>
+
               {!startTime && (
                 <button 
                   onClick={startTimer}
@@ -117,7 +162,11 @@ export const RankedFinalize: React.FC<RankedFinalizeProps> = ({
                   ▶ EMPEZAR PARTIDO
                 </button>
               )}
-              <MatchTimer startTime={startTime} sets={sets} />
+              <MatchTimer 
+                startTime={startTime} 
+                sets={sets} 
+                suddenDeathLimit={matchConfig?.suddenDeathLimit} 
+              />
             </div>
           )}
         </div>
@@ -383,6 +432,94 @@ export const RankedFinalize: React.FC<RankedFinalizeProps> = ({
           seasonId={selectedPlayer.temporadaId || (lbScope === 'competition' ? (seasonId || 'null') : 'null')}
           onUpdated={onRefreshLeaderboard}
         />
+      )}
+
+      {/* Advanced Match Settings Modal */}
+      {showAdvanced && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md border border-slate-200 overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+              <h3 className="font-black text-slate-800 uppercase tracking-tight flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-brand-600" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
+                </svg>
+                Opciones de Partido
+              </h3>
+              <button onClick={() => setShowAdvanced(false)} className="text-slate-400 hover:text-slate-600 font-bold p-1">×</button>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {/* Acciones Rápidas */}
+              <div className="space-y-3">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Mesa de Control Profesional</label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button 
+                    onClick={openMatchLink}
+                    className="flex flex-col items-center gap-2 p-3 rounded-xl border border-blue-100 bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors group"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                    <span className="text-[10px] font-bold uppercase">Abrir Mesa</span>
+                  </button>
+                  <button 
+                    onClick={copyMatchLink}
+                    className="flex flex-col items-center gap-2 p-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 transition-colors group"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                    </svg>
+                    <span className="text-[10px] font-bold uppercase">Copiar Link</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Ajustes de Timer */}
+              <div className="space-y-4 pt-4 border-t border-slate-100">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Configuración de Tiempos</label>
+                
+                <div className="grid grid-cols-1 gap-4">
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs font-bold text-slate-600">Duración Partido (Global)</span>
+                      <span className="text-xs font-mono text-brand-600 font-bold">{Math.floor(localConfig.matchDuration / 60)}:00</span>
+                    </div>
+                    <input 
+                      type="range" min="60" max="3600" step="60"
+                      value={localConfig.matchDuration}
+                      onChange={(e) => setLocalConfig({...localConfig, matchDuration: parseInt(e.target.value)})}
+                      className="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-brand-600"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs font-bold text-slate-600">Tiempo de Set / Inicio Súbita</span>
+                      <span className="text-xs font-mono text-amber-600 font-bold">
+                        {localConfig.suddenDeathLimit === 0 ? 'Sin Límite' : `${Math.floor(localConfig.suddenDeathLimit / 60)}:${String(localConfig.suddenDeathLimit % 60).padStart(2,'0')}`}
+                      </span>
+                    </div>
+                    <input 
+                      type="range" min="0" max="600" step="10"
+                      value={localConfig.suddenDeathLimit}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value);
+                        setLocalConfig({...localConfig, suddenDeathLimit: val, setDuration: val});
+                      }}
+                      className="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-amber-600"
+                    />
+                    <p className="text-[9px] text-slate-400 italic">Al llegar a 00:00 el reloj cambiará a naranja y contará hacia adelante (Muerte Súbita).</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 bg-slate-50 border-t border-slate-100 flex gap-3">
+              <Button variant="secondary" onClick={() => setShowAdvanced(false)} className="flex-1 uppercase text-[10px] font-black">Cerrar</Button>
+              <Button variant="primary" onClick={handleUpdateConfig} className="flex-1 uppercase text-[10px] font-black">Guardar Cambios</Button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -166,7 +166,9 @@ export default function CompetenciaRankedSection({
     adjustScore,
     loadMatch,
     startTime,
-    startTimer
+    startTimer,
+    matchConfig,
+    onUpdateConfig
   } = useRankedMatch({
     competenciaId,
     modalidad,
@@ -601,6 +603,9 @@ export default function CompetenciaRankedSection({
             rojoIds={rojo}
             azulIds={azul}
             nameById={nameById}
+            matchId={matchId}
+            matchConfig={matchConfig}
+            onUpdateConfig={onUpdateConfig}
           />
         </div>
       </div>

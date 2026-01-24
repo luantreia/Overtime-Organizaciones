@@ -3,9 +3,10 @@ import React, { useState, useEffect } from 'react';
 interface MatchTimerProps {
   startTime: number | null;
   sets?: { winner: string; time: number }[];
+  suddenDeathLimit?: number;
 }
 
-export const MatchTimer: React.FC<MatchTimerProps> = ({ startTime, sets = [] }) => {
+export const MatchTimer: React.FC<MatchTimerProps> = ({ startTime, sets = [], suddenDeathLimit = 180 }) => {
   const [elapsed, setElapsed] = useState<number>(0);
 
   useEffect(() => {
@@ -29,14 +30,23 @@ export const MatchTimer: React.FC<MatchTimerProps> = ({ startTime, sets = [] }) 
   // Set Timer calculation
   const lastSetTime = sets.length > 0 ? Math.floor(sets[sets.length - 1].time / 1000) : 0;
   const currentSetElapsed = elapsed - lastSetTime;
-  const setMin = Math.floor(currentSetElapsed / 60);
-  const setSec = currentSetElapsed % 60;
-  const isSuddenDeath = setMin >= 3;
+
+  // Countdown logic: suddenDeathLimit is the starting point
+  const setRemaining = suddenDeathLimit - currentSetElapsed;
+  const isSuddenDeath = suddenDeathLimit > 0 && setRemaining <= 0;
+
+  // Display: count down till zero, then count up for sudden death
+  const displaySeconds = isSuddenDeath 
+    ? Math.abs(setRemaining) 
+    : Math.max(0, setRemaining);
+
+  const setMin = Math.floor(displaySeconds / 60);
+  const setSec = displaySeconds % 60;
 
   return (
     <div className="flex items-center gap-2">
       {/* Set Timer */}
-      <div className={`flex flex-col items-center justify-center p-1 sm:p-1.5 rounded-lg border font-mono shadow-sm transition-colors ${
+      <div className={`flex flex-col items-center justify-center p-1 sm:p-1.5 rounded-lg border font-mono shadow-sm transition-colors min-w-[50px] sm:min-w-[60px] ${
         isSuddenDeath ? 'bg-amber-500 border-amber-600 text-white animate-pulse' : 'bg-white border-slate-200 text-slate-800'
       }`}>
         <span className={`text-[7px] sm:text-[8px] uppercase tracking-tighter font-black leading-none mb-0.5 ${isSuddenDeath ? 'text-white' : 'text-slate-400'}`}>
