@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Button, Card } from '../../../../shared/components/ui';
 import { MatchTimer } from './MatchTimer';
+import { PlayerAdvancedSettingsModal } from './PlayerAdvancedSettingsModal';
 
 interface RankedFinalizeProps {
   score: { local: number; visitante: number };
@@ -16,6 +17,10 @@ interface RankedFinalizeProps {
   setLbScope: (s: 'competition' | 'global') => void;
   startTime: number | null;
   onRefreshLeaderboard?: () => void;
+  competenciaId: string;
+  modalidad: string;
+  categoria: string;
+  seasonId?: string;
 }
 
 export const RankedFinalize: React.FC<RankedFinalizeProps> = ({
@@ -31,8 +36,14 @@ export const RankedFinalize: React.FC<RankedFinalizeProps> = ({
   lbScope,
   setLbScope,
   startTime,
-  onRefreshLeaderboard
+  onRefreshLeaderboard,
+  competenciaId,
+  modalidad,
+  categoria,
+  seasonId
 }) => {
+  const [selectedPlayer, setSelectedPlayer] = useState<{ id: string; name: string } | null>(null);
+
   const formatTime = (ms: number) => {
     const totalSeconds = Math.floor(ms / 1000);
     const minutes = Math.floor(totalSeconds / 60);
@@ -183,16 +194,27 @@ export const RankedFinalize: React.FC<RankedFinalizeProps> = ({
             <tbody className="divide-y divide-slate-50">
               {board.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-3 py-6 text-center text-slate-400 italic">No hay datos</td>
+                  <td colSpan={6} className="px-3 py-6 text-center text-slate-400 italic">No hay datos</td>
                 </tr>
               ) : (
                 board.map((r, idx) => (
-                  <tr key={r.playerId} className="hover:bg-slate-50 transition-colors">
+                  <tr key={r.playerId} className="hover:bg-slate-50 transition-colors group">
                     <td className="px-2 py-2 text-center text-[10px] font-bold text-slate-400 border-r border-slate-50">{idx + 1}</td>
-                    <td className="px-2 sm:px-3 py-2 min-w-0 max-w-[80px] sm:max-w-[120px]">
-                      <span className="font-medium text-slate-700 truncate block" title={r.playerName || r.nombre}>
-                        {r.playerName || r.nombre || `ID: ${r.playerId.slice(-4)}`}
-                      </span>
+                    <td className="px-2 sm:px-3 py-2 min-w-0">
+                      <div className="flex items-center gap-1">
+                        <span className="font-medium text-slate-700 truncate" title={r.playerName || r.nombre}>
+                          {r.playerName || r.nombre || `ID: ${r.playerId.slice(-4)}`}
+                        </span>
+                        <button 
+                           onClick={() => setSelectedPlayer({ id: r.playerId, name: r.playerName || r.nombre || 'Desconocido' })}
+                           className="opacity-0 group-hover:opacity-100 p-0.5 text-slate-300 hover:text-brand-500 transition-all rounded"
+                           title="Ajustes avanzados"
+                        >
+                           <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
+                           </svg>
+                        </button>
+                      </div>
                     </td>
                     <td className="px-1 sm:px-2 py-2 text-center">
                       <span className="inline-block px-1 py-0.5 rounded bg-brand-50 text-brand-700 font-bold text-[10px] sm:text-xs">
@@ -216,6 +238,21 @@ export const RankedFinalize: React.FC<RankedFinalizeProps> = ({
           </table>
         </div>
       </Card>
+
+      {selectedPlayer && (
+        <PlayerAdvancedSettingsModal 
+          isOpen={!!selectedPlayer}
+          onClose={() => setSelectedPlayer(null)}
+          playerId={selectedPlayer.id}
+          playerName={selectedPlayer.name}
+          modalidad={modalidad}
+          categoria={categoria}
+          competenciaId={competenciaId}
+          seasonId={seasonId}
+          onUpdated={onRefreshLeaderboard}
+        />
+      )}
     </div>
   );
 };
+

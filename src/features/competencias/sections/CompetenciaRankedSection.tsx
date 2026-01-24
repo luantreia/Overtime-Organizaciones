@@ -565,6 +565,10 @@ export default function CompetenciaRankedSection({
             setLbScope={setLbScope}
             startTime={startTime}
             onRefreshLeaderboard={fetchLeaderboard}
+            competenciaId={competenciaId}
+            modalidad={modalidad as string}
+            categoria={categoria as string}
+            seasonId={selectedTemporada}
           />
         </div>
       </div>

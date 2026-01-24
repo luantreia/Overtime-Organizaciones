@@ -102,3 +102,32 @@ export async function recalculateGlobalRankings() {
     method: 'POST',
   });
 }
+
+export async function getPlayerRatingDetail(playerId: string, params: { modalidad: string; categoria: string; competition?: string; season?: string }) {
+  const sp = new URLSearchParams({
+    modalidad: params.modalidad,
+    categoria: params.categoria,
+  });
+  if (params.competition) sp.set('competition', params.competition);
+  if (params.season) sp.set('season', params.season);
+  return authFetch<{ ok: boolean; rating: any; history: any[] }>(`${BASE}/players/${playerId}/detail?${sp.toString()}`);
+}
+
+export async function recalculatePlayerRating(playerId: string, params: { modalidad: string; categoria: string; competition?: string; season?: string }) {
+  return authFetch<{ ok: boolean; pr: any }>(`${BASE}/players/${playerId}/recalculate`, {
+    method: 'POST',
+    body: params,
+  });
+}
+
+export async function deletePlayerRating(playerId: string, params: { modalidad: string; categoria: string; competition?: string; season?: string }) {
+  const sp = new URLSearchParams({
+    modalidad: params.modalidad,
+    categoria: params.categoria,
+  });
+  if (params.competition) sp.set('competition', params.competition);
+  if (params.season) sp.set('season', params.season);
+  return authFetch<{ ok: boolean; deletedRating: number; deletedHistory: number }>(`${BASE}/players/${playerId}/rating?${sp.toString()}`, {
+    method: 'DELETE',
+  });
+}
