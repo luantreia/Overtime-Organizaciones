@@ -1,7 +1,33 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { autoAssign, assignTeams, createRankedMatch, finalizeMatch, getLeaderboard, markMatchAsRanked, listJugadores, revertMatch, deleteRankedMatch, resetAllRankings, resetScopeRankings, recalculateGlobalRankings } from '../../ranked/services/rankedService';
-import { crearJugadorCompetencia, listJugadoresCompetencia, eliminarJugadorCompetencia } from '../../jugadores/services/jugadorCompetenciaService';
+import React, { useEffect, useState, useCallback } from 'react';
+import { 
+  getLeaderboard, 
+  markMatchAsRanked, 
+  listJugadores, 
+  revertMatch, 
+  resetAllRankings, 
+  resetScopeRankings, 
+  recalculateGlobalRankings 
+} from '../../ranked/services/rankedService';
+import { 
+  crearJugadorCompetencia, 
+  listJugadoresCompetencia, 
+  eliminarJugadorCompetencia 
+} from '../../jugadores/services/jugadorCompetenciaService';
 import { listTemporadasByCompetencia, type BackendTemporada } from '../services';
+
+// Hooks
+import { useAttendance } from '../hooks/useAttendance';
+import { useRankedMatch } from '../hooks/useRankedMatch';
+
+// Components
+import { RankedPlayerSelector } from './ranked/RankedPlayerSelector';
+import { TeamBuilder } from './ranked/TeamBuilder';
+import { RankedFinalize } from './ranked/RankedFinalize';
+import { RankedAdminTools } from './ranked/RankedAdminTools';
+
+// Shared UI
+import { Button, Card } from '../../../shared/components/ui';
+import ConfirmModal from '../../../shared/components/ConfirmModal/ConfirmModal';
 
 export default function CompetenciaRankedSection({
   competenciaId,
@@ -12,43 +38,114 @@ export default function CompetenciaRankedSection({
   modalidad: 'Foam' | 'Cloth' | '';
   categoria: 'Masculino' | 'Femenino' | 'Mixto' | 'Libre' | '';
 }) {
-  const [matchId, setMatchId] = useState<string | null>(null);
   const [players, setPlayers] = useState<Array<{ _id: string; nombre: string; jcId?: string }>>([]);
   const [compPlayers, setCompPlayers] = useState<Array<{ _id: string; nombre: string; jcId?: string }>>([]);
   const [allPlayers, setAllPlayers] = useState<Array<{ _id: string; nombre: string }>>([]);
   const [filter, setFilter] = useState('');
   const [selected, setSelected] = useState<string[]>([]);
-  const [rojo, setRojo] = useState<string[]>([]);
-  const [azul, setAzul] = useState<string[]>([]);
-  const [score, setScore] = useState({ local: 0, visitante: 0 });
   const [board, setBoard] = useState<any[]>([]);
-  const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  
   const [convertId, setConvertId] = useState<string>('');
   const [revertId, setRevertId] = useState<string>('');
   const [nuevoJugadorId, setNuevoJugadorId] = useState<string>('');
   const [showAll, setShowAll] = useState<boolean>(false);
-  const [presentes, setPresentes] = useState<string[]>([]);
-  const [playedCounts, setPlayedCounts] = useState<Record<string, number>>({});
   const [priorizarNoJugados, setPriorizarNoJugados] = useState<boolean>(true);
 
   // Temporadas
   const [temporadas, setTemporadas] = useState<BackendTemporada[]>([]);
   const [selectedTemporada, setSelectedTemporada] = useState<string>('');
 
+  // Modals for confirmation
+  const [confirmConfig, setConfirmConfig] = useState<{
+    isOpen: boolean;
+    title: string;
+    description: string;
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: '',
+    description: '',
+    onConfirm: () => {}
+  });
+
+  const closeConfirm = () => setConfirmConfig(prev => ({ ...prev, isOpen: false }));
+
+  const showConfirm = (title: string, description: string, onConfirm: () => void) => {
+    setConfirmConfig({
+      isOpen: true,
+      title,
+      description,
+      onConfirm: () => {
+        onConfirm();
+        closeConfirm();
+      }
+    });
+  };
+
+  // Custom Hooks
+  const { 
+    presentes, 
+    togglePresente, 
+    playedCounts, 
+    incrementPlayedCount, 
+    resetPlayedCounts, 
+    clearPresentes, 
+    markAllPresent 
+  } = useAttendance(competenciaId);
+
+  const fetchLeaderboard = useCallback(async () => {
+    try {
+      const lb = await getLeaderboard({ 
+        modalidad: modalidad as string, 
+        categoria: categoria as string, 
+        competition: competenciaId, 
+        season: selectedTemporada || undefined,
+        limit: 20 
+      });
+      setBoard(lb.items);
+    } catch {}
+  }, [modalidad, categoria, competenciaId, selectedTemporada]);
+
+  const {
+    matchId,
+    rojo,
+    setRojo,
+    azul,
+    setAzul,
+    score,
+    setScore,
+    busy,
+    onCreateMatch,
+    onAutoAssign,
+    onSaveAssignment,
+    onFinalizeMatch,
+    onCancelMatch,
+    abandonMatch,
+    setMatchId
+  } = useRankedMatch({
+    competenciaId,
+    modalidad,
+    categoria,
+    temporadaId: selectedTemporada,
+    incrementPlayedCount,
+    onSuccess: (msg) => { setSuccess(msg); setTimeout(() => setSuccess(null), 3000); },
+    onError: (err) => { setError(err); setTimeout(() => setError(null), 5000); },
+    onFinalized: fetchLeaderboard
+  });
+
+  // Initial Data Fetching
   useEffect(() => {
     if (!competenciaId) return;
     (async () => {
       try {
-        // load seasons
         const temps = await listTemporadasByCompetencia(competenciaId);
         setTemporadas(temps);
-        // default to last season
         if (temps.length > 0) {
           setSelectedTemporada(temps[temps.length - 1]._id);
         }
 
-        // competencia players
         const items = await listJugadoresCompetencia(competenciaId);
         const mapped = items
           .map((jc) => {
@@ -57,11 +154,11 @@ export default function CompetenciaRankedSection({
             return { _id: (j?._id ?? j) as string, nombre, jcId: jc._id };
           })
           .filter((p) => p._id);
+        
         const seen = new Set<string>();
         const unique = mapped.filter((p) => (seen.has(p._id) ? false : (seen.add(p._id), true)));
         setCompPlayers(unique);
 
-        // all players (for adding or broader selection)
         const all = await listJugadores(200);
         const rawItems = Array.isArray(all) ? all : (all as any).items || [];
         const mappedAll = rawItems
@@ -72,10 +169,9 @@ export default function CompetenciaRankedSection({
           .filter((p: any) => p._id);
         setAllPlayers(mappedAll);
 
-        // auto-enable showAll only if competencia has none yet
         if (unique.length === 0) setShowAll(true);
       } catch (e: any) {
-        setError(e.message || 'Error cargando jugadores');
+        setError(e.message || 'Error cargando datos');
       }
     })();
   }, [competenciaId]);
@@ -84,552 +180,280 @@ export default function CompetenciaRankedSection({
     setPlayers(showAll ? allPlayers : compPlayers);
   }, [showAll, allPlayers, compPlayers]);
 
-  // Persistencia básica por sesión de fecha (día actual) en localStorage
-  const sessionKey = useMemo(() => {
-    const today = new Date();
-    const iso = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
-    return `rankedSession:${competenciaId}:${iso}`;
-  }, [competenciaId]);
-
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(sessionKey);
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        setPresentes(Array.isArray(parsed.presentes) ? parsed.presentes : []);
-        setPlayedCounts(parsed.playedCounts && typeof parsed.playedCounts === 'object' ? parsed.playedCounts : {});
-      }
-    } catch {}
-  }, [sessionKey]);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(sessionKey, JSON.stringify({ presentes, playedCounts }));
-    } catch {}
-  }, [sessionKey, presentes, playedCounts]);
-
-  const filtered = useMemo(() => {
-    const f = filter.trim().toLowerCase();
-    if (!f) return players;
-    return players.filter((p) => p.nombre?.toLowerCase().includes(f));
-  }, [players, filter]);
+    fetchLeaderboard();
+  }, [fetchLeaderboard]);
 
   const toggleSelect = (id: string) => {
     setSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   };
 
-  const addToRojo = () => {
-    setRojo((prev) => {
-      const remainingSlots = Math.max(0, 9 - prev.length);
-      const toAdd = selected.filter((id) => !prev.includes(id) && !azul.includes(id)).slice(0, remainingSlots);
-      return [...prev, ...toAdd];
-    });
-  };
+  const nameById = (id: string) => players.find((p) => p._id === id)?.nombre || id;
 
-  const addToAzul = () => {
-    setAzul((prev) => {
-      const remainingSlots = Math.max(0, 9 - prev.length);
-      const toAdd = selected.filter((id) => !prev.includes(id) && !rojo.includes(id)).slice(0, remainingSlots);
-      return [...prev, ...toAdd];
-    });
-  };
-
-  const removeFromRojo = (id: string) => setRojo((prev) => prev.filter((x) => x !== id));
-  const removeFromAzul = (id: string) => setAzul((prev) => prev.filter((x) => x !== id));
-
-  const chooseForNextMatch = () => {
-    // elegir hasta 18 desde presentes, priorizando los que menos jugaron hoy
+  const onChooseForNextMatch = () => {
     const pool = presentes.filter((id) => players.some((p) => p._id === id));
     const sorted = pool.sort((a, b) => (playedCounts[a] || 0) - (playedCounts[b] || 0));
     const picked = (priorizarNoJugados ? sorted : pool).slice(0, 18);
     setSelected(picked);
   };
 
-  async function onCreate() {
-    if (!competenciaId || !modalidad || !categoria) {
-      setError('Faltan datos de competencia, modalidad o categoría');
-      return;
-    }
-    setBusy(true); setError(null);
-    try {
-      const r = await createRankedMatch({ 
-        modalidad: modalidad as any, 
-        categoria: categoria as any, 
-        creadoPor: 'org-ui', 
-        competenciaId,
-        temporadaId: selectedTemporada || undefined
-      });
-      setMatchId(r.partidoId);
-      setRojo([]); setAzul([]);
-    } catch (e: any) {
-      setError(e.message || 'Error creando partido');
-    } finally { setBusy(false); }
-  }
-
-  async function onAutoAssign() {
-    if (!matchId) return;
-    setBusy(true); setError(null);
-    try {
-      const r = await autoAssign(matchId, selected, true);
-      setRojo(r.rojoPlayers); setAzul(r.azulPlayers);
-    } catch (e: any) {
-      setError(e.message || 'Error auto-asignando');
-    } finally { setBusy(false); }
-  }
-
-  async function onCancel() {
-    if (!matchId) return;
-    if (!window.confirm('¿Estás seguro de que deseas eliminar este partido? No se aplicarán cambios a los ratings.')) return;
-    setBusy(true); setError(null);
-    try {
-      await deleteRankedMatch(matchId);
-      setMatchId(null); setSelected([]); setRojo([]); setAzul([]); setScore({ local: 0, visitante: 0 });
-    } catch (e: any) {
-      setError(e.message || 'Error eliminando partido');
-    } finally { setBusy(false); }
-  }
-
-  async function onSaveAssign() {
-    if (!matchId) return;
-    setBusy(true); setError(null);
-    try {
-      await assignTeams(matchId, rojo, azul);
-      // incrementar conteo de jugados hoy
-      const playedNow = new Set<string>([...rojo, ...azul]);
-      setPlayedCounts((prev) => {
-        const next = { ...prev };
-        for (const id of playedNow) next[id] = (next[id] || 0) + 1;
-        return next;
-      });
-    } catch (e: any) {
-      setError(e.message || 'Error guardando equipos');
-    } finally { setBusy(false); }
-  }
-
-  async function onFinalize() {
-    if (!matchId) return;
-    setBusy(true); setError(null);
-    try {
-      // como respaldo, marcar PJ hoy para los que jugaron (si no se hizo al guardar asignación)
-      const playedNow = new Set<string>([...rojo, ...azul]);
-      if (playedNow.size > 0) {
-        setPlayedCounts((prev) => {
-          const next = { ...prev };
-          for (const id of playedNow) next[id] = (next[id] || 0) + 1;
-          return next;
-        });
-      }
-      await finalizeMatch(matchId, score.local, score.visitante);
-      const lb = await getLeaderboard({ 
-        modalidad: modalidad as string, 
-        categoria: categoria as string, 
-        competition: competenciaId, 
-        season: selectedTemporada || undefined,
-        limit: 20 
-      });
-      setBoard(lb.items);
-      // listo este partido, habilitar crear otro
-      setMatchId(null);
-      setSelected([]);
-      setRojo([]);
-      setAzul([]);
-      setScore({ local: 0, visitante: 0 });
-    } catch (e: any) {
-      setError(e.message || 'Error finalizando');
-    } finally { setBusy(false); }
-  }
-
-  async function onMarkAsRanked() {
-    if (!convertId.trim()) return;
-    setBusy(true); setError(null);
+  const handleMarkAsRanked = async () => {
     try {
       await markMatchAsRanked(convertId.trim());
-      // no-op; user can now finalizar ese partido desde donde corresponda o usar esta vista para nuevos.
+      setSuccess('Partido marcado como ranked');
+      setConvertId('');
     } catch (e: any) {
-      setError(e.message || 'Error marcando partido como ranked');
-    } finally { setBusy(false); }
-  }
-
-  async function onRevertMatch() {
-    if (!revertId.trim()) return;
-    setBusy(true); setError(null);
-    try {
-      await revertMatch(revertId.trim());
-      setRevertId('');
-      // refresh leaderboard
-      const lb = await getLeaderboard({ 
-        modalidad: modalidad as string, 
-        categoria: categoria as string, 
-        competition: competenciaId, 
-        season: selectedTemporada || undefined,
-        limit: 20 
-      });
-      setBoard(lb.items);
-    } catch (e: any) {
-      setError(e.message || 'Error revirtiendo partido');
-    } finally { setBusy(false); }
-  }
-
-  async function onResetAllRankings() {
-    if (!window.confirm('⚠️ ADVERTENCIA: Esto eliminará TODOS los rankings (PlayerRating, MatchPlayer) y marcará todos los partidos ranked como no-aplicados. Tendrás que volver a finalizar cada partido. ¿Continuar?')) return;
-    setBusy(true); setError(null);
-    try {
-      await resetAllRankings();
-      // refresh leaderboard (debería estar vacío)
-      const lb = await getLeaderboard({ 
-        modalidad: modalidad as string, 
-        categoria: categoria as string, 
-        competition: competenciaId, 
-        season: selectedTemporada || undefined,
-        limit: 20 
-      });
-      setBoard(lb.items);
-      alert('Todos los rankings han sido reseteados. Los partidos ranked existentes deben ser finalizados nuevamente.');
-    } catch (e: any) {
-      setError(e.message || 'Error reseteando rankings');
-    } finally { setBusy(false); }
-  }
-
-  async function onResetScopeRankings() {
-    if (!modalidad || !categoria) {
-      setError('Se requiere modalidad y categoría para resetear el scope');
-      return;
+      setError(e.message || 'Error marcando partido');
     }
-    const scope = `${modalidad} - ${categoria}${selectedTemporada ? ` - Temporada seleccionada` : ' - Sin temporada'}`;
-    if (!window.confirm(`⚠️ Esto eliminará los rankings solo de: ${scope} en esta competencia. ¿Continuar?`)) return;
-    setBusy(true); setError(null);
-    try {
-      const result = await resetScopeRankings({
-        competenciaId,
-        temporadaId: selectedTemporada || undefined,
-        modalidad: modalidad as string,
-        categoria: categoria as string
-      });
-      // refresh leaderboard
-      const lb = await getLeaderboard({ 
-        modalidad: modalidad as string, 
-        categoria: categoria as string, 
-        competition: competenciaId, 
-        season: selectedTemporada || undefined,
-        limit: 20 
-      });
-      setBoard(lb.items);
-      alert(`Scope reseteado: ${result.deleted.playerRatings} ratings, ${result.deleted.matchPlayers} participaciones, ${result.updated.matches} partidos desmarcados.`);
-    } catch (e: any) {
-      setError(e.message || 'Error reseteando scope');
-    } finally { setBusy(false); }
-  }
+  };
 
-  async function onEliminarJugador(playerId: string) {
-    if (!competenciaId) return;
+  const handleRevertMatch = () => {
+    showConfirm(
+      '¿Revertir Stats?',
+      'Se restarán los puntos a los jugadores y se eliminará el registro.',
+      async () => {
+        try {
+          await revertMatch(revertId.trim());
+          setRevertId('');
+          setSuccess('Partido revertido con éxito');
+          fetchLeaderboard();
+        } catch (e: any) {
+          setError(e.message || 'Error revirtiendo');
+        }
+      }
+    );
+  };
+
+  const handleResetScope = () => {
+    const scope = `${modalidad} - ${categoria}${selectedTemporada ? ` - Temporada seleccionada` : ''}`;
+    showConfirm(
+      '¿Resetear este Scope?',
+      `Se eliminarán los rankings solo de: ${scope}. Esta acción no se puede deshacer.`,
+      async () => {
+        try {
+          await resetScopeRankings({
+            competenciaId,
+            temporadaId: selectedTemporada || undefined,
+            modalidad: modalidad as string,
+            categoria: categoria as string
+          });
+          setSuccess('Scope reseteado con éxito');
+          fetchLeaderboard();
+        } catch (e: any) {
+          setError(e.message || 'Error reseteando scope');
+        }
+      }
+    );
+  };
+
+  const handleResetAll = () => {
+    showConfirm(
+      '¡PELIGRO: Reset TOTAL!',
+      'Esto eliminará ABSOLUTAMENTE TODOS los rankings del sistema. ¿Estás seguro?',
+      async () => {
+        try {
+          await resetAllRankings();
+          setSuccess('Sistema reseteado por completo');
+          fetchLeaderboard();
+        } catch (e: any) {
+          setError(e.message || 'Error en reset global');
+        }
+      }
+    );
+  };
+
+  const onEliminarJugador = (playerId: string) => {
     const player = compPlayers.find(p => p._id === playerId);
-    if (!player || !player.jcId) {
-      setError('No se encontró la relación de competencia para este jugador');
-      return;
-    }
-    if (!window.confirm(`¿Seguro que deseas eliminar a ${player.nombre} de la competencia?`)) return;
+    if (!player?.jcId) return;
 
-    setBusy(true); setError(null);
-    try {
-      await eliminarJugadorCompetencia(player.jcId);
-      setCompPlayers((prev) => prev.filter((p) => p._id !== playerId));
-    } catch (e: any) {
-      setError(e.message || 'Error eliminando jugador de la competencia');
-    } finally { setBusy(false); }
-  }
+    showConfirm(
+      '¿Eliminar Jugador?',
+      `¿Seguro que deseas quitar a ${player.nombre} de esta competencia?`,
+      async () => {
+        try {
+          await eliminarJugadorCompetencia(player.jcId!);
+          setCompPlayers(prev => prev.filter(p => p._id !== playerId));
+          setSuccess('Jugador eliminado de la competencia');
+        } catch (e: any) {
+          setError(e.message);
+        }
+      }
+    );
+  };
 
-  async function onAgregarJugadorCompetencia() {
-    if (!competenciaId || !nuevoJugadorId.trim()) return;
-    setBusy(true); setError(null);
+  const onAgregarJugadorCompetencia = async (id?: string) => {
+    const targetId = id || nuevoJugadorId.trim();
+    if (!targetId) return;
     try {
-      await crearJugadorCompetencia({ jugador: nuevoJugadorId.trim(), competencia: competenciaId });
-      // refresh competencia players
+      await crearJugadorCompetencia({ jugador: targetId, competencia: competenciaId });
+      setNuevoJugadorId('');
       const items = await listJugadoresCompetencia(competenciaId);
       const mapped = items.map((jc) => {
         const j = jc.jugador as any;
         const nombre = [j?.nombre, j?.apellido].filter(Boolean).join(' ') || j?._id || '';
         return { _id: (j?._id ?? j) as string, nombre, jcId: jc._id };
       }).filter((p) => p._id);
-      const seen = new Set<string>();
-      const unique = mapped.filter((p) => (seen.has(p._id) ? false : (seen.add(p._id), true)));
-      setCompPlayers(unique);
-      setNuevoJugadorId('');
+      setCompPlayers(mapped);
+      setSuccess('Jugador agregado con éxito');
     } catch (e: any) {
-      setError(e.message || 'Error agregando jugador a la competencia');
-    } finally { setBusy(false); }
-  }
-
-  async function onRecalculateGlobalRankings() {
-    if (!window.confirm('¿Estás seguro de que deseas volver a generar el ranking y ELO global? Esta operación puede ser intensiva.')) return;
-    setBusy(true); setError(null);
-    try {
-      await recalculateGlobalRankings();
-      alert('Ranking y ELO global regenerado con éxito.');
-      // Optionally, refresh leaderboard after recalculation
-      // refreshLeaderboard(); 
-    } catch (e: any) {
-      setError(e.message || 'Error al regenerar ranking global');
-    } finally { setBusy(false); }
-  }
-
-  const nameById = (id: string) => players.find((p) => p._id === id)?.nombre || id;
+      setError(e.message);
+    }
+  };
 
   return (
-    <div className="space-y-6">
-      {error && <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>}
-      {showAll && compPlayers.length === 0 && (
-        <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
-          No hay jugadores registrados en esta competencia todavía. Mostrando todos los jugadores. Agrega jugadores a la competencia para usarlos en Ranked.
+    <div className="space-y-6 pb-20">
+      {/* Notifications */}
+      {error && (
+        <div className="fixed top-4 right-4 z-50 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700 shadow-lg animate-in fade-in slide-in-from-top-4">
+          <p className="font-bold">Error</p>
+          <p>{error}</p>
+        </div>
+      )}
+      {success && (
+        <div className="fixed top-4 right-4 z-50 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-700 shadow-lg animate-in fade-in slide-in-from-top-4">
+          <p className="font-bold">Éxito</p>
+          <p>{success}</p>
         </div>
       )}
 
-      <section className="rounded-lg border border-slate-200 bg-white p-4">
+      {/* Header Config */}
+      <Card className="p-4 border-slate-100 shadow-sm">
         <div className="flex flex-wrap items-end gap-3">
-          <div>
-            <label className="block text-xs text-slate-500">Modalidad</label>
-            <input value={modalidad} disabled className="w-40 cursor-not-allowed rounded-md border bg-slate-50 px-2 py-1" />
+          <div className="space-y-1">
+            <label className="text-[10px] uppercase tracking-wider font-bold text-slate-500">Modalidad</label>
+            <div className="h-9 px-3 flex items-center bg-slate-50 rounded border text-sm font-medium text-slate-700">{modalidad || 'N/A'}</div>
           </div>
-          <div>
-            <label className="block text-xs text-slate-500">Categoría</label>
-            <input value={categoria} disabled className="w-40 cursor-not-allowed rounded-md border bg-slate-50 px-2 py-1" />
+          <div className="space-y-1">
+            <label className="text-[10px] uppercase tracking-wider font-bold text-slate-500">Categoría</label>
+            <div className="h-9 px-3 flex items-center bg-slate-50 rounded border text-sm font-medium text-slate-700">{categoria || 'N/A'}</div>
           </div>
-          <div>
-            <label className="block text-xs text-slate-500">Temporada</label>
+          <div className="space-y-1">
+            <label className="text-[10px] uppercase tracking-wider font-bold text-slate-500">Temporada</label>
             <select 
               value={selectedTemporada} 
               onChange={(e) => setSelectedTemporada(e.target.value)}
-              className="w-40 rounded-md border bg-white px-2 py-1 text-sm"
+              className="h-9 w-40 rounded-md border border-slate-200 bg-white px-2 py-1 text-sm outline-none focus:ring-2 focus:ring-brand-500 transition-shadow disabled:bg-slate-50 disabled:text-slate-400"
               disabled={busy || !!matchId}
             >
-              <option value="">Sin temporada</option>
+              <option value="">Sin temporada (Global)</option>
               {temporadas.map(t => (
                 <option key={t._id} value={t._id}>{t.nombre}</option>
               ))}
             </select>
           </div>
-          <button onClick={onCreate} disabled={busy || !!matchId} className="rounded-md bg-brand-600 px-3 py-2 text-white disabled:opacity-50">Crear partido ranked</button>
-          {matchId && (
-            <>
-              <span className="text-xs text-slate-500">Partido: {matchId}</span>
-              <button
-                type="button"
-                onClick={() => { setMatchId(null); setSelected([]); setRojo([]); setAzul([]); setScore({ local: 0, visitante: 0 }); }}
-                className="rounded-md border px-3 py-2 text-sm"
-              >Abandonar (No borrar)</button>
-              <button
-                type="button"
-                onClick={onCancel}
-                className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600 hover:bg-red-100"
-              >Eliminar partido</button>
-            </>
+
+          {!matchId ? (
+            <Button 
+              variant="primary" 
+              onClick={onCreateMatch} 
+              disabled={busy || !modalidad || !categoria}
+              className="px-6"
+            >
+              Iniciar sesión Ranked
+            </Button>
+          ) : (
+            <div className="flex gap-2 items-center bg-brand-50 rounded-lg p-1 pr-3 border border-brand-100">
+               <span className="bg-brand-500 text-white text-[10px] font-bold px-2 py-1 rounded-md ml-1 animate-pulse">EN CURSO</span>
+               <span className="text-[10px] text-brand-700 font-medium">ID: {matchId.slice(-6)}</span>
+               <div className="h-4 w-[1px] bg-brand-200 mx-1" />
+               <button onClick={abandonMatch} className="text-[10px] text-slate-500 hover:text-slate-700 font-bold uppercase tracking-tight">Abandonar</button>
+               <button onClick={() => showConfirm('¿Eliminar Partido?', 'Se perderá el progreso de este partido.', onCancelMatch)} className="text-[10px] text-red-500 hover:text-red-700 font-bold uppercase tracking-tight">Eliminar</button>
+            </div>
           )}
         </div>
-      </section>
+      </Card>
 
-      <section className="grid gap-4 md:grid-cols-3">
-        <div className="rounded-lg border border-slate-200 bg-white p-4">
-          <div className="mb-2 flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <h2 className="text-sm font-semibold">Jugadores</h2>
-              <div className="rounded border text-xs">
-                <button type="button" className={`px-2 py-0.5 ${!showAll ? 'bg-slate-200' : ''}`} onClick={() => setShowAll(false)}>Solo competencia</button>
-                <button type="button" className={`px-2 py-0.5 ${showAll ? 'bg-slate-200' : ''}`} onClick={() => setShowAll(true)}>Todos</button>
-              </div>
-            </div>
-            <input value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="Buscar..." className="rounded-md border px-2 py-1 text-sm" />
-          </div>
-          <div className="h-80 overflow-auto rounded border">
-            {filtered.map((p) => (
-              <div key={p._id} className="flex items-center justify-between gap-2 border-b px-2 py-1 text-sm">
-                <label className="flex flex-1 items-center gap-2">
-                  <input type="checkbox" checked={selected.includes(p._id)} onChange={() => toggleSelect(p._id)} />
-                  <span className="truncate">{p.nombre}</span>
-                </label>
-                <div className="flex items-center gap-2">
-                  <label className="flex items-center gap-1 text-xs">
-                    <input type="checkbox" checked={presentes.includes(p._id)} onChange={(e)=> setPresentes(prev => e.target.checked ? [...new Set([...prev, p._id])] : prev.filter(x=>x!==p._id))} />
-                    <span>Presente</span>
-                    {presentes.includes(p._id) ? <span className="ml-1 text-slate-400">PJ hoy: {playedCounts[p._id] || 0}</span> : null}
-                  </label>
-                {showAll && !compPlayers.some(cp => cp._id === p._id) && (
-                  <button
-                    type="button"
-                    className="shrink-0 rounded border px-2 py-0.5 text-xs"
-                    onClick={async () => {
-                      try {
-                        await crearJugadorCompetencia({ jugador: p._id, competencia: competenciaId });
-                        // refresh competencia players and exit fallback if any
-                        const items = await listJugadoresCompetencia(competenciaId);
-                        const mapped = items.map((jc) => {
-                          const j = jc.jugador as any;
-                          const nombre = [j?.nombre, j?.apellido].filter(Boolean).join(' ') || j?._id || '';
-                          return { _id: (j?._id ?? j) as string, nombre, jcId: jc._id };
-                        }).filter((x) => x._id);
-                        const seen = new Set<string>();
-                        const unique = mapped.filter((x) => (seen.has(x._id) ? false : (seen.add(x._id), true)));
-                        setCompPlayers(unique);
-                      } catch (e: any) {
-                        setError(e.message || 'Error agregando jugador');
-                      }
-                    }}
-                  >Agregar</button>
-                )}
-                {compPlayers.some(cp => cp._id === p._id) && (
-                  <button
-                    type="button"
-                    className="shrink-0 rounded border border-red-200 bg-red-50 px-2 py-0.5 text-xs text-red-700 hover:bg-red-100"
-                    onClick={() => onEliminarJugador(p._id)}
-                  >Quitar</button>
-                )}
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className="mt-3 flex flex-col gap-2">
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-slate-500">Seleccionados: {selected.length}</span>
-              <button onClick={onAutoAssign} disabled={busy || !matchId || selected.length < 2} className="rounded-md border px-3 py-1 text-sm">Auto-assign balanceado</button>
-            </div>
-            <div className="flex gap-2">
-              <button onClick={addToRojo} disabled={busy || selected.length === 0} className="rounded-md border px-3 py-1 text-sm">Añadir a Rojo</button>
-              <button onClick={addToAzul} disabled={busy || selected.length === 0} className="rounded-md border px-3 py-1 text-sm">Añadir a Azul</button>
-            </div>
-            <div className="mt-2 flex items-center gap-2">
-              <input value={nuevoJugadorId} onChange={(e)=>setNuevoJugadorId(e.target.value)} placeholder="ID del jugador para agregar a la competencia" className="flex-1 rounded-md border px-2 py-1 text-sm" />
-              <button onClick={onAgregarJugadorCompetencia} disabled={busy || !nuevoJugadorId.trim()} className="rounded-md border px-3 py-1 text-sm">Agregar jugador a competencia</button>
-            </div>
-            <div className="mt-2 flex items-center justify-between gap-2">
-              <div className="flex items-center gap-3">
-                <label className="flex items-center gap-1 text-xs">
-                  <input type="checkbox" checked={priorizarNoJugados} onChange={(e)=>setPriorizarNoJugados(e.target.checked)} />
-                  <span>Priorizar no jugados</span>
-                </label>
-                <button type="button" className="rounded-md border px-3 py-1 text-xs" onClick={chooseForNextMatch}>Elegir para próximo (max 18)</button>
-              </div>
-              <div className="flex items-center gap-2 text-xs">
-                <button type="button" className="rounded border px-2 py-0.5" onClick={()=>setPresentes(players.map(p=>p._id))}>Marcar todos</button>
-                <button type="button" className="rounded border px-2 py-0.5" onClick={()=>setPresentes([])}>Limpiar presentes</button>
-                <button type="button" className="rounded border px-2 py-0.5" onClick={()=>setPlayedCounts({})}>Reset PJ hoy</button>
-              </div>
-            </div>
-          </div>
+      {/* Main Workflow Grid */}
+      <div className="grid gap-6 lg:grid-cols-12">
+        <div className="lg:col-span-4">
+           <RankedPlayerSelector
+              players={players}
+              compPlayers={compPlayers}
+              filter={filter}
+              setFilter={setFilter}
+              selected={selected}
+              toggleSelect={toggleSelect}
+              presentes={presentes}
+              togglePresente={togglePresente}
+              playedCounts={playedCounts}
+              showAll={showAll}
+              setShowAll={setShowAll}
+              onAgregarJugador={onAgregarJugadorCompetencia}
+              onEliminarJugador={onEliminarJugador}
+              nuevoJugadorId={nuevoJugadorId}
+              setNuevoJugadorId={setNuevoJugadorId}
+              onAgregarNuevoJugador={() => onAgregarJugadorCompetencia()}
+              onChooseForNext={onChooseForNextMatch}
+              onMarkAllPresent={() => markAllPresent(players.map(p => p._id))}
+              onClearPresentes={clearPresentes}
+              onResetPJHoy={resetPlayedCounts}
+              priorizarNoJugados={priorizarNoJugados}
+              setPriorizarNoJugados={setPriorizarNoJugados}
+              busy={busy}
+              onAutoAssign={() => onAutoAssign(selected)}
+              onAddToRojo={() => setRojo(prev => [...new Set([...prev, ...selected])])}
+              onAddToAzul={() => setAzul(prev => [...new Set([...prev, ...selected])])}
+              matchActive={!!matchId}
+           />
         </div>
 
-        <div className="rounded-lg border border-slate-200 bg-white p-4">
-          <h2 className="mb-2 text-sm font-semibold">Rojo <span className="text-xs text-slate-500">({rojo.length}/9)</span></h2>
-          <ul className="min-h-[6rem] space-y-1">
-            {rojo.map((id) => (
-              <li key={id} className="flex items-center justify-between rounded border px-2 py-1 text-sm">
-                <span>{nameById(id)}</span>
-                <button type="button" className="text-xs text-slate-500 hover:text-rose-600" onClick={() => removeFromRojo(id)}>Quitar</button>
-              </li>
-            ))}
-          </ul>
-          <h2 className="mt-4 mb-2 text-sm font-semibold">Azul</h2>
-          <ul className="min-h-[6rem] space-y-1">
-            {azul.map((id) => (
-              <li key={id} className="flex items-center justify-between rounded border px-2 py-1 text-sm">
-                <span>{nameById(id)}</span>
-                <button type="button" className="text-xs text-slate-500 hover:text-rose-600" onClick={() => removeFromAzul(id)}>Quitar</button>
-              </li>
-            ))}
-          </ul>
-          <div className="mt-3 flex justify-end">
-            <button onClick={onSaveAssign} disabled={busy || !matchId} className="rounded-md border px-3 py-1 text-sm">Guardar asignación</button>
-          </div>
+        <div className="lg:col-span-4">
+          <TeamBuilder 
+            rojo={rojo}
+            azul={azul}
+            nameById={nameById}
+            onRemoveFromRojo={(id) => setRojo(prev => prev.filter(x => x !== id))}
+            onRemoveFromAzul={(id) => setAzul(prev => prev.filter(x => x !== id))}
+            onSaveAssignment={onSaveAssignment}
+            busy={busy}
+            matchActive={!!matchId}
+          />
         </div>
 
-        <div className="rounded-lg border border-slate-200 bg-white p-4">
-          <h2 className="mb-2 text-sm font-semibold">Finalizar</h2>
-          <div className="flex items-center gap-2">
-            <input type="number" value={score.local} onChange={(e) => setScore((s) => ({ ...s, local: +e.target.value }))} className="w-20 rounded-md border px-2 py-1" />
-            <span className="text-sm">-</span>
-            <input type="number" value={score.visitante} onChange={(e) => setScore((s) => ({ ...s, visitante: +e.target.value }))} className="w-20 rounded-md border px-2 py-1" />
-          </div>
-          <button onClick={onFinalize} disabled={busy || !matchId} className="mt-3 rounded-md bg-emerald-600 px-3 py-2 text-white disabled:opacity-50">Aplicar resultado</button>
-          <div className="mt-4">
-            <h3 className="text-sm font-semibold">Leaderboard de la competencia (top 20)</h3>
-            <div className="mt-2 max-h-64 overflow-auto rounded border">
-              <table className="w-full text-left text-sm">
-                <thead>
-                  <tr className="border-b bg-slate-50 text-xs">
-                    <th className="px-2 py-1">Jugador</th>
-                    <th className="px-2 py-1">Rating</th>
-                    <th className="px-2 py-1">PJ</th>
-                    <th className="px-2 py-1">Δ</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {board.map((r) => (
-                    <tr key={r.playerId} className="border-b">
-                      <td className="px-2 py-1">{nameById(r.playerId)}</td>
-                      <td className="px-2 py-1">{r.rating}</td>
-                      <td className="px-2 py-1">{r.matchesPlayed}</td>
-                      <td className="px-2 py-1">{r.lastDelta ?? 0}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+        <div className="lg:col-span-4">
+          <RankedFinalize 
+            score={score}
+            setScore={setScore}
+            onFinalize={() => showConfirm('¿Finalizar Partido?', 'Los puntos se aplicarán permanentemente.', onFinalizeMatch)}
+            busy={busy}
+            matchActive={!!matchId}
+            board={board}
+          />
         </div>
-      </section>
+      </div>
 
-      <section className="rounded-lg border border-slate-200 bg-white p-4">
-        <h2 className="mb-2 text-sm font-semibold">Convertir partido existente en ranked</h2>
-        <div className="flex items-center gap-2">
-          <input value={convertId} onChange={(e)=>setConvertId(e.target.value)} placeholder="ID de partido" className="flex-1 rounded-md border px-2 py-1 text-sm" />
-          <button onClick={onMarkAsRanked} disabled={busy || !convertId.trim()} className="rounded-md border px-3 py-2 text-sm">Marcar como ranked</button>
-        </div>
-      </section>
+      {/* Admin Section */}
+      <div className="pt-8 border-t border-slate-100">
+        <RankedAdminTools 
+          convertId={convertId}
+          setConvertId={setConvertId}
+          onMarkAsRanked={handleMarkAsRanked}
+          revertId={revertId}
+          setRevertId={setRevertId}
+          onRevertMatch={handleRevertMatch}
+          onResetScopeRankings={handleResetScope}
+          onResetAllRankings={handleResetAll}
+          onRecalculateGlobalRankings={async () => {
+             try {
+               await recalculateGlobalRankings();
+               setSuccess('ELO Global recalculado');
+             } catch(e: any) { setError(e.message); }
+          }}
+          busy={busy}
+          modalidad={modalidad}
+          categoria={categoria}
+          selectedTemporada={selectedTemporada}
+        />
+      </div>
 
-      <section className="rounded-lg border border-slate-200 bg-white p-4">
-        <h2 className="mb-2 text-sm font-semibold text-red-700">Revertir partido ranked (Admin)</h2>
-        <div className="flex items-center gap-2">
-          <input value={revertId} onChange={(e)=>setRevertId(e.target.value)} placeholder="ID de partido a revertir" className="flex-1 rounded-md border px-2 py-1 text-sm" />
-          <button onClick={onRevertMatch} disabled={busy || !revertId.trim()} className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 hover:bg-red-100">Revertir Stats</button>
-        </div>
-        <p className="mt-1 text-xs text-slate-500">Esto restará los puntos ganados/perdidos a los jugadores y eliminará el registro del historial.</p>
-      </section>
-
-      <section className="rounded-lg border border-amber-300 bg-amber-50 p-4">
-        <h2 className="mb-2 text-sm font-semibold text-amber-800">🎯 Reset de esta competencia/temporada</h2>
-        <p className="mb-3 text-xs text-amber-700">
-          Resetea solo los rankings de: <strong>{modalidad} - {categoria}</strong>{selectedTemporada ? ' en la temporada seleccionada' : ' (sin temporada)'}.
-          Los partidos ranked de este scope serán desmarcados y tendrás que finalizarlos nuevamente.
-        </p>
-        <button 
-          onClick={onResetScopeRankings} 
-          disabled={busy || !modalidad || !categoria} 
-          className="rounded-md border-2 border-amber-500 bg-amber-100 px-4 py-2 text-sm font-semibold text-amber-800 hover:bg-amber-200 disabled:opacity-50"
-        >
-          Resetear este scope
-        </button>
-      </section>
-
-      <section className="rounded-lg border border-red-300 bg-red-50 p-4">
-        <h2 className="mb-2 text-sm font-semibold text-red-800">⚠️ Reset completo de rankings (Peligroso)</h2>
-        <p className="mb-3 text-xs text-red-700">
-          Borra TODOS los PlayerRating, MatchPlayer de TODO EL SISTEMA y marca todos los partidos ranked como no-aplicados. 
-          Útil si los ratings quedaron inconsistentes por errores globales. Tendrás que volver a finalizar cada partido ranked de todas las competencias.
-        </p>
-        <div className="flex gap-2">
-          <button 
-            onClick={onResetAllRankings} 
-            disabled={busy} 
-            className="rounded-md border-2 border-red-500 bg-red-100 px-4 py-2 text-sm font-semibold text-red-800 hover:bg-red-200 disabled:opacity-50"
-          >
-            Resetear TODOS los rankings del sistema
-          </button>
-          <button
-            className="rounded-md border-2 border-orange-500 bg-orange-100 px-4 py-2 text-sm font-semibold text-orange-800 hover:bg-orange-200 disabled:opacity-50"
-            onClick={onRecalculateGlobalRankings}
-            disabled={busy}
-          >
-            Regenerar Ranking Global
-          </button>
-        </div>
-      </section>
+      <ConfirmModal 
+        isOpen={confirmConfig.isOpen}
+        title={confirmConfig.title}
+        message={confirmConfig.description}
+        onConfirm={confirmConfig.onConfirm}
+        onCancel={closeConfirm}
+      />
     </div>
   );
 }
+
