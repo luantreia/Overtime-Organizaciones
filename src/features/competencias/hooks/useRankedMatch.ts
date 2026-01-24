@@ -40,6 +40,7 @@ export function useRankedMatch({
   const [score, setScore] = useState({ local: 0, visitante: 0 });
   const [sets, setSets] = useState<{ winner: 'local' | 'visitante'; time: number }[]>([]);
   const [startTime, setStartTime] = useState<number | null>(null);
+  const [pjMarked, setPjMarked] = useState<boolean>(false);
   const [busy, setBusy] = useState(false);
 
   const persistenceKey = useMemo(() => `rankedMatch:${competenciaId}`, [competenciaId]);
@@ -56,6 +57,7 @@ export function useRankedMatch({
         setScore(parsed.score || { local: 0, visitante: 0 });
         setSets(parsed.sets || []);
         setStartTime(parsed.startTime || null);
+        setPjMarked(!!parsed.pjMarked);
       }
     } catch { }
   }, [persistenceKey]);
@@ -63,8 +65,8 @@ export function useRankedMatch({
   // Save to localStorage
   useEffect(() => {
     if (!competenciaId) return;
-    localStorage.setItem(persistenceKey, JSON.stringify({ matchId, rojo, azul, score, sets, startTime }));
-  }, [matchId, rojo, azul, score, sets, startTime, persistenceKey, competenciaId]);
+    localStorage.setItem(persistenceKey, JSON.stringify({ matchId, rojo, azul, score, sets, startTime, pjMarked }));
+  }, [matchId, rojo, azul, score, sets, startTime, pjMarked, persistenceKey, competenciaId]);
 
   const resetMatchState = useCallback(() => {
     setMatchId(null);
@@ -73,6 +75,7 @@ export function useRankedMatch({
     setScore({ local: 0, visitante: 0 });
     setSets([]);
     setStartTime(null);
+    setPjMarked(false);
     localStorage.removeItem(persistenceKey);
   }, [persistenceKey]);
 
@@ -128,10 +131,16 @@ export function useRankedMatch({
     try {
       await apiAssignTeams(matchId, rojo, azul);
       
-      // Increment PJ only the first time assignment is saved (match start)
-      if (!startTime) {
+      // Increment PJ only the first time assignment is confirmed
+      if (!pjMarked) {
         const playedNow = new Set<string>([...rojo, ...azul]);
-        incrementPlayedCount(playedNow);
+        if (playedNow.size > 0) {
+          incrementPlayedCount(playedNow);
+          setPjMarked(true);
+        }
+      }
+
+      if (!startTime) {
         setStartTime(Date.now());
       }
       
@@ -147,6 +156,15 @@ export function useRankedMatch({
     if (!matchId) return;
     setBusy(true);
     try {
+      // Safety: ensure PJ is marked if they skipped assignment confirmation
+      if (!pjMarked) {
+        const playedNow = new Set<string>([...rojo, ...azul]);
+        if (playedNow.size > 0) {
+          incrementPlayedCount(playedNow);
+          setPjMarked(true);
+        }
+      }
+
       await apiFinalizeMatch(matchId, score.local, score.visitante, sets, afkIds, user?.id || 'org-ui');
       onSuccess?.('Partido finalizado con éxito');
       resetMatchState();
@@ -164,8 +182,8 @@ export function useRankedMatch({
     try {
       await deleteRankedMatch(matchId);
       
-      // Only revert if teams were already confirmed (timer started)
-      if (startTime) {
+      // Only revert if we already incremented the PJ counter
+      if (pjMarked) {
         const playersToRevert = new Set<string>([...rojo, ...azul]);
         if (playersToRevert.size > 0) {
           decrementPlayedCount(playersToRevert);

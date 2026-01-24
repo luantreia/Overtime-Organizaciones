@@ -36,15 +36,15 @@ export function useAttendance(competenciaId: string) {
     }
   }, [sessionKey, presentes, playedCounts, competenciaId]);
 
-  const togglePresente = (id: string, isPresent: boolean) => {
+  const togglePresente = useCallback((id: string, isPresent: boolean) => {
     setPresentes((prev) => 
       isPresent 
         ? [...new Set([...prev, id])] 
         : prev.filter((x) => x !== id)
     );
-  };
+  }, []);
 
-  const incrementPlayedCount = (playerIds: Set<string> | string[]) => {
+  const incrementPlayedCount = useCallback((playerIds: Set<string> | string[]) => {
     setPlayedCounts((prev) => {
       const next = { ...prev };
       playerIds.forEach((id) => {
@@ -52,9 +52,9 @@ export function useAttendance(competenciaId: string) {
       });
       return next;
     });
-  };
+  }, []);
 
-  const decrementPlayedCount = (playerIds: Set<string> | string[]) => {
+  const decrementPlayedCount = useCallback((playerIds: Set<string> | string[]) => {
     setPlayedCounts((prev) => {
       const next = { ...prev };
       playerIds.forEach((id) => {
@@ -64,11 +64,11 @@ export function useAttendance(competenciaId: string) {
       });
       return next;
     });
-  };
+  }, []);
 
-  const resetPlayedCounts = () => setPlayedCounts({});
-  const clearPresentes = () => setPresentes([]);
-  const markAllPresent = (playerIds: string[]) => setPresentes(playerIds);
+  const resetPlayedCounts = useCallback(() => setPlayedCounts({}), []);
+  const clearPresentes = useCallback(() => setPresentes([]), []);
+  const markAllPresent = useCallback((playerIds: string[]) => setPresentes(playerIds), []);
 
   return {
     presentes,
