@@ -33,7 +33,12 @@ export async function startMatchTimer(partidoId: string, startTime: number, time
   });
 }
 
-export async function updateMatchConfig(partidoId: string, config: { matchDuration?: number; setDuration?: number; suddenDeathLimit?: number }) {
+export async function updateMatchConfig(partidoId: string, config: { 
+  matchDuration?: number; 
+  setDuration?: number; 
+  useSuddenDeath?: boolean;
+  autoPauseGlobal?: boolean;
+}) {
   return authFetch<{ ok: boolean; rankedMeta: any }>(`${BASE}/match/${partidoId}/config`, {
     method: 'PUT',
     body: config,

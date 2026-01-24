@@ -38,14 +38,14 @@ interface RankedFinalizeProps {
   matchConfig?: { 
     matchDuration: number; 
     setDuration: number; 
-    suddenDeathLimit: number;
+    useSuddenDeath: boolean;
     autoPauseGlobal?: boolean;
   };
   isBasicMode?: boolean;
   onUpdateConfig?: (config: Partial<{ 
     matchDuration: number; 
     setDuration: number; 
-    suddenDeathLimit: number;
+    useSuddenDeath: boolean;
     autoPauseGlobal?: boolean;
   }>) => Promise<void>;
 }
@@ -95,7 +95,7 @@ export const RankedFinalize: React.FC<RankedFinalizeProps> = ({
   const [localConfig, setLocalConfig] = useState(matchConfig || { 
     matchDuration: 1200, 
     setDuration: 180, 
-    suddenDeathLimit: 180,
+    useSuddenDeath: true,
     autoPauseGlobal: false 
   });
 
@@ -242,8 +242,9 @@ export const RankedFinalize: React.FC<RankedFinalizeProps> = ({
                   sets={sets} 
                   currentSetStartTime={currentSetStartTime}
                   isWaitingForNextSet={isWaitingForNextSet}
-                  suddenDeathLimit={matchConfig?.suddenDeathLimit} 
+                  useSuddenDeath={matchConfig?.useSuddenDeath} 
                   setDuration={matchConfig?.setDuration}
+                  matchDuration={matchConfig?.matchDuration}
                 />
                 {startTime && (
                   <button 
@@ -592,48 +593,60 @@ export const RankedFinalize: React.FC<RankedFinalizeProps> = ({
                   <div className="space-y-1.5">
                     <div className="flex justify-between items-center">
                       <span className="text-xs font-bold text-slate-600">Duración Partido (Global)</span>
-                      <span className="text-xs font-mono text-brand-600 font-bold">{Math.floor(localConfig.matchDuration / 60)}:00</span>
+                      <span className="text-xs font-mono text-emerald-600 font-bold">{Math.floor(localConfig.matchDuration / 60)}:00</span>
                     </div>
                     <input 
                       type="range" min="60" max="3600" step="60"
                       value={localConfig.matchDuration}
                       onChange={(e) => setLocalConfig({...localConfig, matchDuration: parseInt(e.target.value)})}
-                      className="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-brand-600"
+                      className="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-emerald-600"
                     />
                   </div>
 
                   <div className="space-y-1.5">
                     <div className="flex justify-between items-center">
                       <span className="text-xs font-bold text-slate-600">Tiempo por Set</span>
-                      <span className="text-xs font-mono text-brand-600 font-bold">
-                        {Math.floor(localConfig.setDuration / 60)}:{String(localConfig.setDuration % 60).padStart(2, '0')}
+                      <span className="text-xs font-mono text-emerald-600 font-bold">
+                        {localConfig.setDuration === 0 ? 'SIN LÍMITE' : `${Math.floor(localConfig.setDuration / 60)}:${String(localConfig.setDuration % 60).padStart(2, '0')}`}
                       </span>
                     </div>
-                    <input 
-                      type="range" min="60" max="600" step="30"
-                      value={localConfig.setDuration}
-                      onChange={(e) => setLocalConfig({...localConfig, setDuration: parseInt(e.target.value)})}
-                      className="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-brand-600"
-                    />
+                    <div className="flex items-center gap-3">
+                       <input 
+                        type="range" min="0" max="600" step="30"
+                        value={localConfig.setDuration}
+                        onChange={(e) => setLocalConfig({...localConfig, setDuration: parseInt(e.target.value)})}
+                        className="flex-1 h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-emerald-600"
+                      />
+                      <button 
+                        onClick={() => setLocalConfig({...localConfig, setDuration: localConfig.setDuration === 0 ? 180 : 0})}
+                        className={`px-2 py-1 rounded text-[9px] font-bold border transition-colors ${localConfig.setDuration === 0 ? 'bg-emerald-100 border-emerald-200 text-emerald-700' : 'bg-slate-50 border-slate-200 text-slate-500'}`}
+                      >
+                         {localConfig.setDuration === 0 ? 'TIEMPO FIJO' : 'SIN LÍMITE'}
+                      </button>
+                    </div>
                   </div>
 
-                  <div className="space-y-1.5">
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs font-bold text-slate-600">Inicio Muerte Súbita</span>
-                      <span className="text-xs font-mono text-amber-600 font-bold">
-                        {localConfig.suddenDeathLimit === 0 ? 'Sin Límite' : `${Math.floor(localConfig.suddenDeathLimit / 60)}:${String(localConfig.suddenDeathLimit % 60).padStart(2,'0')}`}
-                      </span>
-                    </div>
-                    <input 
-                      type="range" min="0" max="600" step="10"
-                      value={localConfig.suddenDeathLimit}
-                      onChange={(e) => {
-                        const val = parseInt(e.target.value);
-                        setLocalConfig({...localConfig, suddenDeathLimit: val});
-                      }}
-                      className="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-amber-600"
-                    />
-                    <p className="text-[9px] text-slate-400 italic">Al llegar a este tiempo el reloj cambiará a naranja y contará hacia adelante.</p>
+                  <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 space-y-3">
+                     <div className="flex justify-between items-center">
+                        <div className="flex flex-col">
+                           <span className="text-xs font-bold text-slate-700">Muerte Súbita</span>
+                           <span className="text-[9px] text-slate-400">Habilitar desempate al terminar el tiempo.</span>
+                        </div>
+                        <button 
+                          onClick={() => setLocalConfig({...localConfig, useSuddenDeath: !localConfig.useSuddenDeath})}
+                          className={`relative inline-flex h-5 w-10 items-center rounded-full transition-colors focus:outline-none ${localConfig.useSuddenDeath ? 'bg-amber-500' : 'bg-slate-300'}`}
+                        >
+                          <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${localConfig.useSuddenDeath ? 'translate-x-6' : 'translate-x-1'}`} />
+                        </button>
+                     </div>
+                     {localConfig.useSuddenDeath && localConfig.setDuration === 0 && (
+                        <div className="flex items-center gap-2 p-1.5 bg-amber-50 rounded-lg border border-amber-100">
+                           <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                           </svg>
+                           <span className="text-[9px] text-amber-700 font-medium">Al no haber límite de set, la súbita comenzará al terminar el tiempo GLOBAL.</span>
+                        </div>
+                     )}
                   </div>
 
                   <div className="space-y-2 pt-2 border-t border-slate-50">

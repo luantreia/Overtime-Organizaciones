@@ -84,12 +84,12 @@ export function useRankedMatch({
   const [matchConfig, setMatchConfig] = useState<{ 
     matchDuration: number; 
     setDuration: number; 
-    suddenDeathLimit: number;
+    useSuddenDeath: boolean;
     autoPauseGlobal?: boolean;
   }>({
     matchDuration: 1200,
     setDuration: 180,
-    suddenDeathLimit: 180,
+    useSuddenDeath: true,
     autoPauseGlobal: false
   });
   const [pjMarked, setPjMarked] = useState<boolean>(false);
@@ -141,7 +141,8 @@ export function useRankedMatch({
         setMatchConfig({
           matchDuration: partido.rankedMeta.matchDuration || 1200,
           setDuration: partido.rankedMeta.setDuration || 180,
-          suddenDeathLimit: partido.rankedMeta.suddenDeathLimit || 180
+          useSuddenDeath: partido.rankedMeta.useSuddenDeath ?? (partido.rankedMeta.suddenDeathLimit > 0),
+          autoPauseGlobal: partido.rankedMeta.autoPauseGlobal
         });
       }
     } catch (e) {
@@ -188,7 +189,7 @@ export function useRankedMatch({
           setCurrentSetStartTime(parsed.currentSetStartTime || 0);
           setIsWaitingForNextSet(!!parsed.isWaitingForNextSet);
 
-          setMatchConfig(parsed.matchConfig || { matchDuration: 1200, setDuration: 180, suddenDeathLimit: 180 });
+          setMatchConfig(parsed.matchConfig || { matchDuration: 1200, setDuration: 180, useSuddenDeath: true });
           setPjMarked(!!parsed.pjMarked);
           setIsBasicMode(!!parsed.isBasicMode);
         }
@@ -640,7 +641,7 @@ export function useRankedMatch({
     onUpdateConfig: async (newConfig: Partial<{ 
       matchDuration: number; 
       setDuration: number; 
-      suddenDeathLimit: number;
+      useSuddenDeath: boolean;
       autoPauseGlobal?: boolean;
     }>) => {
       if (!matchId) return;
@@ -655,7 +656,7 @@ export function useRankedMatch({
           ...prev,
           matchDuration: res.rankedMeta.matchDuration ?? prev.matchDuration,
           setDuration: res.rankedMeta.setDuration ?? prev.setDuration,
-          suddenDeathLimit: res.rankedMeta.suddenDeathLimit ?? prev.suddenDeathLimit,
+          useSuddenDeath: res.rankedMeta.useSuddenDeath ?? prev.useSuddenDeath,
           autoPauseGlobal: res.rankedMeta.autoPauseGlobal ?? prev.autoPauseGlobal
         }));
         onSuccess?.('Configuración actualizada');

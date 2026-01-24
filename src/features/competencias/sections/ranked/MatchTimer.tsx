@@ -6,8 +6,9 @@ interface MatchTimerProps {
   isPaused?: boolean;
   getEffectiveElapsed?: () => number;
   sets?: { winner: string; time: number }[];
-  suddenDeathLimit?: number;
+  useSuddenDeath?: boolean;
   setDuration?: number;
+  matchDuration?: number;
   currentSetStartTime?: number;
   isWaitingForNextSet?: boolean;
 }
@@ -18,8 +19,9 @@ export const MatchTimer: React.FC<MatchTimerProps> = ({
   isPaused = true,
   getEffectiveElapsed,
   sets = [], 
-  suddenDeathLimit = 180,
+  useSuddenDeath = true,
   setDuration = 180,
+  matchDuration = 1200,
   currentSetStartTime = 0,
   isWaitingForNextSet = false
 }) => {
@@ -57,20 +59,21 @@ export const MatchTimer: React.FC<MatchTimerProps> = ({
       setElapsed(currentElapsed);
 
       // Check for sound trigger (when set time hits limit)
-      const lastSetTime = sets.length > 0 ? Math.floor(sets[sets.length - 1].time / 1000) : 0;
-      const currentSetElapsed = currentElapsed - lastSetTime;
+      const currentSetElapsed = currentElapsed - Math.floor(currentSetStartTime / 1000);
+      const isUnlimitedSet = !setDuration || setDuration === 0;
+      const triggerTime = isUnlimitedSet ? matchDuration : setDuration;
+      const checkVal = isUnlimitedSet ? currentElapsed : currentSetElapsed;
       
-      if (suddenDeathLimit > 0 && currentSetElapsed >= suddenDeathLimit && !hasSounded) {
+      if (useSuddenDeath && checkVal >= triggerTime && !hasSounded) {
         playBuzzer();
         setHasSounded(true);
-      } else if (currentSetElapsed < suddenDeathLimit) {
-        // Reset sound flag if we are in a new set or time was edited back
+      } else if (!useSuddenDeath || checkVal < triggerTime) {
         setHasSounded(false);
       }
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [startTime, accumulatedTime, isPaused, getEffectiveElapsed, sets, suddenDeathLimit, hasSounded]);
+  }, [startTime, accumulatedTime, isPaused, getEffectiveElapsed, sets, useSuddenDeath, setDuration, matchDuration, currentSetStartTime, hasSounded]);
 
   if (!startTime) return null;
 
@@ -78,18 +81,30 @@ export const MatchTimer: React.FC<MatchTimerProps> = ({
   const totalSec = elapsed % 60;
 
   // Set Timer calculation
+  const isUnlimitedSet = !setDuration || setDuration === 0;
   const currentSetElapsed = isWaitingForNextSet 
     ? 0 
     : Math.max(0, elapsed - Math.floor(currentSetStartTime / 1000));
 
-  // Countdown logic: suddenDeathLimit is the starting point
-  const setRemaining = setDuration - currentSetElapsed;
-  const isSuddenDeath = suddenDeathLimit > 0 && currentSetElapsed >= suddenDeathLimit;
+  // Determine if in Sudden Death
+  const triggerTime = isUnlimitedSet ? matchDuration : setDuration;
+  const isSuddenDeath = useSuddenDeath && (
+    isUnlimitedSet 
+      ? elapsed >= triggerTime 
+      : currentSetElapsed >= triggerTime
+  );
 
-  // Display: count down till zero (based on setDuration), then switch logic if needed
-  const displaySeconds = isSuddenDeath 
-    ? (currentSetElapsed - suddenDeathLimit) 
-    : Math.max(0, setRemaining);
+  // Display logic
+  let displaySeconds = 0;
+  if (isSuddenDeath) {
+    displaySeconds = isUnlimitedSet 
+      ? (elapsed - triggerTime) 
+      : (currentSetElapsed - triggerTime);
+  } else {
+    displaySeconds = isUnlimitedSet 
+      ? currentSetElapsed 
+      : Math.max(0, setDuration - currentSetElapsed);
+  }
 
   const setMin = Math.floor(displaySeconds / 60);
   const setSec = displaySeconds % 60;
@@ -101,7 +116,7 @@ export const MatchTimer: React.FC<MatchTimerProps> = ({
         isSuddenDeath ? 'bg-amber-500 border-amber-600 text-white animate-pulse' : 'bg-white border-slate-200 text-slate-800'
       }`}>
         <span className={`text-[7px] sm:text-[8px] uppercase tracking-tighter font-black leading-none mb-0.5 ${isSuddenDeath ? 'text-white' : 'text-slate-400'}`}>
-          {isSuddenDeath ? 'SÚBITA' : `SET ${sets.length + 1}`}
+          {isSuddenDeath ? 'SÚBITA' : isUnlimitedSet ? 'TIEMPO' : `SET ${sets.length + 1}`}
         </span>
         <span className="text-sm sm:text-base font-black leading-none">
           {String(setMin).padStart(2, '0')}:{String(setSec).padStart(2, '0')}
