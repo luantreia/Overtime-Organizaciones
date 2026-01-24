@@ -352,12 +352,15 @@ export default function CompetenciaRankedSection({
     }
   };
 
-  const onQuickAddPlayer = async (datos: { nombre: string; alias?: string; genero?: string }) => {
+  const onQuickAddPlayer = async (datos: { 
+    nombre: string; 
+    alias?: string; 
+    genero?: string; 
+    fechaNacimiento?: string;
+  }) => {
     try {
-      const res = await crearJugador(datos);
-      if (!res.success) throw new Error('No se pudo crear el jugador');
+      const newPlayer = await crearJugador(datos);
       
-      const newPlayer = res.data;
       const playerId = newPlayer._id;
 
       // 2. Vincular a competencia

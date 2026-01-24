@@ -66,7 +66,7 @@ export async function crearJugador(payload: {
   genero?: string; 
   fechaNacimiento?: string;
 }) {
-  return authFetch<{ success: boolean; data: any }>(`/api/jugadores`, {
+  return authFetch<any>(`/api/jugadores`, {
     method: 'POST',
     body: payload,
   });

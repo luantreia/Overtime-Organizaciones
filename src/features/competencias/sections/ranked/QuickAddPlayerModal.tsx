@@ -84,9 +84,9 @@ export const QuickAddPlayerModal: React.FC<QuickAddPlayerModalProps> = ({
             value={genero}
             onChange={(e) => setGenero(e.target.value as any)}
             options={[
-              { label: 'Masculino', value: 'Masculino' },
-              { label: 'Femenino', value: 'Femenino' },
-              { label: 'Otro', value: 'Otro' },
+              { label: 'Masculino', value: 'masculino' },
+              { label: 'Femenino', value: 'femenino' },
+              { label: 'Otro', value: 'otro' },
             ]}
           />
 
