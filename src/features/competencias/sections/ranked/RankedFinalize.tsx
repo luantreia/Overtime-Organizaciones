@@ -22,6 +22,8 @@ interface RankedFinalizeProps {
   getEffectiveElapsed?: () => number;
   togglePause?: () => void;
   setStartTime?: (val: number | null) => void;
+  currentSetStartTime?: number;
+  isWaitingForNextSet?: boolean;
   startTimer: () => void;
   onRefreshLeaderboard?: () => void;
   competenciaId: string;
@@ -32,9 +34,9 @@ interface RankedFinalizeProps {
   azulIds?: string[];
   nameById?: (id: string) => string;
   matchId?: string | null;
-  matchConfig?: { matchDuration: number; setDuration: number; suddenDeathLimit: number; pauseOnSetWin: boolean; showGlobalTimer: boolean };
+  matchConfig?: { matchDuration: number; setDuration: number; suddenDeathLimit: number };
   isBasicMode?: boolean;
-  onUpdateConfig?: (config: Partial<{ matchDuration: number; setDuration: number; suddenDeathLimit: number; pauseOnSetWin: boolean; showGlobalTimer: boolean }>) => Promise<void>;
+  onUpdateConfig?: (config: Partial<{ matchDuration: number; setDuration: number; suddenDeathLimit: number }>) => Promise<void>;
 }
 
 export const RankedFinalize: React.FC<RankedFinalizeProps> = ({
@@ -55,6 +57,8 @@ export const RankedFinalize: React.FC<RankedFinalizeProps> = ({
   getEffectiveElapsed,
   togglePause,
   setStartTime,
+  currentSetStartTime = 0,
+  isWaitingForNextSet = false,
   startTimer,
   onRefreshLeaderboard,
   competenciaId,
@@ -76,7 +80,7 @@ export const RankedFinalize: React.FC<RankedFinalizeProps> = ({
   const [deleting, setDeleting] = useState(false);
 
   // local states for config form
-  const [localConfig, setLocalConfig] = useState(matchConfig || { matchDuration: 1200, setDuration: 180, suddenDeathLimit: 180, pauseOnSetWin: true, showGlobalTimer: true });
+  const [localConfig, setLocalConfig] = useState(matchConfig || { matchDuration: 1200, setDuration: 180, suddenDeathLimit: 180 });
 
   React.useEffect(() => {
     if (matchConfig) setLocalConfig(matchConfig);
@@ -219,8 +223,9 @@ export const RankedFinalize: React.FC<RankedFinalizeProps> = ({
                   isPaused={isPaused}
                   getEffectiveElapsed={getEffectiveElapsed}
                   sets={sets} 
+                  currentSetStartTime={currentSetStartTime}
+                  isWaitingForNextSet={isWaitingForNextSet}
                   suddenDeathLimit={matchConfig?.suddenDeathLimit} 
-                  showGlobalTimer={matchConfig?.showGlobalTimer}
                 />
                 {startTime && (
                   <button 
@@ -596,30 +601,21 @@ export const RankedFinalize: React.FC<RankedFinalizeProps> = ({
                     <p className="text-[9px] text-slate-400 italic">Al llegar a 00:00 el reloj cambiará a naranja y contará hacia adelante (Muerte Súbita).</p>
                   </div>
 
-                  <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100">
-                    <div className="flex flex-col">
-                      <span className="text-xs font-bold text-slate-700">Auto-Pausa al finalizar set</span>
-                      <span className="text-[10px] text-slate-400">Detiene el reloj global al marcar un ganador.</span>
-                    </div>
-                    <button 
-                      onClick={() => setLocalConfig({...localConfig, pauseOnSetWin: !localConfig.pauseOnSetWin})}
-                      className={`relative inline-flex h-5 w-10 items-center rounded-full transition-colors focus:outline-none ${localConfig.pauseOnSetWin ? 'bg-emerald-500' : 'bg-slate-300'}`}
-                    >
-                      <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${localConfig.pauseOnSetWin ? 'translate-x-6' : 'translate-x-1'}`} />
-                    </button>
-                  </div>
-
-                  <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100">
-                    <div className="flex flex-col">
-                      <span className="text-xs font-bold text-slate-700">Mostrar Cronómetro Global</span>
-                      <span className="text-[10px] text-slate-400">Si se oculta, solo verás el tiempo del set actual.</span>
-                    </div>
-                    <button 
-                      onClick={() => setLocalConfig({...localConfig, showGlobalTimer: !localConfig.showGlobalTimer})}
-                      className={`relative inline-flex h-5 w-10 items-center rounded-full transition-colors focus:outline-none ${localConfig.showGlobalTimer ? 'bg-brand-500' : 'bg-slate-300'}`}
-                    >
-                      <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${localConfig.showGlobalTimer ? 'translate-x-6' : 'translate-x-1'}`} />
-                    </button>
+                  <div className="space-y-2 pt-2 border-t border-slate-50">
+                    <label className="flex items-center gap-3 cursor-pointer group">
+                      <div className="relative">
+                        <input 
+                          type="checkbox"
+                          className="sr-only peer"
+                          checked={!!localConfig.autoPauseGlobal}
+                          onChange={(e) => setLocalConfig({...localConfig, autoPauseGlobal: e.target.checked})}
+                        />
+                        <div className="w-9 h-5 bg-slate-200 rounded-full peer peer-checked:bg-emerald-500 transition-colors shadow-inner" />
+                        <div className="absolute left-1 top-1 w-3 h-3 bg-white rounded-full peer-checked:translate-x-4 transition-transform shadow-sm" />
+                      </div>
+                      <span className="text-xs font-bold text-slate-700 group-hover:text-slate-900 transition-colors">Frenar Reloj Global al terminar Set</span>
+                    </label>
+                    <p className="text-[9px] text-slate-400 italic">Si se desactiva, el tiempo total del partido seguirá corriendo mientras esperas a dar "Play" al siguiente set.</p>
                   </div>
                 </div>
               </div>

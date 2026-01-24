@@ -176,7 +176,9 @@ export default function CompetenciaRankedSection({
     matchConfig,
     isBasicMode,
     setIsBasicMode,
-    onUpdateConfig
+    onUpdateConfig,
+    currentSetStartTime,
+    isWaitingForNextSet
   } = useRankedMatch({
     competenciaId,
     modalidad,
@@ -638,6 +640,8 @@ export default function CompetenciaRankedSection({
             getEffectiveElapsed={getEffectiveElapsed}
             togglePause={togglePause}
             setStartTime={(val: number | null) => setStartTime(val)}
+            currentSetStartTime={currentSetStartTime}
+            isWaitingForNextSet={isWaitingForNextSet}
             startTimer={startTimer}
             onRefreshLeaderboard={fetchLeaderboard}
             competenciaId={competenciaId}
