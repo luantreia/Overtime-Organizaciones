@@ -188,6 +188,7 @@ export const RankedFinalize: React.FC<RankedFinalizeProps> = ({
                 <th className="px-3 py-2 font-bold text-slate-600">Jugador</th>
                 <th className="px-2 py-2 font-bold text-slate-600 text-center">MMR</th>
                 <th className="px-2 py-2 font-bold text-slate-600 text-center">PJ</th>
+                <th className="px-2 py-2 font-bold text-slate-600 text-center">%W</th>
                 <th className="px-2 py-2 font-bold text-slate-600 text-center">Δ</th>
               </tr>
             </thead>
@@ -227,6 +228,9 @@ export const RankedFinalize: React.FC<RankedFinalizeProps> = ({
                       </span>
                     </td>
                     <td className="px-1 sm:px-2 py-2 text-center text-slate-500 font-medium">{r.matchesPlayed}</td>
+                    <td className="px-1 sm:px-2 py-2 text-center text-slate-400 font-bold">
+                      {r.matchesPlayed > 0 ? `${Math.round(((r.wins || 0) / r.matchesPlayed) * 100)}%` : '-'}
+                    </td>
                     <td className="px-1 sm:px-2 py-2 text-center">
                       {r.lastDelta ? (
                         <span className={`font-bold text-[10px] sm:text-xs ${r.lastDelta > 0 ? 'text-emerald-500' : 'text-red-500'}`}>

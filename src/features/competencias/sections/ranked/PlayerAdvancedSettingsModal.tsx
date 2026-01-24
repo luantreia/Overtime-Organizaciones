@@ -127,6 +127,7 @@ export const PlayerAdvancedSettingsModal: React.FC<PlayerAdvancedSettingsModalPr
                         <thead className="bg-slate-50 text-[10px] text-slate-500 font-bold uppercase">
                            <tr>
                               <th className="p-2 text-left">Fecha / Partido</th>
+                              <th className="p-2 text-center">Res</th>
                               <th className="p-2 text-center">Color</th>
                               <th className="p-2 text-center">Delta</th>
                               <th className="p-2 text-center">Score</th>
@@ -138,6 +139,13 @@ export const PlayerAdvancedSettingsModal: React.FC<PlayerAdvancedSettingsModalPr
                                 <td className="p-2">
                                    <p className="font-bold">{new Date(h.partidoId?.fecha || h.createdAt).toLocaleDateString()}</p>
                                    <p className="text-[9px] text-slate-400">ID: {(h.partidoId?._id || h.partidoId || '').slice(-6)}</p>
+                                </td>
+                                <td className="p-2 text-center">
+                                   {h.win ? (
+                                     <span className="text-emerald-600 font-black">W</span>
+                                   ) : (
+                                     <span className="text-red-400 font-bold">L</span>
+                                   )}
                                 </td>
                                 <td className="p-2 text-center">
                                    <span className={`px-1 rounded text-[10px] font-bold ${h.teamColor === 'rojo' ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600'}`}>
