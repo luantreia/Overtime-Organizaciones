@@ -57,11 +57,22 @@ export function useRankedMatch({
 
   const persistenceKey = useMemo(() => `rankedMatch:${competenciaId}`, [competenciaId]);
 
-  const syncWithServer = useCallback(async (id: string) => {
-    if (isBasicMode) return; // Skip sync in basic mode
+  const syncWithServer = useCallback(async (id: string, force = false) => {
+    if (isBasicMode && !force) return; // Skip sync in basic mode unless forced
     try {
       const { partido, sets: serverSets } = await apiGetRankedMatch(id);
       
+      // Update teams if they are in the response
+      if (partido.rojoPlayers || partido.azulPlayers) {
+         setRojo(partido.rojoPlayers || []);
+         setAzul(partido.azulPlayers || []);
+      } else if (partido.matchTeams) {
+         const r = partido.matchTeams.find((t: any) => t.color === 'rojo');
+         const a = partido.matchTeams.find((t: any) => t.color === 'azul');
+         if (r) setRojo(r.players || []);
+         if (a) setAzul(a.players || []);
+      }
+
       // Update score if matched from server
       if (partido.marcadorLocal !== undefined && partido.marcadorVisitante !== undefined) {
         setScore({ local: partido.marcadorLocal, visitante: partido.marcadorVisitante });
@@ -80,9 +91,6 @@ export function useRankedMatch({
         }));
       }
 
-      // We no longer update start time from server here to keep the 
-      // Organizaciones timer as a purely local indicative timer for the buzzer.
-      
       if (partido.rankedMeta) {
         setMatchConfig({
           matchDuration: partido.rankedMeta.matchDuration || 1200,
@@ -338,20 +346,31 @@ export function useRankedMatch({
     markAsPresent?: (ids: string[]) => void,
     externalStartTime?: number
   ) => {
-    setMatchId(id);
-    setRojo(rojoIds);
-    setAzul(azulIds);
-    setScore(currentScore);
-    setSets(existingSets);
-    setStartTime(externalStartTime || null);
-    
-    const currentPlayers = [...rojoIds, ...azulIds];
-    syncMatchAttendance(id, currentPlayers);
-    if (currentPlayers.length > 0) setPjMarked(true);
+    setBusy(true);
+    try {
+      setMatchId(id);
+      setRojo(rojoIds);
+      setAzul(azulIds);
+      setScore(currentScore);
+      setSets(existingSets);
+      setStartTime(externalStartTime || null);
+      
+      const currentPlayers = [...rojoIds, ...azulIds];
+      syncMatchAttendance(id, currentPlayers);
+      if (currentPlayers.length > 0) setPjMarked(true);
 
-    // Ensure players are marked present when loading a match
-    if (markAsPresent) {
-      markAsPresent([...rojoIds, ...azulIds]);
+      // Ensure players are marked present when loading a match
+      if (markAsPresent) {
+        markAsPresent([...rojoIds, ...azulIds]);
+      }
+
+      // Update local storage immediately to prevent race conditions with useEffect
+      localStorage.setItem(persistenceKey, JSON.stringify({ 
+        matchId: id, rojo: rojoIds, azul: azulIds, score: currentScore, sets: existingSets, 
+        startTime: externalStartTime || null, matchConfig, pjMarked: true, isBasicMode 
+      }));
+    } finally {
+      setBusy(false);
     }
   };
 

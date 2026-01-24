@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { 
   getLeaderboard, 
   markMatchAsRanked, 
+  getRankedMatch as getLeaderboardMatch,
   listJugadores, 
   crearJugador,
   revertMatch, 
@@ -193,7 +194,7 @@ export default function CompetenciaRankedSection({
   const handleEditResult = async (m: any) => {
     if (loadingMatch) return;
     const matchId = m.id || m._id;
-    const isFinalizado = m.estado === 'finalizado';
+    const isFinalizado = m.estado === 'finalizado' || m.estado === 'final';
     
     const proceed = async () => {
       try {
@@ -202,13 +203,16 @@ export default function CompetenciaRankedSection({
           await revertMatch(matchId);
         }
         
-        // Buscamos los IDs de los jugadores de los equipos
-        const eqL = m.rojoPlayers || [];
-        const eqV = m.azulPlayers || [];
-        // El backend puede llamar al campo 'sets' o 'setDetalles'
+        // Fetch full match data to ensure we have all players and details
+        // sometimes the summary list doesn't include the full rosters
+        const { partido, sets: serverSets } = await getLeaderboardMatch(matchId);
+        
+        const eqL = partido.rojoPlayers || partido.matchTeams?.find((t: any) => t.color === 'rojo')?.players || [];
+        const eqV = partido.azulPlayers || partido.matchTeams?.find((t: any) => t.color === 'azul')?.players || [];
+
         let cumulativeTime = 0;
-        const setsData = (m.sets || []).map((s: any) => {
-           const durationMs = (s.duracionReal || 0) * 1000;
+        const setsData = (serverSets || []).map((s: any) => {
+           const durationMs = (s.lastSetDuration || 0) * 1000;
            cumulativeTime += durationMs;
            return {
              _id: s._id,
@@ -217,10 +221,13 @@ export default function CompetenciaRankedSection({
            };
         });
 
-        const externalStartTime = m.rankedMeta?.startTime ? new Date(m.rankedMeta.startTime).getTime() : null;
+        const externalStartTime = partido.rankedMeta?.startTime ? new Date(partido.rankedMeta.startTime).getTime() : null;
 
-        loadMatch(matchId, eqL, eqV, { local: m.marcadorLocal || 0, visitante: m.marcadorVisitante || 0 }, setsData, addManyPresentes, externalStartTime || undefined);
+        loadMatch(matchId, eqL, eqV, { local: partido.marcadorLocal || 0, visitante: partido.marcadorVisitante || 0 }, setsData, addManyPresentes, externalStartTime || undefined);
         setSuccess(isFinalizado ? 'Partido cargado para corrección' : 'Partido cargado para continuar');
+        
+        // Scroll to top to see the match dashboard
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       } catch (e: any) {
         setError(e.message || 'Error al cargar el partido');
       } finally {
