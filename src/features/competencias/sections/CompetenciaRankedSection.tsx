@@ -203,19 +203,33 @@ export default function CompetenciaRankedSection({
     const matchId = m.id || m._id;
     const isFinalizado = m.estado === 'finalizado' || m.estado === 'final';
     
+    // Immediate feedback: Scroll to top and show loading
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
     const proceed = async () => {
       try {
         setLoadingMatch(true);
+
+        // We can run the fetch and revert in parallel if it's finalized
+        // to save time, as fetch doesn't depend on the outcome of revert
+        const fetchPromise = getLeaderboardMatch(matchId);
+        
         if (isFinalizado) {
           await revertMatch(matchId);
         }
         
-        // Fetch full match data to ensure we have all players and details
-        // sometimes the summary list doesn't include the full rosters
-        const { partido, sets: serverSets } = await getLeaderboardMatch(matchId);
+        const { partido, sets: serverSets, teams } = await fetchPromise;
         
-        const eqL = partido.rojoPlayers || partido.matchTeams?.find((t: any) => t.color === 'rojo')?.players || [];
-        const eqV = partido.azulPlayers || partido.matchTeams?.find((t: any) => t.color === 'azul')?.players || [];
+        if (!partido) throw new Error('No se encontró el partido');
+
+        // Robust player extraction checking multiple possible locations
+        const eqL = partido.rojoPlayers || 
+                    teams?.find((t: any) => t.color === 'rojo')?.players || 
+                    partido.matchTeams?.find((t: any) => t.color === 'rojo')?.players || [];
+                    
+        const eqV = partido.azulPlayers || 
+                    teams?.find((t: any) => t.color === 'azul')?.players || 
+                    partido.matchTeams?.find((t: any) => t.color === 'azul')?.players || [];
 
         let cumulativeTime = 0;
         const setsData = (serverSets || []).map((s: any) => {
@@ -230,13 +244,21 @@ export default function CompetenciaRankedSection({
 
         const externalStartTime = partido.rankedMeta?.startTime ? new Date(partido.rankedMeta.startTime).getTime() : null;
 
-        loadMatch(matchId, eqL, eqV, { local: partido.marcadorLocal || 0, visitante: partido.marcadorVisitante || 0 }, setsData, addManyPresentes, externalStartTime || undefined);
-        setSuccess(isFinalizado ? 'Partido cargado para corrección' : 'Partido cargado para continuar');
-        
-        // Scroll to top to see the match dashboard
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        // Load into state
+        loadMatch(
+          matchId, 
+          eqL, 
+          eqV, 
+          { local: partido.marcadorLocal || 0, visitante: partido.marcadorVisitante || 0 }, 
+          setsData, 
+          addManyPresentes, 
+          externalStartTime || undefined
+        );
+
+        setSuccess(isFinalizado ? 'Partido revertido para edición' : 'Partido cargado');
       } catch (e: any) {
         setError(e.message || 'Error al cargar el partido');
+        console.error('Error in handleEditResult:', e);
       } finally {
         setLoadingMatch(false);
       }
