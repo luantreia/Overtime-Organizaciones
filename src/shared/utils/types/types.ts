@@ -150,6 +150,7 @@ export interface SetPartido {
   ganadorSet: string;
   marcadorLocal?: number;
   marcadorVisitante?: number;
+  duracionReal?: number;
 }
 
 export interface Partido {
@@ -182,6 +183,11 @@ export interface Partido {
   marcadorLocal?: number;
   marcadorVisitante?: number;
   sets?: SetPartido[];
+  isRanked?: boolean;
+  rojoPlayers?: string[];
+  azulPlayers?: string[];
+  modalidad?: string;
+  categoria?: string;
 }
 
 export interface JugadorPartido {
