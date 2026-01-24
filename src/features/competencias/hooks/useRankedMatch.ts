@@ -109,8 +109,7 @@ export function useRankedMatch({
     try {
       // Prioritize players with fewer PJ today
       const sortedPool = [...presentes].sort((a, b) => (playedCounts[a] || 0) - (playedCounts[b] || 0));
-      const picked = sortedPool.slice(0, 12); // Max 6 vs 6 or adjust as needed. Ranked usually is 6v6? 
-      // Actually the backend caps 9 per side (18 total).
+      const picked = sortedPool.slice(0, 18); // Max 9 vs 9 (Matches backend cap of 18 total)
       
       const r = await apiAutoAssign(matchId, picked, true);
       setRojo(r.rojoPlayers);
