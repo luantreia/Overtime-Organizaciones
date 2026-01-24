@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Button, Input, Select } from '../../../../shared/components/ui';
-import ConfirmModal from '../../../../shared/components/ConfirmModal/ConfirmModal';
 
 interface QuickAddPlayerModalProps {
   isOpen: boolean;

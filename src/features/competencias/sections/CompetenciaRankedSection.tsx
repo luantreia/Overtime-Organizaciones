@@ -134,7 +134,6 @@ export default function CompetenciaRankedSection({
     azul,
     setAzul,
     score,
-    setScore,
     busy,
     onCreateMatch,
     onAutoAssign,
