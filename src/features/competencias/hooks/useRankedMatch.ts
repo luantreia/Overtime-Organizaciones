@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { 
   createRankedMatch, 
   autoAssign as apiAutoAssign, 
@@ -34,14 +34,40 @@ export function useRankedMatch({
   const [rojo, setRojo] = useState<string[]>([]);
   const [azul, setAzul] = useState<string[]>([]);
   const [score, setScore] = useState({ local: 0, visitante: 0 });
+  const [startTime, setStartTime] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
 
-  const resetMatchState = () => {
+  const persistenceKey = useMemo(() => `rankedMatch:${competenciaId}`, [competenciaId]);
+
+  // Load from localStorage
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(persistenceKey);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        setMatchId(parsed.matchId || null);
+        setRojo(parsed.rojo || []);
+        setAzul(parsed.azul || []);
+        setScore(parsed.score || { local: 0, visitante: 0 });
+        setStartTime(parsed.startTime || null);
+      }
+    } catch { }
+  }, [persistenceKey]);
+
+  // Save to localStorage
+  useEffect(() => {
+    if (!competenciaId) return;
+    localStorage.setItem(persistenceKey, JSON.stringify({ matchId, rojo, azul, score, startTime }));
+  }, [matchId, rojo, azul, score, startTime, persistenceKey, competenciaId]);
+
+  const resetMatchState = useCallback(() => {
     setMatchId(null);
     setRojo([]);
     setAzul([]);
     setScore({ local: 0, visitante: 0 });
-  };
+    setStartTime(null);
+    localStorage.removeItem(persistenceKey);
+  }, [persistenceKey]);
 
   const onCreateMatch = async () => {
     if (!competenciaId || !modalidad || !categoria) {
@@ -60,6 +86,8 @@ export function useRankedMatch({
       setMatchId(r.partidoId);
       setRojo([]);
       setAzul([]);
+      setScore({ local: 0, visitante: 0 });
+      setStartTime(null);
       onSuccess?.('Partido ranked creado con éxito');
     } catch (e: any) {
       onError?.(e.message || 'Error creando partido');
@@ -68,14 +96,19 @@ export function useRankedMatch({
     }
   };
 
-  const onAutoAssign = async (selectedPlayers: string[]) => {
+  const onAutoAssign = async (presentes: string[], playedCounts: Record<string, number>) => {
     if (!matchId) return;
     setBusy(true);
     try {
-      const r = await apiAutoAssign(matchId, selectedPlayers, true);
+      // Prioritize players with fewer PJ today
+      const sortedPool = [...presentes].sort((a, b) => (playedCounts[a] || 0) - (playedCounts[b] || 0));
+      const picked = sortedPool.slice(0, 12); // Max 6 vs 6 or adjust as needed. Ranked usually is 6v6? 
+      // Actually the backend caps 9 per side (18 total).
+      
+      const r = await apiAutoAssign(matchId, picked, true);
       setRojo(r.rojoPlayers);
       setAzul(r.azulPlayers);
-      onSuccess?.('Equipos auto-asignados');
+      onSuccess?.('Equipos auto-asignados (Priorizando descanso)');
     } catch (e: any) {
       onError?.(e.message || 'Error auto-asignando');
     } finally {
@@ -90,6 +123,12 @@ export function useRankedMatch({
       await apiAssignTeams(matchId, rojo, azul);
       const playedNow = new Set<string>([...rojo, ...azul]);
       incrementPlayedCount(playedNow);
+      
+      // Start the timer when saving assignment
+      if (!startTime) {
+        setStartTime(Date.now());
+      }
+      
       onSuccess?.('Asignación de equipos guardada');
     } catch (e: any) {
       onError?.(e.message || 'Error guardando equipos');
@@ -102,10 +141,6 @@ export function useRankedMatch({
     if (!matchId) return;
     setBusy(true);
     try {
-      // Como respaldo, marcar PJ hoy si no se hizo al guardar
-      const playedNow = new Set<string>([...rojo, ...azul]);
-      incrementPlayedCount(playedNow);
-      
       await apiFinalizeMatch(matchId, score.local, score.visitante);
       onSuccess?.('Partido finalizado con éxito');
       resetMatchState();
@@ -135,6 +170,21 @@ export function useRankedMatch({
     resetMatchState();
   };
 
+  const loadMatch = async (id: string, rojoIds: string[], azulIds: string[], currentScore: { local: number; visitante: number }) => {
+    setMatchId(id);
+    setRojo(rojoIds);
+    setAzul(azulIds);
+    setScore(currentScore);
+    setStartTime(null); // Timer doesn't make sense for old matches
+  };
+
+  const adjustScore = (team: 'local' | 'visitante', delta: number) => {
+    setScore(prev => ({
+      ...prev,
+      [team]: Math.max(0, prev[team] + delta)
+    }));
+  };
+
   return {
     matchId,
     rojo,
@@ -150,6 +200,8 @@ export function useRankedMatch({
     onFinalizeMatch,
     onCancelMatch,
     abandonMatch,
-    setMatchId
+    adjustScore,
+    loadMatch,
+    startTime
   };
 }

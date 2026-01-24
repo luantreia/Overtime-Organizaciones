@@ -15,6 +15,8 @@ interface RankedAdminToolsProps {
   modalidad: string;
   categoria: string;
   selectedTemporada: string;
+  recentMatches: any[];
+  onEditResult: (m: any) => void;
 }
 
 export const RankedAdminTools: React.FC<RankedAdminToolsProps> = ({
@@ -30,12 +32,48 @@ export const RankedAdminTools: React.FC<RankedAdminToolsProps> = ({
   busy,
   modalidad,
   categoria,
-  selectedTemporada
+  selectedTemporada,
+  recentMatches,
+  onEditResult
 }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
     <div className="space-y-4">
+      <Card className="p-4 border-slate-100 shadow-sm bg-white">
+        <h3 className="mb-3 text-sm font-bold text-slate-700 flex items-center justify-between">
+          <span>Historial Reciente (Corrección Rápida)</span>
+          <span className="text-[10px] text-slate-400 font-normal uppercase">Últimos {recentMatches.length}</span>
+        </h3>
+        <div className="space-y-2">
+          {recentMatches.length === 0 ? (
+            <p className="text-xs text-slate-400 italic py-2 text-center">No hay partidos recientes para corregir</p>
+          ) : (
+            recentMatches.map((m) => (
+              <div key={m._id} className="flex items-center justify-between p-2 rounded-lg border border-slate-50 bg-slate-50/50 hover:bg-slate-50 transition-colors">
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-mono text-slate-400 uppercase">ID: {m._id.slice(-6)}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-bold text-red-600">{m.marcadorLocal}</span>
+                    <span className="text-xs text-slate-300">-</span>
+                    <span className="text-sm font-bold text-blue-600">{m.marcadorVisitante}</span>
+                  </div>
+                </div>
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  className="h-7 text-[10px] border-slate-200 bg-white"
+                  onClick={() => onEditResult(m)}
+                  disabled={busy}
+                >
+                  Corregir
+                </Button>
+              </div>
+            ))
+          )}
+        </div>
+      </Card>
+
       <button 
         onClick={() => setIsOpen(!isOpen)}
         className="flex w-full items-center justify-between rounded-lg border border-slate-200 bg-white p-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors"

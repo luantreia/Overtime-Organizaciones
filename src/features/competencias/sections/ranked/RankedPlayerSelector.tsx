@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '../../../../shared/components/ui';
+import { QuickAddPlayerModal } from './QuickAddPlayerModal';
 
 interface Player {
   _id: string;
@@ -23,6 +24,7 @@ interface RankedPlayerSelectorProps {
   nuevoJugadorId: string;
   setNuevoJugadorId: (id: string) => void;
   onAgregarNuevoJugador: () => void;
+  onQuickAddPlayer: (datos: { nombre: string; alias?: string; genero?: string }) => Promise<void>;
   onChooseForNext: () => void;
   onMarkAllPresent: () => void;
   onClearPresentes: () => void;
@@ -53,6 +55,7 @@ export const RankedPlayerSelector: React.FC<RankedPlayerSelectorProps> = ({
   nuevoJugadorId,
   setNuevoJugadorId,
   onAgregarNuevoJugador,
+  onQuickAddPlayer,
   onChooseForNext,
   onMarkAllPresent,
   onClearPresentes,
@@ -65,6 +68,7 @@ export const RankedPlayerSelector: React.FC<RankedPlayerSelectorProps> = ({
   onAddToAzul,
   matchActive
 }) => {
+  const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
   const filtered = players.filter(p => !filter || p.nombre.toLowerCase().includes(filter.toLowerCase()));
 
   return (
@@ -200,10 +204,22 @@ export const RankedPlayerSelector: React.FC<RankedPlayerSelectorProps> = ({
             placeholder="ID manual..." 
             className="flex-1 rounded-md border px-2 py-1 text-xs" 
           />
-          <Button size="sm" variant="outline" onClick={onAgregarNuevoJugador} disabled={busy || !nuevoJugadorId.trim()}>
-            + Competencia
+          <Button size="sm" variant="outline" className="h-7 text-[10px]" onClick={onAgregarNuevoJugador} disabled={busy || !nuevoJugadorId.trim()}>
+            + Comp.
+          </Button>
+          <Button size="sm" variant="primary" className="h-7 text-[10px]" onClick={() => setIsQuickAddOpen(true)} disabled={busy}>
+            + Nuevo
           </Button>
         </div>
+
+        <QuickAddPlayerModal 
+          isOpen={isQuickAddOpen} 
+          onClose={() => setIsQuickAddOpen(false)} 
+          onSuccess={async (datos) => {
+            await onQuickAddPlayer(datos);
+            setIsQuickAddOpen(false);
+          }}
+        />
 
         <div className="space-y-2 pt-2 border-t">
           <div className="flex items-center justify-between gap-2">

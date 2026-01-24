@@ -60,6 +60,13 @@ export async function listJugadores(limit = 50) {
   return authFetch<any[]>(`/api/jugadores?limit=${limit}`, { method: 'GET' });
 }
 
+export async function crearJugador(payload: { nombre: string; alias?: string; genero?: string }) {
+  return authFetch<{ success: boolean; data: any }>(`/api/jugadores`, {
+    method: 'POST',
+    body: payload,
+  });
+}
+
 export async function markMatchAsRanked(partidoId: string) {
   return authFetch<{ ok: boolean; rojoPlayers: string[]; azulPlayers: string[] }>(`${BASE}/match/${partidoId}/mark-ranked`, {
     method: 'POST',

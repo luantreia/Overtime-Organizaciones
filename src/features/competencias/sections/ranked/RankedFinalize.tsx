@@ -1,54 +1,92 @@
 import React from 'react';
 import { Button, Card } from '../../../../shared/components/ui';
+import { MatchTimer } from './MatchTimer';
 
 interface RankedFinalizeProps {
   score: { local: number; visitante: number };
-  setScore: (s: { local: number; visitante: number }) => void;
+  adjustScore: (team: 'local' | 'visitante', delta: number) => void;
   onFinalize: () => void;
   busy: boolean;
   matchActive: boolean;
   board: any[];
+  startTime: number | null;
 }
 
 export const RankedFinalize: React.FC<RankedFinalizeProps> = ({
   score,
-  setScore,
+  adjustScore,
   onFinalize,
   busy,
   matchActive,
-  board
+  board,
+  startTime
 }) => {
   return (
     <div className="space-y-4">
       <Card className="p-4 border-emerald-100 bg-emerald-50/20">
-        <h2 className="mb-3 text-sm font-bold text-emerald-800">Finalizar Match</h2>
-        <div className="flex items-center gap-4 justify-center">
-          <div className="text-center">
-            <span className="block text-[10px] text-red-600 font-bold mb-1">ROJO</span>
-            <input 
-              type="number" 
-              value={score.local} 
-              onChange={(e) => setScore({ ...score, local: +e.target.value })} 
-              className="w-16 h-12 text-2xl font-bold text-center rounded-lg border border-slate-200 outline-none focus:ring-2 focus:ring-emerald-500" 
-            />
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm font-bold text-emerald-800">Marcador en Vivo</h2>
+          {matchActive && <MatchTimer startTime={startTime} />}
+        </div>
+        
+        <div className="flex items-center gap-2 justify-center py-4">
+          {/* Rojo Team */}
+          <div className="flex flex-col items-center gap-2">
+            <span className="text-[10px] font-bold text-red-600">ROJO</span>
+            <div className="flex items-center gap-2">
+              <button 
+                onClick={() => adjustScore('local', -1)} 
+                className="w-8 h-8 flex items-center justify-center rounded-full bg-white border border-slate-200 text-slate-500 hover:bg-slate-50 active:scale-95"
+                disabled={!matchActive}
+              >
+                -
+              </button>
+              <div className="w-16 h-16 flex items-center justify-center text-4xl font-black rounded-xl bg-white border shadow-sm text-slate-900">
+                {score.local}
+              </div>
+              <button 
+                onClick={() => adjustScore('local', 1)} 
+                className="w-10 h-10 flex items-center justify-center rounded-full bg-red-600 text-white shadow-md hover:bg-red-700 active:scale-90 transition-all font-bold text-xl"
+                disabled={!matchActive}
+              >
+                +
+              </button>
+            </div>
           </div>
-          <span className="text-2xl font-bold text-slate-400 mt-4">-</span>
-          <div className="text-center">
-            <span className="block text-[10px] text-blue-600 font-bold mb-1">AZUL</span>
-            <input 
-              type="number" 
-              value={score.visitante} 
-              onChange={(e) => setScore({ ...score, visitante: +e.target.value })} 
-              className="w-16 h-12 text-2xl font-bold text-center rounded-lg border border-slate-200 outline-none focus:ring-2 focus:ring-emerald-500" 
-            />
+
+          <div className="mx-2 text-2xl font-bold text-slate-300">vs</div>
+
+          {/* Azul Team */}
+          <div className="flex flex-col items-center gap-2">
+            <span className="text-[10px] font-bold text-blue-600">AZUL</span>
+            <div className="flex items-center gap-2">
+              <button 
+                onClick={() => adjustScore('visitante', 1)} 
+                className="w-10 h-10 flex items-center justify-center rounded-full bg-blue-600 text-white shadow-md hover:bg-blue-700 active:scale-90 transition-all font-bold text-xl"
+                disabled={!matchActive}
+              >
+                +
+              </button>
+              <div className="w-16 h-16 flex items-center justify-center text-4xl font-black rounded-xl bg-white border shadow-sm text-slate-900">
+                {score.visitante}
+              </div>
+              <button 
+                onClick={() => adjustScore('visitante', -1)} 
+                className="w-8 h-8 flex items-center justify-center rounded-full bg-white border border-slate-200 text-slate-500 hover:bg-slate-50 active:scale-95"
+                disabled={!matchActive}
+              >
+                -
+              </button>
+            </div>
           </div>
         </div>
+
         <Button 
-          className="mt-4 w-full bg-emerald-600 hover:bg-emerald-700 text-white"
+          className="mt-6 w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 font-bold uppercase tracking-wide shadow-lg shadow-emerald-200"
           onClick={onFinalize} 
           disabled={busy || !matchActive}
         >
-          Aplicar y Subir Puntos
+          Finalizar Match y Subir Puntos
         </Button>
       </Card>
 

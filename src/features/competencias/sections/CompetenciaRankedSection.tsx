@@ -3,6 +3,7 @@ import {
   getLeaderboard, 
   markMatchAsRanked, 
   listJugadores, 
+  crearJugador,
   revertMatch, 
   resetAllRankings, 
   resetScopeRankings, 
@@ -13,6 +14,7 @@ import {
   listJugadoresCompetencia, 
   eliminarJugadorCompetencia 
 } from '../../jugadores/services/jugadorCompetenciaService';
+import { getPartidosPorCompetencia } from '../../partidos/services/partidoService';
 import { listTemporadasByCompetencia, type BackendTemporada } from '../services';
 
 // Hooks
@@ -52,6 +54,7 @@ export default function CompetenciaRankedSection({
   const [nuevoJugadorId, setNuevoJugadorId] = useState<string>('');
   const [showAll, setShowAll] = useState<boolean>(false);
   const [priorizarNoJugados, setPriorizarNoJugados] = useState<boolean>(true);
+  const [recentMatches, setRecentMatches] = useState<any[]>([]);
 
   // Temporadas
   const [temporadas, setTemporadas] = useState<BackendTemporada[]>([]);
@@ -108,6 +111,22 @@ export default function CompetenciaRankedSection({
     } catch {}
   }, [modalidad, categoria, competenciaId, selectedTemporada]);
 
+  const fetchRecentMatches = useCallback(async () => {
+    try {
+      const all = await getPartidosPorCompetencia(competenciaId);
+      const ranked = all
+        .filter((m: any) => 
+          m.isRanked && 
+          m.estado === 'finalizado' && 
+          m.modalidad === modalidad && 
+          m.categoria === categoria
+        )
+        .sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime())
+        .slice(0, 5);
+      setRecentMatches(ranked);
+    } catch {}
+  }, [competenciaId, modalidad, categoria]);
+
   const {
     matchId,
     rojo,
@@ -122,7 +141,10 @@ export default function CompetenciaRankedSection({
     onSaveAssignment,
     onFinalizeMatch,
     onCancelMatch,
-    abandonMatch
+    abandonMatch,
+    adjustScore,
+    loadMatch,
+    startTime
   } = useRankedMatch({
     competenciaId,
     modalidad,
@@ -131,8 +153,33 @@ export default function CompetenciaRankedSection({
     incrementPlayedCount,
     onSuccess: (msg) => { setSuccess(msg); setTimeout(() => setSuccess(null), 3000); },
     onError: (err) => { setError(err); setTimeout(() => setError(null), 5000); },
-    onFinalized: fetchLeaderboard
+    onFinalized: () => {
+      fetchLeaderboard();
+      fetchRecentMatches();
+    }
   });
+
+  const handleEditResult = async (m: any) => {
+    showConfirm(
+      'Corregir Resultado',
+      `Se revertirán los puntos actuales del partido ${m._id.slice(-6)} para editarlos. ¿Continuar?`,
+      async () => {
+        try {
+          await revertMatch(m._id);
+          
+          // Buscamos los IDs de los jugadores de los equipos
+          // El backend de listPartidos debería traerlos, o los buscamos por matchId
+          const eqL = m.rojoPlayers || [];
+          const eqV = m.azulPlayers || [];
+
+          loadMatch(m._id, eqL, eqV, { local: m.marcadorLocal || 0, visitante: m.marcadorVisitante || 0 });
+          setSuccess('Partido cargado para corrección');
+        } catch (e: any) {
+          setError(e.message || 'Error al cargar para edición');
+        }
+      }
+    );
+  };
 
   // Initial Data Fetching
   useEffect(() => {
@@ -181,7 +228,8 @@ export default function CompetenciaRankedSection({
 
   useEffect(() => {
     fetchLeaderboard();
-  }, [fetchLeaderboard]);
+    fetchRecentMatches();
+  }, [fetchLeaderboard, fetchRecentMatches]);
 
   const toggleSelect = (id: string) => {
     setSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
@@ -299,6 +347,34 @@ export default function CompetenciaRankedSection({
     }
   };
 
+  const onQuickAddPlayer = async (datos: { nombre: string; alias?: string; genero?: string }) => {
+    try {
+      const res = await crearJugador(datos);
+      if (!res.success) throw new Error('No se pudo crear el jugador');
+      
+      const newPlayer = res.data;
+      const playerId = newPlayer._id;
+
+      // 2. Vincular a competencia
+      await crearJugadorCompetencia({ jugador: playerId, competencia: competenciaId });
+
+      // 3. Actualizar listas locales
+      const nombre = [newPlayer.nombre, newPlayer.apellido].filter(Boolean).join(' ') || newPlayer.alias || newPlayer.nombre;
+      const mappedNew = { _id: playerId, nombre };
+      
+      setAllPlayers(prev => [mappedNew, ...prev]);
+      setCompPlayers(prev => [{ ...mappedNew, jcId: 'temp-' + Date.now() }, ...prev]); // Actualizamos la lista de competencia
+
+      // 4. Marcarlo como presente automáticamente
+      togglePresente(playerId, true);
+      
+      setSuccess(`Jugador ${nombre} creado y agregado`);
+    } catch (e: any) {
+      setError(e.message || 'Error en Quick Add');
+      throw e;
+    }
+  };
+
   return (
     <div className="space-y-6 pb-20">
       {/* Notifications */}
@@ -382,14 +458,18 @@ export default function CompetenciaRankedSection({
               nuevoJugadorId={nuevoJugadorId}
               setNuevoJugadorId={setNuevoJugadorId}
               onAgregarNuevoJugador={() => onAgregarJugadorCompetencia()}
+              onQuickAddPlayer={onQuickAddPlayer}
               onChooseForNext={onChooseForNextMatch}
-              onMarkAllPresent={() => markAllPresent(players.map(p => p._id))}
+              onMarkAllPresent={() => markAllPresent(compPlayers.map(p => p._id))}
               onClearPresentes={clearPresentes}
-              onResetPJHoy={resetPlayedCounts}
+              onResetPJHoy={() => showConfirm('Reset PJ', '¿Reiniciar contadores de partidos jugados hoy?', resetPlayedCounts)}
               priorizarNoJugados={priorizarNoJugados}
               setPriorizarNoJugados={setPriorizarNoJugados}
               busy={busy}
-              onAutoAssign={() => onAutoAssign(selected)}
+              onAutoAssign={() => {
+                const pool = selected.length > 0 ? selected : presentes;
+                onAutoAssign(pool, playedCounts);
+              }}
               onAddToRojo={() => setRojo(prev => [...new Set([...prev, ...selected])])}
               onAddToAzul={() => setAzul(prev => [...new Set([...prev, ...selected])])}
               matchActive={!!matchId}
@@ -412,11 +492,12 @@ export default function CompetenciaRankedSection({
         <div className="lg:col-span-4">
           <RankedFinalize 
             score={score}
-            setScore={setScore}
+            adjustScore={adjustScore}
             onFinalize={() => showConfirm('¿Finalizar Partido?', 'Los puntos se aplicarán permanentemente.', onFinalizeMatch)}
             busy={busy}
             matchActive={!!matchId}
             board={board}
+            startTime={startTime}
           />
         </div>
       </div>
@@ -442,6 +523,8 @@ export default function CompetenciaRankedSection({
           modalidad={modalidad}
           categoria={categoria}
           selectedTemporada={selectedTemporada}
+          recentMatches={recentMatches}
+          onEditResult={handleEditResult}
         />
       </div>
 
