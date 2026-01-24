@@ -7,6 +7,8 @@ import {
   finalizeMatch as apiFinalizeMatch, 
   startMatchTimer as apiStartMatchTimer,
   updateMatchConfig as apiUpdateMatchConfig,
+  getRankedMatch as apiGetRankedMatch,
+  updateScore as apiUpdateScore,
   createSet as apiCreateSet,
   finishSet as apiFinishSet,
   deleteSet as apiDeleteSet,
@@ -54,6 +56,59 @@ export function useRankedMatch({
   const [busy, setBusy] = useState(false);
 
   const persistenceKey = useMemo(() => `rankedMatch:${competenciaId}`, [competenciaId]);
+
+  const syncWithServer = useCallback(async (id: string) => {
+    try {
+      const { partido, sets: serverSets } = await apiGetRankedMatch(id);
+      
+      // Update score if matched from server
+      if (partido.marcadorLocal !== undefined && partido.marcadorVisitante !== undefined) {
+        setScore({ local: partido.marcadorLocal, visitante: partido.marcadorVisitante });
+      }
+
+      // Update sets (mapping server structure to hook structure)
+      if (serverSets) {
+        let cumulative = 0;
+        setSets(serverSets.map((s: any) => {
+          cumulative += (s.lastSetDuration || 0) * 1000;
+          return {
+            _id: s._id,
+            winner: s.ganadorSet,
+            time: cumulative
+          };
+        }));
+      }
+
+      // Update start time
+      if (partido.rankedMeta?.startTime) {
+        setStartTime(new Date(partido.rankedMeta.startTime).getTime());
+      }
+      
+      if (partido.rankedMeta) {
+        setMatchConfig({
+          matchDuration: partido.rankedMeta.matchDuration || 1200,
+          setDuration: partido.rankedMeta.setDuration || 180,
+          suddenDeathLimit: partido.rankedMeta.suddenDeathLimit || 180
+        });
+      }
+    } catch (e) {
+      console.error('Error in syncWithServer:', e);
+    }
+  }, []);
+
+  // Polling for Interoperability
+  useEffect(() => {
+    if (!matchId) return;
+
+    const interval = setInterval(() => {
+      // Only sync if not busy with an action
+      if (!busy) {
+        syncWithServer(matchId);
+      }
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [matchId, busy, syncWithServer]);
 
   // Load from localStorage
   useEffect(() => {
@@ -295,11 +350,29 @@ export function useRankedMatch({
     }
   };
 
-  const adjustScore = (team: 'local' | 'visitante', delta: number) => {
-    setScore(prev => ({
-      ...prev,
-      [team]: Math.max(0, prev[team] + delta)
-    }));
+  const adjustScore = async (team: 'local' | 'visitante', delta: number) => {
+    if (!matchId) {
+      setScore(prev => ({
+        ...prev,
+        [team]: Math.max(0, prev[team] + delta)
+      }));
+      return;
+    }
+
+    setBusy(true);
+    try {
+      const newScore = { ...score };
+      newScore[team] = Math.max(0, newScore[team] + delta);
+      
+      const res = await apiUpdateScore(matchId, newScore.local, newScore.visitante);
+      if (res.ok) {
+        setScore(newScore);
+      }
+    } catch (e) {
+      console.error('Error updating score:', e);
+    } finally {
+      setBusy(false);
+    }
   };
 
   const addSet = async (winner: 'local' | 'visitante') => {
@@ -312,7 +385,17 @@ export function useRankedMatch({
     try {
       // 1. Create set in DB
       const nextSetNum = sets.length + 1;
-      const newSetDoc = await apiCreateSet(matchId, nextSetNum);
+      let newSetDoc: any;
+      try {
+        newSetDoc = await apiCreateSet(matchId, nextSetNum);
+      } catch (e: any) {
+        if (e.message?.includes('ya cuenta con el set')) {
+          // If already exists, sync and abort local push
+          await syncWithServer(matchId);
+          return;
+        }
+        throw e;
+      }
       
       // 2. Finish it immediately
       await apiFinishSet(newSetDoc._id, winner, Math.floor(currentSetDuration / 1000));
@@ -322,10 +405,16 @@ export function useRankedMatch({
         ...prev,
         [winner]: prev[winner] + 1
       }));
+      
+      // Optional: Sync again to be sure
+      await syncWithServer(matchId);
     } catch (e: any) {
       console.error('Error adding set:', e);
-      // Recovery logic similar to ControlPage if needed, but here we usually show error
-      onError?.(e.message || 'Error al guardar set en servidor');
+      if (e.message?.includes('ya cuenta con el set')) {
+        await syncWithServer(matchId);
+      } else {
+        onError?.(e.message || 'Error al guardar set en servidor');
+      }
     } finally {
       setBusy(false);
     }

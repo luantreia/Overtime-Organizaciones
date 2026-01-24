@@ -48,7 +48,14 @@ export async function finalizeMatch(partidoId: string, marcadorLocal: number, ma
 }
 
 export async function getRankedMatch(partidoId: string) {
-  return authFetch<{ ok: boolean; partido: any; teams: any[] }>(`${BASE}/match/${partidoId}`);
+  return authFetch<{ ok: boolean; partido: any; teams: any[]; sets: any[] }>(`${BASE}/match/${partidoId}`);
+}
+
+export async function updateScore(partidoId: string, marcadorLocal: number, marcadorVisitante: number) {
+  return authFetch<{ ok: boolean }>(`${BASE}/match/${partidoId}/score`, {
+    method: 'PATCH',
+    body: { marcadorLocal, marcadorVisitante },
+  });
 }
 
 export async function createSet(partidoId: string, numeroSet: number) {
