@@ -50,6 +50,7 @@ export default function CompetenciaRankedSection({
   const [board, setBoard] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [loadingMatch, setLoadingMatch] = useState<boolean>(false);
 
   // Auto-dismiss notifications
   useEffect(() => {
@@ -108,6 +109,7 @@ export default function CompetenciaRankedSection({
   const { 
     presentes, 
     togglePresente, 
+    addManyPresentes,
     playedCounts, 
     syncMatchAttendance,
     removeMatchAttendance,
@@ -188,6 +190,7 @@ export default function CompetenciaRankedSection({
     
     const proceed = async () => {
       try {
+        setLoadingMatch(true);
         if (isFinalizado) {
           await revertMatch(matchId);
         }
@@ -201,14 +204,12 @@ export default function CompetenciaRankedSection({
            time: s.duracionReal ? s.duracionReal * 1000 : 0
         }));
 
-        const markPresentBatch = (ids: string[]) => {
-          ids.forEach(id => togglePresente(id, true));
-        };
-
-        loadMatch(matchId, eqL, eqV, { local: m.marcadorLocal || 0, visitante: m.marcadorVisitante || 0 }, setsData, markPresentBatch);
+        loadMatch(matchId, eqL, eqV, { local: m.marcadorLocal || 0, visitante: m.marcadorVisitante || 0 }, setsData, addManyPresentes);
         setSuccess(isFinalizado ? 'Partido cargado para corrección' : 'Partido cargado para continuar');
       } catch (e: any) {
         setError(e.message || 'Error al cargar el partido');
+      } finally {
+        setLoadingMatch(false);
       }
     };
 
@@ -419,7 +420,28 @@ export default function CompetenciaRankedSection({
   };
 
   return (
-    <div className="space-y-6 pb-20">
+    <div className="space-y-6 pb-20 relative">
+      {/* Loading Match Overlay */}
+      {loadingMatch && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-900/40 backdrop-blur-[2px]">
+          <div className="bg-white p-6 rounded-2xl shadow-2xl border border-slate-100 flex flex-col items-center gap-4 max-w-xs text-center animate-in zoom-in duration-200">
+            <div className="relative">
+              <div className="w-12 h-12 border-4 border-brand-100 border-t-brand-600 rounded-full animate-spin" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-brand-600" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
+                  <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd" />
+                </svg>
+              </div>
+            </div>
+            <div>
+              <p className="font-black text-slate-800 uppercase tracking-tight">Procesando Partido</p>
+              <p className="text-[11px] text-slate-500 font-medium">Revirtiendo puntos y cargando rosters... Esto puede tardar unos segundos.</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Notifications */}
       {error && (
         <div 
@@ -621,7 +643,7 @@ export default function CompetenciaRankedSection({
               }
             );
           }}
-          busy={busy}
+          busy={busy || loadingMatch}
           modalidad={modalidad}
           categoria={categoria}
           selectedTemporada={selectedTemporada}

@@ -55,6 +55,10 @@ export function useAttendance(competenciaId: string) {
     );
   }, []);
 
+  const addManyPresentes = useCallback((ids: string[]) => {
+    setPresentes((prev) => [...new Set([...prev, ...ids])]);
+  }, []);
+
   const syncMatchAttendance = useCallback((matchId: string, playerIds: string[]) => {
     if (!matchId) return;
     setMatchParticipations((prev) => ({
@@ -80,6 +84,7 @@ export function useAttendance(competenciaId: string) {
     presentes,
     setPresentes,
     togglePresente,
+    addManyPresentes,
     playedCounts,
     syncMatchAttendance,
     removeMatchAttendance,
