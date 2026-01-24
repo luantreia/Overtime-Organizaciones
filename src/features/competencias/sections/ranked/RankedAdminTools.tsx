@@ -11,6 +11,7 @@ interface RankedAdminToolsProps {
   onResetScopeRankings: () => void;
   onResetAllRankings: () => void;
   onRecalculateGlobalRankings: () => void;
+  onSyncWins: () => void;
   busy: boolean;
   modalidad: string;
   categoria: string;
@@ -29,6 +30,7 @@ export const RankedAdminTools: React.FC<RankedAdminToolsProps> = ({
   onResetScopeRankings,
   onResetAllRankings,
   onRecalculateGlobalRankings,
+  onSyncWins,
   busy,
   modalidad,
   categoria,
@@ -166,6 +168,15 @@ export const RankedAdminTools: React.FC<RankedAdminToolsProps> = ({
                   disabled={busy}
                 >
                   Regenerar ELO Global
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  className="text-brand-700 border-brand-500 bg-brand-50 hover:bg-brand-100"
+                  onClick={onSyncWins} 
+                  disabled={busy}
+                >
+                  Sincronizar Winrates
                 </Button>
               </div>
             </div>

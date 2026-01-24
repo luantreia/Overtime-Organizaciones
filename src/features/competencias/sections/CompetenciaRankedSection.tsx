@@ -7,7 +7,8 @@ import {
   revertMatch, 
   resetAllRankings, 
   resetScopeRankings, 
-  recalculateGlobalRankings 
+  recalculateGlobalRankings,
+  syncAllWins
 } from '../../ranked/services/rankedService';
 import { 
   crearJugadorCompetencia, 
@@ -588,6 +589,13 @@ export default function CompetenciaRankedSection({
              try {
                await recalculateGlobalRankings();
                setSuccess('ELO Global recalculado');
+             } catch(e: any) { setError(e.message); }
+          }}
+          onSyncWins={async () => {
+             try {
+               const res = await syncAllWins();
+               setSuccess(`Winrates sincronizados (${res.updatedCount} jugadores)`);
+               fetchLeaderboard();
              } catch(e: any) { setError(e.message); }
           }}
           busy={busy}

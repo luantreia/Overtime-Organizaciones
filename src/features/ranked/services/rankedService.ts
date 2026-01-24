@@ -103,6 +103,12 @@ export async function recalculateGlobalRankings() {
   });
 }
 
+export async function syncAllWins() {
+  return authFetch<{ ok: boolean; updatedCount: number }>(`${BASE}/dev/sync-all-wins`, {
+    method: 'POST',
+  });
+}
+
 export async function getPlayerRatingDetail(playerId: string, params: { modalidad: string; categoria: string; competition?: string; season?: string }) {
   const sp = new URLSearchParams({
     modalidad: params.modalidad,
