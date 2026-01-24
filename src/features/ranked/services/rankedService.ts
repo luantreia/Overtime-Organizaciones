@@ -26,10 +26,10 @@ export async function assignTeams(partidoId: string, rojoPlayers: string[], azul
   });
 }
 
-export async function finalizeMatch(partidoId: string, marcadorLocal: number, marcadorVisitante: number, sets?: any[], creadoPor?: string) {
+export async function finalizeMatch(partidoId: string, marcadorLocal: number, marcadorVisitante: number, sets?: any[], afkPlayers?: string[], creadoPor?: string) {
   return authFetch<{ ok: boolean; rankedMeta?: any; ratingDeltas?: any[] }>(`${BASE}/match/${partidoId}/finalize`, {
     method: 'POST',
-    body: { marcadorLocal, marcadorVisitante, sets, creadoPor },
+    body: { marcadorLocal, marcadorVisitante, sets, afkPlayers, creadoPor },
   });
 }
 

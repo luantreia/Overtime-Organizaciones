@@ -9,7 +9,7 @@ interface RankedFinalizeProps {
   addSet: (winner: 'local' | 'visitante') => void;
   removeLastSet: () => void;
   adjustScore: (team: 'local' | 'visitante', delta: number) => void;
-  onFinalize: () => void;
+  onFinalize: (afkIds?: string[]) => void;
   busy: boolean;
   matchActive: boolean;
   board: any[];
@@ -21,6 +21,9 @@ interface RankedFinalizeProps {
   modalidad: string;
   categoria: string;
   seasonId?: string;
+  rojoIds?: string[];
+  azulIds?: string[];
+  nameById?: (id: string) => string;
 }
 
 export const RankedFinalize: React.FC<RankedFinalizeProps> = ({
@@ -40,9 +43,17 @@ export const RankedFinalize: React.FC<RankedFinalizeProps> = ({
   competenciaId,
   modalidad,
   categoria,
-  seasonId
+  seasonId,
+  rojoIds = [],
+  azulIds = [],
+  nameById = (id) => id
 }) => {
   const [selectedPlayer, setSelectedPlayer] = useState<{ id: string; name: string; competenciaId?: string; temporadaId?: string } | null>(null);
+  const [afkPlayers, setAfkPlayers] = useState<string[]>([]);
+
+  const toggleAFK = (id: string) => {
+    setAfkPlayers(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  };
 
   const formatTime = (ms: number) => {
     const totalSeconds = Math.floor(ms / 1000);
@@ -141,9 +152,33 @@ export const RankedFinalize: React.FC<RankedFinalizeProps> = ({
           </div>
         </div>
 
+        {matchActive && (rojoIds.length > 0 || azulIds.length > 0) && (
+          <div className="mt-4 p-3 bg-white/40 rounded-lg border border-slate-100">
+            <h3 className="text-[10px] font-bold text-slate-500 uppercase mb-2">Reportar AFK / Abandono (Doble Penalización)</h3>
+            <div className="flex flex-wrap gap-1.5">
+              {[...rojoIds, ...azulIds].map(id => {
+                const isAFK = afkPlayers.includes(id);
+                return (
+                  <button
+                    key={id}
+                    onClick={() => toggleAFK(id)}
+                    className={`px-2 py-1 rounded-md text-[9px] font-bold border transition-all ${
+                      isAFK 
+                        ? 'bg-red-500 border-red-600 text-white shadow-sm' 
+                        : 'bg-white border-slate-200 text-slate-500 hover:border-red-200 hover:text-red-500'
+                    }`}
+                  >
+                    {nameById(id).split(' ')[0]}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         <Button 
           className="mt-6 w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 font-bold uppercase tracking-wide shadow-lg shadow-emerald-200"
-          onClick={onFinalize} 
+          onClick={() => onFinalize(afkPlayers)} 
           disabled={busy || !matchActive}
         >
           Finalizar Match y Subir Puntos

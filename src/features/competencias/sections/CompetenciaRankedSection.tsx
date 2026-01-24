@@ -558,7 +558,7 @@ export default function CompetenciaRankedSection({
             addSet={addSet}
             removeLastSet={removeLastSet}
             adjustScore={adjustScore}
-            onFinalize={() => showConfirm('¿Finalizar Partido?', 'Los puntos se aplicarán permanentemente.', onFinalizeMatch)}
+            onFinalize={(afkIds) => showConfirm('¿Finalizar Partido?', 'Los puntos se aplicarán permanentemente.', () => onFinalizeMatch(afkIds))}
             busy={busy}
             matchActive={!!matchId}
             board={board}
@@ -570,6 +570,9 @@ export default function CompetenciaRankedSection({
             modalidad={modalidad as string}
             categoria={categoria as string}
             seasonId={selectedTemporada}
+            rojoIds={rojo}
+            azulIds={azul}
+            nameById={nameById}
           />
         </div>
       </div>

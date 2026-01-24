@@ -144,11 +144,11 @@ export function useRankedMatch({
     }
   };
 
-  const onFinalizeMatch = async () => {
+  const onFinalizeMatch = async (afkIds?: string[]) => {
     if (!matchId) return;
     setBusy(true);
     try {
-      await apiFinalizeMatch(matchId, score.local, score.visitante, sets, user?.id || 'org-ui');
+      await apiFinalizeMatch(matchId, score.local, score.visitante, sets, afkIds, user?.id || 'org-ui');
       onSuccess?.('Partido finalizado con éxito');
       resetMatchState();
       onFinalized?.();
