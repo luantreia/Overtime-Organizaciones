@@ -79,24 +79,32 @@ export const RankedPlayerSelector: React.FC<RankedPlayerSelectorProps> = ({
   return (
     <div className="rounded-lg border border-slate-200 bg-white p-3 sm:p-4">
       <div className="mb-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-        <div className="flex items-center justify-between sm:justify-start gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <h2 className="text-sm font-semibold">Jugadores</h2>
           <div className="flex rounded border text-[10px] overflow-hidden">
             <button 
               type="button" 
-              className={`px-2 py-1 ${!showAll ? 'bg-slate-200' : 'bg-white'}`} 
+              className={`px-2 py-1 ${!showAll ? 'bg-slate-200 font-bold' : 'bg-white'}`} 
               onClick={() => setShowAll(false)}
             >
               Comp.
             </button>
             <button 
               type="button" 
-              className={`px-2 py-1 ${showAll ? 'bg-slate-200' : 'bg-white'}`} 
+              className={`px-2 py-1 ${showAll ? 'bg-slate-200 font-bold' : 'bg-white'}`} 
               onClick={() => setShowAll(true)}
             >
               Todos
             </button>
           </div>
+          <button 
+            type="button" 
+            onClick={() => setIsQuickAddOpen(true)}
+            disabled={busy}
+            className="rounded bg-brand-600 px-1.5 py-1 text-[10px] font-bold text-white hover:bg-brand-700 transition-colors disabled:opacity-50"
+          >
+            + NUEVO
+          </button>
         </div>
         <input 
           value={filter} 
@@ -239,18 +247,6 @@ export const RankedPlayerSelector: React.FC<RankedPlayerSelectorProps> = ({
               Añadir a Azul
             </Button>
           </div>
-        </div>
-
-        <div className="pt-2 border-t">
-          <Button 
-            size="sm" 
-            variant="primary" 
-            className="w-full h-8 text-[10px] font-bold uppercase tracking-wider" 
-            onClick={() => setIsQuickAddOpen(true)} 
-            disabled={busy}
-          >
-            + Crear Nuevo Jugador
-          </Button>
         </div>
 
         <QuickAddPlayerModal 
