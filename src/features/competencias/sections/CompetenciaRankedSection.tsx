@@ -134,6 +134,9 @@ export default function CompetenciaRankedSection({
     azul,
     setAzul,
     score,
+    sets,
+    addSet,
+    removeLastSet,
     busy,
     onCreateMatch,
     onAutoAssign,
@@ -491,6 +494,9 @@ export default function CompetenciaRankedSection({
         <div className="lg:col-span-4">
           <RankedFinalize 
             score={score}
+            sets={sets}
+            addSet={addSet}
+            removeLastSet={removeLastSet}
             adjustScore={adjustScore}
             onFinalize={() => showConfirm('¿Finalizar Partido?', 'Los puntos se aplicarán permanentemente.', onFinalizeMatch)}
             busy={busy}

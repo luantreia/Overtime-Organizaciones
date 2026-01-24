@@ -34,6 +34,7 @@ export function useRankedMatch({
   const [rojo, setRojo] = useState<string[]>([]);
   const [azul, setAzul] = useState<string[]>([]);
   const [score, setScore] = useState({ local: 0, visitante: 0 });
+  const [sets, setSets] = useState<{ winner: 'local' | 'visitante'; time: number }[]>([]);
   const [startTime, setStartTime] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -49,6 +50,7 @@ export function useRankedMatch({
         setRojo(parsed.rojo || []);
         setAzul(parsed.azul || []);
         setScore(parsed.score || { local: 0, visitante: 0 });
+        setSets(parsed.sets || []);
         setStartTime(parsed.startTime || null);
       }
     } catch { }
@@ -57,14 +59,15 @@ export function useRankedMatch({
   // Save to localStorage
   useEffect(() => {
     if (!competenciaId) return;
-    localStorage.setItem(persistenceKey, JSON.stringify({ matchId, rojo, azul, score, startTime }));
-  }, [matchId, rojo, azul, score, startTime, persistenceKey, competenciaId]);
+    localStorage.setItem(persistenceKey, JSON.stringify({ matchId, rojo, azul, score, sets, startTime }));
+  }, [matchId, rojo, azul, score, sets, startTime, persistenceKey, competenciaId]);
 
   const resetMatchState = useCallback(() => {
     setMatchId(null);
     setRojo([]);
     setAzul([]);
     setScore({ local: 0, visitante: 0 });
+    setSets([]);
     setStartTime(null);
     localStorage.removeItem(persistenceKey);
   }, [persistenceKey]);
@@ -185,6 +188,27 @@ export function useRankedMatch({
     }));
   };
 
+  const addSet = (winner: 'local' | 'visitante') => {
+    const elapsed = startTime ? Date.now() - startTime : 0;
+    setSets(prev => [...prev, { winner, time: elapsed }]);
+    setScore(prev => ({
+      ...prev,
+      [winner]: prev[winner] + 1
+    }));
+  };
+
+  const removeLastSet = () => {
+    setSets(prev => {
+      if (prev.length === 0) return prev;
+      const last = prev[prev.length - 1];
+      setScore(s => ({
+        ...s,
+        [last.winner]: Math.max(0, s[last.winner] - 1)
+      }));
+      return prev.slice(0, -1);
+    });
+  };
+
   return {
     matchId,
     rojo,
@@ -193,6 +217,9 @@ export function useRankedMatch({
     setAzul,
     score,
     setScore,
+    sets,
+    addSet,
+    removeLastSet,
     busy,
     onCreateMatch,
     onAutoAssign,
