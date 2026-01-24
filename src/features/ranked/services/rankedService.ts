@@ -137,3 +137,9 @@ export async function deletePlayerRating(playerId: string, params: { modalidad: 
     method: 'DELETE',
   });
 }
+
+export async function deleteMatchPlayerSnapshot(id: string) {
+  return authFetch<{ ok: boolean; message: string; pr?: any }>(`${BASE}/match-player/${id}`, {
+    method: 'DELETE',
+  });
+}
