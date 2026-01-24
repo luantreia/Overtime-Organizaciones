@@ -108,6 +108,58 @@ export function useRankedMatch({
 
   const onAutoAssign = async (presentes: string[], playedCounts: Record<string, number>) => {
     if (!matchId) return;
+
+    // Logic: If teams already have players, only fill gaps instead of reshuffling everything.
+    const hasInitialPlayers = rojo.length > 0 || azul.length > 0;
+    if (hasInitialPlayers) {
+      const inMatch = new Set([...rojo, ...azul]);
+      const available = presentes.filter(pid => !inMatch.has(pid));
+      // Prioritize by PJ
+      const sorted = [...available].sort((a, b) => (playedCounts[a] || 0) - (playedCounts[b] || 0));
+
+      const maxTeamSize = 9;
+      const neededRojo = Math.max(0, maxTeamSize - rojo.length);
+      const neededAzul = Math.max(0, maxTeamSize - azul.length);
+
+      if (neededRojo === 0 && neededAzul === 0) {
+        onSuccess?.('Los equipos ya están al límite (9v9)');
+        return;
+      }
+
+      const toAddRojo: string[] = [];
+      const toAddAzul: string[] = [];
+
+      // Fill alternating to try some balance, though purely based on PJ here
+      sorted.forEach((pid, idx) => {
+        if (idx % 2 === 0) {
+          if (toAddRojo.length < neededRojo) toAddRojo.push(pid);
+          else if (toAddAzul.length < neededAzul) toAddAzul.push(pid);
+        } else {
+          if (toAddAzul.length < neededAzul) toAddAzul.push(pid);
+          else if (toAddRojo.length < neededRojo) toAddRojo.push(pid);
+        }
+      });
+
+      if (toAddRojo.length > 0 || toAddAzul.length > 0) {
+        const nextRojo = [...rojo, ...toAddRojo];
+        const nextAzul = [...azul, ...toAddAzul];
+        setRojo(nextRojo);
+        setAzul(nextAzul);
+        setBusy(true);
+        try {
+          await apiAssignTeams(matchId, nextRojo, nextAzul);
+          onSuccess?.(`Equipos rellenados con ${toAddRojo.length + toAddAzul.length} jugadores.`);
+        } catch (e: any) {
+          onError?.(e.message || 'Error actualizando rellenos');
+        } finally {
+          setBusy(false);
+        }
+      } else {
+        onSuccess?.('No hay jugadores disponibles para rellenar huecos.');
+      }
+      return;
+    }
+
     setBusy(true);
     try {
       // Prioritize players with fewer PJ today
