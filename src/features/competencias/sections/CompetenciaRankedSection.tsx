@@ -106,7 +106,7 @@ export default function CompetenciaRankedSection({
         categoria: categoria as string, 
         competition: lbScope === 'competition' ? competenciaId : undefined, 
         season: lbScope === 'competition' ? (selectedTemporada || undefined) : undefined,
-        limit: 20 
+        limit: 100 
       });
       setBoard(lb.items);
     } catch {}
@@ -516,6 +516,7 @@ export default function CompetenciaRankedSection({
             lbScope={lbScope}
             setLbScope={setLbScope}
             startTime={startTime}
+            onRefreshLeaderboard={fetchLeaderboard}
           />
         </div>
       </div>
