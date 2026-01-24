@@ -7,6 +7,7 @@ interface MatchTimerProps {
   getEffectiveElapsed?: () => number;
   sets?: { winner: string; time: number }[];
   suddenDeathLimit?: number;
+  showGlobalTimer?: boolean;
 }
 
 export const MatchTimer: React.FC<MatchTimerProps> = ({ 
@@ -15,7 +16,8 @@ export const MatchTimer: React.FC<MatchTimerProps> = ({
   isPaused = true,
   getEffectiveElapsed,
   sets = [], 
-  suddenDeathLimit = 180 
+  suddenDeathLimit = 180,
+  showGlobalTimer = true
 }) => {
   const [elapsed, setElapsed] = useState<number>(accumulatedTime / 1000);
   const [hasSounded, setHasSounded] = useState<boolean>(false);
@@ -102,12 +104,14 @@ export const MatchTimer: React.FC<MatchTimerProps> = ({
       </div>
 
       {/* Match Timer */}
-      <div className="flex flex-col items-center justify-center p-1 sm:p-1.5 rounded-lg bg-slate-900 text-white font-mono shadow-inner border border-slate-700 min-w-[50px] sm:min-w-[60px]">
-        <span className="text-[7px] sm:text-[8px] uppercase tracking-tighter text-slate-400 font-bold leading-none mb-0.5">Global</span>
-        <span className="text-xs sm:text-sm font-bold leading-none">
-          {String(totalMin).padStart(2, '0')}:{String(totalSec).padStart(2, '0')}
-        </span>
-      </div>
+      {showGlobalTimer && (
+        <div className="flex flex-col items-center justify-center p-1 sm:p-1.5 rounded-lg bg-slate-900 text-white font-mono shadow-inner border border-slate-700 min-w-[50px] sm:min-w-[60px]">
+          <span className="text-[7px] sm:text-[8px] uppercase tracking-tighter text-slate-400 font-bold leading-none mb-0.5">Global</span>
+          <span className="text-xs sm:text-sm font-bold leading-none">
+            {String(totalMin).padStart(2, '0')}:{String(totalSec).padStart(2, '0')}
+          </span>
+        </div>
+      )}
     </div>
   );
 };

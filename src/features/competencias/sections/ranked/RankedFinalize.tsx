@@ -32,9 +32,9 @@ interface RankedFinalizeProps {
   azulIds?: string[];
   nameById?: (id: string) => string;
   matchId?: string | null;
-  matchConfig?: { matchDuration: number; setDuration: number; suddenDeathLimit: number };
+  matchConfig?: { matchDuration: number; setDuration: number; suddenDeathLimit: number; pauseOnSetWin: boolean; showGlobalTimer: boolean };
   isBasicMode?: boolean;
-  onUpdateConfig?: (config: Partial<{ matchDuration: number; setDuration: number; suddenDeathLimit: number }>) => Promise<void>;
+  onUpdateConfig?: (config: Partial<{ matchDuration: number; setDuration: number; suddenDeathLimit: number; pauseOnSetWin: boolean; showGlobalTimer: boolean }>) => Promise<void>;
 }
 
 export const RankedFinalize: React.FC<RankedFinalizeProps> = ({
@@ -76,7 +76,7 @@ export const RankedFinalize: React.FC<RankedFinalizeProps> = ({
   const [deleting, setDeleting] = useState(false);
 
   // local states for config form
-  const [localConfig, setLocalConfig] = useState(matchConfig || { matchDuration: 1200, setDuration: 180, suddenDeathLimit: 180 });
+  const [localConfig, setLocalConfig] = useState(matchConfig || { matchDuration: 1200, setDuration: 180, suddenDeathLimit: 180, pauseOnSetWin: true, showGlobalTimer: true });
 
   React.useEffect(() => {
     if (matchConfig) setLocalConfig(matchConfig);
@@ -220,6 +220,7 @@ export const RankedFinalize: React.FC<RankedFinalizeProps> = ({
                   getEffectiveElapsed={getEffectiveElapsed}
                   sets={sets} 
                   suddenDeathLimit={matchConfig?.suddenDeathLimit} 
+                  showGlobalTimer={matchConfig?.showGlobalTimer}
                 />
                 {startTime && (
                   <button 
@@ -593,6 +594,32 @@ export const RankedFinalize: React.FC<RankedFinalizeProps> = ({
                       className="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-amber-600"
                     />
                     <p className="text-[9px] text-slate-400 italic">Al llegar a 00:00 el reloj cambiará a naranja y contará hacia adelante (Muerte Súbita).</p>
+                  </div>
+
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100">
+                    <div className="flex flex-col">
+                      <span className="text-xs font-bold text-slate-700">Auto-Pausa al finalizar set</span>
+                      <span className="text-[10px] text-slate-400">Detiene el reloj global al marcar un ganador.</span>
+                    </div>
+                    <button 
+                      onClick={() => setLocalConfig({...localConfig, pauseOnSetWin: !localConfig.pauseOnSetWin})}
+                      className={`relative inline-flex h-5 w-10 items-center rounded-full transition-colors focus:outline-none ${localConfig.pauseOnSetWin ? 'bg-emerald-500' : 'bg-slate-300'}`}
+                    >
+                      <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${localConfig.pauseOnSetWin ? 'translate-x-6' : 'translate-x-1'}`} />
+                    </button>
+                  </div>
+
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100">
+                    <div className="flex flex-col">
+                      <span className="text-xs font-bold text-slate-700">Mostrar Cronómetro Global</span>
+                      <span className="text-[10px] text-slate-400">Si se oculta, solo verás el tiempo del set actual.</span>
+                    </div>
+                    <button 
+                      onClick={() => setLocalConfig({...localConfig, showGlobalTimer: !localConfig.showGlobalTimer})}
+                      className={`relative inline-flex h-5 w-10 items-center rounded-full transition-colors focus:outline-none ${localConfig.showGlobalTimer ? 'bg-brand-500' : 'bg-slate-300'}`}
+                    >
+                      <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${localConfig.showGlobalTimer ? 'translate-x-6' : 'translate-x-1'}`} />
+                    </button>
                   </div>
                 </div>
               </div>

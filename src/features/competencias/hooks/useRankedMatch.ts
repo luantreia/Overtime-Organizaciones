@@ -73,10 +73,18 @@ export function useRankedMatch({
     }
   }, []); // Stable callback
 
-  const [matchConfig, setMatchConfig] = useState<{ matchDuration: number; setDuration: number; suddenDeathLimit: number }>({
+  const [matchConfig, setMatchConfig] = useState<{ 
+    matchDuration: number; 
+    setDuration: number; 
+    suddenDeathLimit: number;
+    pauseOnSetWin: boolean;
+    showGlobalTimer: boolean;
+  }>({
     matchDuration: 1200,
     setDuration: 180,
-    suddenDeathLimit: 180
+    suddenDeathLimit: 180,
+    pauseOnSetWin: true,
+    showGlobalTimer: true
   });
   const [pjMarked, setPjMarked] = useState<boolean>(false);
   const [isBasicMode, setIsBasicMode] = useState<boolean>(false);
@@ -127,7 +135,9 @@ export function useRankedMatch({
         setMatchConfig({
           matchDuration: partido.rankedMeta.matchDuration || 1200,
           setDuration: partido.rankedMeta.setDuration || 180,
-          suddenDeathLimit: partido.rankedMeta.suddenDeathLimit || 180
+          suddenDeathLimit: partido.rankedMeta.suddenDeathLimit || 180,
+          pauseOnSetWin: partido.rankedMeta.pauseOnSetWin ?? true,
+          showGlobalTimer: partido.rankedMeta.showGlobalTimer ?? true
         });
       }
     } catch (e) {
@@ -478,8 +488,8 @@ export function useRankedMatch({
     const lastSetTime = sets.length > 0 ? sets[sets.length - 1].time : 0;
     const currentSetDurationMs = elapsed - lastSetTime;
 
-    // Automatic Pause (as requested)
-    if (!isPaused) {
+    // Automatic Pause (respecting config)
+    if (!isPaused && matchConfig.pauseOnSetWin) {
        togglePause();
     }
     
@@ -599,7 +609,7 @@ export function useRankedMatch({
     togglePause,
     startTimer,
     matchConfig,
-    onUpdateConfig: async (newConfig: Partial<{ matchDuration: number; setDuration: number; suddenDeathLimit: number }>) => {
+    onUpdateConfig: async (newConfig: Partial<{ matchDuration: number; setDuration: number; suddenDeathLimit: number; pauseOnSetWin: boolean; showGlobalTimer: boolean }>) => {
       if (!matchId) return;
       try {
         const res = await apiUpdateMatchConfig(matchId, newConfig);
@@ -607,7 +617,9 @@ export function useRankedMatch({
           ...prev,
           matchDuration: res.rankedMeta.matchDuration ?? prev.matchDuration,
           setDuration: res.rankedMeta.setDuration ?? prev.setDuration,
-          suddenDeathLimit: res.rankedMeta.suddenDeathLimit ?? prev.suddenDeathLimit
+          suddenDeathLimit: res.rankedMeta.suddenDeathLimit ?? prev.suddenDeathLimit,
+          pauseOnSetWin: res.rankedMeta.pauseOnSetWin ?? prev.pauseOnSetWin,
+          showGlobalTimer: res.rankedMeta.showGlobalTimer ?? prev.showGlobalTimer
         }));
         onSuccess?.('Configuración actualizada');
       } catch (e: any) {
