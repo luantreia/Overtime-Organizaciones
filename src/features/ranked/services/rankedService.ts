@@ -60,7 +60,12 @@ export async function listJugadores(limit = 50) {
   return authFetch<any[]>(`/api/jugadores?limit=${limit}`, { method: 'GET' });
 }
 
-export async function crearJugador(payload: { nombre: string; alias?: string; genero?: string }) {
+export async function crearJugador(payload: { 
+  nombre: string; 
+  alias?: string; 
+  genero?: string; 
+  fechaNacimiento?: string;
+}) {
   return authFetch<{ success: boolean; data: any }>(`/api/jugadores`, {
     method: 'POST',
     body: payload,

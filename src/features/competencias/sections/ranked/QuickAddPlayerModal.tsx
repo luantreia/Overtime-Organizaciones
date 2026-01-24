@@ -4,7 +4,12 @@ import { Button, Input, Select } from '../../../../shared/components/ui';
 interface QuickAddPlayerModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: (datos: { nombre: string; alias?: string; genero?: string }) => Promise<void>;
+  onSuccess: (datos: { 
+    nombre: string; 
+    alias?: string; 
+    genero?: string; 
+    fechaNacimiento?: string;
+  }) => Promise<void>;
 }
 
 export const QuickAddPlayerModal: React.FC<QuickAddPlayerModalProps> = ({
@@ -14,6 +19,7 @@ export const QuickAddPlayerModal: React.FC<QuickAddPlayerModalProps> = ({
 }) => {
   const [nombre, setNombre] = useState('');
   const [alias, setAlias] = useState('');
+  const [fechaNacimiento, setFechaNacimiento] = useState('');
   const [genero, setGenero] = useState<'Masculino' | 'Femenino' | 'Otro' | ''>('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -25,9 +31,15 @@ export const QuickAddPlayerModal: React.FC<QuickAddPlayerModalProps> = ({
     setBusy(true);
     setError(null);
     try {
-      await onSuccess({ nombre, alias, genero: genero || undefined });
+      await onSuccess({ 
+        nombre, 
+        alias, 
+        genero: genero || undefined,
+        fechaNacimiento: fechaNacimiento || undefined 
+      });
       setNombre('');
       setAlias('');
+      setFechaNacimiento('');
       setGenero('');
     } catch (e: any) {
       setError(e.message || 'Error al crear jugador');
@@ -58,6 +70,13 @@ export const QuickAddPlayerModal: React.FC<QuickAddPlayerModalProps> = ({
             value={alias}
             onChange={(e) => setAlias(e.target.value)}
             placeholder="Ej: El Rayo"
+          />
+
+          <Input
+            label="Fecha de Nacimiento (Opcional)"
+            type="date"
+            value={fechaNacimiento}
+            onChange={(e) => setFechaNacimiento(e.target.value)}
           />
 
           <Select
