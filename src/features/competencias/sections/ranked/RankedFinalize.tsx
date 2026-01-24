@@ -17,6 +17,7 @@ interface RankedFinalizeProps {
   lbScope: 'competition' | 'global';
   setLbScope: (s: 'competition' | 'global') => void;
   startTime: number | null;
+  startTimer: () => void;
   onRefreshLeaderboard?: () => void;
   competenciaId: string;
   modalidad: string;
@@ -40,6 +41,7 @@ export const RankedFinalize: React.FC<RankedFinalizeProps> = ({
   lbScope,
   setLbScope,
   startTime,
+  startTimer,
   onRefreshLeaderboard,
   competenciaId,
   modalidad,
@@ -105,7 +107,19 @@ export const RankedFinalize: React.FC<RankedFinalizeProps> = ({
       <Card className="p-4 border-emerald-100 bg-emerald-50/20">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-sm font-bold text-emerald-800">Cancha en Vivo</h2>
-          {matchActive && <MatchTimer startTime={startTime} />}
+          {matchActive && (
+            <div className="flex items-center gap-2">
+              {!startTime && (
+                <button 
+                  onClick={startTimer}
+                  className="px-3 py-1 bg-emerald-600 text-white rounded-lg text-[10px] font-bold shadow-sm hover:bg-emerald-700 animate-pulse"
+                >
+                  ▶ EMPEZAR PARTIDO
+                </button>
+              )}
+              <MatchTimer startTime={startTime} sets={sets} />
+            </div>
+          )}
         </div>
 
         {/* Timeline de Sets */}

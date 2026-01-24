@@ -165,7 +165,8 @@ export default function CompetenciaRankedSection({
     abandonMatch,
     adjustScore,
     loadMatch,
-    startTime
+    startTime,
+    startTimer
   } = useRankedMatch({
     competenciaId,
     modalidad,
@@ -204,7 +205,9 @@ export default function CompetenciaRankedSection({
            time: s.duracionReal ? s.duracionReal * 1000 : 0
         }));
 
-        loadMatch(matchId, eqL, eqV, { local: m.marcadorLocal || 0, visitante: m.marcadorVisitante || 0 }, setsData, addManyPresentes);
+        const externalStartTime = m.rankedMeta?.startTime ? new Date(m.rankedMeta.startTime).getTime() : null;
+
+        loadMatch(matchId, eqL, eqV, { local: m.marcadorLocal || 0, visitante: m.marcadorVisitante || 0 }, setsData, addManyPresentes, externalStartTime || undefined);
         setSuccess(isFinalizado ? 'Partido cargado para corrección' : 'Partido cargado para continuar');
       } catch (e: any) {
         setError(e.message || 'Error al cargar el partido');
@@ -589,6 +592,7 @@ export default function CompetenciaRankedSection({
             lbScope={lbScope}
             setLbScope={setLbScope}
             startTime={startTime}
+            startTimer={startTimer}
             onRefreshLeaderboard={fetchLeaderboard}
             competenciaId={competenciaId}
             modalidad={modalidad as string}

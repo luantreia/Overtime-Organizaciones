@@ -5,6 +5,7 @@ import {
   autoAssign as apiAutoAssign, 
   assignTeams as apiAssignTeams, 
   finalizeMatch as apiFinalizeMatch, 
+  startMatchTimer as apiStartMatchTimer,
   deleteRankedMatch,
   Modalidad,
   Categoria
@@ -197,7 +198,9 @@ export function useRankedMatch({
       if (currentPlayers.length > 0) setPjMarked(true);
 
       if (!startTime) {
-        setStartTime(Date.now());
+        const now = Date.now();
+        setStartTime(now);
+        apiStartMatchTimer(matchId, now).catch(console.error);
       }
       
       onSuccess?.('Asignación de equipos guardada');
@@ -215,7 +218,7 @@ export function useRankedMatch({
       const currentPlayers = [...rojo, ...azul];
       syncMatchAttendance(matchId, currentPlayers);
 
-      await apiFinalizeMatch(matchId, score.local, score.visitante, sets, afkIds, user?.id || 'org-ui');
+      await apiFinalizeMatch(matchId, score.local, score.visitante, sets, afkIds, user?.id || 'org-ui', startTime || undefined);
       onSuccess?.('Partido finalizado con éxito');
       resetMatchState();
       onFinalized?.();
@@ -251,14 +254,15 @@ export function useRankedMatch({
     azulIds: string[], 
     currentScore: { local: number; visitante: number }, 
     existingSets: any[] = [],
-    markAsPresent?: (ids: string[]) => void
+    markAsPresent?: (ids: string[]) => void,
+    externalStartTime?: number
   ) => {
     setMatchId(id);
     setRojo(rojoIds);
     setAzul(azulIds);
     setScore(currentScore);
     setSets(existingSets);
-    setStartTime(null); // Timer doesn't make sense for old matches
+    setStartTime(externalStartTime || null);
     
     const currentPlayers = [...rojoIds, ...azulIds];
     syncMatchAttendance(id, currentPlayers);
@@ -267,6 +271,16 @@ export function useRankedMatch({
     // Ensure players are marked present when loading a match
     if (markAsPresent) {
       markAsPresent([...rojoIds, ...azulIds]);
+    }
+  };
+
+  const startTimer = () => {
+    if (!matchId) return;
+    if (!startTime) {
+      const now = Date.now();
+      setStartTime(now);
+      // Sync with backend so Mesa de Control can pick it up
+      apiStartMatchTimer(matchId, now).catch(console.error);
     }
   };
 
@@ -318,6 +332,7 @@ export function useRankedMatch({
     abandonMatch,
     adjustScore,
     loadMatch,
-    startTime
+    startTime,
+    startTimer
   };
 }

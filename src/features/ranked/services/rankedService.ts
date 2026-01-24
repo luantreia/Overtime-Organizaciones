@@ -26,10 +26,17 @@ export async function assignTeams(partidoId: string, rojoPlayers: string[], azul
   });
 }
 
-export async function finalizeMatch(partidoId: string, marcadorLocal: number, marcadorVisitante: number, sets?: any[], afkPlayers?: string[], creadoPor?: string) {
+export async function startMatchTimer(partidoId: string, startTime: number, timerMatchValue: number = 1200) {
+  return authFetch<{ ok: boolean }>(`${BASE}/match/${partidoId}/start-timer`, {
+    method: 'POST',
+    body: { startTime, timerMatchValue },
+  });
+}
+
+export async function finalizeMatch(partidoId: string, marcadorLocal: number, marcadorVisitante: number, sets?: any[], afkPlayers?: string[], creadoPor?: string, startTime?: number) {
   return authFetch<{ ok: boolean; rankedMeta?: any; ratingDeltas?: any[] }>(`${BASE}/match/${partidoId}/finalize`, {
     method: 'POST',
-    body: { marcadorLocal, marcadorVisitante, sets, afkPlayers, creadoPor },
+    body: { marcadorLocal, marcadorVisitante, sets, afkPlayers, creadoPor, startTime },
   });
 }
 
