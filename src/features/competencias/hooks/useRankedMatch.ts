@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useAuth } from '../../../app/providers/AuthContext';
 import { 
   createRankedMatch, 
@@ -51,16 +51,19 @@ export function useRankedMatch({
   const [accumulatedTime, setAccumulatedTime] = useState<number>(0);
   const [lastStartTime, setLastStartTime] = useState<number | null>(null);
   const [isPaused, setIsPaused] = useState<boolean>(true);
+  const isPausedRef = useRef(isPaused);
+  useEffect(() => { isPausedRef.current = isPaused; }, [isPaused]);
 
   // Wrapper to keep timer states in sync
   const setStartTime = useCallback((val: number | null) => {
     rawSetStartTime(val);
+    const p = isPausedRef.current;
     if (val === null) {
       setAccumulatedTime(0);
       setLastStartTime(null);
     } else if (val) {
       const totalElapsed = Math.max(0, Date.now() - val);
-      if (isPaused) {
+      if (p) {
         setAccumulatedTime(totalElapsed);
         setLastStartTime(null);
       } else {
@@ -68,7 +71,7 @@ export function useRankedMatch({
         setLastStartTime(val);
       }
     }
-  }, [isPaused]);
+  }, []); // Stable callback
 
   const [matchConfig, setMatchConfig] = useState<{ matchDuration: number; setDuration: number; suddenDeathLimit: number }>({
     matchDuration: 1200,
@@ -78,8 +81,13 @@ export function useRankedMatch({
   const [pjMarked, setPjMarked] = useState<boolean>(false);
   const [isBasicMode, setIsBasicMode] = useState<boolean>(false);
   const [busy, setBusy] = useState(false);
+  const hasLoadedRef = useRef(false);
 
   const persistenceKey = useMemo(() => `rankedMatch:${competenciaId}`, [competenciaId]);
+
+  useEffect(() => {
+    hasLoadedRef.current = false;
+  }, [persistenceKey]);
 
   const syncWithServer = useCallback(async (id: string, force = false) => {
     if (isBasicMode && !force) return; // Skip sync in basic mode unless forced
@@ -141,36 +149,39 @@ export function useRankedMatch({
     return () => clearInterval(interval);
   }, [matchId, busy, syncWithServer]);
 
-  // Load from localStorage
+  // Load from localStorage (Initialization only)
   useEffect(() => {
+    if (hasLoadedRef.current) return;
+    
     try {
       const raw = localStorage.getItem(persistenceKey);
       if (raw) {
         const parsed = JSON.parse(raw);
-        // Safety: If we already have a matchId in memory (set by onCreateMatch),
-        // only restore if it's the SAME match. Otherwise, don't restore old state.
-        if (matchId && parsed.matchId && matchId !== parsed.matchId) {
-          return;
-        }
-
-        if (!matchId && parsed.matchId) setMatchId(parsed.matchId);
-        setRojo(parsed.rojo || []);
-        setAzul(parsed.azul || []);
-        setScore(parsed.score || { local: 0, visitante: 0 });
-        setSets(parsed.sets || []);
         
-        // Restore timers
-        setAccumulatedTime(parsed.accumulatedTime || 0);
-        setIsPaused(parsed.isPaused !== undefined ? parsed.isPaused : true);
-        setLastStartTime(parsed.lastStartTime || null);
-        setStartTime(parsed.startTime || null);
+        // If we found a saved session, hydrate the state
+        if (parsed.matchId) {
+          setMatchId(parsed.matchId);
+          setRojo(parsed.rojo || []);
+          setAzul(parsed.azul || []);
+          setScore(parsed.score || { local: 0, visitante: 0 });
+          setSets(parsed.sets || []);
+          
+          // Restore timers
+          setAccumulatedTime(parsed.accumulatedTime || 0);
+          setIsPaused(parsed.isPaused !== undefined ? parsed.isPaused : true);
+          setLastStartTime(parsed.lastStartTime || null);
+          rawSetStartTime(parsed.startTime || null);
 
-        setMatchConfig(parsed.matchConfig || { matchDuration: 1200, setDuration: 180, suddenDeathLimit: 180 });
-        setPjMarked(!!parsed.pjMarked);
-        setIsBasicMode(!!parsed.isBasicMode);
+          setMatchConfig(parsed.matchConfig || { matchDuration: 1200, setDuration: 180, suddenDeathLimit: 180 });
+          setPjMarked(!!parsed.pjMarked);
+          setIsBasicMode(!!parsed.isBasicMode);
+        }
       }
-    } catch { }
-  }, [persistenceKey, matchId, setStartTime]);
+      hasLoadedRef.current = true;
+    } catch { 
+      hasLoadedRef.current = true;
+    }
+  }, [persistenceKey]);
 
   // Save to localStorage
   useEffect(() => {
