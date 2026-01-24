@@ -42,7 +42,7 @@ export const RankedFinalize: React.FC<RankedFinalizeProps> = ({
   categoria,
   seasonId
 }) => {
-  const [selectedPlayer, setSelectedPlayer] = useState<{ id: string; name: string } | null>(null);
+  const [selectedPlayer, setSelectedPlayer] = useState<{ id: string; name: string; competenciaId?: string; temporadaId?: string } | null>(null);
 
   const formatTime = (ms: number) => {
     const totalSeconds = Math.floor(ms / 1000);
@@ -206,7 +206,12 @@ export const RankedFinalize: React.FC<RankedFinalizeProps> = ({
                           {r.playerName || r.nombre || `ID: ${r.playerId.slice(-4)}`}
                         </span>
                         <button 
-                           onClick={() => setSelectedPlayer({ id: r.playerId, name: r.playerName || r.nombre || 'Desconocido' })}
+                           onClick={() => setSelectedPlayer({ 
+                             id: r.playerId, 
+                             name: r.playerName || r.nombre || 'Desconocido',
+                             competenciaId: r.competenciaId,
+                             temporadaId: r.temporadaId
+                           })}
                            className="p-1 text-slate-400 hover:text-brand-500 hover:bg-slate-100 transition-all rounded"
                            title="Ajustes avanzados"
                         >
@@ -247,8 +252,8 @@ export const RankedFinalize: React.FC<RankedFinalizeProps> = ({
           playerName={selectedPlayer.name}
           modalidad={modalidad}
           categoria={categoria}
-          competenciaId={lbScope === 'competition' ? competenciaId : ''}
-          seasonId={lbScope === 'competition' ? seasonId : 'null'}
+          competenciaId={selectedPlayer.competenciaId || (lbScope === 'competition' ? competenciaId : 'null')}
+          seasonId={selectedPlayer.temporadaId || (lbScope === 'competition' ? (seasonId || 'null') : 'null')}
           onUpdated={onRefreshLeaderboard}
         />
       )}
