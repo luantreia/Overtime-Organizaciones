@@ -132,7 +132,7 @@ export const MatchTimer: React.FC<MatchTimerProps> = ({
       // Last Minute Alert (60s)
       if (audioConfig.enableLastMinuteAlert && globalRemainingSeconds === 60 && !hasAnnouncedLastMinute.current) {
         hasAnnouncedLastMinute.current = true;
-        speak("¡Último minuto de juego!");
+        speak("¡Último minuto del partido!");
       }
 
       // 10s Countdown logic
