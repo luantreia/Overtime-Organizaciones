@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 interface MatchTimerProps {
   startTime: number | null;
@@ -27,6 +27,7 @@ export const MatchTimer: React.FC<MatchTimerProps> = ({
 }) => {
   const [elapsed, setElapsed] = useState<number>(accumulatedTime / 1000);
   const [hasSounded, setHasSounded] = useState<boolean>(false);
+  const lastAnnouncedSecond = useRef<number>(-1);
 
   // Audio for the buzzer
   const playBuzzer = () => {
@@ -39,10 +40,32 @@ export const MatchTimer: React.FC<MatchTimerProps> = ({
     }
   };
 
+  // Audio for the whistle
+  const playWhistle = () => {
+    try {
+      const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2158/2158-preview.mp3'); // Professional Whistle
+      audio.volume = 0.6;
+      audio.play();
+    } catch (e) {
+      console.warn('Whistle audio failed', e);
+    }
+  };
+
+  const speak = (text: string) => {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'es-ES';
+      utterance.rate = 1.3;
+      window.speechSynthesis.speak(utterance);
+    }
+  };
+
   useEffect(() => {
     if (!startTime) {
       setElapsed(0);
       setHasSounded(false);
+      lastAnnouncedSecond.current = -1;
       return;
     }
 
@@ -64,11 +87,28 @@ export const MatchTimer: React.FC<MatchTimerProps> = ({
       const triggerTime = isUnlimitedSet ? matchDuration : setDuration;
       const checkVal = isUnlimitedSet ? currentElapsed : currentSetElapsed;
       
-      if (useSuddenDeath && checkVal >= triggerTime && !hasSounded) {
+      const remainingSeconds = triggerTime - checkVal;
+
+      // 10s Countdown logic
+      if (remainingSeconds > 0 && remainingSeconds <= 10 && lastAnnouncedSecond.current !== remainingSeconds) {
+        lastAnnouncedSecond.current = remainingSeconds;
+        speak(String(remainingSeconds));
+      }
+
+      // Final trigger at 0
+      if (remainingSeconds === 0 && lastAnnouncedSecond.current !== 0) {
+        lastAnnouncedSecond.current = 0;
+        playWhistle();
         playBuzzer();
+        speak(useSuddenDeath ? "Muerte Súbita" : "Tiempo de Partido");
+      }
+      
+      if (useSuddenDeath && checkVal >= triggerTime && !hasSounded) {
         setHasSounded(true);
       } else if (!useSuddenDeath || checkVal < triggerTime) {
         setHasSounded(false);
+        // Reset ref if we move back (e.g. edit clock)
+        if (remainingSeconds > 10) lastAnnouncedSecond.current = -1;
       }
     }, 1000);
 
