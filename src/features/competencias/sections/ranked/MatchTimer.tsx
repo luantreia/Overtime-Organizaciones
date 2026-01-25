@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 
 interface MatchTimerProps {
   startTime: number | null;
@@ -46,7 +46,7 @@ export const MatchTimer: React.FC<MatchTimerProps> = ({
   const lastAnnouncedSecond = useRef<number>(-1);
 
   // Audio for the buzzer
-  const playBuzzer = () => {
+  const playBuzzer = useCallback(() => {
     try {
       const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3'); // Professional Buzzer Sound
       audio.volume = audioConfig.buzzerVolume ?? 0.5;
@@ -54,10 +54,10 @@ export const MatchTimer: React.FC<MatchTimerProps> = ({
     } catch (e) {
       console.warn('Audio play failed', e);
     }
-  };
+  }, [audioConfig.buzzerVolume]);
 
   // Audio for the whistle
-  const playWhistle = () => {
+  const playWhistle = useCallback(() => {
     if (!audioConfig.enableWhistle) return;
     try {
       const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2158/2158-preview.mp3'); // Professional Whistle
@@ -66,9 +66,9 @@ export const MatchTimer: React.FC<MatchTimerProps> = ({
     } catch (e) {
       console.warn('Whistle audio failed', e);
     }
-  };
+  }, [audioConfig.enableWhistle, audioConfig.buzzerVolume]);
 
-  const speak = (text: string) => {
+  const speak = useCallback((text: string) => {
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
@@ -83,7 +83,7 @@ export const MatchTimer: React.FC<MatchTimerProps> = ({
 
       window.speechSynthesis.speak(utterance);
     }
-  };
+  }, [audioConfig.voiceVolume, audioConfig.voiceRate, audioConfig.voiceIndex]);
 
   useEffect(() => {
     if (!startTime) {
@@ -137,7 +137,7 @@ export const MatchTimer: React.FC<MatchTimerProps> = ({
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [startTime, accumulatedTime, isPaused, getEffectiveElapsed, sets, useSuddenDeath, setDuration, matchDuration, currentSetStartTime, hasSounded, audioConfig]);
+  }, [startTime, accumulatedTime, isPaused, getEffectiveElapsed, sets, useSuddenDeath, setDuration, matchDuration, currentSetStartTime, hasSounded, audioConfig, playBuzzer, playWhistle, speak]);
 
   if (!startTime) return null;
 
