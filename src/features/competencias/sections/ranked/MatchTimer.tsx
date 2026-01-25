@@ -56,7 +56,7 @@ export const MatchTimer: React.FC<MatchTimerProps> = ({
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = 'es-ES';
-      utterance.rate = 1.3;
+      utterance.rate = 5.3;
       window.speechSynthesis.speak(utterance);
     }
   };
