@@ -14,6 +14,12 @@ interface MatchTimerProps {
   audioConfig?: {
     enableCountdown?: boolean;
     enableWhistle?: boolean;
+    whistleType?: 'standard' | 'double' | 'long';
+    suddenDeathMessage?: string;
+    matchEndMessage?: string;
+    enableMatchStartAlert?: boolean;
+    matchStartMessage?: string;
+    enableLastMinuteAlert?: boolean;
     voiceVolume?: number;
     buzzerVolume?: number;
     voiceRate?: number;
@@ -35,6 +41,12 @@ export const MatchTimer: React.FC<MatchTimerProps> = ({
   audioConfig = {
     enableCountdown: true,
     enableWhistle: true,
+    whistleType: 'standard',
+    suddenDeathMessage: '¡Muerte Súbita! Próximo punto gana.',
+    matchEndMessage: 'Tiempo de juego cumplido. Final del set.',
+    enableMatchStartAlert: true,
+    matchStartMessage: '¡Partido iniciado! Buena suerte.',
+    enableLastMinuteAlert: true,
     voiceVolume: 1,
     buzzerVolume: 0.5,
     voiceRate: 1.3,
@@ -44,6 +56,8 @@ export const MatchTimer: React.FC<MatchTimerProps> = ({
   const [elapsed, setElapsed] = useState<number>(accumulatedTime / 1000);
   const [hasSounded, setHasSounded] = useState<boolean>(false);
   const lastAnnouncedSecond = useRef<number>(-1);
+  const hasAnnouncedStart = useRef<boolean>(false);
+  const hasAnnouncedLastMinute = useRef<boolean>(false);
 
   // Audio for the buzzer
   const playBuzzer = useCallback(() => {
@@ -60,13 +74,18 @@ export const MatchTimer: React.FC<MatchTimerProps> = ({
   const playWhistle = useCallback(() => {
     if (!audioConfig.enableWhistle) return;
     try {
-      const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2158/2158-preview.mp3'); // Professional Whistle
+      const sounds = {
+        standard: 'https://assets.mixkit.co/active_storage/sfx/2158/2158-preview.mp3',
+        double: 'https://assets.mixkit.co/active_storage/sfx/2157/2157-preview.mp3',
+        long: 'https://assets.mixkit.co/active_storage/sfx/2159/2159-preview.mp3'
+      };
+      const audio = new Audio(sounds[audioConfig.whistleType || 'standard']);
       audio.volume = (audioConfig.buzzerVolume ?? 0.5) * 1.2;
       audio.play();
     } catch (e) {
       console.warn('Whistle audio failed', e);
     }
-  }, [audioConfig.enableWhistle, audioConfig.buzzerVolume]);
+  }, [audioConfig.enableWhistle, audioConfig.buzzerVolume, audioConfig.whistleType]);
 
   const speak = useCallback((text: string) => {
     if ('speechSynthesis' in window) {
@@ -105,6 +124,12 @@ export const MatchTimer: React.FC<MatchTimerProps> = ({
       const currentElapsed = Math.floor(totalMs / 1000);
       setElapsed(currentElapsed);
 
+      // Match Start Alert
+      if (audioConfig.enableMatchStartAlert && currentElapsed === 0 && !hasAnnouncedStart.current) {
+        hasAnnouncedStart.current = true;
+        speak(audioConfig.matchStartMessage || "¡Partido iniciado!");
+      }
+
       // Check for sound trigger (when set time hits limit)
       const currentSetElapsed = currentElapsed - Math.floor(currentSetStartTime / 1000);
       const isUnlimitedSet = !setDuration || setDuration === 0;
@@ -112,6 +137,12 @@ export const MatchTimer: React.FC<MatchTimerProps> = ({
       const checkVal = isUnlimitedSet ? currentElapsed : currentSetElapsed;
       
       const remainingSeconds = triggerTime - checkVal;
+
+      // Last Minute Alert (60s)
+      if (audioConfig.enableLastMinuteAlert && remainingSeconds === 60 && !hasAnnouncedLastMinute.current) {
+        hasAnnouncedLastMinute.current = true;
+        speak("¡Último minuto de juego!");
+      }
 
       // 10s Countdown logic
       if (audioConfig.enableCountdown && remainingSeconds > 0 && remainingSeconds <= 10 && lastAnnouncedSecond.current !== remainingSeconds) {
@@ -124,7 +155,11 @@ export const MatchTimer: React.FC<MatchTimerProps> = ({
         lastAnnouncedSecond.current = 0;
         playWhistle();
         playBuzzer();
-        speak(useSuddenDeath ? "Muerte Súbita, No hay escudo!" : "Tiempo de Partido, Termina el set y se acaba el partido!");
+        
+        const msg = useSuddenDeath 
+          ? (audioConfig.suddenDeathMessage || "¡Muerte Súbita! ¡No hay Escudo!") 
+          : (audioConfig.matchEndMessage || "¡Tiempo de Partido!");
+        speak(msg);
       }
       
       if (useSuddenDeath && checkVal >= triggerTime && !hasSounded) {

@@ -12,6 +12,12 @@ interface RankedMatchSettingsModalProps {
     autoPauseGlobal?: boolean;
     enableCountdown?: boolean;
     enableWhistle?: boolean;
+    whistleType?: 'standard' | 'double' | 'long';
+    suddenDeathMessage?: string;
+    matchEndMessage?: string;
+    enableMatchStartAlert?: boolean;
+    matchStartMessage?: string;
+    enableLastMinuteAlert?: boolean;
     voiceVolume?: number;
     buzzerVolume?: number;
     voiceRate?: number;
@@ -35,6 +41,12 @@ export const RankedMatchSettingsModal: React.FC<RankedMatchSettingsModalProps> =
     autoPauseGlobal: false,
     enableCountdown: true,
     enableWhistle: true,
+    whistleType: 'standard',
+    suddenDeathMessage: '¡Muerte Súbita! Próximo punto gana.',
+    matchEndMessage: 'Tiempo de juego cumplido. Final del set.',
+    enableMatchStartAlert: true,
+    matchStartMessage: '¡Partido iniciado! Buena suerte.',
+    enableLastMinuteAlert: true,
     voiceVolume: 1,
     buzzerVolume: 0.5,
     voiceRate: 1.3,
@@ -42,7 +54,17 @@ export const RankedMatchSettingsModal: React.FC<RankedMatchSettingsModalProps> =
   });
 
   useEffect(() => {
-    if (matchConfig) setLocalConfig(matchConfig);
+    if (matchConfig) {
+      setLocalConfig({
+        ...matchConfig,
+        whistleType: matchConfig.whistleType || 'standard',
+        suddenDeathMessage: matchConfig.suddenDeathMessage || '¡Muerte Súbita! Próximo punto gana.',
+        matchEndMessage: matchConfig.matchEndMessage || 'Tiempo de juego cumplido. Final del set.',
+        enableMatchStartAlert: matchConfig.enableMatchStartAlert ?? true,
+        matchStartMessage: matchConfig.matchStartMessage || '¡Partido iniciado! Buena suerte.',
+        enableLastMinuteAlert: matchConfig.enableLastMinuteAlert ?? true
+      });
+    }
   }, [matchConfig]);
 
   useEffect(() => {
@@ -205,13 +227,79 @@ export const RankedMatchSettingsModal: React.FC<RankedMatchSettingsModalProps> =
                 </div>
 
                 <div className="flex justify-between items-center bg-slate-50 p-2 sm:p-3 rounded-xl border border-slate-100">
-                  <span className="text-[11px] sm:text-xs font-bold text-slate-700">Silbato final</span>
+                  <div className="flex flex-col">
+                    <span className="text-[11px] sm:text-xs font-bold text-slate-700">Silbato final</span>
+                    <select 
+                      value={localConfig.whistleType || 'standard'}
+                      onChange={(e) => setLocalConfig({...localConfig, whistleType: e.target.value as any})}
+                      className="text-[9px] bg-transparent border-none p-0 font-bold text-emerald-600 focus:ring-0 cursor-pointer"
+                    >
+                      <option value="standard">Estándar</option>
+                      <option value="double">Doble</option>
+                      <option value="long">Largo</option>
+                    </select>
+                  </div>
                   <button 
                     onClick={() => setLocalConfig({...localConfig, enableWhistle: !localConfig.enableWhistle})}
                     className={`relative inline-flex h-5 w-10 items-center rounded-full transition-colors focus:outline-none ${localConfig.enableWhistle ? 'bg-emerald-500' : 'bg-slate-200'}`}
                   >
                     <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${localConfig.enableWhistle ? 'translate-x-6' : 'translate-x-1'}`} />
                   </button>
+                </div>
+
+                <div className="flex justify-between items-center bg-slate-50 p-2 sm:p-3 rounded-xl border border-slate-100">
+                  <span className="text-[11px] sm:text-xs font-bold text-slate-700">Aviso Inicio de Match</span>
+                  <button 
+                    onClick={() => setLocalConfig({...localConfig, enableMatchStartAlert: !localConfig.enableMatchStartAlert})}
+                    className={`relative inline-flex h-5 w-10 items-center rounded-full transition-colors focus:outline-none ${localConfig.enableMatchStartAlert ? 'bg-emerald-500' : 'bg-slate-200'}`}
+                  >
+                    <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${localConfig.enableMatchStartAlert ? 'translate-x-6' : 'translate-x-1'}`} />
+                  </button>
+                </div>
+
+                <div className="flex justify-between items-center bg-slate-50 p-2 sm:p-3 rounded-xl border border-slate-100">
+                  <span className="text-[11px] sm:text-xs font-bold text-slate-700">Aviso Último Minuto (60s)</span>
+                  <button 
+                    onClick={() => setLocalConfig({...localConfig, enableLastMinuteAlert: !localConfig.enableLastMinuteAlert})}
+                    className={`relative inline-flex h-5 w-10 items-center rounded-full transition-colors focus:outline-none ${localConfig.enableLastMinuteAlert ? 'bg-emerald-500' : 'bg-slate-200'}`}
+                  >
+                    <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${localConfig.enableLastMinuteAlert ? 'translate-x-6' : 'translate-x-1'}`} />
+                  </button>
+                </div>
+
+                <div className="space-y-3 p-3 bg-slate-50 rounded-xl border border-slate-100">
+                  {localConfig.enableMatchStartAlert && (
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">Locución Inicio</label>
+                      <input 
+                        type="text"
+                        value={localConfig.matchStartMessage}
+                        onChange={(e) => setLocalConfig({...localConfig, matchStartMessage: e.target.value})}
+                        className="w-full p-2 text-[10px] font-bold text-slate-700 bg-white border border-slate-200 rounded-lg placeholder:text-slate-300"
+                        placeholder="Ej: ¡A jugar!"
+                      />
+                    </div>
+                  )}
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">Locución Muerte Súbita</label>
+                    <input 
+                      type="text"
+                      value={localConfig.suddenDeathMessage}
+                      onChange={(e) => setLocalConfig({...localConfig, suddenDeathMessage: e.target.value})}
+                      className="w-full p-2 text-[10px] font-bold text-slate-700 bg-white border border-slate-200 rounded-lg placeholder:text-slate-300"
+                      placeholder="Ej: ¡Muerte Súbita activa!"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">Locución Fin de Tiempo</label>
+                    <input 
+                      type="text"
+                      value={localConfig.matchEndMessage}
+                      onChange={(e) => setLocalConfig({...localConfig, matchEndMessage: e.target.value})}
+                      className="w-full p-2 text-[10px] font-bold text-slate-700 bg-white border border-slate-200 rounded-lg placeholder:text-slate-300"
+                      placeholder="Ej: Tiempo cumplido."
+                    />
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
