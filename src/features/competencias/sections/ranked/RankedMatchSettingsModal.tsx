@@ -41,9 +41,9 @@ export const RankedMatchSettingsModal: React.FC<RankedMatchSettingsModalProps> =
     autoPauseGlobal: false,
     enableCountdown: true,
     enableWhistle: true,
-    whistleType: 'standard',
-    suddenDeathMessage: '¡Muerte Súbita! Próximo punto gana.',
-    matchEndMessage: 'Tiempo de juego cumplido. Final del set.',
+    whistleType: 'double',
+    suddenDeathMessage: '¡Muerte Súbita! No hay Escudo!',
+    matchEndMessage: 'Tiempo de juego cumplido.',
     enableMatchStartAlert: true,
     matchStartMessage: '¡Partido iniciado! Buena suerte.',
     enableLastMinuteAlert: true,
@@ -57,9 +57,9 @@ export const RankedMatchSettingsModal: React.FC<RankedMatchSettingsModalProps> =
     if (matchConfig) {
       setLocalConfig({
         ...matchConfig,
-        whistleType: matchConfig.whistleType || 'standard',
-        suddenDeathMessage: matchConfig.suddenDeathMessage || '¡Muerte Súbita! Próximo punto gana.',
-        matchEndMessage: matchConfig.matchEndMessage || 'Tiempo de juego cumplido. Final del set.',
+        whistleType: matchConfig.whistleType || 'double',
+        suddenDeathMessage: matchConfig.suddenDeathMessage || '¡Muerte Súbita! No hay Escudo!',
+        matchEndMessage: matchConfig.matchEndMessage || 'Tiempo de juego cumplido.',
         enableMatchStartAlert: matchConfig.enableMatchStartAlert ?? true,
         matchStartMessage: matchConfig.matchStartMessage || '¡Partido iniciado! Buena suerte.',
         enableLastMinuteAlert: matchConfig.enableLastMinuteAlert ?? true
