@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { DEFAULT_MATCH_CONFIG } from './constants';
 
 interface MatchTimerProps {
   startTime: number | null;
@@ -33,25 +34,12 @@ export const MatchTimer: React.FC<MatchTimerProps> = ({
   isPaused = true,
   getEffectiveElapsed,
   sets = [], 
-  useSuddenDeath = true,
-  setDuration = 180,
-  matchDuration = 1200,
+  useSuddenDeath = DEFAULT_MATCH_CONFIG.useSuddenDeath,
+  setDuration = DEFAULT_MATCH_CONFIG.setDuration,
+  matchDuration = DEFAULT_MATCH_CONFIG.matchDuration,
   currentSetStartTime = 0,
   isWaitingForNextSet = false,
-  audioConfig = {
-    enableCountdown: true,
-    enableWhistle: true,
-    whistleType: 'standard',
-    suddenDeathMessage: '¡Muerte Súbita! Próximo punto gana.',
-    matchEndMessage: 'Tiempo de juego cumplido. Final del set.',
-    enableMatchStartAlert: true,
-    matchStartMessage: '¡Partido iniciado! Buena suerte.',
-    enableLastMinuteAlert: true,
-    voiceVolume: 1,
-    buzzerVolume: 0.5,
-    voiceRate: 1.3,
-    voiceIndex: 0
-  }
+  audioConfig = DEFAULT_MATCH_CONFIG
 }) => {
   const [elapsed, setElapsed] = useState<number>(accumulatedTime / 1000);
   const [hasSounded, setHasSounded] = useState<boolean>(false);

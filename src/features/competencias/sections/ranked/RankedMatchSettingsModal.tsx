@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '../../../../shared/components/ui';
 
+import { DEFAULT_MATCH_CONFIG } from './constants';
+
 interface RankedMatchSettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -34,36 +36,11 @@ export const RankedMatchSettingsModal: React.FC<RankedMatchSettingsModalProps> =
   onUpdateConfig
 }) => {
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
-  const [localConfig, setLocalConfig] = useState(matchConfig || { 
-    matchDuration: 1200, 
-    setDuration: 180, 
-    useSuddenDeath: true,
-    autoPauseGlobal: false,
-    enableCountdown: true,
-    enableWhistle: true,
-    whistleType: 'double',
-    suddenDeathMessage: '¡Muerte Súbita! No hay Escudo!',
-    matchEndMessage: 'Tiempo de juego cumplido.',
-    enableMatchStartAlert: true,
-    matchStartMessage: '¡Partido iniciado! Buena suerte.',
-    enableLastMinuteAlert: true,
-    voiceVolume: 1,
-    buzzerVolume: 0.5,
-    voiceRate: 1.3,
-    voiceIndex: 0
-  });
+  const [localConfig, setLocalConfig] = useState({ ...DEFAULT_MATCH_CONFIG, ...matchConfig });
 
   useEffect(() => {
     if (matchConfig) {
-      setLocalConfig({
-        ...matchConfig,
-        whistleType: matchConfig.whistleType || 'double',
-        suddenDeathMessage: matchConfig.suddenDeathMessage || '¡Muerte Súbita! No hay Escudo!',
-        matchEndMessage: matchConfig.matchEndMessage || 'Tiempo de juego cumplido.',
-        enableMatchStartAlert: matchConfig.enableMatchStartAlert ?? true,
-        matchStartMessage: matchConfig.matchStartMessage || '¡Partido iniciado! Buena suerte.',
-        enableLastMinuteAlert: matchConfig.enableLastMinuteAlert ?? true
-      });
+      setLocalConfig(prev => ({ ...DEFAULT_MATCH_CONFIG, ...matchConfig }));
     }
   }, [matchConfig]);
 
