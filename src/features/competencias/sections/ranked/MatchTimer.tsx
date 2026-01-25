@@ -109,6 +109,8 @@ export const MatchTimer: React.FC<MatchTimerProps> = ({
       setElapsed(0);
       setHasSounded(false);
       lastAnnouncedSecond.current = -1;
+      hasAnnouncedStart.current = false;
+      hasAnnouncedLastMinute.current = false;
       return;
     }
 
@@ -119,16 +121,16 @@ export const MatchTimer: React.FC<MatchTimerProps> = ({
        return;
     }
 
+    // Match Start Alert - Triggers immediately when timer starts
+    if (audioConfig.enableMatchStartAlert && !hasAnnouncedStart.current) {
+      hasAnnouncedStart.current = true;
+      speak(audioConfig.matchStartMessage || "¡Partido iniciado!");
+    }
+
     const interval = setInterval(() => {
       const totalMs = getEffectiveElapsed ? getEffectiveElapsed() : (Date.now() - (startTime || 0));
       const currentElapsed = Math.floor(totalMs / 1000);
       setElapsed(currentElapsed);
-
-      // Match Start Alert
-      if (audioConfig.enableMatchStartAlert && currentElapsed === 0 && !hasAnnouncedStart.current) {
-        hasAnnouncedStart.current = true;
-        speak(audioConfig.matchStartMessage || "¡Partido iniciado!");
-      }
 
       // Check for sound trigger (when set time hits limit)
       const currentSetElapsed = currentElapsed - Math.floor(currentSetStartTime / 1000);
@@ -137,9 +139,10 @@ export const MatchTimer: React.FC<MatchTimerProps> = ({
       const checkVal = isUnlimitedSet ? currentElapsed : currentSetElapsed;
       
       const remainingSeconds = triggerTime - checkVal;
+      const globalRemainingSeconds = matchDuration - currentElapsed;
 
       // Last Minute Alert (60s)
-      if (audioConfig.enableLastMinuteAlert && remainingSeconds === 60 && !hasAnnouncedLastMinute.current) {
+      if (audioConfig.enableLastMinuteAlert && globalRemainingSeconds === 60 && !hasAnnouncedLastMinute.current) {
         hasAnnouncedLastMinute.current = true;
         speak("¡Último minuto de juego!");
       }
@@ -156,10 +159,16 @@ export const MatchTimer: React.FC<MatchTimerProps> = ({
         playWhistle();
         playBuzzer();
         
-        const msg = useSuddenDeath 
-          ? (audioConfig.suddenDeathMessage || "¡Muerte Súbita! ¡No hay Escudo!") 
-          : (audioConfig.matchEndMessage || "¡Tiempo de Partido!");
-        speak(msg);
+        // Voice alert logic: Match End message only for Global End
+        if (globalRemainingSeconds <= 0) {
+          const msg = useSuddenDeath 
+            ? (audioConfig.suddenDeathMessage || "¡Muerte Súbita!") 
+            : (audioConfig.matchEndMessage || "Tiempo cumplido.");
+          speak(msg);
+        } else if (!isUnlimitedSet) {
+          // If it's just a set end, we can have a generic set-end message or just the whistle
+          speak("Fin del set.");
+        }
       }
       
       if (useSuddenDeath && checkVal >= triggerTime && !hasSounded) {
