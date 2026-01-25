@@ -124,7 +124,7 @@ export const MatchTimer: React.FC<MatchTimerProps> = ({
         lastAnnouncedSecond.current = 0;
         playWhistle();
         playBuzzer();
-        speak(useSuddenDeath ? "Muerte Súbita" : "Tiempo de Partido");
+        speak(useSuddenDeath ? "Muerte Súbita, No hay escudo!" : "Tiempo de Partido, Termina el set y se acaba el partido!");
       }
       
       if (useSuddenDeath && checkVal >= triggerTime && !hasSounded) {
