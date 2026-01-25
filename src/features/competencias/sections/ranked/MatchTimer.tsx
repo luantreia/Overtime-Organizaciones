@@ -33,7 +33,7 @@ export const MatchTimer: React.FC<MatchTimerProps> = ({
   const playBuzzer = () => {
     try {
       const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3'); // Professional Buzzer Sound
-      audio.volume = 0.5;
+      audio.volume = 4.6;
       audio.play();
     } catch (e) {
       console.warn('Audio play failed', e);
@@ -44,7 +44,7 @@ export const MatchTimer: React.FC<MatchTimerProps> = ({
   const playWhistle = () => {
     try {
       const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2158/2158-preview.mp3'); // Professional Whistle
-      audio.volume = 0.6;
+      audio.volume = 4.6;
       audio.play();
     } catch (e) {
       console.warn('Whistle audio failed', e);
@@ -100,7 +100,7 @@ export const MatchTimer: React.FC<MatchTimerProps> = ({
         lastAnnouncedSecond.current = 0;
         playWhistle();
         playBuzzer();
-        speak(useSuddenDeath ? "Muerte Súbita" : "Tiempo de Partido");
+        speak(useSuddenDeath ? "Súbitaa" : "Tiempo de Partido");
       }
       
       if (useSuddenDeath && checkVal >= triggerTime && !hasSounded) {
