@@ -40,6 +40,12 @@ interface RankedFinalizeProps {
     setDuration: number; 
     useSuddenDeath: boolean;
     autoPauseGlobal?: boolean;
+    enableCountdown?: boolean;
+    enableWhistle?: boolean;
+    voiceVolume?: number;
+    buzzerVolume?: number;
+    voiceRate?: number;
+    voiceIndex?: number;
   };
   isBasicMode?: boolean;
   onUpdateConfig?: (config: Partial<{ 
@@ -47,6 +53,12 @@ interface RankedFinalizeProps {
     setDuration: number; 
     useSuddenDeath: boolean;
     autoPauseGlobal?: boolean;
+    enableCountdown?: boolean;
+    enableWhistle?: boolean;
+    voiceVolume?: number;
+    buzzerVolume?: number;
+    voiceRate?: number;
+    voiceIndex?: number;
   }>) => Promise<void>;
 }
 
@@ -96,7 +108,13 @@ export const RankedFinalize: React.FC<RankedFinalizeProps> = ({
     matchDuration: 1200, 
     setDuration: 180, 
     useSuddenDeath: true,
-    autoPauseGlobal: false 
+    autoPauseGlobal: false,
+    enableCountdown: true,
+    enableWhistle: true,
+    voiceVolume: 1,
+    buzzerVolume: 0.5,
+    voiceRate: 1.3,
+    voiceIndex: 0
   });
 
   React.useEffect(() => {

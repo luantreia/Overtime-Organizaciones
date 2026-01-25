@@ -86,11 +86,23 @@ export function useRankedMatch({
     setDuration: number; 
     useSuddenDeath: boolean;
     autoPauseGlobal?: boolean;
+    enableCountdown?: boolean;
+    enableWhistle?: boolean;
+    voiceVolume?: number;
+    buzzerVolume?: number;
+    voiceRate?: number;
+    voiceIndex?: number;
   }>({
     matchDuration: 1200,
     setDuration: 180,
     useSuddenDeath: true,
-    autoPauseGlobal: false
+    autoPauseGlobal: false,
+    enableCountdown: true,
+    enableWhistle: true,
+    voiceVolume: 1,
+    buzzerVolume: 0.5,
+    voiceRate: 1.3,
+    voiceIndex: 0
   });
   const [pjMarked, setPjMarked] = useState<boolean>(false);
   const [isBasicMode, setIsBasicMode] = useState<boolean>(false);
@@ -138,12 +150,19 @@ export function useRankedMatch({
       }
 
       if (partido.rankedMeta) {
-        setMatchConfig({
+        setMatchConfig(prev => ({
+          ...prev,
           matchDuration: partido.rankedMeta.matchDuration || 1200,
           setDuration: partido.rankedMeta.setDuration || 180,
           useSuddenDeath: partido.rankedMeta.useSuddenDeath ?? (partido.rankedMeta.suddenDeathLimit > 0),
-          autoPauseGlobal: partido.rankedMeta.autoPauseGlobal
-        });
+          autoPauseGlobal: partido.rankedMeta.autoPauseGlobal,
+          enableCountdown: partido.rankedMeta.enableCountdown ?? prev.enableCountdown,
+          enableWhistle: partido.rankedMeta.enableWhistle ?? prev.enableWhistle,
+          voiceVolume: partido.rankedMeta.voiceVolume ?? prev.voiceVolume,
+          buzzerVolume: partido.rankedMeta.buzzerVolume ?? prev.buzzerVolume,
+          voiceRate: partido.rankedMeta.voiceRate ?? prev.voiceRate,
+          voiceIndex: partido.rankedMeta.voiceIndex ?? prev.voiceIndex
+        }));
       }
     } catch (e) {
       console.error('Error in syncWithServer:', e);
@@ -643,6 +662,12 @@ export function useRankedMatch({
       setDuration: number; 
       useSuddenDeath: boolean;
       autoPauseGlobal?: boolean;
+      enableCountdown?: boolean;
+      enableWhistle?: boolean;
+      voiceVolume?: number;
+      buzzerVolume?: number;
+      voiceRate?: number;
+      voiceIndex?: number;
     }>) => {
       if (!matchId) return;
       if (isBasicMode) {
@@ -657,7 +682,13 @@ export function useRankedMatch({
           matchDuration: res.rankedMeta.matchDuration ?? prev.matchDuration,
           setDuration: res.rankedMeta.setDuration ?? prev.setDuration,
           useSuddenDeath: res.rankedMeta.useSuddenDeath ?? prev.useSuddenDeath,
-          autoPauseGlobal: res.rankedMeta.autoPauseGlobal ?? prev.autoPauseGlobal
+          autoPauseGlobal: res.rankedMeta.autoPauseGlobal ?? prev.autoPauseGlobal,
+          enableCountdown: res.rankedMeta.enableCountdown ?? prev.enableCountdown,
+          enableWhistle: res.rankedMeta.enableWhistle ?? prev.enableWhistle,
+          voiceVolume: res.rankedMeta.voiceVolume ?? prev.voiceVolume,
+          buzzerVolume: res.rankedMeta.buzzerVolume ?? prev.buzzerVolume,
+          voiceRate: res.rankedMeta.voiceRate ?? prev.voiceRate,
+          voiceIndex: res.rankedMeta.voiceIndex ?? prev.voiceIndex
         }));
         onSuccess?.('Configuración actualizada');
       } catch (e: any) {

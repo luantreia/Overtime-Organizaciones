@@ -11,6 +11,14 @@ interface MatchTimerProps {
   matchDuration?: number;
   currentSetStartTime?: number;
   isWaitingForNextSet?: boolean;
+  audioConfig?: {
+    enableCountdown?: boolean;
+    enableWhistle?: boolean;
+    voiceVolume?: number;
+    buzzerVolume?: number;
+    voiceRate?: number;
+    voiceIndex?: number;
+  };
 }
 
 export const MatchTimer: React.FC<MatchTimerProps> = ({ 
@@ -23,7 +31,15 @@ export const MatchTimer: React.FC<MatchTimerProps> = ({
   setDuration = 180,
   matchDuration = 1200,
   currentSetStartTime = 0,
-  isWaitingForNextSet = false
+  isWaitingForNextSet = false,
+  audioConfig = {
+    enableCountdown: true,
+    enableWhistle: true,
+    voiceVolume: 1,
+    buzzerVolume: 0.5,
+    voiceRate: 1.3,
+    voiceIndex: 0
+  }
 }) => {
   const [elapsed, setElapsed] = useState<number>(accumulatedTime / 1000);
   const [hasSounded, setHasSounded] = useState<boolean>(false);
@@ -33,7 +49,7 @@ export const MatchTimer: React.FC<MatchTimerProps> = ({
   const playBuzzer = () => {
     try {
       const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3'); // Professional Buzzer Sound
-      audio.volume = 0.2;
+      audio.volume = audioConfig.buzzerVolume ?? 0.5;
       audio.play();
     } catch (e) {
       console.warn('Audio play failed', e);
@@ -42,9 +58,10 @@ export const MatchTimer: React.FC<MatchTimerProps> = ({
 
   // Audio for the whistle
   const playWhistle = () => {
+    if (!audioConfig.enableWhistle) return;
     try {
       const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2158/2158-preview.mp3'); // Professional Whistle
-      audio.volume = 0.2;
+      audio.volume = (audioConfig.buzzerVolume ?? 0.5) * 1.2;
       audio.play();
     } catch (e) {
       console.warn('Whistle audio failed', e);
@@ -56,7 +73,14 @@ export const MatchTimer: React.FC<MatchTimerProps> = ({
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = 'es-ES';
-      utterance.rate = 1.3;
+      utterance.volume = audioConfig.voiceVolume ?? 1;
+      utterance.rate = audioConfig.voiceRate ?? 1.3;
+
+      const voices = window.speechSynthesis.getVoices();
+      if (audioConfig.voiceIndex !== undefined && voices[audioConfig.voiceIndex]) {
+        utterance.voice = voices[audioConfig.voiceIndex];
+      }
+
       window.speechSynthesis.speak(utterance);
     }
   };
@@ -90,7 +114,7 @@ export const MatchTimer: React.FC<MatchTimerProps> = ({
       const remainingSeconds = triggerTime - checkVal;
 
       // 10s Countdown logic
-      if (remainingSeconds > 0 && remainingSeconds <= 10 && lastAnnouncedSecond.current !== remainingSeconds) {
+      if (audioConfig.enableCountdown && remainingSeconds > 0 && remainingSeconds <= 10 && lastAnnouncedSecond.current !== remainingSeconds) {
         lastAnnouncedSecond.current = remainingSeconds;
         speak(String(remainingSeconds));
       }
@@ -100,7 +124,7 @@ export const MatchTimer: React.FC<MatchTimerProps> = ({
         lastAnnouncedSecond.current = 0;
         playWhistle();
         playBuzzer();
-        speak(useSuddenDeath ? "Muerte Súbita, No hay Escudo!" : "Tiempo de Partido, Termina el Set y se acaba!");
+        speak(useSuddenDeath ? "Muerte Súbita" : "Tiempo de Partido");
       }
       
       if (useSuddenDeath && checkVal >= triggerTime && !hasSounded) {
@@ -113,7 +137,7 @@ export const MatchTimer: React.FC<MatchTimerProps> = ({
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [startTime, accumulatedTime, isPaused, getEffectiveElapsed, sets, useSuddenDeath, setDuration, matchDuration, currentSetStartTime, hasSounded]);
+  }, [startTime, accumulatedTime, isPaused, getEffectiveElapsed, sets, useSuddenDeath, setDuration, matchDuration, currentSetStartTime, hasSounded, audioConfig]);
 
   if (!startTime) return null;
 
