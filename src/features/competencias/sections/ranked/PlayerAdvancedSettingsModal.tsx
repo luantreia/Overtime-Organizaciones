@@ -109,88 +109,86 @@ export const PlayerAdvancedSettingsModal: React.FC<PlayerAdvancedSettingsModalPr
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-lg rounded-xl bg-white p-6 shadow-xl max-h-[90vh] flex flex-col">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold text-slate-900 truncate">Ajustes: {playerName}</h2>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 font-bold text-xl">×</button>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 p-2 sm:p-4 backdrop-blur-sm">
+      <div className="w-full max-w-lg rounded-xl bg-white p-3 sm:p-6 shadow-xl max-h-[95vh] flex flex-col">
+        <div className="flex justify-between items-center mb-3 sm:mb-4">
+          <h2 className="text-sm sm:text-xl font-bold text-slate-900 truncate">Ajustes: {playerName}</h2>
+          <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-600 font-bold text-2xl leading-none">×</button>
         </div>
 
         {loading ? (
           <div className="py-20 text-center animate-pulse text-slate-400">Cargando detalles...</div>
         ) : (
-          <div className="overflow-auto flex-1 space-y-6 pr-1">
-             <div className="bg-slate-50 p-4 rounded-lg border border-slate-100 grid grid-cols-2 gap-4">
+          <div className="overflow-auto flex-1 space-y-4 sm:space-y-6 pr-1">
+             <div className="bg-slate-50 p-3 sm:p-4 rounded-lg border border-slate-100 grid grid-cols-2 gap-3 sm:gap-4">
                 <div>
                    <p className="text-[10px] font-bold text-slate-400 uppercase">Rating Actual</p>
-                   <p className="text-2xl font-black text-brand-600">{Math.round(rating?.rating || 1500)}</p>
+                   <p className="text-xl sm:text-2xl font-black text-brand-600">{Math.round(rating?.rating || 1500)}</p>
                 </div>
                 <div>
-                   <p className="text-[10px] font-bold text-slate-400 uppercase">Partidos Jugados</p>
-                   <p className="text-2xl font-black text-slate-700">{rating?.matchesPlayed || 0}</p>
+                   <p className="text-[10px] font-bold text-slate-400 uppercase">PJ</p>
+                   <p className="text-xl sm:text-2xl font-black text-slate-700">{rating?.matchesPlayed || 0}</p>
                 </div>
              </div>
 
-             <div className="space-y-3">
-                <h3 className="text-sm font-bold text-slate-700">Historial de Snapshots (MatchPlayer)</h3>
-                <div className="border rounded-lg overflow-hidden divide-y text-xs bg-white">
+             <div className="space-y-2 sm:space-y-3">
+                <h3 className="text-xs sm:text-sm font-bold text-slate-700">Historial de Partidos</h3>
+                <div className="border rounded-lg overflow-hidden divide-y text-[11px] sm:text-xs bg-white">
                    {history.length === 0 ? (
-                     <div className="p-4 text-center text-slate-400 italic">No hay partidos registrados para este jugador en este contexto.</div>
+                     <div className="p-4 text-center text-slate-400 italic">No hay partidos registrados.</div>
                    ) : (
                      <table className="w-full">
-                        <thead className="bg-slate-50 text-[10px] text-slate-500 font-bold uppercase">
+                        <thead className="bg-slate-50 text-[9px] sm:text-[10px] text-slate-500 font-bold uppercase">
                            <tr>
-                              <th className="p-2 text-left">Fecha / Partido</th>
+                              <th className="p-2 text-left">Fecha</th>
                               <th className="p-2 text-center">Res</th>
-                              <th className="p-2 text-center">Color</th>
+                              <th className="p-2 text-center hidden sm:table-cell">Color</th>
                               <th className="p-2 text-center">Delta</th>
-                              <th className="p-2 text-center">Score</th>
+                              <th className="p-2 text-center hidden xs:table-cell">Score</th>
                               <th className="p-2 text-center w-8"></th>
                            </tr>
                         </thead>
                         <tbody className="divide-y">
                            {history.map((h, i) => (
                              <tr key={h._id} className="hover:bg-slate-50">
-                                <td className="p-2">
-                                   <p className="font-bold">{new Date(h.partidoId?.fecha || h.createdAt).toLocaleDateString()}</p>
-                                   <p className="text-[9px] text-slate-400">ID: {(h.partidoId?._id || h.partidoId || '').slice(-6)}</p>
+                                <td className="p-1.5 sm:p-2">
+                                   <p className="font-bold">{new Date(h.partidoId?.fecha || h.createdAt).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' })}</p>
+                                   <p className="text-[8px] text-slate-400">..{(h.partidoId?._id || h.partidoId || '').slice(-4)}</p>
                                 </td>
-                                <td className="p-2 text-center">
-                                   <div className="flex flex-col items-center gap-1">
+                                <td className="p-1.5 sm:p-2 text-center">
+                                   <div className="flex flex-col items-center">
                                       {(h.win === true || (h.win === undefined && h.delta > 0)) ? (
                                         <span className="text-emerald-600 font-black">W</span>
                                       ) : (
                                         <span className="text-red-400 font-bold">L</span>
                                       )}
                                       {h.isAFK && (
-                                        <span className="bg-red-500 text-white text-[8px] px-1 rounded font-bold animate-pulse">AFK</span>
+                                        <span className="bg-red-500 text-white text-[7px] px-1 rounded font-bold animate-pulse">AFK</span>
                                       )}
                                    </div>
                                 </td>
-                                <td className="p-2 text-center">
-                                   <span className={`px-1 rounded text-[10px] font-bold ${h.teamColor === 'rojo' ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600'}`}>
-                                      {h.teamColor?.toUpperCase()}
+                                <td className="p-1.5 sm:p-2 text-center hidden sm:table-cell">
+                                   <span className={`px-1 rounded text-[9px] font-bold ${h.teamColor === 'rojo' ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600'}`}>
+                                      {h.teamColor?.toUpperCase().slice(0,3)}
                                    </span>
                                 </td>
-                                <td className="p-2 text-center font-black">
+                                <td className="p-1.5 sm:p-2 text-center font-black">
                                    <div className="flex flex-col items-center">
-                                      <span className={h.delta > 0 ? 'text-emerald-500' : 'text-red-500'}>
+                                      <span className={`${h.delta > 0 ? 'text-emerald-500' : 'text-red-500'} text-xs`}>
                                          {h.delta > 0 ? `+${h.delta}` : h.delta}
                                       </span>
-                                      {h.isAFK && <span className="text-[7px] text-red-400 font-bold uppercase leading-none mt-0.5" title="Se aplicó penalización doble por abandono">(Penalización)</span>}
                                    </div>
                                 </td>
-                                <td className="p-2 text-center text-slate-500">
-                                   {h.partidoId?.marcadorLocal} - {h.partidoId?.marcadorVisitante}
+                                <td className="p-1.5 sm:p-2 text-center text-slate-500 hidden xs:table-cell">
+                                   {h.partidoId?.marcadorLocal}-{h.partidoId?.marcadorVisitante}
                                 </td>
-                                <td className="p-2 text-center">
+                                <td className="p-1.5 sm:p-2 text-center">
                                    <button 
                                       onClick={() => handleDeleteSnapshot(h._id)}
                                       disabled={busy}
                                       className="p-1 text-slate-300 hover:text-red-500 transition-colors disabled:opacity-30"
-                                      title="Eliminar snapshot"
                                    >
-                                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 sm:h-3.5 sm:w-3.5" viewBox="0 0 20 20" fill="currentColor">
                                          <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
                                       </svg>
                                    </button>
