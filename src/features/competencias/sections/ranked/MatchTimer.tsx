@@ -147,14 +147,15 @@ export const MatchTimer: React.FC<MatchTimerProps> = ({
         playWhistle();
         playBuzzer();
         
-        // Voice alert logic: Match End message only for Global End
-        if (globalRemainingSeconds <= 0) {
-          const msg = useSuddenDeath 
-            ? (audioConfig.suddenDeathMessage || "¡Muerte Súbita!") 
-            : (audioConfig.matchEndMessage || "Tiempo cumplido.");
-          speak(msg);
+        // Voice alert logic
+        if (useSuddenDeath) {
+          // If Sudden Death is active, it always takes priority when time hits 0
+          speak(audioConfig.suddenDeathMessage || "¡Muerte Súbita!");
+        } else if (globalRemainingSeconds <= 0) {
+          // If not SD, Match End message only for Global End
+          speak(audioConfig.matchEndMessage || "Tiempo cumplido.");
         } else if (!isUnlimitedSet) {
-          // If it's just a set end, we can have a generic set-end message or just the whistle
+          // Regular set end without Sudden Death
           speak("Fin del set.");
         }
       }
