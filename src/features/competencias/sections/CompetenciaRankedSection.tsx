@@ -126,7 +126,7 @@ export default function CompetenciaRankedSection({
         categoria: categoria as string, 
         competition: lbScope === 'competition' ? competenciaId : undefined, 
         season: lbScope === 'competition' ? (selectedTemporada || undefined) : undefined,
-        limit: 100 
+        limit: 500 
       });
       setBoard(lb.items);
     } catch {}
@@ -303,7 +303,7 @@ export default function CompetenciaRankedSection({
         const unique = mapped.filter((p) => (seen.has(p._id) ? false : (seen.add(p._id), true)));
         setCompPlayers(unique);
 
-        const all = await listJugadores(200);
+        const all = await listJugadores(500);
         const rawItems = Array.isArray(all) ? all : (all as any).items || [];
         const mappedAll = rawItems
           .map((j: any) => {
