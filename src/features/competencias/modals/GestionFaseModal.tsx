@@ -566,6 +566,7 @@ export default function GestionParticipantesFaseModal({
                               sugs.push({
                                 local: getW(m1),
                                 visitante: getW(m2),
+                                stage: stage,
                                 labelMatch1: `${m1.localNombre || 'TBD'} vs ${m1.visitanteNombre || 'TBD'}`,
                                 labelMatch2: `${m2.localNombre || 'TBD'} vs ${m2.visitanteNombre || 'TBD'}`
                               });
@@ -740,6 +741,7 @@ export default function GestionParticipantesFaseModal({
                                    onClick={() => {
                                       if (s.local) setNuevoLocal(typeof s.local === 'string' ? s.local : s.local._id);
                                       if (s.visitante) setNuevoVisitante(typeof s.visitante === 'string' ? s.visitante : s.visitante._id);
+                                      if (s.stage) setNuevaEtapa(s.stage);
                                    }}
                                    className="group flex flex-col gap-1 p-2.5 bg-brand-50 border border-brand-100 rounded-xl hover:border-brand-400 hover:bg-white transition-all text-left"
                                  >
