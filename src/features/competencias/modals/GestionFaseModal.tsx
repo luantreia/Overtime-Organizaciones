@@ -26,6 +26,7 @@ type Props = {
 };
 
 export default function GestionParticipantesFaseModal({ isOpen, onClose, esAdmin, fase, temporadaId, participantesFase, participantesTemporada, onAgregar, onGenerarLlave }: Props) {
+  const [activeTab, setActiveTab] = useState<'participantes' | 'partidos' | 'configuracion'>('participantes');
   const [seleccionPT, setSeleccionPT] = useState('');
   const [grupo, setGrupo] = useState('');
   const [division, setDivision] = useState('');
@@ -128,272 +129,364 @@ export default function GestionParticipantesFaseModal({ isOpen, onClose, esAdmin
 
   const seccionAgregarVisible = esAdmin && opcionesAgregar.length > 0 && !!fase?._id;
 
+  const renderStatusBadge = (estado: string) => {
+    switch (estado?.toLowerCase()) {
+      case 'finalizado': return <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-600 uppercase">Finalizado</span>;
+      case 'en_curso': return <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700 uppercase animate-pulse">En curso</span>;
+      default: return <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-600 uppercase">Pendiente</span>;
+    }
+  };
+
+  const renderMatchCard = (p: Partido) => (
+    <li key={p.id} className="group relative flex flex-col rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-brand-300 hover:shadow-md">
+      <div className="mb-3 flex items-center justify-between">
+        <div className="flex flex-col">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+            {p.etapa ? p.etapa.replace('_', ' ') : (p.grupo ? `Grupo ${p.grupo}` : (p.division ? `División ${p.division}` : 'Partido'))}
+          </span>
+          <span className="text-xs font-medium text-slate-600">
+            {new Date(p.fecha).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' })} {p.hora ? `· ${p.hora} hs` : ''}
+          </span>
+        </div>
+        {renderStatusBadge(p.estado)}
+      </div>
+
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex flex-1 flex-col items-center text-center">
+          <div className="mb-1 h-8 w-8 rounded-full bg-slate-50 flex items-center justify-center text-sm">🏟️</div>
+          <span className="text-sm font-bold text-slate-900 line-clamp-1">{p.localNombre || 'Local'}</span>
+        </div>
+        
+        <div className="flex flex-col items-center px-2">
+          <span className="text-xl font-black text-slate-900 italic">VS</span>
+        </div>
+
+        <div className="flex flex-1 flex-col items-center text-center">
+          <div className="mb-1 h-8 w-8 rounded-full bg-slate-50 flex items-center justify-center text-sm">🛡️</div>
+          <span className="text-sm font-bold text-slate-900 line-clamp-1">{p.visitanteNombre || p.rival || 'Visitante'}</span>
+        </div>
+      </div>
+
+      <div className="mt-4 flex items-center justify-center gap-2 pt-3 border-t border-slate-50">
+        <button 
+          className="rounded-lg bg-slate-50 px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-100 transition"
+          onClick={() => { setPartidoInfoId(p.id); setInfoModalAbierto(true); }}
+        >
+          Info
+        </button>
+        <button 
+          className="rounded-lg bg-brand-50 px-3 py-1.5 text-xs font-bold text-brand-700 hover:bg-brand-100 transition border border-brand-100"
+          onClick={() => { setPartidoSetsId(p.id); setGestionSetsAbierto(true); }}
+        >
+          Sets
+        </button>
+        <button 
+          className="rounded-lg bg-slate-50 px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-100 transition"
+          onClick={() => { setPartidoAlineacionId(p.id); setAlineacionModalAbierto(true); }}
+        >
+          Plantilla
+        </button>
+      </div>
+    </li>
+  );
+
   const contenido = (
-    <div className="max-h-[80vh] overflow-y-auto space-y-6">
+    <div className="max-h-[80vh] overflow-y-auto">
       {notice ? (
-        <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 font-medium">
+        <div className="sticky top-0 z-20 mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 font-medium shadow-sm animate-in fade-in slide-in-from-top-2">
           {notice}
         </div>
       ) : null}
 
-      {/* Sección Participantes */}
-      <section className="space-y-4">
-        <h3 className="text-lg font-semibold text-slate-900 border-b border-slate-200 pb-2">Participantes de la Fase</h3>
-        {tipo === 'liga' ? (
-          <FaseLigaSection
-            participantes={items}
-            esAdmin={esAdmin}
-            onUpdate={async (id: string, body: Partial<{ division: string }>) => {
-              await updateParticipacionFase(id, body);
-              setItems((prev)=> prev.map(p=> p._id===id ? ({...p, ...body} as any) : p));
-              setNotice('Cambios guardados'); setTimeout(()=> setNotice(''), 1200);
-            }}
-            onDelete={async (id: string) => {
-              if (!window.confirm('¿Eliminar este participante de la fase?')) return;
-              await deleteParticipacionFase(id);
-              setItems((prev)=> prev.filter(p=> p._id !== id));
-              setNotice('Participante eliminado'); setTimeout(()=> setNotice(''), 1200);
-            }}
-          />
-        ) : tipo === 'grupo' ? (
-          <FaseGruposSection
-            participantes={items}
-            esAdmin={esAdmin}
-            onUpdate={async (id: string, body: Partial<{ grupo: string }>) => {
-              await updateParticipacionFase(id, body);
-              setItems((prev)=> prev.map(p=> p._id===id ? ({...p, ...body} as any) : p));
-              setNotice('Cambios guardados'); setTimeout(()=> setNotice(''), 1200);
-            }}
-            onDelete={async (id: string) => {
-              if (!window.confirm('¿Eliminar este participante de la fase?')) return;
-              await deleteParticipacionFase(id);
-              setItems((prev)=> prev.filter(p=> p._id !== id));
-              setNotice('Participante eliminado'); setTimeout(()=> setNotice(''), 1200);
-            }}
-          />
-        ) : (tipo === 'playoff' || tipo === 'promocion') ? (
-          <>
-            <FasePlayoffSection
-              participantes={items}
-              esAdmin={esAdmin}
-              onUpdate={async (id: string, body: Partial<{ seed: number; posicion: number }>) => {
-                await updateParticipacionFase(id, body);
-                setItems((prev)=> prev.map(p=> p._id===id ? ({...p, ...body} as any) : p));
-                setNotice('Cambios guardados'); setTimeout(()=> setNotice(''), 1200);
-              }}
-              onDelete={async (id: string) => {
-                if (!window.confirm('¿Eliminar este participante de la fase?')) return;
-                await deleteParticipacionFase(id);
-                setItems((prev)=> prev.filter(p=> p._id !== id));
-                setNotice('Participante eliminado'); setTimeout(()=> setNotice(''), 1200);
-              }}
-            />
-            {esAdmin ? (
-              <div className="flex justify-end pt-4">
-                <button type="button" className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-700 transition" onClick={() => { if (fase?._id) { void onGenerarLlave?.(fase._id); } }}>Generar Llave</button>
-              </div>
-            ) : null}
-          </>
-        ) : (
-          <FaseGruposSection participantes={items} esAdmin={esAdmin} onUpdate={async (id: string, body: Partial<{ grupo: string }>) => { await updateParticipacionFase(id, body); setItems((prev)=> prev.map(p=> p._id===id ? ({...p, ...body} as any) : p)); setNotice('Cambios guardados'); setTimeout(()=> setNotice(''), 1200); }} onDelete={async (id: string) => { if (!window.confirm('¿Eliminar este participante de la fase?')) return; await deleteParticipacionFase(id); setItems((prev)=> prev.filter(p=> p._id !== id)); setNotice('Participante eliminado'); setTimeout(()=> setNotice(''), 1200); }} />
-        )}
-      </section>
+      {/* HEADER DE FASE */}
+      <div className="mb-6 grid grid-cols-2 sm:grid-cols-4 gap-4 rounded-2xl bg-slate-50 p-4 border border-slate-100">
+        <div className="flex flex-col lg:items-center">
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Equipos</span>
+          <span className="text-xl font-black text-brand-600">{items.length}</span>
+        </div>
+        <div className="flex flex-col lg:items-center border-l border-slate-200 pl-4 sm:pl-0 sm:border-l-0 sm:border-x">
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Partidos</span>
+          <span className="text-xl font-black text-slate-700">{partidos.length}</span>
+        </div>
+        <div className="flex flex-col lg:items-center border-t sm:border-t-0 pt-4 sm:pt-0 sm:border-r border-slate-200">
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Finalizados</span>
+          <span className="text-xl font-black text-green-600">{partidos.filter(p => p.estado === 'finalizado').length}</span>
+        </div>
+        <div className="flex flex-col lg:items-center border-l sm:border-l-0 border-t sm:border-t-0 pt-4 sm:pt-0 pl-4 sm:pl-0 border-slate-200">
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Fase Tipo</span>
+          <span className="text-xs font-extrabold text-slate-900 uppercase bg-slate-200/50 px-2 py-0.5 rounded-md mt-1 italic">{tipo || '—'}</span>
+        </div>
+      </div>
 
-      {/* Sección Partidos */}
-      <section className="space-y-4">
-        <details className="group">
-          <summary className="cursor-pointer text-lg font-semibold text-slate-900 border-b border-slate-200 pb-2 group-open:border-brand-500 transition">
-            Partidos de la Fase
-            <span className="ml-2 text-sm text-slate-500">({partidos.length} partidos)</span>
-          </summary>
-          <div className="mt-4 space-y-4">
-            {(tipo === 'playoff' || tipo === 'promocion') && Object.keys(porEtapa).length > 0 ? (
-              <div>
-                <h5 className="text-sm font-semibold text-slate-700 mb-3">Bracket por Etapa</h5>
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                  {ordenEtapas.filter(e => porEtapa[e]?.length).map((e) => (
-                    <div key={e} className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-                      <p className="text-sm font-semibold capitalize text-slate-700 mb-3">{e.replace('_', ' ')}</p>
-                      <ul className="space-y-3">
-                        {porEtapa[e].map((p) => (
-                          <li key={p.id} className="rounded border border-slate-100 bg-slate-50 p-3 text-sm">
-                            <div className="flex items-center justify-between mb-2">
-                              <span className="truncate pr-2 font-medium">{p.localNombre || 'Local'}</span>
-                              <span className="text-slate-400 text-xs">vs</span>
-                              <span className="truncate pl-2 font-medium">{p.visitanteNombre || p.rival || 'Visitante'}</span>
-                              <div className="relative ml-2">
-                                <button type="button" className="rounded border border-slate-200 px-2 py-1 text-xs hover:bg-slate-100 transition" onClick={(e)=>{ e.stopPropagation(); setMenuAbiertoId(menuAbiertoId === p.id ? null : p.id); }}>
-                                  ⋯
-                                </button>
-                                {menuAbiertoId === p.id ? (
-                                  <div className="absolute right-0 z-10 mt-1 w-40 rounded border border-slate-200 bg-white shadow-lg">
-                                    <button className="block w-full px-3 py-2 text-left text-sm hover:bg-slate-50" onClick={()=>{ setPartidoInfoId(p.id); setInfoModalAbierto(true); setMenuAbiertoId(null); }}>Información</button>
-                                    <button className="block w-full px-3 py-2 text-left text-sm hover:bg-slate-50" onClick={()=>{ setPartidoSetsId(p.id); setGestionSetsAbierto(true); setMenuAbiertoId(null); }}>Gestionar Sets</button>
-                                    <button className="block w-full px-3 py-2 text-left text-sm hover:bg-slate-50" onClick={()=>{ setPartidoAlineacionId(p.id); setAlineacionModalAbierto(true); setMenuAbiertoId(null); }}>Alineación</button>
-                                  </div>
-                                ) : null}
-                              </div>
-                            </div>
-                            <div className="text-xs text-slate-500">{p.fecha}{p.hora ? ` ${p.hora}` : ''} · {p.estado}</div>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ) : null}
+      {/* TABS SELECTOR */}
+      <div className="mb-6 flex gap-1 rounded-xl bg-slate-100 p-1">
+        <button
+          onClick={() => setActiveTab('participantes')}
+          className={`flex-1 rounded-lg px-4 py-2.5 text-sm font-bold transition-all ${activeTab === 'participantes' ? 'bg-white text-brand-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+        >
+          Participantes
+        </button>
+        <button
+          onClick={() => setActiveTab('partidos')}
+          className={`flex-1 rounded-lg px-4 py-2.5 text-sm font-bold transition-all ${activeTab === 'partidos' ? 'bg-white text-brand-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+        >
+          Calendario
+        </button>
+        <button
+          onClick={() => setActiveTab('configuracion')}
+          className={`flex-1 rounded-lg px-4 py-2.5 text-sm font-bold transition-all ${activeTab === 'configuracion' ? 'bg-white text-brand-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+        >
+          Configuración
+        </button>
+      </div>
 
-            <div>
-              <h5 className="text-sm font-semibold text-slate-700 mb-3">Lista por Fecha (Agrupada)</h5>
-              <div className="space-y-4">
-                {(tipo === 'grupo' ? Object.entries(porGrupo) : tipo === 'liga' ? Object.entries(porDivision) : (Object.keys(porGrupo).some(k => k !== '—') ? Object.entries(porGrupo) : Object.entries(porDivision)))
-                  .map(([key, arr]) => (
-                    <div key={key} className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-                      <p className="text-sm font-semibold text-slate-700 mb-3">{tipo === 'grupo' ? `Grupo ${key}` : tipo === 'liga' ? `División ${key}` : (key !== '—' ? `Grupo ${key}` : 'General')}</p>
-                      <ul className="divide-y divide-slate-100">
-                        {arr.map((p) => (
-                          <li key={p.id} className="flex items-center justify-between py-3 text-sm">
-                            <span className="truncate pr-2 flex-1">{p.localNombre || 'Local'} vs {p.visitanteNombre || p.rival || 'Visitante'}</span>
-                            <div className="flex items-center gap-3">
-                              <span className="text-slate-500 text-xs">{p.fecha}{p.hora ? ` ${p.hora}` : ''}</span>
-                              <span className="text-xs text-slate-400">{p.estado}</span>
-                              <div className="relative">
-                                <button type="button" className="rounded border border-slate-200 px-2 py-1 text-xs hover:bg-slate-100 transition" onClick={(e)=>{ e.stopPropagation(); setMenuAbiertoId(menuAbiertoId === p.id ? null : p.id); }}>
-                                  ⋯
-                                </button>
-                                {menuAbiertoId === p.id ? (
-                                  <div className="absolute right-0 z-10 mt-1 w-40 rounded border border-slate-200 bg-white shadow-lg">
-                                    <button className="block w-full px-3 py-2 text-left text-sm hover:bg-slate-50" onClick={()=>{ setPartidoInfoId(p.id); setInfoModalAbierto(true); setMenuAbiertoId(null); }}>Información</button>
-                                    <button className="block w-full px-3 py-2 text-left text-sm hover:bg-slate-50" onClick={()=>{ setPartidoSetsId(p.id); setGestionSetsAbierto(true); setMenuAbiertoId(null); }}>Gestionar Sets</button>
-                                    <button className="block w-full px-3 py-2 text-left text-sm hover:bg-slate-50" onClick={()=>{ setPartidoAlineacionId(p.id); setAlineacionModalAbierto(true); setMenuAbiertoId(null); }}>Alineación</button>
-                                  </div>
-                                ) : null}
-                              </div>
-                            </div>
-                          </li>
-                        ))}
-                        {arr.length === 0 ? (
-                          <li className="py-3 text-sm text-slate-500">Sin partidos</li>
-                        ) : null}
-                      </ul>
-                    </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Agregar partido en playoffs */}
-            {(tipo === 'playoff' || tipo === 'promocion') && esAdmin ? (
-              <div className="rounded-lg border border-slate-200 bg-white p-4">
-                <h6 className="text-sm font-semibold text-slate-700 mb-3">Agregar Partido</h6>
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
-                  <select className="rounded border border-slate-200 bg-white px-3 py-2 text-sm" value={nuevoLocal} onChange={(e)=> setNuevoLocal(e.target.value)}>
-                    <option value="">Local…</option>
-                    {items.map((pf: any) => {
-                      const eq = (pf?.participacionTemporada?.equipo as any);
-                      const id = typeof eq === 'string' ? eq : eq?._id;
-                      const nombre = typeof eq === 'string' ? eq : (eq?.nombre || id);
-                      return <option key={pf._id} value={id}>{nombre}</option>;
-                    })}
-                  </select>
-                  <select className="rounded border border-slate-200 bg-white px-3 py-2 text-sm" value={nuevoVisitante} onChange={(e)=> setNuevoVisitante(e.target.value)}>
-                    <option value="">Visitante…</option>
-                    {items.map((pf: any) => {
-                      const eq = (pf?.participacionTemporada?.equipo as any);
-                      const id = typeof eq === 'string' ? eq : eq?._id;
-                      const nombre = typeof eq === 'string' ? eq : (eq?.nombre || id);
-                      return <option key={pf._id} value={id}>{nombre}</option>;
-                    })}
-                  </select>
-                  <select className="rounded border border-slate-200 bg-white px-3 py-2 text-sm" value={nuevaEtapa} onChange={(e)=> setNuevaEtapa(e.target.value)}>
-                    <option value="">Etapa…</option>
-                    <option value="octavos">Octavos</option>
-                    <option value="cuartos">Cuartos</option>
-                    <option value="semifinal">Semifinal</option>
-                    <option value="final">Final</option>
-                    <option value="tercer_puesto">Tercer puesto</option>
-                    <option value="repechaje">Repechaje</option>
-                    <option value="otro">Otro</option>
-                  </select>
-                  <input type="date" className="rounded border border-slate-200 bg-white px-3 py-2 text-sm" value={nuevaFecha} onChange={(e)=> setNuevaFecha(e.target.value)} />
-                  <input type="time" className="rounded border border-slate-200 bg-white px-3 py-2 text-sm" value={nuevaHora} onChange={(e)=> setNuevaHora(e.target.value)} />
-                  <button
-                    type="button"
-                    className="rounded bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50 transition"
-                    disabled={!nuevoLocal || !nuevoVisitante || !nuevaFecha}
-                    onClick={async ()=>{
-                      if (!fase?._id) return;
-                      await crearPartidoCompetencia({ equipoLocalId: nuevoLocal, equipoVisitanteId: nuevoVisitante, fecha: nuevaFecha, hora: nuevaHora || undefined, faseId: fase._id, etapa: nuevaEtapa || undefined, modalidad: modalidadComp, categoria: categoriaComp });
-                      setNuevoLocal(''); setNuevoVisitante(''); setNuevaFecha(''); setNuevaHora(''); setNuevaEtapa('');
-                      const lista = await getPartidosPorFase(fase._id);
-                      setPartidos(lista);
-                      setNotice('Partido creado'); setTimeout(()=> setNotice(''), 1200);
-                    }}
-                  >
-                    Agregar
-                  </button>
-                </div>
-              </div>
-            ) : null}
-          </div>
-        </details>
-      </section>
-
-      {/* Agregar Participante */}
-      {seccionAgregarVisible ? (
-        <section className="space-y-4">
-          <h3 className="text-lg font-semibold text-slate-900 border-b border-slate-200 pb-2">Agregar Participante</h3>
-          <div className="rounded-lg border border-slate-200 bg-white p-4">
-            <div className="grid gap-3 sm:grid-cols-4">
-              <select
-                className="sm:col-span-2 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
-                value={seleccionPT}
-                onChange={(e) => setSeleccionPT(e.target.value)}
-              >
-                <option value="">Seleccionar participante…</option>
-                {opcionesAgregar.map((pt) => (
-                  <option key={pt._id} value={pt._id}>{typeof pt.equipo === 'string' ? pt.equipo : (pt.equipo as any)?.nombre || pt._id}</option>
-                ))}
-              </select>
-              {tipo === 'grupo' ? (
-                <input placeholder="Grupo" className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm" value={grupo} onChange={(e)=>setGrupo(e.target.value)} />
-              ) : null}
-              {tipo === 'liga' ? (
-                <input placeholder="División" className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm" value={division} onChange={(e)=>setDivision(e.target.value)} />
-              ) : null}
-              <button
-                type="button"
-                className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-700 disabled:opacity-50 transition"
-                disabled={!seleccionPT}
-                onClick={async () => {
-                  if (!fase?._id || !seleccionPT) return;
-
-                  // Validación para fase tipo liga: requiere división
-                  if (tipo === 'liga' && !division.trim()) {
-                    setNotice('Debe especificar una división para fases tipo liga');
-                    setTimeout(() => setNotice(''), 3000);
-                    return;
-                  }
-
-                  // Validación para fase tipo grupo: requiere grupo
-                  if (tipo === 'grupo' && !grupo.trim()) {
-                    setNotice('Debe especificar un grupo para fases tipo grupo');
-                    setTimeout(() => setNotice(''), 3000);
-                    return;
-                  }
-
-                  await onAgregar(fase._id, seleccionPT, { grupo: grupo || undefined, division: division || undefined });
-                  setSeleccionPT('');
-                  setGrupo('');
-                  setDivision('');
+      {/* CONTENIDO DE PESTAÑAS */}
+      <div className="px-1">
+        {activeTab === 'participantes' && (
+          <section className="space-y-4 animate-in fade-in duration-300">
+            {tipo === 'liga' ? (
+              <FaseLigaSection
+                participantes={items}
+                esAdmin={esAdmin}
+                onUpdate={async (id: string, body: Partial<{ division: string }>) => {
+                  await updateParticipacionFase(id, body);
+                  setItems((prev)=> prev.map(p=> p._id===id ? ({...p, ...body} as any) : p));
+                  setNotice('Cambios guardados'); setTimeout(()=> setNotice(''), 1200);
                 }}
-              >
-                Agregar
-              </button>
-            </div>
-          </div>
-        </section>
-      ) : null}
+                onDelete={async (id: string) => {
+                  if (!window.confirm('¿Eliminar este participante de la fase?')) return;
+                  await deleteParticipacionFase(id);
+                  setItems((prev)=> prev.filter(p=> p._id !== id));
+                  setNotice('Participante eliminado'); setTimeout(()=> setNotice(''), 1200);
+                }}
+              />
+            ) : tipo === 'grupo' ? (
+              <FaseGruposSection
+                participantes={items}
+                esAdmin={esAdmin}
+                onUpdate={async (id: string, body: Partial<{ grupo: string }>) => {
+                  await updateParticipacionFase(id, body);
+                  setItems((prev)=> prev.map(p=> p._id===id ? ({...p, ...body} as any) : p));
+                  setNotice('Cambios guardados'); setTimeout(()=> setNotice(''), 1200);
+                }}
+                onDelete={async (id: string) => {
+                  if (!window.confirm('¿Eliminar este participante de la fase?')) return;
+                  await deleteParticipacionFase(id);
+                  setItems((prev)=> prev.filter(p=> p._id !== id));
+                  setNotice('Participante eliminado'); setTimeout(()=> setNotice(''), 1200);
+                }}
+              />
+            ) : (tipo === 'playoff' || tipo === 'promocion') ? (
+              <>
+                <FasePlayoffSection
+                  participantes={items}
+                  esAdmin={esAdmin}
+                  onUpdate={async (id: string, body: Partial<{ seed: number; posicion: number }>) => {
+                    await updateParticipacionFase(id, body);
+                    setItems((prev)=> prev.map(p=> p._id===id ? ({...p, ...body} as any) : p));
+                    setNotice('Cambios guardados'); setTimeout(()=> setNotice(''), 1200);
+                  }}
+                  onDelete={async (id: string) => {
+                    if (!window.confirm('¿Eliminar este participante de la fase?')) return;
+                    await deleteParticipacionFase(id);
+                    setItems((prev)=> prev.filter(p=> p._id !== id));
+                    setNotice('Participante eliminado'); setTimeout(()=> setNotice(''), 1200);
+                  }}
+                />
+                {esAdmin && (
+                  <div className="flex justify-end pt-4 border-t border-slate-100">
+                    <button 
+                      type="button" 
+                      className="rounded-xl bg-brand-600 px-6 py-2.5 text-sm font-bold text-white shadow-lg shadow-brand-200 hover:bg-brand-700 transition" 
+                      onClick={() => { if (fase?._id) { void onGenerarLlave?.(fase._id); } }}
+                    >
+                      Generar Llave Automática
+                    </button>
+                  </div>
+                )}
+              </>
+            ) : (
+              <FaseGruposSection participantes={items} esAdmin={esAdmin} onUpdate={async (id: string, body: Partial<{ grupo: string }>) => { await updateParticipacionFase(id, body); setItems((prev)=> prev.map(p=> p._id===id ? ({...p, ...body} as any) : p)); setNotice('Cambios guardados'); setTimeout(()=> setNotice(''), 1200); }} onDelete={async (id: string) => { if (!window.confirm('¿Eliminar este participante de la fase?')) return; await deleteParticipacionFase(id); setItems((prev)=> prev.filter(p=> p._id !== id)); setNotice('Participante eliminado'); setTimeout(()=> setNotice(''), 1200); }} />
+            )}
+          </section>
+        )}
+
+        {activeTab === 'partidos' && (
+          <section className="space-y-6 animate-in fade-in duration-300">
+            {partidos.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-20 text-center bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
+                <span className="text-4xl mb-3">📅</span>
+                <p className="text-sm font-bold text-slate-500 uppercase tracking-widest">No hay partidos programados</p>
+                <p className="text-xs text-slate-400 mt-1">Crea partidos manualmente o genera la llave en playoffs.</p>
+              </div>
+            ) : (
+              <>
+                {(tipo === 'playoff' || tipo === 'promocion') && Object.keys(porEtapa).length > 0 ? (
+                  <div className="space-y-8">
+                    {ordenEtapas.filter(e => porEtapa[e]?.length).map((e) => (
+                      <div key={e}>
+                        <h5 className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-brand-600 mb-4">
+                          <span className="block h-px flex-1 bg-brand-100"></span>
+                          {e.replace('_', ' ')}
+                          <span className="block h-px flex-1 bg-brand-100"></span>
+                        </h5>
+                        <ul className="grid gap-4 sm:grid-cols-2">
+                          {porEtapa[e].map((p) => renderMatchCard(p))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="space-y-8">
+                    {(tipo === 'grupo' ? Object.entries(porGrupo) : tipo === 'liga' ? Object.entries(porDivision) : (Object.keys(porGrupo).some(k => k !== '—') ? Object.entries(porGrupo) : Object.entries(porDivision)))
+                      .map(([key, arr]) => (
+                        <div key={key}>
+                          <h5 className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-slate-400 mb-4">
+                            <span className="block h-px flex-1 bg-slate-100"></span>
+                            {tipo === 'grupo' ? `Grupo ${key}` : tipo === 'liga' ? `División ${key}` : (key !== '—' ? `Grupo ${key}` : 'Fase Regular')}
+                            <span className="block h-px flex-1 bg-slate-100"></span>
+                          </h5>
+                          <ul className="grid gap-4 sm:grid-cols-2">
+                            {arr.map((p) => renderMatchCard(p))}
+                          </ul>
+                        </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+          </section>
+        )}
+
+        {activeTab === 'configuracion' && (
+          <section className="space-y-8 animate-in fade-in duration-300">
+            {/* Gestión de Playoffs: Agregar Partido */}
+            {(tipo === 'playoff' || tipo === 'promocion') && esAdmin && (
+              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <h6 className="text-sm font-extrabold text-slate-900 uppercase tracking-tight mb-4 flex items-center gap-2">
+                  <span className="flex h-5 w-5 items-center justify-center rounded bg-brand-100 text-[10px] text-brand-600">+</span>
+                  Agregar Partido Manual
+                </h6>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-3">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase">Equipos</label>
+                    <select className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500/20" value={nuevoLocal} onChange={(e)=> setNuevoLocal(e.target.value)}>
+                      <option value="">Local…</option>
+                      {items.map((pf: any) => {
+                        const eq = (pf?.participacionTemporada?.equipo as any);
+                        const id = typeof eq === 'string' ? eq : eq?._id;
+                        const nombre = typeof eq === 'string' ? eq : (eq?.nombre || id);
+                        return <option key={pf._id} value={id}>{nombre}</option>;
+                      })}
+                    </select>
+                    <select className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500/20" value={nuevoVisitante} onChange={(e)=> setNuevoVisitante(e.target.value)}>
+                      <option value="">Visitante…</option>
+                      {items.map((pf: any) => {
+                        const eq = (pf?.participacionTemporada?.equipo as any);
+                        const id = typeof eq === 'string' ? eq : eq?._id;
+                        const nombre = typeof eq === 'string' ? eq : (eq?.nombre || id);
+                        return <option key={pf._id} value={id}>{nombre}</option>;
+                      })}
+                    </select>
+                  </div>
+                  <div className="space-y-3">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase">Detalles</label>
+                    <select className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500/20" value={nuevaEtapa} onChange={(e)=> setNuevaEtapa(e.target.value)}>
+                      <option value="">Etapa…</option>
+                      <option value="octavos">Octavos</option>
+                      <option value="cuartos">Cuartos</option>
+                      <option value="semifinal">Semifinal</option>
+                      <option value="final">Final</option>
+                      <option value="tercer_puesto">Tercer puesto</option>
+                      <option value="repechaje">Repechaje</option>
+                      <option value="otro">Otro</option>
+                    </select>
+                    <div className="flex gap-2">
+                      <input type="date" className="flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm" value={nuevaFecha} onChange={(e)=> setNuevaFecha(e.target.value)} />
+                      <input type="time" className="w-32 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm" value={nuevaHora} onChange={(e)=> setNuevaHora(e.target.value)} />
+                    </div>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  className="mt-5 w-full rounded-xl bg-slate-900 px-4 py-3 text-sm font-bold text-white hover:bg-slate-800 disabled:opacity-30 transition shadow-lg shadow-slate-200"
+                  disabled={!nuevoLocal || !nuevoVisitante || !nuevaFecha}
+                  onClick={async ()=>{
+                    if (!fase?._id) return;
+                    await crearPartidoCompetencia({ equipoLocalId: nuevoLocal, equipoVisitanteId: nuevoVisitante, fecha: nuevaFecha, hora: nuevaHora || undefined, faseId: fase._id, etapa: nuevaEtapa || undefined, modalidad: modalidadComp, categoria: categoriaComp });
+                    setNuevoLocal(''); setNuevoVisitante(''); setNuevaFecha(''); setNuevaHora(''); setNuevaEtapa('');
+                    const lista = await getPartidosPorFase(fase._id);
+                    setPartidos(lista);
+                    setNotice('Partido creado exitosamente'); setTimeout(()=> setNotice(''), 1200);
+                  }}
+                >
+                  Confirmar Partido
+                </button>
+              </div>
+            )}
+
+            {/* Inscribir Nuevo Participante */}
+            {seccionAgregarVisible && (
+              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <h3 className="text-sm font-extrabold text-slate-900 uppercase tracking-tight mb-4">Inscribir Participante en Fase</h3>
+                <div className="grid gap-4 sm:grid-cols-4">
+                  <div className="sm:col-span-2">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase block mb-2">Equipo de la Temporada</label>
+                    <select
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500/20"
+                      value={seleccionPT}
+                      onChange={(e) => setSeleccionPT(e.target.value)}
+                    >
+                      <option value="">Seleccionar equipo…</option>
+                      {opcionesAgregar.map((pt) => (
+                        <option key={pt._id} value={pt._id}>{typeof pt.equipo === 'string' ? pt.equipo : (pt.equipo as any)?.nombre || pt._id}</option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  {tipo === 'grupo' && (
+                    <div className="sm:col-span-1">
+                      <label className="text-[10px] font-bold text-slate-400 uppercase block mb-2">Asignar Grupo</label>
+                      <input placeholder="Ej: A, B..." className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm" value={grupo} onChange={(e)=>setGrupo(e.target.value)} />
+                    </div>
+                  )}
+                  {tipo === 'liga' && (
+                    <div className="sm:col-span-1">
+                      <label className="text-[10px] font-bold text-slate-400 uppercase block mb-2">Asignar División</label>
+                      <input placeholder="Ej: Oro, Plata..." className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm" value={division} onChange={(e)=>setDivision(e.target.value)} />
+                    </div>
+                  )}
+
+                  <div className="flex items-end">
+                    <button
+                      type="button"
+                      className="w-full rounded-xl bg-brand-50 px-4 py-2.5 text-sm font-bold text-brand-600 border border-brand-100 hover:bg-brand-100 disabled:opacity-50 transition"
+                      disabled={!seleccionPT}
+                      onClick={async () => {
+                        if (!fase?._id || !seleccionPT) return;
+                        if (tipo === 'liga' && !division.trim()) { setNotice('Debe especificar una división'); setTimeout(() => setNotice(''), 3000); return; }
+                        if (tipo === 'grupo' && !grupo.trim()) { setNotice('Debe especificar un grupo'); setTimeout(() => setNotice(''), 3000); return; }
+
+                        await onAgregar(fase._id, seleccionPT, { grupo: grupo || undefined, division: division || undefined });
+                        setSeleccionPT(''); setGrupo(''); setDivision('');
+                        setNotice('Participante agregado'); setTimeout(()=> setNotice(''), 1200);
+                      }}
+                    >
+                      Agregar
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {!seccionAgregarVisible && !((tipo === 'playoff' || tipo === 'promocion') && esAdmin) && (
+              <div className="text-center py-10">
+                <p className="text-sm text-slate-500 font-medium italic">No hay opciones de configuración adicionales para esta fase.</p>
+              </div>
+            )}
+          </section>
+        )}
+      </div>
     </div>
   );
 
@@ -401,7 +494,7 @@ export default function GestionParticipantesFaseModal({ isOpen, onClose, esAdmin
     <>
       <ConfirmModal
         isOpen={isOpen}
-        title={`Participantes de fase${fase?.nombre ? `: ${fase.nombre}` : ''}`}
+        title={`Gestión de Fase: ${fase?.nombre || 'General'}`}
         message={contenido as any}
         confirmLabel="Cerrar"
         showCancel={false}
