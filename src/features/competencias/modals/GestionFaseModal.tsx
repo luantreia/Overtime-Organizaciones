@@ -59,6 +59,10 @@ export default function GestionParticipantesFaseModal({
   const [modalidadComp, setModalidadComp] = useState<string | undefined>(undefined);
   const [categoriaComp, setCategoriaComp] = useState<string | undefined>(undefined);
 
+  // Filtros de partidos
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterEstado, setFilterEstado] = useState<string | 'all'>('all');
+
   useEffect(() => {
     setItems(participantesFase || []);
   }, [participantesFase, fase?._id, isOpen]);
@@ -107,36 +111,53 @@ export default function GestionParticipantesFaseModal({
     return [...partidos].sort((a, b) => toTime(a) - toTime(b));
   }, [partidos]);
 
+  const statsCompletado = useMemo(() => {
+    if (partidos.length === 0) return 0;
+    const finalizados = partidos.filter(p => p.estado === 'finalizado').length;
+    return Math.round((finalizados / partidos.length) * 100);
+  }, [partidos]);
+
+  const partidosFiltrados = useMemo(() => {
+    return partidosOrdenados.filter(p => {
+      const search = searchTerm.toLowerCase();
+      const matchSearch = search === '' || 
+        (p.localNombre || '').toLowerCase().includes(search) ||
+        (p.visitanteNombre || '').toLowerCase().includes(search);
+      const matchEstado = filterEstado === 'all' || p.estado === filterEstado;
+      return matchSearch && matchEstado;
+    });
+  }, [partidosOrdenados, searchTerm, filterEstado]);
+
   const ordenEtapas = ['octavos', 'cuartos', 'semifinal', 'final', 'tercer_puesto', 'repechaje', 'otro'];
   const porEtapa = useMemo(() => {
     const map: Record<string, Partido[]> = {};
-    for (const p of partidosOrdenados) {
+    for (const p of partidosFiltrados) {
       const e = (p.etapa || 'otro').toString();
       if (!map[e]) map[e] = [];
       map[e].push(p);
     }
     return map;
-  }, [partidosOrdenados]);
+  }, [partidosFiltrados]);
 
   const porGrupo = useMemo(() => {
     const map: Record<string, Partido[]> = {};
-    for (const p of partidosOrdenados) {
+    for (const p of partidosFiltrados) {
       const g = (p.grupo ?? '—').toString();
       if (!map[g]) map[g] = [];
       map[g].push(p);
     }
     return map;
-  }, [partidosOrdenados]);
+  }, [partidosFiltrados]);
 
   const porDivision = useMemo(() => {
     const map: Record<string, Partido[]> = {};
-    for (const p of partidosOrdenados) {
+    for (const p of partidosFiltrados) {
       const d = (p.division ?? '—').toString();
       if (!map[d]) map[d] = [];
       map[d].push(p);
     }
     return map;
-  }, [partidosOrdenados]);
+  }, [partidosFiltrados]);
 
   const seccionAgregarVisible = esAdmin && opcionesAgregar.length > 0 && !!fase?._id;
 
@@ -168,8 +189,16 @@ export default function GestionParticipantesFaseModal({
           <span className="text-sm font-bold text-slate-900 line-clamp-1">{p.localNombre || 'Local'}</span>
         </div>
         
-        <div className="flex flex-col items-center px-2">
-          <span className="text-xl font-black text-slate-900 italic">VS</span>
+        <div className="flex flex-col items-center px-4">
+          {p.estado === 'programado' ? (
+            <span className="text-xl font-black text-slate-300 italic">VS</span>
+          ) : (
+            <div className="flex items-center gap-3 bg-slate-900 px-4 py-1.5 rounded-xl shadow-lg border border-slate-700">
+              <span className="text-2xl font-black text-white tabular-nums leading-none">{p.marcadorLocal ?? 0}</span>
+              <span className="h-4 w-px bg-slate-700"></span>
+              <span className="text-2xl font-black text-white tabular-nums leading-none">{p.marcadorVisitante ?? 0}</span>
+            </div>
+          )}
         </div>
 
         <div className="flex flex-1 flex-col items-center text-center">
@@ -210,22 +239,31 @@ export default function GestionParticipantesFaseModal({
       ) : null}
 
       {/* HEADER DE FASE */}
-      <div className="mb-6 grid grid-cols-2 sm:grid-cols-4 gap-4 rounded-2xl bg-slate-50 p-4 border border-slate-100">
-        <div className="flex flex-col lg:items-center">
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Equipos</span>
-          <span className="text-xl font-black text-brand-600">{items.length}</span>
+      <div className="mb-6 rounded-2xl bg-slate-50 p-4 border border-slate-100">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
+          <div className="flex flex-col lg:items-center">
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Equipos</span>
+            <span className="text-xl font-black text-brand-600">{items.length}</span>
+          </div>
+          <div className="flex flex-col lg:items-center border-l border-slate-200 pl-4 sm:pl-0 sm:border-l-0 sm:border-x">
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Partidos</span>
+            <span className="text-xl font-black text-slate-700">{partidos.length}</span>
+          </div>
+          <div className="flex flex-col lg:items-center border-t sm:border-t-0 pt-4 sm:pt-0 sm:border-r border-slate-200">
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Finalizados</span>
+            <span className="text-xl font-black text-green-600">{partidos.filter(p => p.estado === 'finalizado').length}</span>
+          </div>
+          <div className="flex flex-col lg:items-center border-l sm:border-l-0 border-t sm:border-t-0 pt-4 sm:pt-0 pl-4 sm:pl-0 border-slate-200">
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Progreso</span>
+            <span className="text-xl font-black text-slate-900">{statsCompletado}%</span>
+          </div>
         </div>
-        <div className="flex flex-col lg:items-center border-l border-slate-200 pl-4 sm:pl-0 sm:border-l-0 sm:border-x">
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Partidos</span>
-          <span className="text-xl font-black text-slate-700">{partidos.length}</span>
-        </div>
-        <div className="flex flex-col lg:items-center border-t sm:border-t-0 pt-4 sm:pt-0 sm:border-r border-slate-200">
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Finalizados</span>
-          <span className="text-xl font-black text-green-600">{partidos.filter(p => p.estado === 'finalizado').length}</span>
-        </div>
-        <div className="flex flex-col lg:items-center border-l sm:border-l-0 border-t sm:border-t-0 pt-4 sm:pt-0 pl-4 sm:pl-0 border-slate-200">
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Fase Tipo</span>
-          <span className="text-xs font-extrabold text-slate-900 uppercase bg-slate-200/50 px-2 py-0.5 rounded-md mt-1 italic">{tipo || '—'}</span>
+        
+        <div className="h-1.5 w-full bg-slate-200 rounded-full overflow-hidden">
+          <div 
+            className="h-full bg-brand-500 transition-all duration-1000 ease-out" 
+            style={{ width: `${statsCompletado}%` }}
+          />
         </div>
       </div>
 
@@ -317,11 +355,51 @@ export default function GestionParticipantesFaseModal({
 
         {activeTab === 'partidos' && (
           <section className="space-y-6 animate-in fade-in duration-300">
-            {partidos.length === 0 ? (
+            {/* BUSCADOR Y FILTROS */}
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="relative flex-1">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">🔍</span>
+                <input
+                  type="text"
+                  placeholder="Buscar equipo..."
+                  className="w-full rounded-xl border border-slate-200 py-2 pl-9 pr-4 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+              <div className="flex gap-2">
+                {[
+                  { value: 'all', label: 'Todos' },
+                  { value: 'programado', label: 'Pendientes' },
+                  { value: 'en_juego', label: 'En vivo' },
+                  { value: 'finalizado', label: 'Terminados' },
+                ].map((f) => (
+                  <button
+                    key={f.value}
+                    onClick={() => setFilterEstado(f.value)}
+                    className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-all ${
+                      filterEstado === f.value 
+                        ? 'bg-brand-600 text-white shadow-md' 
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    }`}
+                  >
+                    {f.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {partidosFiltrados.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-20 text-center bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
-                <span className="text-4xl mb-3">📅</span>
-                <p className="text-sm font-bold text-slate-500 uppercase tracking-widest">No hay partidos programados</p>
-                <p className="text-xs text-slate-400 mt-1">Crea partidos manualmente o genera la llave en playoffs.</p>
+                <span className="text-4xl mb-3">{searchTerm || filterEstado !== 'all' ? '🔍' : '📅'}</span>
+                <p className="text-sm font-bold text-slate-500 uppercase tracking-widest">
+                  {searchTerm || filterEstado !== 'all' ? 'No se encontraron partidos' : 'No hay partidos programados'}
+                </p>
+                <p className="text-xs text-slate-400 mt-1">
+                  {searchTerm || filterEstado !== 'all' 
+                    ? 'Intenta ajustando los filtros o el buscador.' 
+                    : 'Crea partidos manualmente o genera la llave en la pestaña Configuración.'}
+                </p>
               </div>
             ) : (
               <>
@@ -480,27 +558,44 @@ export default function GestionParticipantesFaseModal({
                       </button>
                     </div>
                     <div className="max-h-48 overflow-y-auto rounded-xl border border-slate-200 bg-slate-50 p-2 grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {opcionesAgregar.map((pt) => {
+                      {opcionesAgregar.map(pt => {
+                        const eq = (pt?.equipo as any);
+                        const id = pt._id;
+                        const nombre = eq?.nombre || (typeof eq === 'string' ? eq : id);
+                        const escudo = eq?.escudo;
                         const isSelected = selectedPTs.includes(pt._id);
+
                         return (
                           <button
-                            key={pt._id}
+                            key={id}
                             type="button"
                             onClick={() => {
                               setSelectedPTs(prev => 
-                                isSelected ? prev.filter(id => id !== pt._id) : [...prev, pt._id]
+                                isSelected ? prev.filter(sid => sid !== pt._id) : [...prev, pt._id]
                               );
                             }}
-                            className={`flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-bold transition-all border ${
+                            className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all border ${
                               isSelected 
-                                ? 'bg-brand-600 border-brand-600 text-white shadow-md' 
-                                : 'bg-white border-slate-100 text-slate-600 hover:border-brand-300'
+                                ? 'bg-brand-600 border-brand-600 text-white shadow-lg scale-[1.02]' 
+                                : 'bg-white border-slate-200 text-slate-700 hover:border-brand-300 hover:shadow-sm'
                             }`}
                           >
-                            <span className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border ${isSelected ? 'bg-white border-white text-brand-600' : 'border-slate-300 bg-slate-50'}`}>
-                              {isSelected && '✓'}
-                            </span>
-                            <span className="truncate">{typeof pt.equipo === 'string' ? pt.equipo : (pt.equipo as any)?.nombre || pt._id}</span>
+                            <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded-full bg-slate-100 border border-slate-200">
+                              {escudo ? (
+                                <img src={escudo} alt={nombre} className="h-full w-full object-cover" />
+                              ) : (
+                                <div className="flex h-full w-full items-center justify-center text-[10px] text-slate-400">🛡️</div>
+                              )}
+                              {isSelected && (
+                                <div className="absolute inset-0 flex items-center justify-center bg-brand-600/40 text-white">
+                                  ✓
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex flex-col items-start min-w-0">
+                                <span className="truncate w-full leading-tight">{nombre}</span>
+                                <span className={`text-[9px] font-medium ${isSelected ? 'text-brand-100' : 'text-slate-400'}`}>Disponible</span>
+                            </div>
                           </button>
                         );
                       })}
