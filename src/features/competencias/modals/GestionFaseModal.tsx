@@ -27,7 +27,7 @@ type Props = {
 
 export default function GestionParticipantesFaseModal({ isOpen, onClose, esAdmin, fase, temporadaId, participantesFase, participantesTemporada, onAgregar, onGenerarLlave }: Props) {
   const [activeTab, setActiveTab] = useState<'participantes' | 'partidos' | 'configuracion'>('participantes');
-  const [seleccionPT, setSeleccionPT] = useState('');
+  const [selectedPTs, setSelectedPTs] = useState<string[]>([]);
   const [grupo, setGrupo] = useState('');
   const [division, setDivision] = useState('');
   const [items, setItems] = useState<BackendParticipacionFase[]>(participantesFase || []);
@@ -427,52 +427,92 @@ export default function GestionParticipantesFaseModal({ isOpen, onClose, esAdmin
             {/* Inscribir Nuevo Participante */}
             {seccionAgregarVisible && (
               <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <h3 className="text-sm font-extrabold text-slate-900 uppercase tracking-tight mb-4">Inscribir Participante en Fase</h3>
-                <div className="grid gap-4 sm:grid-cols-4">
-                  <div className="sm:col-span-2">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase block mb-2">Equipo de la Temporada</label>
-                    <select
-                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500/20"
-                      value={seleccionPT}
-                      onChange={(e) => setSeleccionPT(e.target.value)}
-                    >
-                      <option value="">Seleccionar equipo…</option>
-                      {opcionesAgregar.map((pt) => (
-                        <option key={pt._id} value={pt._id}>{typeof pt.equipo === 'string' ? pt.equipo : (pt.equipo as any)?.nombre || pt._id}</option>
-                      ))}
-                    </select>
+                <h3 className="text-sm font-extrabold text-slate-900 uppercase tracking-tight mb-4">Inscribir Participantes en Fase</h3>
+                <div className="space-y-4">
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Equipos disponibles en la Temporada</label>
+                      <button 
+                        type="button"
+                        onClick={() => {
+                          if (selectedPTs.length === opcionesAgregar.length) {
+                            setSelectedPTs([]);
+                          } else {
+                            setSelectedPTs(opcionesAgregar.map(o => o._id));
+                          }
+                        }}
+                        className="text-[10px] font-extrabold text-brand-600 uppercase hover:underline"
+                      >
+                        {selectedPTs.length === opcionesAgregar.length ? 'Deseleccionar todos' : 'Seleccionar todos'}
+                      </button>
+                    </div>
+                    <div className="max-h-48 overflow-y-auto rounded-xl border border-slate-200 bg-slate-50 p-2 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {opcionesAgregar.map((pt) => {
+                        const isSelected = selectedPTs.includes(pt._id);
+                        return (
+                          <button
+                            key={pt._id}
+                            type="button"
+                            onClick={() => {
+                              setSelectedPTs(prev => 
+                                isSelected ? prev.filter(id => id !== pt._id) : [...prev, pt._id]
+                              );
+                            }}
+                            className={`flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-bold transition-all border ${
+                              isSelected 
+                                ? 'bg-brand-600 border-brand-600 text-white shadow-md' 
+                                : 'bg-white border-slate-100 text-slate-600 hover:border-brand-300'
+                            }`}
+                          >
+                            <span className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border ${isSelected ? 'bg-white border-white text-brand-600' : 'border-slate-300 bg-slate-50'}`}>
+                              {isSelected && '✓'}
+                            </span>
+                            <span className="truncate">{typeof pt.equipo === 'string' ? pt.equipo : (pt.equipo as any)?.nombre || pt._id}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
-                  
-                  {tipo === 'grupo' && (
-                    <div className="sm:col-span-1">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase block mb-2">Asignar Grupo</label>
-                      <input placeholder="Ej: A, B..." className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm" value={grupo} onChange={(e)=>setGrupo(e.target.value)} />
-                    </div>
-                  )}
-                  {tipo === 'liga' && (
-                    <div className="sm:col-span-1">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase block mb-2">Asignar División</label>
-                      <input placeholder="Ej: Oro, Plata..." className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm" value={division} onChange={(e)=>setDivision(e.target.value)} />
-                    </div>
-                  )}
 
-                  <div className="flex items-end">
-                    <button
-                      type="button"
-                      className="w-full rounded-xl bg-brand-50 px-4 py-2.5 text-sm font-bold text-brand-600 border border-brand-100 hover:bg-brand-100 disabled:opacity-50 transition"
-                      disabled={!seleccionPT}
-                      onClick={async () => {
-                        if (!fase?._id || !seleccionPT) return;
-                        if (tipo === 'liga' && !division.trim()) { setNotice('Debe especificar una división'); setTimeout(() => setNotice(''), 3000); return; }
-                        if (tipo === 'grupo' && !grupo.trim()) { setNotice('Debe especificar un grupo'); setTimeout(() => setNotice(''), 3000); return; }
+                  <div className="grid gap-4 sm:grid-cols-3">
+                    {tipo === 'grupo' && (
+                      <div>
+                        <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Asignar Grupo</label>
+                        <input placeholder="Ej: A, B..." className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm" value={grupo} onChange={(e)=>setGrupo(e.target.value)} />
+                      </div>
+                    )}
+                    {tipo === 'liga' && (
+                      <div>
+                        <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Asignar División</label>
+                        <input placeholder="Ej: Oro, Plata..." className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm" value={division} onChange={(e)=>setDivision(e.target.value)} />
+                      </div>
+                    )}
 
-                        await onAgregar(fase._id, seleccionPT, { grupo: grupo || undefined, division: division || undefined });
-                        setSeleccionPT(''); setGrupo(''); setDivision('');
-                        setNotice('Participante agregado'); setTimeout(()=> setNotice(''), 1200);
-                      }}
-                    >
-                      Agregar
-                    </button>
+                    <div className={`flex items-end ${tipo === 'grupo' || tipo === 'liga' ? 'sm:col-span-1' : 'sm:col-span-3'}`}>
+                      <button
+                        type="button"
+                        className="w-full rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-brand-100 hover:bg-brand-700 disabled:opacity-50 transition"
+                        disabled={selectedPTs.length === 0}
+                        onClick={async () => {
+                          if (!fase?._id || selectedPTs.length === 0) return;
+                          if (tipo === 'liga' && !division.trim()) { setNotice('Debe especificar una división'); setTimeout(() => setNotice(''), 3000); return; }
+                          if (tipo === 'grupo' && !grupo.trim()) { setNotice('Debe especificar un grupo'); setTimeout(() => setNotice(''), 3000); return; }
+
+                          try {
+                            setNotice(`Inscribiendo ${selectedPTs.length} equipos...`);
+                            for (const ptId of selectedPTs) {
+                              await onAgregar(fase._id, ptId, { grupo: grupo || undefined, division: division || undefined });
+                            }
+                            setSelectedPTs([]); setGrupo(''); setDivision('');
+                            setNotice('Equipos agregados exitosamente'); setTimeout(()=> setNotice(''), 1500);
+                          } catch (error) {
+                            setNotice('Error al agregar algunos equipos');
+                          }
+                        }}
+                      >
+                        Inscribir {selectedPTs.length > 0 ? `(${selectedPTs.length})` : ''} Selección
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
