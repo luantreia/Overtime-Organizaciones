@@ -329,13 +329,13 @@ export default function EstructuraSection(props: Props) {
                           participacionTemporada: p.participacionTemporada as any, // Asumir populate
                           grupo: p.grupo,
                           division: p.division,
-                          puntos: (p as any).puntos || 0,
-                          partidosJugados: (p as any).partidosJugados || 0,
-                          partidosGanados: (p as any).partidosGanados || 0,
-                          partidosPerdidos: (p as any).partidosPerdidos || 0,
-                          partidosEmpatados: (p as any).partidosEmpatados || 0,
-                          diferenciaPuntos: (p as any).diferenciaPuntos || 0,
-                          posicion: (p as any).posicion,
+                          puntos: p.puntos || 0,
+                          partidosJugados: p.partidosJugados || 0,
+                          partidosGanados: p.partidosGanados || 0,
+                          partidosPerdidos: p.partidosPerdidos || 0,
+                          partidosEmpatados: p.partidosEmpatados || 0,
+                          diferenciaPuntos: p.diferenciaPuntos || 0,
+                          posicion: p.posicion,
                         }))} />
                       </div>
                     )}

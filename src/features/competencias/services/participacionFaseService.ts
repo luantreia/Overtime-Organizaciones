@@ -6,6 +6,16 @@ export type BackendParticipacionFase = {
   participacionTemporada: string | { _id: string; equipo?: string | { _id: string; nombre?: string } };
   grupo?: string;
   division?: string;
+  puntos?: number;
+  partidosJugados?: number;
+  partidosGanados?: number;
+  partidosPerdidos?: number;
+  partidosEmpatados?: number;
+  diferenciaPuntos?: number;
+  posicion?: number;
+  clasificado?: boolean;
+  eliminado?: boolean;
+  seed?: number;
 };
 
 export async function listParticipacionesByFase(faseId: string): Promise<BackendParticipacionFase[]> {
