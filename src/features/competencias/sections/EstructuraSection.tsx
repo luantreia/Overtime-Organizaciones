@@ -348,6 +348,7 @@ export default function EstructuraSection(props: Props) {
       <ConfigurarReglamentoModal
         isOpen={openReglamento.open}
         fase={openReglamento.fase}
+        todasLasFases={openReglamento.temporadaId ? (fasesPorTemporada[openReglamento.temporadaId] || []) : []}
         onClose={() => setOpenReglamento({ open: false, fase: null })}
         onSave={async (faseId, config) => {
           if (openReglamento.temporadaId) {
