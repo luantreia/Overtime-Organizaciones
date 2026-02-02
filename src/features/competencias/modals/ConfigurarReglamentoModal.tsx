@@ -1,16 +1,39 @@
 import React, { useState, useEffect } from 'react';
 import { BackendFase } from '../services';
 
+interface ReglamentoConfig {
+  puntuacion: {
+    victoria: number;
+    empate: number;
+    derrota: number;
+    setGanado: number;
+    arbitroPresentado: number;
+    penalizacionNoArbitro: number;
+  };
+  criteriosDesempate: string[];
+  progresion: {
+    clasificanDirecto: number;
+    destinoGanadores: string;
+    destinoPerdedores: string;
+  };
+  playoff: {
+    formato: 'simple' | 'doble_eliminacion';
+    tercerPuesto: boolean;
+    idaYVuelta: boolean;
+    rondasConConsolacion?: string[];
+  };
+}
+
 interface ConfigurarReglamentoModalProps {
   isOpen: boolean;
   onClose: () => void;
   fase: BackendFase | null;
   todasLasFases: BackendFase[];
-  onSave: (faseId: string, configuracion: any) => Promise<void>;
+  onSave: (faseId: string, configuracion: ReglamentoConfig) => Promise<void>;
 }
 
 export default function ConfigurarReglamentoModal({ isOpen, onClose, fase, todasLasFases, onSave }: ConfigurarReglamentoModalProps) {
-  const [config, setConfig] = useState<any>({
+  const [config, setConfig] = useState<ReglamentoConfig>({
     puntuacion: {
       victoria: 3,
       empate: 1,
@@ -29,25 +52,33 @@ export default function ConfigurarReglamentoModal({ isOpen, onClose, fase, todas
       formato: 'simple',
       tercerPuesto: false,
       idaYVuelta: false,
+      rondasConConsolacion: []
     }
   });
 
   useEffect(() => {
     if (fase?.configuracion) {
+      const conf = fase.configuracion;
       setConfig({
-        ...fase.configuracion,
         puntuacion: {
-           victoria: 3, empate: 1, derrota: 0, setGanado: 0, arbitroPresentado: 0, penalizacionNoArbitro: 0,
-           ...(fase.configuracion.puntuacion || {})
+           victoria: conf.puntuacion?.victoria ?? 3,
+           empate: conf.puntuacion?.empate ?? 1,
+           derrota: conf.puntuacion?.derrota ?? 0,
+           setGanado: conf.puntuacion?.setGanado ?? 0,
+           arbitroPresentado: conf.puntuacion?.arbitroPresentado ?? 0,
+           penalizacionNoArbitro: conf.puntuacion?.penalizacionNoArbitro ?? 0,
         },
-        criteriosDesempate: fase.configuracion.criteriosDesempate || ['PUNTOS', 'DIF_SETS', 'CARA_A_CARA'],
+        criteriosDesempate: conf.criteriosDesempate || ['PUNTOS', 'DIF_SETS', 'CARA_A_CARA'],
         progresion: {
-           clasificanDirecto: 0, destinoGanadores: '', destinoPerdedores: '',
-           ...(fase.configuracion.progresion || {})
+           clasificanDirecto: conf.progresion?.clasificanDirecto ?? 0,
+           destinoGanadores: conf.progresion?.destinoGanadores ?? '',
+           destinoPerdedores: conf.progresion?.destinoPerdedores ?? '',
         },
         playoff: {
-           formato: 'simple', tercerPuesto: false, idaYVuelta: false,
-           ...(fase.configuracion.playoff || {})
+           formato: conf.playoff?.formato ?? 'simple',
+           tercerPuesto: conf.playoff?.tercerPuesto ?? false,
+           idaYVuelta: conf.playoff?.idaYVuelta ?? false,
+           rondasConConsolacion: conf.playoff?.rondasConConsolacion ?? []
         }
       });
     }
@@ -195,19 +226,22 @@ export default function ConfigurarReglamentoModal({ isOpen, onClose, fase, todas
 
               {/* SECCIÓN PROGRESIÓN (Copa Moran Style) */}
               <div className="md:col-span-2 space-y-4 bg-slate-50 p-6 rounded-2xl border-2 border-slate-100">
-                <h3 className="text-xs font-black uppercase tracking-widest text-slate-900 border-b border-slate-200 pb-2">Destino de Equipos (Progresión)</h3>
+                <h3 className="text-xs font-black uppercase tracking-widest text-slate-900 border-b border-slate-200 pb-2">Destino de Equipos (Progresión / Copa de Plata)</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div>
-                    <label className="text-[10px] font-black uppercase text-slate-500">¿Cuántos clasifican?</label>
-                    <input 
-                        type="number" 
-                        value={config.progresion?.clasificanDirecto} 
-                        onChange={(e) => setConfig({...config, progresion: {...config.progresion, clasificanDirecto: Number(e.target.value)}})}
-                        className="w-full rounded-lg border-2 border-white p-2 font-black text-slate-700 shadow-sm focus:border-brand-500 focus:outline-none"
-                      />
-                  </div>
-                  <div>
+                  {isTableType && (
+                    <div>
+                      <label className="text-[10px] font-black uppercase text-slate-500">¿Cuántos clasifican?</label>
+                      <input 
+                          type="number" 
+                          value={config.progresion?.clasificanDirecto} 
+                          onChange={(e) => setConfig({...config, progresion: {...config.progresion, clasificanDirecto: Number(e.target.value)}})}
+                          className="w-full rounded-lg border-2 border-white p-2 font-black text-slate-700 shadow-sm focus:border-brand-500 focus:outline-none"
+                        />
+                    </div>
+                  )}
+                  <div className={isPlayoffType ? "md:col-span-1" : ""}>
                     <label className="text-[10px] font-black uppercase text-green-600">Destino Ganadores</label>
+                    <p className="text-[8px] text-slate-400 mb-1 italic">Para campeones o clasificados</p>
                     <select 
                       value={config.progresion?.destinoGanadores}
                       onChange={(e) => setConfig({...config, progresion: {...config.progresion, destinoGanadores: e.target.value}})}
@@ -219,8 +253,9 @@ export default function ConfigurarReglamentoModal({ isOpen, onClose, fase, todas
                       ))}
                     </select>
                   </div>
-                  <div>
-                    <label className="text-[10px] font-black uppercase text-rose-600">Destino Perdedores</label>
+                  <div className={isPlayoffType ? "md:col-span-2" : ""}>
+                    <label className="text-[10px] font-black uppercase text-rose-600">Destino Perdedores (Copa de Plata / Repechaje)</label>
+                    <p className="text-[8px] text-slate-400 mb-1 italic">¿A dónde van los que quedan eliminados de esta fase?</p>
                     <select 
                       value={config.progresion?.destinoPerdedores}
                       onChange={(e) => setConfig({...config, progresion: {...config.progresion, destinoPerdedores: e.target.value}})}
@@ -239,6 +274,65 @@ export default function ConfigurarReglamentoModal({ isOpen, onClose, fase, todas
 
           {isPlayoffType && (
             <div className="md:col-span-2 space-y-6">
+              {/* Para Playoffs, mostramos la progresión arriba también para el caso de perdedores a otra fase */}
+              {!isTableType && (
+                 <div className="bg-slate-50 p-6 rounded-2xl border-2 border-slate-100">
+                    <h3 className="text-xs font-black uppercase tracking-widest text-slate-900 border-b border-slate-200 pb-2 mb-4">Flujo de Perdedores</h3>
+                    <div>
+                      <label className="text-[10px] font-black uppercase text-rose-600">Enviar eliminados a otra fase:</label>
+                      <p className="text-[9px] text-slate-400 mb-2 italic">Ej: Perdedores de esta llave pasan a la "Llave de Plata"</p>
+                      <select 
+                        value={config.progresion?.destinoPerdedores}
+                        onChange={(e) => setConfig({...config, progresion: {...config.progresion, destinoPerdedores: e.target.value}})}
+                        className="w-full rounded-lg border-2 border-white p-2 text-xs font-bold text-slate-700 shadow-sm focus:border-rose-500 focus:outline-none"
+                      >
+                        <option value="">Ninguno (Eliminación directa)</option>
+                        {todasLasFases.filter(f2 => f2._id !== fase._id).map(f2 => (
+                          <option key={f2._id} value={f2._id}>{f2.nombre} ({f2.tipo})</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {config.progresion?.destinoPerdedores && (
+                      <div className="mt-4 animate-in slide-in-from-top-2">
+                        <label className="text-[10px] font-black uppercase text-slate-500 mb-2 block">¿En qué rondas hay revancha (Plata)?</label>
+                        <div className="grid grid-cols-2 gap-2">
+                          {[
+                            { label: 'Treintaidosavos', value: 'treintaidosavos' },
+                            { label: 'Dieciseisavos', value: 'dieciseisavos' },
+                            { label: 'Octavos', value: 'octavos' },
+                            { label: 'Cuartos', value: 'cuartos' },
+                            { label: 'Semifinal', value: 'semifinal' },
+                            { label: 'Final', value: 'final' }
+                          ].map(ronda => (
+                            <label key={ronda.value} className="flex items-center gap-2 p-2 bg-white rounded-lg border border-slate-200 cursor-pointer hover:bg-rose-50 transition-colors">
+                              <input 
+                                type="checkbox"
+                                checked={config.playoff?.rondasConConsolacion?.includes(ronda.value)}
+                                onChange={(e) => {
+                                  const prevRondas = config.playoff?.rondasConConsolacion || [];
+                                  const nuevas = e.target.checked 
+                                    ? [...prevRondas, ronda.value]
+                                    : prevRondas.filter((r: string) => r !== ronda.value);
+                                  setConfig({
+                                    ...config, 
+                                    playoff: {
+                                      ...config.playoff, 
+                                      rondasConConsolacion: nuevas
+                                    }
+                                  });
+                                }}
+                                className="accent-rose-500"
+                              />
+                              <span className="text-[10px] font-bold text-slate-600">{ronda.label}</span>
+                            </label>
+                          ))}
+                        </div>
+                        <p className="text-[9px] text-slate-400 mt-2 italic">Solo los perdedores de estas rondas viajarán a la fase de destino.</p>
+                      </div>
+                    )}
+                 </div>
+              )}
               <div className="bg-purple-50 p-6 rounded-2xl border-2 border-purple-100">
                  <h3 className="text-xs font-black uppercase tracking-widest text-purple-900 mb-4 flex items-center gap-2">
                    Mecánicas de Eliminación
@@ -250,8 +344,8 @@ export default function ConfigurarReglamentoModal({ isOpen, onClose, fase, todas
                      <div>
                        <label className="text-[10px] font-black uppercase text-purple-500 mb-2 block">Formato del cuadro</label>
                        <select 
-                          value={config.playoff?.formato || 'simple'} 
-                          onChange={(e) => setConfig({...config, playoff: {...(config.playoff || {}), formato: e.target.value}})}
+                          value={config.playoff.formato} 
+                          onChange={(e) => setConfig({...config, playoff: {...config.playoff, formato: e.target.value as 'simple' | 'doble_eliminacion'}})}
                           className="w-full rounded-lg border-2 border-white p-3 font-black text-slate-700 shadow-sm focus:border-brand-500 focus:outline-none"
                         >
                          <option value="simple">Eliminación Simple</option>
@@ -261,8 +355,8 @@ export default function ConfigurarReglamentoModal({ isOpen, onClose, fase, todas
                      <div className="p-3 bg-white/50 rounded-xl border border-purple-200">
                         <p className="text-[10px] font-bold text-purple-800 leading-relaxed">
                           {config.playoff?.formato === 'simple' 
-                            ? "🚩 Los equipos que pierden quedan eliminados inmediatamente de la fase."
-                            : "🔄 Los perdedores pasan a una llave secundaria. Solo quedan eliminados tras perder dos veces."}
+                            ? "🚩 Eliminación directa. Se puede configurar que los perdedores de ciertas rondas (ej: Octavos) pasen a otra fase de consolación."
+                            : "🔄 Llave de ganadores y perdedores dentro de la misma fase (Double Bracket). Se necesitan dos derrotas para quedar fuera."}
                         </p>
                      </div>
                    </div>

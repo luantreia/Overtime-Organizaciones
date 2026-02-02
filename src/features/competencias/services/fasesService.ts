@@ -17,6 +17,8 @@ export type BackendFase = {
       derrota?: number;
       setGanado?: number;
       perderPorW?: number;
+      arbitroPresentado?: number;
+      penalizacionNoArbitro?: number;
     };
     criteriosDesempate?: string[];
     progresion?: {
@@ -33,6 +35,7 @@ export type BackendFase = {
       formato?: 'simple' | 'doble_eliminacion';
       idaYVuelta?: boolean;
       tercerPuesto?: boolean;
+      rondasConConsolacion?: string[];
     };
   };
 };
