@@ -13,8 +13,8 @@ interface ReglamentoConfig {
   criteriosDesempate: string[];
   progresion: {
     clasificanDirecto: number;
-    destinoGanadores: string;
-    destinoPerdedores: string;
+    destinoGanadores: string | null;
+    destinoPerdedores: string | null;
   };
   playoff: {
     formato: 'simple' | 'doble_eliminacion';
@@ -33,6 +33,8 @@ interface ConfigurarReglamentoModalProps {
 }
 
 export default function ConfigurarReglamentoModal({ isOpen, onClose, fase, todasLasFases, onSave }: ConfigurarReglamentoModalProps) {
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [config, setConfig] = useState<ReglamentoConfig>({
     puntuacion: {
       victoria: 3,
@@ -87,8 +89,26 @@ export default function ConfigurarReglamentoModal({ isOpen, onClose, fase, todas
   if (!isOpen || !fase) return null;
 
   const handleSave = async () => {
-    await onSave(fase._id, config);
-    onClose();
+    try {
+      setSaving(true);
+      setError(null);
+      // Sanitizar ObjectIds vacíos para que Mongoose no falle al validar strings vacíos como ObjectIds
+      const sanitizedConfig = {
+        ...config,
+        progresion: {
+          ...config.progresion,
+          destinoGanadores: config.progresion.destinoGanadores || null,
+          destinoPerdedores: config.progresion.destinoPerdedores || null,
+        }
+      };
+      await onSave(fase._id, sanitizedConfig);
+      onClose();
+    } catch (err: any) {
+      console.error('Error saving reglamento:', err);
+      setError(err.message || 'Error al guardar el reglamento');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const isTableType = fase.tipo === 'liga' || fase.tipo === 'grupo';
@@ -128,6 +148,16 @@ export default function ConfigurarReglamentoModal({ isOpen, onClose, fase, todas
           </div>
           <button onClick={onClose} className="rounded-full p-2 hover:bg-slate-100 transition-colors">✕</button>
         </div>
+
+        {error && (
+          <div className="mb-6 p-4 bg-rose-50 border-2 border-rose-100 rounded-xl flex items-start gap-3 animate-in fade-in slide-in-from-top-2">
+            <span className="text-xl">⚠️</span>
+            <div>
+              <p className="text-xs font-black text-rose-600 uppercase tracking-widest">Error de validación</p>
+              <p className="text-[11px] font-bold text-rose-500 leading-tight">{error}</p>
+            </div>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-h-[60vh] overflow-y-auto px-1 custom-scrollbar">
           {isTableType && (
@@ -399,12 +429,19 @@ export default function ConfigurarReglamentoModal({ isOpen, onClose, fase, todas
         </div>
 
         <div className="mt-8 flex justify-end gap-4 border-t pt-6">
-          <button onClick={onClose} className="px-6 py-2.5 text-sm font-black text-slate-400 uppercase tracking-widest hover:text-slate-600 transition-colors">Cancelar</button>
           <button 
-            onClick={handleSave}
-            className="rounded-xl bg-brand-600 px-8 py-2.5 text-sm font-black text-white shadow-[4px_4px_0px_0px_rgba(30,58,138,1)] uppercase tracking-widest hover:-translate-y-1 hover:shadow-[6px_6px_0px_0px_rgba(30,58,138,1)] active:translate-y-0 active:shadow-none transition-all"
+            disabled={saving}
+            onClick={onClose} 
+            className="px-6 py-2.5 text-sm font-black text-slate-400 uppercase tracking-widest hover:text-slate-600 transition-colors disabled:opacity-50"
           >
-            Guardar Reglamento
+            Cancelar
+          </button>
+          <button 
+            disabled={saving}
+            onClick={handleSave}
+            className="rounded-xl bg-brand-600 px-8 py-2.5 text-sm font-black text-white shadow-[4px_4px_0px_0px_rgba(30,58,138,1)] uppercase tracking-widest hover:-translate-y-1 hover:shadow-[6px_6px_0px_0px_rgba(30,58,138,1)] active:translate-y-0 active:shadow-none transition-all disabled:opacity-50 disabled:translate-y-0 disabled:shadow-none"
+          >
+            {saving ? 'Guardando...' : 'Guardar Reglamento'}
           </button>
         </div>
       </div>
