@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { listTemporadasByCompetencia, crearTemporada, BackendTemporada, actualizarTemporada, eliminarTemporada, listFasesByTemporada, crearFase, generarFixture, BackendFase, actualizarFase, eliminarFase, addCompetenciaAdministrador, getCompetenciaAdministradores, getCompetenciaById, removeCompetenciaAdministrador, actualizarCompetencia, eliminarCompetencia, type AdminUser, listParticipacionesByTemporada, type BackendParticipacionTemporada, crearSolicitudParticipacionTemporada, listParticipacionesByFase, type BackendParticipacionFase, crearParticipacionFase, updateParticipacionTemporada, deleteParticipacionTemporada } from '../services';
 import { getPartidosPorCompetencia } from '../../partidos/services/partidoService';
@@ -62,7 +62,7 @@ const CompetenciaDetallePage = () => {
     return false;
   }, [esAdminBackend, user, admins]);
 
-  const loadAll = async () => {
+  const loadAll = useCallback(async () => {
     if (!competenciaId) return;
     setLoading(true);
     try {
@@ -117,11 +117,11 @@ const CompetenciaDetallePage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [competenciaId]);
 
   useEffect(() => {
     void loadAll();
-  }, [competenciaId]);
+  }, [loadAll]);
 
   const onGenerarFixture = async (faseId: string) => {
     await generarFixture(faseId);
