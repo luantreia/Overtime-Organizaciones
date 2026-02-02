@@ -298,16 +298,16 @@ export default function EstructuraSection(props: Props) {
                                 {f.estado === 'finalizada' && esAdmin && (
                                   <button
                                     onClick={async () => {
-                                      if (window.confirm('¿Reabrir esta fase? Esto permitirá volver a finalizarla, pero recuerda borrar manualmente los equipos que se hayan clasificado erróneamente en las fases de destino.')) {
+                                      if (window.confirm('¿Reabrir esta fase? Esto permitirá volver a finalizarla. Importante: debes borrar manualmente los equipos en las fases de destino (Oro/Plata) antes de volver a clasificarlos para evitar duplicados.')) {
                                         try {
                                           await onEditarFase(f, t._id, { estado: 'en_curso' });
-                                          alert('Fase reabierta.');
+                                          alert('Fase reabierta. Limpia las fases destino y vuelve a finalizar cuando estés listo.');
                                         } catch (err) {
                                           alert('Error al reabrir fase');
                                         }
                                       }
                                     }}
-                                    className="px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest bg-amber-50 text-amber-6100 hover:bg-amber-100 border border-amber-200"
+                                    className="px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest bg-amber-50 text-amber-600 hover:bg-amber-100 border border-amber-200"
                                   >
                                     🔄 Reabrir para Corregir
                                   </button>
