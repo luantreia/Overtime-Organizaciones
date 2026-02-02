@@ -28,8 +28,8 @@ export type BackendFase = {
         posicion?: number;
         criterio?: 'global' | 'por_grupo';
       };
-      destinoGanadores?: string;
-      destinoPerdedores?: string;
+      destinoGanadores?: string | null;
+      destinoPerdedores?: string | null;
     };
     playoff?: {
       formato?: 'simple' | 'doble_eliminacion';

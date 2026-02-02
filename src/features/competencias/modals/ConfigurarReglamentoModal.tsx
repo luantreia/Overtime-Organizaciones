@@ -273,7 +273,7 @@ export default function ConfigurarReglamentoModal({ isOpen, onClose, fase, todas
                     <label className="text-[10px] font-black uppercase text-green-600">Destino Ganadores</label>
                     <p className="text-[8px] text-slate-400 mb-1 italic">Para campeones o clasificados</p>
                     <select 
-                      value={config.progresion?.destinoGanadores}
+                      value={config.progresion?.destinoGanadores || ''}
                       onChange={(e) => setConfig({...config, progresion: {...config.progresion, destinoGanadores: e.target.value}})}
                       className="w-full rounded-lg border-2 border-white p-2 text-xs font-bold text-slate-700 shadow-sm focus:border-green-500 focus:outline-none"
                     >
@@ -287,7 +287,7 @@ export default function ConfigurarReglamentoModal({ isOpen, onClose, fase, todas
                     <label className="text-[10px] font-black uppercase text-rose-600">Destino Perdedores (Copa de Plata / Repechaje)</label>
                     <p className="text-[8px] text-slate-400 mb-1 italic">¿A dónde van los que quedan eliminados de esta fase?</p>
                     <select 
-                      value={config.progresion?.destinoPerdedores}
+                      value={config.progresion?.destinoPerdedores || ''}
                       onChange={(e) => setConfig({...config, progresion: {...config.progresion, destinoPerdedores: e.target.value}})}
                       className="w-full rounded-lg border-2 border-white p-2 text-xs font-bold text-slate-700 shadow-sm focus:border-rose-500 focus:outline-none"
                     >
@@ -312,7 +312,7 @@ export default function ConfigurarReglamentoModal({ isOpen, onClose, fase, todas
                       <label className="text-[10px] font-black uppercase text-rose-600">Enviar eliminados a otra fase:</label>
                       <p className="text-[9px] text-slate-400 mb-2 italic">Ej: Perdedores de esta llave pasan a la "Llave de Plata"</p>
                       <select 
-                        value={config.progresion?.destinoPerdedores}
+                        value={config.progresion?.destinoPerdedores || ''}
                         onChange={(e) => setConfig({...config, progresion: {...config.progresion, destinoPerdedores: e.target.value}})}
                         className="w-full rounded-lg border-2 border-white p-2 text-xs font-bold text-slate-700 shadow-sm focus:border-rose-500 focus:outline-none"
                       >
