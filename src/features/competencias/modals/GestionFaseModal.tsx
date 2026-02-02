@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import ConfirmModal from '../../../shared/components/ConfirmModal/ConfirmModal';
 import type { BackendFase, BackendParticipacionFase, BackendParticipacionTemporada } from '../services';
+import { recalcularFase } from '../services';
 import FaseLigaSection from './sections/FaseLigaSection';
 import FaseGruposSection from './sections/FaseGruposSection';
 import FasePlayoffSection from './sections/FasePlayoffSection';
@@ -422,6 +423,28 @@ export default function GestionParticipantesFaseModal({
       <div className="px-1">
         {activeTab === 'participantes' && (
           <section className="space-y-4 animate-in fade-in duration-300">
+            {esAdmin && (
+              <div className="flex justify-end">
+                <button
+                  onClick={async () => {
+                    if (fase?._id) {
+                      setNotice('Recalculando estadísticas...');
+                      try {
+                        await recalcularFase(fase._id);
+                        onRefresh?.();
+                        setNotice('✨ Estadísticas recalculadas');
+                        setTimeout(() => setNotice(''), 3000);
+                      } catch (err) {
+                        setNotice('❌ Error al recalcular');
+                      }
+                    }
+                  }}
+                  className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 shadow-sm transition-all"
+                >
+                  🔄 Recalcular Tabla
+                </button>
+              </div>
+            )}
             {tipo === 'liga' ? (
               <FaseLigaSection
                 participantes={items}
@@ -663,6 +686,7 @@ export default function GestionParticipantesFaseModal({
                               for (const p of partidos) {
                                 await eliminarPartido(p.id);
                               }
+                              if (fase?._id) await recalcularFase(fase._id);
                               await refrescarPartidos();
                               setNotice('✨ Calendario limpiado. Ya puedes generar uno nuevo.');
                               setTimeout(() => setNotice(''), 3000);

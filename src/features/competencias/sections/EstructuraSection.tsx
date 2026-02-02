@@ -8,6 +8,9 @@ import GestionEquiposTemporadaModal from '../modals/GestionEquiposTemporadaModal
 import GestionParticipantesFaseModal from '../modals/GestionFaseModal';
 import ConfigurarReglamentoModal from '../modals/ConfigurarReglamentoModal';
 import { TablaPosiciones } from '../../../shared/components/TablaPosiciones';
+import { VisualBracket } from '../components/VisualBracket';
+import { getPartidosPorFase } from '../../partidos/services/partidoService';
+import type { Partido } from '../../../types';
 
 type Props = {
   esAdmin: boolean;
@@ -106,6 +109,40 @@ export default function EstructuraSection(props: Props) {
       case 'playoff': return 'bg-purple-100 text-purple-700 border-purple-200';
       default: return 'bg-slate-100 text-slate-700 border-slate-200';
     }
+  };
+
+  const PlayoffBracketOverview = ({ faseId }: { faseId: string }) => {
+    const [matches, setMatches] = useState<Partido[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+      const fetchMatches = async () => {
+        try {
+          const data = await getPartidosPorFase(faseId);
+          setMatches(data);
+        } catch (error) {
+          console.error('Error al cargar partidos del bracket:', error);
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchMatches();
+    }, [faseId]);
+
+    if (loading) return <div className="py-8 text-center text-xs text-slate-400">Cargando llaves...</div>;
+    if (matches.length === 0) return (
+      <div className="py-8 text-center text-xs text-slate-400 border border-dashed border-slate-200 rounded-xl">
+        No hay partidos generados para esta llave.
+      </div>
+    );
+
+    return (
+      <div className="overflow-x-auto py-4 scrollbar-thin scrollbar-thumb-slate-200">
+        <div className="min-w-[800px]">
+          <VisualBracket matches={matches} />
+        </div>
+      </div>
+    );
   };
 
   // ---------------------------------
@@ -323,20 +360,46 @@ export default function EstructuraSection(props: Props) {
                             Gestionar participantes →
                           </button>
                         </div>
-                        {/* Tabla de posiciones */}
-                        <TablaPosiciones participaciones={(participacionesFasePorId[f._id] || []).map(p => ({
-                          id: p._id,
-                          participacionTemporada: p.participacionTemporada as any, // Asumir populate
-                          grupo: p.grupo,
-                          division: p.division,
-                          puntos: p.puntos || 0,
-                          partidosJugados: p.partidosJugados || 0,
-                          partidosGanados: p.partidosGanados || 0,
-                          partidosPerdidos: p.partidosPerdidos || 0,
-                          partidosEmpatados: p.partidosEmpatados || 0,
-                          diferenciaPuntos: p.diferenciaPuntos || 0,
-                          posicion: p.posicion,
-                        }))} />
+                        {/* Contenido de la fase según su tipo */}
+                        {f.tipo === 'playoff' ? (
+                          <div className="space-y-6">
+                            <div className="rounded-xl border border-slate-100 bg-slate-50/30 p-4">
+                              <h5 className="mb-4 text-[10px] font-bold uppercase tracking-widest text-slate-400">Esquema de la Fase</h5>
+                              <PlayoffBracketOverview faseId={f._id} />
+                            </div>
+                            
+                            <div>
+                                <h5 className="mb-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">Lista de Participantes</h5>
+                                <TablaPosiciones participaciones={(participacionesFasePorId[f._id] || []).map(p => ({
+                                  id: p._id,
+                                  participacionTemporada: p.participacionTemporada as any, // Asumir populate
+                                  grupo: p.grupo,
+                                  division: p.division,
+                                  puntos: p.puntos || 0,
+                                  partidosJugados: p.partidosJugados || 0,
+                                  partidosGanados: p.partidosGanados || 0,
+                                  partidosPerdidos: p.partidosPerdidos || 0,
+                                  partidosEmpatados: p.partidosEmpatados || 0,
+                                  diferenciaPuntos: p.diferenciaPuntos || 0,
+                                  posicion: p.posicion,
+                                }))} />
+                            </div>
+                          </div>
+                        ) : (
+                          <TablaPosiciones participaciones={(participacionesFasePorId[f._id] || []).map(p => ({
+                            id: p._id,
+                            participacionTemporada: p.participacionTemporada as any, // Asumir populate
+                            grupo: p.grupo,
+                            division: p.division,
+                            puntos: p.puntos || 0,
+                            partidosJugados: p.partidosJugados || 0,
+                            partidosGanados: p.partidosGanados || 0,
+                            partidosPerdidos: p.partidosPerdidos || 0,
+                            partidosEmpatados: p.partidosEmpatados || 0,
+                            diferenciaPuntos: p.diferenciaPuntos || 0,
+                            posicion: p.posicion,
+                          }))} />
+                        )}
                       </div>
                     )}
                   </div>

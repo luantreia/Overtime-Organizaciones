@@ -81,3 +81,7 @@ export async function finalizarFase(faseId: string) {
 export async function getFaseById(id: string): Promise<BackendFase> {
   return authFetch<BackendFase>(`/fases/${id}`);
 }
+
+export async function recalcularFase(faseId: string) {
+  return authFetch<{ mensaje: string }>(`/fases/${faseId}/recalcular`, { method: 'POST' });
+}
