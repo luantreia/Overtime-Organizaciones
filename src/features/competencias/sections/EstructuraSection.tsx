@@ -87,6 +87,24 @@ export default function EstructuraSection(props: Props) {
     return sortedTemporadas.find(temp => temp._id === selectedTemporadaId) || sortedTemporadas[0];
   }, [sortedTemporadas, selectedTemporadaId]);
 
+  // --- NUEVOS ESTADOS PARA UX/UI ---
+  const [expandedFases, setExpandedFases] = useState<Record<string, boolean>>({});
+
+  const toggleFase = (faseId: string) => {
+    setExpandedFases(prev => ({ ...prev, [faseId]: !prev[faseId] }));
+  };
+
+  const getTipoBadgeClass = (tipo?: string) => {
+    switch (tipo) {
+      case 'grupo': return 'bg-amber-100 text-amber-700 border-amber-200';
+      case 'liga': return 'bg-blue-100 text-blue-700 border-blue-200';
+      case 'playoff': return 'bg-purple-100 text-purple-700 border-purple-200';
+      default: return 'bg-slate-100 text-slate-700 border-slate-200';
+    }
+  };
+
+  // ---------------------------------
+
   const [openCrearTemporada, setOpenCrearTemporada] = useState(false);
   const [openCrearFase, setOpenCrearFase] = useState<{ open: boolean; temporadaId?: string }>({ open: false });
   const [openJugadores, setOpenJugadores] = useState<{ open: boolean; pt?: BackendParticipacionTemporada }>( { open: false });
@@ -121,61 +139,158 @@ export default function EstructuraSection(props: Props) {
         {loading ? (
           <p className="text-sm text-slate-500">Cargando…</p>
         ) : !t ? (
-          <p className="rounded-2xl border border-dashed border-slate-200 px-4 py-6 text-sm text-slate-500">Sin temporadas</p>
+          <div className="rounded-2xl border-2 border-dashed border-slate-200 bg-white px-6 py-12 text-center">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-slate-50 text-slate-400">
+              📅
+            </div>
+            <h3 className="mt-4 text-sm font-semibold text-slate-900">No hay temporadas</h3>
+            <p className="mt-1 text-sm text-slate-500">Comenzá creando una temporada para organizar las fases y equipos.</p>
+            <div className="mt-6">
+              <button
+                type="button"
+                disabled={!esAdmin}
+                onClick={() => setOpenCrearTemporada(true)}
+                className="inline-flex items-center rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-700 disabled:opacity-50"
+              >
+                + Crear temporada
+              </button>
+            </div>
+          </div>
         ) : (
           <div key={t._id} className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-6 shadow-card">
-            <div className="mb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <h3 className="text-lg font-semibold text-slate-900">{t.nombre}</h3>
-              <div className="flex flex-wrap gap-2">
-                <button disabled={!esAdmin} className="flex-1 sm:flex-none rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50 text-center" onClick={() => setOpenCrearFase({ open: true, temporadaId: t._id })}>Crear fase</button>
-                <button disabled={!esAdmin} className="flex-1 sm:flex-none rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50 text-center" onClick={() => onEditarTemporada(t)}>Editar</button>
-                <button disabled={!esAdmin} className="flex-1 sm:flex-none rounded-lg border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-100 disabled:opacity-50 text-center" onClick={() => onEliminarTemporada(t)}>Eliminar</button>
-              </div>
-            </div>
-
-            <div className="mb-4 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <span className="text-xs text-slate-500">{(participacionesTemporadaPorId[t._id] || []).length} equipos</span>
-                <button type="button" className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50" onClick={()=> setOpenGestionEquipos({ open: true, temporadaId: t._id })} disabled={!esAdmin}>Gestionar</button>
-              </div>
-            </div>
-
-            <h4 className="text-sm font-medium text-slate-800">Fases</h4>
-            <ul className="mt-2 divide-y divide-slate-200">
-              {(fasesPorTemporada[t._id] || []).map((f) => (
-                <li key={f._id} className="py-2 text-sm">
-                  <div className="flex flex-col gap-2 py-2">
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium">{f.nombre ?? 'Fase'}</span>
+            {/* Timeline / Progress Indicator */}
+            <div className="mb-8 border-b border-slate-100 pb-6">
+              <h4 className="mb-4 text-xs font-bold uppercase tracking-wider text-slate-400">Guía de configuración</h4>
+              <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                {[
+                  { label: 'Temporada', done: true },
+                  { label: 'Cargar Equipos', done: (participacionesTemporadaPorId[t._id] || []).length > 0 },
+                  { label: 'Crear Fases', done: (fasesPorTemporada[t._id] || []).length > 0 },
+                  { label: 'Generar Fixtures', done: false }, // Simplificado
+                ].map((step, idx, arr) => (
+                  <div key={step.label} className="flex items-center shrink-0">
+                    <div className={`flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold ${step.done ? 'bg-green-100 text-green-600' : 'bg-slate-100 text-slate-400'}`}>
+                      {step.done ? '✓' : idx + 1}
                     </div>
-                    <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
-                      <button disabled={!esAdmin} className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50 text-center" onClick={() => onGenerarFixture(f._id)}>Generar fixture</button>
-                      <button disabled={!esAdmin} className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50 text-center" onClick={() => onEditarFase(f, t._id)}>Editar</button>
-                      <button disabled={!esAdmin} className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-100 disabled:opacity-50 text-center" onClick={() => onEliminarFase(f, t._id)}>Eliminar</button>
-                      <button disabled={!esAdmin} className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50 text-center" onClick={() => setOpenGestionParticipantesFase({ open: true, fase: f, temporadaId: t._id })}>Gestionar</button>
-                    </div>
+                    <span className={`ml-2 text-xs font-medium ${step.done ? 'text-slate-900' : 'text-slate-400'}`}>{step.label}</span>
+                    {idx < arr.length - 1 && <div className="mx-4 h-px w-8 bg-slate-200" />}
                   </div>
-                  {/* Tabla de posiciones */}
-                  <TablaPosiciones participaciones={(participacionesFasePorId[f._id] || []).map(p => ({
-                    id: p._id,
-                    participacionTemporada: p.participacionTemporada as any, // Asumir populate
-                    grupo: p.grupo,
-                    division: p.division,
-                    puntos: (p as any).puntos || 0,
-                    partidosJugados: (p as any).partidosJugados || 0,
-                    partidosGanados: (p as any).partidosGanados || 0,
-                    partidosPerdidos: (p as any).partidosPerdidos || 0,
-                    partidosEmpatados: (p as any).partidosEmpatados || 0,
-                    diferenciaPuntos: (p as any).diferenciaPuntos || 0,
-                    posicion: (p as any).posicion,
-                  }))} />
-                  {/* Participantes y altas gestionados por modal */}
-                </li>
-              ))}
+                ))}
+              </div>
+            </div>
+
+            <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h3 className="text-xl font-bold text-slate-900">{t.nombre}</h3>
+                <div className="mt-1 flex items-center gap-3">
+                  <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
+                     {(participacionesTemporadaPorId[t._id] || []).length} equipos inscritos
+                  </span>
+                  <button type="button" className="text-xs font-semibold text-brand-600 hover:text-brand-700 disabled:opacity-50" onClick={()=> setOpenGestionEquipos({ open: true, temporadaId: t._id })} disabled={!esAdmin}>
+                    Gestionar altas →
+                  </button>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <button disabled={!esAdmin} className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50" onClick={() => onEditarTemporada(t)}>Editar</button>
+                <button disabled={!esAdmin} className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-100 disabled:opacity-50" onClick={() => onEliminarTemporada(t)}>Eliminar</button>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between mb-4 mt-8 border-t border-slate-100 pt-6">
+              <h4 className="text-sm font-bold text-slate-900 uppercase tracking-tight">Fases de la competencia</h4>
+              <button 
+                disabled={!esAdmin} 
+                className="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-slate-800 disabled:opacity-50 transition-colors" 
+                onClick={() => setOpenCrearFase({ open: true, temporadaId: t._id })}
+              >
+                + Nueva fase
+              </button>
+            </div>
+
+            <div className="space-y-3">
               {(fasesPorTemporada[t._id] || []).length === 0 ? (
-                <li className="py-2 text-xs text-slate-500">Sin fases</li>
-              ) : null}
-            </ul>
+                <div className="rounded-xl border border-dashed border-slate-200 p-8 text-center">
+                  <span className="text-sm text-slate-400">Aún no hay fases definidas para esta temporada.</span>
+                </div>
+              ) : (
+                fasesPorTemporada[t._id].map((f) => (
+                  <div key={f._id} className="overflow-hidden rounded-xl border border-slate-200 transition-all hover:border-slate-300">
+                    <div 
+                      className="flex cursor-pointer items-center justify-between bg-slate-50/50 p-4 transition-colors hover:bg-slate-50"
+                      onClick={() => toggleFase(f._id)}
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="text-lg">{expandedFases[f._id] ? '▾' : '▸'}</span>
+                        <span className="font-bold text-slate-900">{f.nombre ?? 'Fase'}</span>
+                        <span className={`rounded-md border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${getTipoBadgeClass(f.tipo)}`}>
+                          {f.tipo || 'otro'}
+                        </span>
+                        {f.estado && (
+                          <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse" title="Fase en curso" />
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                        <button 
+                          disabled={!esAdmin} 
+                          className="rounded-lg bg-brand-50 px-3 py-1.5 text-[11px] font-bold text-brand-700 hover:bg-brand-100 disabled:opacity-50 transition-colors border border-brand-100" 
+                          onClick={() => onGenerarFixture(f._id)}
+                        >
+                          ⚡ Generar fixture
+                        </button>
+                        <button 
+                          disabled={!esAdmin} 
+                          className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors" 
+                          onClick={() => onEditarFase(f, t._id)}
+                          title="Editar"
+                        >
+                          ✏️
+                        </button>
+                        <button 
+                          disabled={!esAdmin} 
+                          className="rounded-lg p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition-colors" 
+                          onClick={() => onEliminarFase(f, t._id)}
+                          title="Eliminar"
+                        >
+                          🗑️
+                        </button>
+                      </div>
+                    </div>
+
+                    {expandedFases[f._id] && (
+                      <div className="border-t border-slate-200 bg-white p-4 animate-in slide-in-from-top-2 duration-200">
+                        <div className="mb-4 flex items-center justify-between">
+                          <span className="text-xs font-medium text-slate-500">
+                            {(participacionesFasePorId[f._id] || []).length} equipos en esta fase
+                          </span>
+                          <button 
+                            disabled={!esAdmin} 
+                            className="text-xs font-bold text-brand-600 hover:underline disabled:opacity-50" 
+                            onClick={() => setOpenGestionParticipantesFase({ open: true, fase: f, temporadaId: t._id })}
+                          >
+                            Gestionar participantes →
+                          </button>
+                        </div>
+                        {/* Tabla de posiciones */}
+                        <TablaPosiciones participaciones={(participacionesFasePorId[f._id] || []).map(p => ({
+                          id: p._id,
+                          participacionTemporada: p.participacionTemporada as any, // Asumir populate
+                          grupo: p.grupo,
+                          division: p.division,
+                          puntos: (p as any).puntos || 0,
+                          partidosJugados: (p as any).partidosJugados || 0,
+                          partidosGanados: (p as any).partidosGanados || 0,
+                          partidosPerdidos: (p as any).partidosPerdidos || 0,
+                          partidosEmpatados: (p as any).partidosEmpatados || 0,
+                          diferenciaPuntos: (p as any).diferenciaPuntos || 0,
+                          posicion: (p as any).posicion,
+                        }))} />
+                      </div>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         )}
       </section>

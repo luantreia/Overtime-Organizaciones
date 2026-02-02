@@ -5,6 +5,11 @@ export type BackendFase = {
   temporada: string;
   nombre?: string;
   descripcion?: string;
+  tipo?: 'grupo' | 'liga' | 'playoff' | 'promocion' | 'otro';
+  estado?: 'programada' | 'en_curso' | 'finalizada';
+  orden?: number;
+  fechaInicio?: string;
+  fechaFin?: string;
 };
 
 export async function listFasesByTemporada(temporadaId: string): Promise<BackendFase[]> {
