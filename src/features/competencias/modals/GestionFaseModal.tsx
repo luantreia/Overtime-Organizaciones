@@ -45,6 +45,11 @@ export default function GestionParticipantesFaseModal({
   const [division, setDivision] = useState('');
   const [items, setItems] = useState<BackendParticipacionFase[]>(participantesFase || []);
   const [notice, setNotice] = useState<string>('');
+
+  useEffect(() => {
+    setItems(participantesFase || []);
+  }, [participantesFase]);
+
   const [partidos, setPartidos] = useState<Partido[]>([]);
   const [nuevoLocal, setNuevoLocal] = useState('');
   const [nuevoVisitante, setNuevoVisitante] = useState('');
@@ -561,7 +566,10 @@ export default function GestionParticipantesFaseModal({
                             if (m1 && m2) {
                               const getW = (m: Partido) => {
                                 if (m.estado !== 'finalizado') return null;
-                                return (m.marcadorLocal ?? 0) > (m.marcadorVisitante ?? 0) ? m.equipoLocal : m.equipoVisitante;
+                                const ml = m.marcadorLocal ?? 0;
+                                const mv = m.marcadorVisitante ?? 0;
+                                if (ml === mv) return null;
+                                return ml > mv ? m.equipoLocal : m.equipoVisitante;
                               };
                               sugs.push({
                                 local: getW(m1),
@@ -739,8 +747,20 @@ export default function GestionParticipantesFaseModal({
                                  <button
                                    key={idx}
                                    onClick={() => {
-                                      if (s.local) setNuevoLocal(typeof s.local === 'string' ? s.local : s.local._id);
-                                      if (s.visitante) setNuevoVisitante(typeof s.visitante === 'string' ? s.visitante : s.visitante._id);
+                                      if (s.local) {
+                                        const id = typeof s.local === 'string' ? s.local : (s.local.id || s.local._id);
+                                        if (id) setNuevoLocal(id);
+                                      } else {
+                                        setNuevoLocal('');
+                                      }
+                                      
+                                      if (s.visitante) {
+                                        const id = typeof s.visitante === 'string' ? s.visitante : (s.visitante.id || s.visitante._id);
+                                        if (id) setNuevoVisitante(id);
+                                      } else {
+                                        setNuevoVisitante('');
+                                      }
+
                                       if (s.stage) setNuevaEtapa(s.stage);
                                    }}
                                    className="group flex flex-col gap-1 p-2.5 bg-brand-50 border border-brand-100 rounded-xl hover:border-brand-400 hover:bg-white transition-all text-left"
@@ -854,7 +874,8 @@ export default function GestionParticipantesFaseModal({
                                       {(() => {
                                         const pFound = items.find(i => {
                                           const eq = (i.participacionTemporada as any)?.equipo;
-                                          return (typeof eq === 'string' ? eq : eq?._id) === nuevoLocal;
+                                          const id = typeof eq === 'string' ? eq : (eq?.id || eq?._id);
+                                          return id === nuevoLocal;
                                         });
                                         const escudo = (pFound?.participacionTemporada as any)?.equipo?.escudo;
                                         return escudo ? <img src={escudo} alt="Local" className="w-full h-full object-contain" /> : '🏆';
@@ -864,7 +885,8 @@ export default function GestionParticipantesFaseModal({
                                       {(() => {
                                         const pFound = items.find(i => {
                                           const eq = (i.participacionTemporada as any)?.equipo;
-                                          return (typeof eq === 'string' ? eq : eq?._id) === nuevoLocal;
+                                          const id = typeof eq === 'string' ? eq : (eq?.id || eq?._id);
+                                          return id === nuevoLocal;
                                         });
                                         const eqObj = (pFound?.participacionTemporada as any)?.equipo;
                                         return (typeof eqObj === 'string' ? eqObj : eqObj?.nombre) || 'Equipo';
@@ -904,7 +926,8 @@ export default function GestionParticipantesFaseModal({
                                       {(() => {
                                         const pFound = items.find(i => {
                                           const eq = (i.participacionTemporada as any)?.equipo;
-                                          return (typeof eq === 'string' ? eq : eq?._id) === nuevoVisitante;
+                                          const id = typeof eq === 'string' ? eq : (eq?.id || eq?._id);
+                                          return id === nuevoVisitante;
                                         });
                                         const escudo = (pFound?.participacionTemporada as any)?.equipo?.escudo;
                                         return escudo ? <img src={escudo} alt="Visita" className="w-full h-full object-contain" /> : '🛡️';
@@ -914,7 +937,8 @@ export default function GestionParticipantesFaseModal({
                                       {(() => {
                                         const pFound = items.find(i => {
                                           const eq = (i.participacionTemporada as any)?.equipo;
-                                          return (typeof eq === 'string' ? eq : eq?._id) === nuevoVisitante;
+                                          const id = typeof eq === 'string' ? eq : (eq?.id || eq?._id);
+                                          return id === nuevoVisitante;
                                         });
                                         const eqObj = (pFound?.participacionTemporada as any)?.equipo;
                                         return (typeof eqObj === 'string' ? eqObj : eqObj?.nombre) || 'Equipo';
