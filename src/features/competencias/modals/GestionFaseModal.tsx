@@ -556,7 +556,8 @@ export default function GestionParticipantesFaseModal({
                             .sort((a,b) => {
                               const ta = a.hora ? `${a.fecha}T${a.hora}` : a.fecha;
                               const tb = b.hora ? `${b.fecha}T${b.hora}` : b.fecha;
-                              return ta.localeCompare(tb);
+                              if (ta !== tb) return ta.localeCompare(tb);
+                              return (a.id || '').localeCompare(b.id || '');
                             });
                           
                           const sugs = [];
