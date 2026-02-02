@@ -23,6 +23,16 @@ export const VisualBracket: React.FC<VisualBracketProps> = ({ matches, onMatchCl
     return acc;
   }, {} as Record<string, Partido[]>);
 
+  // Ordenar cada etapa para mantener la coherencia visual de las ramas
+  Object.keys(matchesByStage).forEach(stage => {
+    matchesByStage[stage].sort((a, b) => {
+      const ta = a.hora ? `${a.fecha}T${a.hora}` : a.fecha;
+      const tb = b.hora ? `${b.fecha}T${b.hora}` : b.fecha;
+      if (ta !== tb) return ta.localeCompare(tb);
+      return (a.id || '').localeCompare(b.id || '');
+    });
+  });
+
   const activeFirstStage = () => {
     for (const s of STAGE_ORDER) if (matchesByStage[s]?.length > 0) return s;
     return 'final';
