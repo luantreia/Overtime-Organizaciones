@@ -849,6 +849,7 @@ export default function GestionParticipantesFaseModal({
 
                         <button
                           type="button"
+                          id="gestion-partidos-header"
                           className="w-full rounded-2xl bg-brand-600 px-6 py-5 text-xs font-black uppercase tracking-[0.2em] text-white hover:bg-brand-700 shadow-[0_20px_40px_-15px_rgba(59,130,246,0.5)] transition-all flex items-center justify-center gap-3 active:scale-[0.98]"
                           disabled={!nuevoLocal || !nuevoVisitante || !nuevaFecha}
                           onClick={async () => {
