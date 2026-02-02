@@ -23,9 +23,21 @@ type Props = {
   participantesTemporada: BackendParticipacionTemporada[];
   onAgregar: (faseId: string, ptId: string, opts?: { grupo?: string; division?: string }) => void | Promise<void>;
   onGenerarLlave?: (faseId: string) => void | Promise<void>;
+  onRefresh?: () => void | Promise<void>;
 };
 
-export default function GestionParticipantesFaseModal({ isOpen, onClose, esAdmin, fase, temporadaId, participantesFase, participantesTemporada, onAgregar, onGenerarLlave }: Props) {
+export default function GestionParticipantesFaseModal({ 
+  isOpen, 
+  onClose, 
+  esAdmin, 
+  fase, 
+  temporadaId, 
+  participantesFase, 
+  participantesTemporada, 
+  onAgregar, 
+  onGenerarLlave,
+  onRefresh
+}: Props) {
   const [activeTab, setActiveTab] = useState<'participantes' | 'partidos' | 'configuracion'>('participantes');
   const [selectedPTs, setSelectedPTs] = useState<string[]>([]);
   const [grupo, setGrupo] = useState('');
@@ -251,12 +263,14 @@ export default function GestionParticipantesFaseModal({ isOpen, onClose, esAdmin
                   await updateParticipacionFase(id, body);
                   setItems((prev)=> prev.map(p=> p._id===id ? ({...p, ...body} as any) : p));
                   setNotice('Cambios guardados'); setTimeout(()=> setNotice(''), 1200);
+                  onRefresh?.();
                 }}
                 onDelete={async (id: string) => {
                   if (!window.confirm('¿Eliminar este participante de la fase?')) return;
                   await deleteParticipacionFase(id);
                   setItems((prev)=> prev.filter(p=> p._id !== id));
                   setNotice('Participante eliminado'); setTimeout(()=> setNotice(''), 1200);
+                  onRefresh?.();
                 }}
               />
             ) : tipo === 'grupo' ? (
@@ -267,45 +281,36 @@ export default function GestionParticipantesFaseModal({ isOpen, onClose, esAdmin
                   await updateParticipacionFase(id, body);
                   setItems((prev)=> prev.map(p=> p._id===id ? ({...p, ...body} as any) : p));
                   setNotice('Cambios guardados'); setTimeout(()=> setNotice(''), 1200);
+                  onRefresh?.();
                 }}
                 onDelete={async (id: string) => {
                   if (!window.confirm('¿Eliminar este participante de la fase?')) return;
                   await deleteParticipacionFase(id);
                   setItems((prev)=> prev.filter(p=> p._id !== id));
                   setNotice('Participante eliminado'); setTimeout(()=> setNotice(''), 1200);
+                  onRefresh?.();
                 }}
               />
             ) : (tipo === 'playoff' || tipo === 'promocion') ? (
-              <>
-                <FasePlayoffSection
-                  participantes={items}
-                  esAdmin={esAdmin}
-                  onUpdate={async (id: string, body: Partial<{ seed: number; posicion: number }>) => {
-                    await updateParticipacionFase(id, body);
-                    setItems((prev)=> prev.map(p=> p._id===id ? ({...p, ...body} as any) : p));
-                    setNotice('Cambios guardados'); setTimeout(()=> setNotice(''), 1200);
-                  }}
-                  onDelete={async (id: string) => {
-                    if (!window.confirm('¿Eliminar este participante de la fase?')) return;
-                    await deleteParticipacionFase(id);
-                    setItems((prev)=> prev.filter(p=> p._id !== id));
-                    setNotice('Participante eliminado'); setTimeout(()=> setNotice(''), 1200);
-                  }}
-                />
-                {esAdmin && (
-                  <div className="flex justify-end pt-4 border-t border-slate-100">
-                    <button 
-                      type="button" 
-                      className="rounded-xl bg-brand-600 px-6 py-2.5 text-sm font-bold text-white shadow-lg shadow-brand-200 hover:bg-brand-700 transition" 
-                      onClick={() => { if (fase?._id) { void onGenerarLlave?.(fase._id); } }}
-                    >
-                      Generar Llave Automática
-                    </button>
-                  </div>
-                )}
-              </>
+              <FasePlayoffSection
+                participantes={items}
+                esAdmin={esAdmin}
+                onUpdate={async (id: string, body: Partial<{ seed: number; posicion: number }>) => {
+                  await updateParticipacionFase(id, body);
+                  setItems((prev)=> prev.map(p=> p._id===id ? ({...p, ...body} as any) : p));
+                  setNotice('Cambios guardados'); setTimeout(()=> setNotice(''), 1200);
+                  onRefresh?.();
+                }}
+                onDelete={async (id: string) => {
+                  if (!window.confirm('¿Eliminar este participante de la fase?')) return;
+                  await deleteParticipacionFase(id);
+                  setItems((prev)=> prev.filter(p=> p._id !== id));
+                  setNotice('Participante eliminado'); setTimeout(()=> setNotice(''), 1200);
+                  onRefresh?.();
+                }}
+              />
             ) : (
-              <FaseGruposSection participantes={items} esAdmin={esAdmin} onUpdate={async (id: string, body: Partial<{ grupo: string }>) => { await updateParticipacionFase(id, body); setItems((prev)=> prev.map(p=> p._id===id ? ({...p, ...body} as any) : p)); setNotice('Cambios guardados'); setTimeout(()=> setNotice(''), 1200); }} onDelete={async (id: string) => { if (!window.confirm('¿Eliminar este participante de la fase?')) return; await deleteParticipacionFase(id); setItems((prev)=> prev.filter(p=> p._id !== id)); setNotice('Participante eliminado'); setTimeout(()=> setNotice(''), 1200); }} />
+              <FaseGruposSection participantes={items} esAdmin={esAdmin} onUpdate={async (id: string, body: Partial<{ grupo: string }>) => { await updateParticipacionFase(id, body); setItems((prev)=> prev.map(p=> p._id===id ? ({...p, ...body} as any) : p)); setNotice('Cambios guardados'); setTimeout(()=> setNotice(''), 1200); onRefresh?.(); }} onDelete={async (id: string) => { if (!window.confirm('¿Eliminar este participante de la fase?')) return; await deleteParticipacionFase(id); setItems((prev)=> prev.filter(p=> p._id !== id)); setNotice('Participante eliminado'); setTimeout(()=> setNotice(''), 1200); onRefresh?.(); }} />
             )}
           </section>
         )}
@@ -359,6 +364,33 @@ export default function GestionParticipantesFaseModal({ isOpen, onClose, esAdmin
 
         {activeTab === 'configuracion' && (
           <section className="space-y-8 animate-in fade-in duration-300">
+            {/* Acciones de Fase */}
+            {esAdmin && (
+              <div className="rounded-2xl border border-brand-100 bg-brand-50/20 p-5 shadow-sm">
+                <h3 className="text-sm font-extrabold text-brand-900 uppercase tracking-tight mb-4 flex items-center gap-2">
+                  <span className="text-lg">⚙️</span>
+                  Configuración de Encuentros
+                </h3>
+                <div className="flex flex-wrap gap-3">
+                  <button 
+                    type="button" 
+                    className="flex-1 rounded-xl bg-brand-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-brand-200 hover:bg-brand-700 transition flex items-center justify-center gap-2" 
+                    onClick={async () => { 
+                      if (fase?._id) { 
+                        await onGenerarLlave?.(fase._id); 
+                        onRefresh?.();
+                      } 
+                    }}
+                  >
+                    ⚡ {tipo === 'playoff' || tipo === 'promocion' ? 'Generar Llave de Playoffs' : 'Generar Fixture Automático'}
+                  </button>
+                </div>
+                <p className="mt-3 text-[10px] text-brand-600/70 font-medium italic">
+                  * Esta acción creará los partidos base según los participantes actuales de la fase. Si ya existen partidos, podría duplicarlos o resetearlos según la configuración del servidor.
+                </p>
+              </div>
+            )}
+
             {/* Gestión de Playoffs: Agregar Partido */}
             {(tipo === 'playoff' || tipo === 'promocion') && esAdmin && (
               <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -417,6 +449,7 @@ export default function GestionParticipantesFaseModal({ isOpen, onClose, esAdmin
                     const lista = await getPartidosPorFase(fase._id);
                     setPartidos(lista);
                     setNotice('Partido creado exitosamente'); setTimeout(()=> setNotice(''), 1200);
+                    onRefresh?.();
                   }}
                 >
                   Confirmar Partido
@@ -505,6 +538,7 @@ export default function GestionParticipantesFaseModal({ isOpen, onClose, esAdmin
                             }
                             setSelectedPTs([]); setGrupo(''); setDivision('');
                             setNotice('Equipos agregados exitosamente'); setTimeout(()=> setNotice(''), 1500);
+                            onRefresh?.();
                           } catch (error) {
                             setNotice('Error al agregar algunos equipos');
                           }

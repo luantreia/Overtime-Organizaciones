@@ -62,64 +62,65 @@ const CompetenciaDetallePage = () => {
     return false;
   }, [esAdminBackend, user, admins]);
 
-  useEffect(() => {
-    const run = async () => {
-      if (!competenciaId) return;
-      setLoading(true);
-      try {
-        // detalle competencia
-        const detalle = await getCompetenciaById(competenciaId);
-        setNombre(detalle.nombre ?? 'Competencia');
-        setModalidad((detalle.modalidad as any) ?? '');
-        setCategoria((detalle.categoria as any) ?? '');
-        setTipo((detalle.tipo as any) ?? '');
-        setFechaInicio(detalle.fechaInicio ? detalle.fechaInicio.slice(0, 10) : '');
-        setFechaFin(detalle.fechaFin ? detalle.fechaFin.slice(0, 10) : '');
-        setDescripcion((detalle as any).descripcion ?? '');
-        setRankedEnabled(Boolean((detalle as any).rankedEnabled));
-        setEsAdminBackend(Boolean((detalle as any).esAdmin));
-        if ((detalle as any).administradores) {
-          setAdmins(((detalle as any).administradores as AdminUser[]) || []);
-        }
-
-        // admins
-        try {
-          const { administradores } = await getCompetenciaAdministradores(competenciaId);
-          setAdmins(administradores || []);
-        } catch {}
-
-        const temps = await listTemporadasByCompetencia(competenciaId);
-        setTemporadas(temps);
-        const fasesMap: Record<string, BackendFase[]> = {};
-        for (const t of temps) {
-          fasesMap[t._id] = await listFasesByTemporada(t._id);
-        }
-        setFasesPorTemporada(fasesMap);
-
-        // participaciones de temporada
-        const ptsMap: Record<string, BackendParticipacionTemporada[]> = {};
-        for (const t of temps) {
-          ptsMap[t._id] = await listParticipacionesByTemporada(t._id);
-        }
-        setParticipacionesTemporada(ptsMap);
-
-        // participaciones por fase
-        const pfMap: Record<string, BackendParticipacionFase[]> = {};
-        for (const t of temps) {
-          for (const f of fasesMap[t._id] || []) {
-            pfMap[f._id] = await listParticipacionesByFase(f._id);
-          }
-        }
-        setParticipacionesFase(pfMap);
-
-        // partidos
-        const listaPartidos = await getPartidosPorCompetencia(competenciaId);
-        setPartidos(listaPartidos);
-      } finally {
-        setLoading(false);
+  const loadAll = async () => {
+    if (!competenciaId) return;
+    setLoading(true);
+    try {
+      // detalle competencia
+      const detalle = await getCompetenciaById(competenciaId);
+      setNombre(detalle.nombre ?? 'Competencia');
+      setModalidad((detalle.modalidad as any) ?? '');
+      setCategoria((detalle.categoria as any) ?? '');
+      setTipo((detalle.tipo as any) ?? '');
+      setFechaInicio(detalle.fechaInicio ? detalle.fechaInicio.slice(0, 10) : '');
+      setFechaFin(detalle.fechaFin ? detalle.fechaFin.slice(0, 10) : '');
+      setDescripcion((detalle as any).descripcion ?? '');
+      setRankedEnabled(Boolean((detalle as any).rankedEnabled));
+      setEsAdminBackend(Boolean((detalle as any).esAdmin));
+      if ((detalle as any).administradores) {
+        setAdmins(((detalle as any).administradores as AdminUser[]) || []);
       }
-    };
-    void run();
+
+      // admins
+      try {
+        const { administradores } = await getCompetenciaAdministradores(competenciaId);
+        setAdmins(administradores || []);
+      } catch {}
+
+      const temps = await listTemporadasByCompetencia(competenciaId);
+      setTemporadas(temps);
+      const fasesMap: Record<string, BackendFase[]> = {};
+      for (const t of temps) {
+        fasesMap[t._id] = await listFasesByTemporada(t._id);
+      }
+      setFasesPorTemporada(fasesMap);
+
+      // participaciones de temporada
+      const ptsMap: Record<string, BackendParticipacionTemporada[]> = {};
+      for (const t of temps) {
+        ptsMap[t._id] = await listParticipacionesByTemporada(t._id);
+      }
+      setParticipacionesTemporada(ptsMap);
+
+      // participaciones por fase
+      const pfMap: Record<string, BackendParticipacionFase[]> = {};
+      for (const t of temps) {
+        for (const f of fasesMap[t._id] || []) {
+          pfMap[f._id] = await listParticipacionesByFase(f._id);
+        }
+      }
+      setParticipacionesFase(pfMap);
+
+      // partidos
+      const listaPartidos = await getPartidosPorCompetencia(competenciaId);
+      setPartidos(listaPartidos);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    void loadAll();
   }, [competenciaId]);
 
   const onGenerarFixture = async (faseId: string) => {
@@ -316,6 +317,7 @@ const CompetenciaDetallePage = () => {
         <EstructuraSection
           esAdmin={esAdmin}
           loading={loading}
+          onRefresh={loadAll}
           onSubmitCrearTemporada={crearTemporadaHandler}
           temporadas={temporadas}
           fasesPorTemporada={fasesPorTemporada}

@@ -10,6 +10,7 @@ import { TablaPosiciones } from '../../../shared/components/TablaPosiciones';
 type Props = {
   esAdmin: boolean;
   loading: boolean;
+  onRefresh?: () => void | Promise<void>;
   onSubmitCrearTemporada: (payload: { nombre: string; fechaInicio: string; fechaFin?: string }) => void | Promise<void>;
   temporadas: BackendTemporada[];
   fasesPorTemporada: Record<string, BackendFase[]>;
@@ -44,6 +45,7 @@ export default function EstructuraSection(props: Props) {
   const {
     esAdmin,
     loading,
+    onRefresh,
     onSubmitCrearTemporada,
     temporadas,
     fasesPorTemporada,
@@ -233,13 +235,6 @@ export default function EstructuraSection(props: Props) {
                       <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                         <button 
                           disabled={!esAdmin} 
-                          className="rounded-lg bg-brand-50 px-3 py-1.5 text-[11px] font-bold text-brand-700 hover:bg-brand-100 disabled:opacity-50 transition-colors border border-brand-100" 
-                          onClick={() => onGenerarFixture(f._id)}
-                        >
-                          ⚡ Generar fixture
-                        </button>
-                        <button 
-                          disabled={!esAdmin} 
                           className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors" 
                           onClick={() => onEditarFase(f, t._id)}
                           title="Editar"
@@ -317,6 +312,7 @@ export default function EstructuraSection(props: Props) {
         isOpen={openGestionEquipos.open}
         onClose={() => setOpenGestionEquipos({ open: false })}
         esAdmin={esAdmin}
+        onRefresh={onRefresh}
         temporadaId={openGestionEquipos.temporadaId || ''}
         participaciones={openGestionEquipos.temporadaId ? (participacionesTemporadaPorId[openGestionEquipos.temporadaId] || []) : []}
         onUpdateParticipacionTemporada={onUpdateParticipacionTemporada}
@@ -329,6 +325,7 @@ export default function EstructuraSection(props: Props) {
         isOpen={openGestionParticipantesFase.open}
         onClose={() => setOpenGestionParticipantesFase({ open: false })}
         esAdmin={esAdmin}
+        onRefresh={onRefresh}
         fase={openGestionParticipantesFase.fase}
         temporadaId={openGestionParticipantesFase.temporadaId}
         participantesFase={openGestionParticipantesFase.fase ? (participacionesFasePorId[openGestionParticipantesFase.fase._id] || []) : []}
