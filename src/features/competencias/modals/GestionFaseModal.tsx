@@ -77,7 +77,9 @@ export default function GestionParticipantesFaseModal({
   const [isSavingQuick, setIsSavingQuick] = useState(false);
 
   useEffect(() => {
-    setSugerencias([]);
+    if (activeTab !== 'configuracion') {
+      setSugerencias([]);
+    }
   }, [activeTab]);
 
   const refrescarPartidos = async () => {
@@ -533,9 +535,10 @@ export default function GestionParticipantesFaseModal({
                     <VisualBracket 
                       matches={partidos} 
                       onMatchClick={(id) => { setPartidoInfoId(id); setInfoModalAbierto(true); }}
-                      onAutoCreate={(stage) => {
+                      onAutoCreate={esAdmin ? (stage) => {
                         setModoVisual(true);
                         setNuevaEtapa(stage);
+                        setActiveTab('configuracion');
                         
                         // Generar sugerencias basadas en la rama de la llave
                         const ST_ORDER = ['octavos', 'cuartos', 'semifinal', 'final'];
@@ -573,8 +576,10 @@ export default function GestionParticipantesFaseModal({
                           setSugerencias([]);
                         }
 
-                        document.getElementById('gestion-partidos-header')?.scrollIntoView({ behavior: 'smooth' });
-                      }}
+                        setTimeout(() => {
+                           document.getElementById('gestion-partidos-header')?.scrollIntoView({ behavior: 'smooth' });
+                        }, 100);
+                      } : undefined}
                     />
                   </div>
                 )}

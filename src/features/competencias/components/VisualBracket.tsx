@@ -120,9 +120,9 @@ export const VisualBracket: React.FC<VisualBracketProps> = ({ matches, onMatchCl
                       )}
                     </div>
                   );
-                }) : (
+                }) : onAutoCreate ? (
                   <button 
-                    onClick={() => onAutoCreate?.(stage)}
+                    onClick={() => onAutoCreate(stage)}
                     className="group bg-slate-50/50 border-2 border-dashed border-slate-200 rounded-2xl p-6 flex flex-col items-center justify-center opacity-60 hover:opacity-100 hover:border-brand-400 hover:bg-white transition-all cursor-pointer"
                   >
                     <span className="text-[10px] font-black text-slate-400 group-hover:text-brand-600 uppercase transition-colors">+ Crear {STAGE_LABELS[stage]}</span>
@@ -130,6 +130,13 @@ export const VisualBracket: React.FC<VisualBracketProps> = ({ matches, onMatchCl
                       Ganadores de<br/>{STAGE_LABELS[STAGE_ORDER[STAGE_ORDER.indexOf(stage)-1]]}
                     </div>
                   </button>
+                ) : (
+                  <div className="bg-slate-50/30 border-2 border-dashed border-slate-100 rounded-2xl p-6 flex flex-col items-center justify-center opacity-40">
+                    <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest text-center">
+                       {STAGE_LABELS[stage]}<br/>
+                       <span className="text-[8px] italic font-bold lowercase opacity-70">Pendiente de resultados</span>
+                    </span>
+                  </div>
                 )}
               </div>
             </div>
