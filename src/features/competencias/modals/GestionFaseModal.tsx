@@ -534,7 +534,7 @@ export default function GestionParticipantesFaseModal({
                                   }`}
                                 >
                                   <div className="h-6 w-6 shrink-0 overflow-hidden rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center">
-                                    {escudo ? <img src={escudo} className="h-full w-full object-contain" /> : '🛡️'}
+                                    {escudo ? <img src={escudo} alt={nombre} className="h-full w-full object-contain" /> : '🛡️'}
                                   </div>
                                   <span className="truncate flex-1">{nombre}</span>
                                   {!isAlreadySelected && <span className="text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity">⠿</span>}
@@ -578,7 +578,7 @@ export default function GestionParticipantesFaseModal({
                                           return (typeof eq === 'string' ? eq : eq?._id) === nuevoLocal;
                                         });
                                         const escudo = (pFound?.participacionTemporada as any)?.equipo?.escudo;
-                                        return escudo ? <img src={escudo} className="w-full h-full object-contain" /> : '🏆';
+                                        return escudo ? <img src={escudo} alt="Escudo Local" className="w-full h-full object-contain" /> : '🏆';
                                       })()}
                                     </div>
                                     <span className="text-xs font-black text-slate-800 text-center line-clamp-2 px-1">
@@ -625,7 +625,7 @@ export default function GestionParticipantesFaseModal({
                                           return (typeof eq === 'string' ? eq : eq?._id) === nuevoVisitante;
                                         });
                                         const escudo = (pFound?.participacionTemporada as any)?.equipo?.escudo;
-                                        return escudo ? <img src={escudo} className="w-full h-full object-contain" /> : '🛡️';
+                                        return escudo ? <img src={escudo} alt="Escudo Visitante" className="w-full h-full object-contain" /> : '🛡️';
                                       })()}
                                     </div>
                                     <span className="text-xs font-black text-slate-800 text-center line-clamp-2 px-1">
