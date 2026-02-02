@@ -44,7 +44,6 @@ export default function GestionParticipantesFaseModal({ isOpen, onClose, esAdmin
   const [partidoSetsId, setPartidoSetsId] = useState<string | null>(null);
   const [alineacionModalAbierto, setAlineacionModalAbierto] = useState(false);
   const [partidoAlineacionId, setPartidoAlineacionId] = useState<string | null>(null);
-  const [menuAbiertoId, setMenuAbiertoId] = useState<string | null>(null);
   const [modalidadComp, setModalidadComp] = useState<string | undefined>(undefined);
   const [categoriaComp, setCategoriaComp] = useState<string | undefined>(undefined);
 
