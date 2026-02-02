@@ -86,7 +86,7 @@ export const VisualBracket: React.FC<VisualBracketProps> = ({ matches, onMatchCl
                             <div className="flex items-center gap-2 flex-1 min-w-0">
                                {localGana && <span className="text-xs">👑</span>}
                                <span className={`text-xs truncate transition-all ${localGana ? 'font-black text-green-900' : 'font-bold text-slate-700'}`}>
-                                 {m.localNombre || 'TBD'}
+                                 {m.localNombre || (m.visitanteNombre ? 'BYE' : 'TBD')}
                                </span>
                             </div>
                             <span className={`text-[11px] font-black tabular-nums ${localGana ? 'text-green-600' : 'text-slate-400'}`}>
@@ -98,7 +98,7 @@ export const VisualBracket: React.FC<VisualBracketProps> = ({ matches, onMatchCl
                             <div className="flex items-center gap-2 flex-1 min-w-0">
                                {visitaGana && <span className="text-xs">👑</span>}
                                <span className={`text-xs truncate transition-all ${visitaGana ? 'font-black text-green-900' : 'font-bold text-slate-700'}`}>
-                                 {m.visitanteNombre || m.rival || 'TBD'}
+                                 {m.visitanteNombre || (m.localNombre ? 'BYE' : 'TBD')}
                                </span>
                             </div>
                             <span className={`text-[11px] font-black tabular-nums ${visitaGana ? 'text-green-600' : 'text-slate-400'}`}>
