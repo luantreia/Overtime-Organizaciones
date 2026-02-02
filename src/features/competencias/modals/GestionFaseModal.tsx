@@ -12,6 +12,7 @@ import ModalAlineacionPartido from '../../partidos/components/modals/ModalAlinea
 import ModalGestionSets from '../../partidos/components/modals/ModalGestionSets';
 import { getTemporadaById } from '../services/temporadasService';
 import { getCompetenciaById } from '../services/competenciasService';
+import { VisualBracket } from '../components/VisualBracket';
 
 type Props = {
   isOpen: boolean;
@@ -66,6 +67,7 @@ export default function GestionParticipantesFaseModal({
   // Drag and Drop State for Visual Builder
   const [modoVisual, setModoVisual] = useState(false);
   const [dragItem, setDragItem] = useState<{ id: string, nombre: string, escudo?: string } | null>(null);
+  const [partidosEnCola, setPartidosEnCola] = useState<any[]>([]);
 
   const handleDragStart = (pt: any) => {
     const eq = (pt?.participacionTemporada?.equipo as any);
@@ -422,6 +424,19 @@ export default function GestionParticipantesFaseModal({
               </div>
             ) : (
               <>
+                {(tipo === 'playoff' || tipo === 'promocion') && (
+                  <div className="mb-10 animate-in fade-in duration-700">
+                    <h5 className="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-6 flex items-center gap-3">
+                      <span className="p-1 px-2 bg-slate-900 text-white rounded text-[9px]">DIAGRAMA</span>
+                      Cuadro de Competencia
+                    </h5>
+                    <VisualBracket 
+                      matches={partidos} 
+                      onMatchClick={(id) => { setPartidoInfoId(id); setInfoModalAbierto(true); }}
+                    />
+                  </div>
+                )}
+
                 {(tipo === 'playoff' || tipo === 'promocion') && Object.keys(porEtapa).length > 0 ? (
                   <div className="space-y-8">
                     {ordenEtapas.filter(e => porEtapa[e]?.length).map((e) => (
@@ -663,15 +678,133 @@ export default function GestionParticipantesFaseModal({
                             </div>
                             <div className="lg:col-span-2">
                                <label className="text-[9px] font-black text-slate-400 uppercase mb-1 block ml-1">Fecha del Partido</label>
-                               <input type="date" className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold" value={nuevaFecha} onChange={(e)=> setNuevaFecha(e.target.value)} />
+                               <input 
+                                 type="date" 
+                                 className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold" 
+                                 value={nuevaFecha} 
+                                 min={fase?.fechaInicio?.split('T')[0]}
+                                 max={fase?.fechaFin?.split('T')[0]}
+                                 onChange={(e)=> setNuevaFecha(e.target.value)} 
+                               />
+                               {fase?.fechaInicio && (
+                                 <p className="text-[8px] text-brand-500 mt-1 italic">Rango fase: {new Date(fase.fechaInicio).toLocaleDateString()} al {new Date(fase.fechaFin || '').toLocaleDateString()}</p>
+                               )}
                             </div>
                             <div className="lg:col-span-1">
                                <label className="text-[9px] font-black text-slate-400 uppercase mb-1 block ml-1">Hora</label>
                                <input type="time" className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold" value={nuevaHora} onChange={(e)=> setNuevaHora(e.target.value)} />
                             </div>
                         </div>
+
+                        <div className="flex gap-2 pt-2">
+                          <button
+                            type="button"
+                            className="flex-1 rounded-xl bg-indigo-50 border border-indigo-100 px-4 py-3 text-[10px] font-black uppercase text-indigo-700 hover:bg-indigo-100 transition flex items-center justify-center gap-2"
+                            disabled={!nuevoLocal || !nuevoVisitante || !nuevaFecha}
+                            onClick={() => {
+                              const localFound = items.find(i => (typeof (i.participacionTemporada as any)?.equipo === 'string' ? (i.participacionTemporada as any).equipo : (i.participacionTemporada as any).equipo?._id) === nuevoLocal);
+                              const visitorFound = items.find(i => (typeof (i.participacionTemporada as any)?.equipo === 'string' ? (i.participacionTemporada as any).equipo : (i.participacionTemporada as any).equipo?._id) === nuevoVisitante);
+                              
+                              const item = {
+                                localId: nuevoLocal,
+                                localNombre: (localFound?.participacionTemporada as any)?.equipo?.nombre || 'Local',
+                                visitanteId: nuevoVisitante,
+                                visitanteNombre: (visitorFound?.participacionTemporada as any)?.equipo?.nombre || 'Visitante',
+                                fecha: nuevaFecha,
+                                hora: nuevaHora,
+                                etapa: nuevaEtapa || 'Cuartos'
+                              };
+                              setPartidosEnCola([...partidosEnCola, item]);
+                              setNuevoLocal(''); setNuevoVisitante('');
+                            }}
+                          >
+                            📥 Añadir a Lista (Queue)
+                          </button>
+                          
+                          <button
+                            type="button"
+                            className="flex-1 rounded-xl bg-brand-600 px-4 py-3 text-[10px] font-black uppercase text-white hover:bg-brand-700 shadow-lg shadow-brand-100 transition flex items-center justify-center gap-2"
+                            disabled={!nuevoLocal || !nuevoVisitante || !nuevaFecha}
+                            onClick={async () => {
+                              if (!fase?._id) return;
+                              await crearPartidoCompetencia({ equipoLocalId: nuevoLocal, equipoVisitanteId: nuevoVisitante, fecha: nuevaFecha, hora: nuevaHora || undefined, faseId: fase._id, etapa: nuevaEtapa || undefined, modalidad: modalidadComp, categoria: categoriaComp });
+                              setNuevoLocal(''); setNuevoVisitante('');
+                              const lista = await getPartidosPorFase(fase._id);
+                              setPartidos(lista);
+                              setNotice('✨ Partido creado exitosamente'); setTimeout(()=> setNotice(''), 2000);
+                              onRefresh?.();
+                            }}
+                          >
+                            🚀 Crear Ahora
+                          </button>
+                        </div>
                       </div>
                     </div>
+
+                    {/* Lista en Cola */}
+                    {partidosEnCola.length > 0 && (
+                      <div className="mt-6 border-t border-slate-100 pt-6 animate-in slide-in-from-bottom-2 duration-300">
+                        <div className="flex items-center justify-between mb-4">
+                          <h6 className="text-[11px] font-black text-indigo-600 uppercase tracking-widest flex items-center gap-2">
+                             <span className="flex h-5 w-5 items-center justify-center rounded bg-indigo-100 text-[10px]">📋</span>
+                             Partidos Listos para Generar ({partidosEnCola.length})
+                          </h6>
+                          <button onClick={() => setPartidosEnCola([])} className="text-[10px] text-red-500 font-bold hover:underline">Limpiar lista</button>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                          {partidosEnCola.map((q, idx) => (
+                            <div key={idx} className="flex items-center justify-between p-3 bg-indigo-50/50 border border-indigo-100 rounded-xl relative group">
+                               <button 
+                                 onClick={() => setPartidosEnCola(prev => prev.filter((_, i) => i !== idx))}
+                                 className="absolute -top-2 -right-2 bg-white text-red-500 rounded-full w-5 h-5 flex items-center justify-center text-[10px] shadow-sm border border-red-100 opacity-0 group-hover:opacity-100 transition-opacity"
+                               >✕</button>
+                               <div className="flex flex-col">
+                                 <span className="text-[9px] font-black text-indigo-400 uppercase leading-none mb-1">{q.etapa}</span>
+                                 <span className="text-xs font-bold text-slate-800">{q.localNombre} vs {q.visitanteNombre}</span>
+                               </div>
+                               <div className="text-right">
+                                 <span className="text-[10px] font-bold text-slate-400">{q.fecha}</span>
+                               </div>
+                            </div>
+                          ))}
+                        </div>
+
+                        <button
+                          type="button"
+                          className="w-full rounded-xl bg-indigo-600 px-4 py-4 text-xs font-black uppercase tracking-[0.2em] text-white hover:bg-indigo-700 shadow-xl shadow-indigo-100 transition flex items-center justify-center gap-3"
+                          onClick={async () => {
+                            if (!fase?._id) return;
+                            setNotice(`Creando ${partidosEnCola.length} partidos en simultáneo...`);
+                            try {
+                              for (const p of partidosEnCola) {
+                                await crearPartidoCompetencia({ 
+                                  equipoLocalId: p.localId, 
+                                  equipoVisitanteId: p.visitanteId, 
+                                  fecha: p.fecha, 
+                                  hora: p.hora || undefined, 
+                                  faseId: fase._id, 
+                                  etapa: p.etapa || undefined, 
+                                  modalidad: modalidadComp, 
+                                  categoria: categoriaComp 
+                                });
+                              }
+                              setPartidosEnCola([]);
+                              const lista = await getPartidosPorFase(fase._id);
+                              setPartidos(lista);
+                              setNotice('✅ Todos los partidos han sido creados');
+                              setTimeout(() => setNotice(''), 3000);
+                              onRefresh?.();
+                            } catch (e) {
+                              setNotice('❌ Error al crear algunos partidos');
+                            }
+                          }}
+                        >
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                          Confirmar y Generar Todo el Bloque
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="grid gap-4 sm:grid-cols-2">
