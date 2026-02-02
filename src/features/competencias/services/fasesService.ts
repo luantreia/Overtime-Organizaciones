@@ -73,6 +73,10 @@ export async function generarFixture(faseId: string) {
   return authFetch<{ mensaje: string; cantidad?: number }>(`/fases/${faseId}/generar-fixture`, { method: 'POST' });
 }
 
+export async function finalizarFase(faseId: string) {
+  return authFetch<{ mensaje: string; detalles?: any }>(`/fases/${faseId}/finalizar`, { method: 'POST' });
+}
+
 export async function getFaseById(id: string): Promise<BackendFase> {
   return authFetch<BackendFase>(`/fases/${id}`);
 }

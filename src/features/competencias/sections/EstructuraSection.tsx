@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import type { BackendTemporada, BackendFase, BackendParticipacionTemporada, BackendParticipacionFase } from '../services';
+import { finalizarFase } from '../services';
 import CrearTemporadaModal from '../modals/CrearTemporadaModal';
 import CrearFaseModal from '../modals/CrearFaseModal';
 import JugadoresTemporadaModal from '../modals/JugadoresTemporadaModal';
@@ -266,9 +267,34 @@ export default function EstructuraSection(props: Props) {
                     {expandedFases[f._id] && (
                       <div className="border-t border-slate-200 bg-white p-4 animate-in slide-in-from-top-2 duration-200">
                         <div className="mb-4 flex items-center justify-between">
-                          <span className="text-xs font-medium text-slate-500">
-                            {(participacionesFasePorId[f._id] || []).length} equipos en esta fase
-                          </span>
+                          <div className="flex items-center gap-4">
+                            <span className="text-xs font-medium text-slate-500">
+                              {(participacionesFasePorId[f._id] || []).length} equipos en esta fase
+                            </span>
+                            {f.tipo === 'grupo' || f.tipo === 'liga' ? (
+                               <button
+                                 disabled={!esAdmin || f.estado === 'finalizada'}
+                                 onClick={async () => {
+                                   if (window.confirm('¿Estás seguro de finalizar esta fase? Se calcularán las posiciones finales y los equipos clasificarán a la siguiente fase según el reglamento.')) {
+                                      try {
+                                        await finalizarFase(f._id);
+                                        onRefresh?.();
+                                        alert('Fase finalizada con éxito.');
+                                      } catch (err: any) {
+                                        alert('Error al finalizar fase: ' + err.message);
+                                      }
+                                   }
+                                 }}
+                                 className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
+                                   f.estado === 'finalizada' 
+                                   ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                                   : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-200'
+                                 }`}
+                               >
+                                 {f.estado === 'finalizada' ? '✓ Fase Finalizada' : '🏁 Finalizar y Clasificar'}
+                               </button>
+                            ) : null}
+                          </div>
                           <button 
                             disabled={!esAdmin} 
                             className="text-xs font-bold text-brand-600 hover:underline disabled:opacity-50" 
