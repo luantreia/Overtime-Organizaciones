@@ -186,12 +186,13 @@ export default function GestionParticipantesFaseModal({
   const tipo = (fase as any)?.tipo as string | undefined;
 
   const partidosOrdenados = useMemo(() => {
-    const toTime = (p: Partido) => {
-      // fecha en formato YYYY-MM-DD, hora opcional HH:mm
-      const iso = p.hora ? `${p.fecha}T${p.hora}:00` : `${p.fecha}T00:00:00`;
-      return new Date(iso).getTime();
-    };
-    return [...partidos].sort((a, b) => toTime(a) - toTime(b));
+    return [...partidos].sort((a, b) => {
+      const ta = a.hora ? `${a.fecha}T${a.hora}` : a.fecha;
+      const tb = b.hora ? `${b.fecha}T${b.hora}` : b.fecha;
+      if (ta !== tb) return ta.localeCompare(tb);
+      // Fallback a ID para mantener el orden de la llave cuando no hay horas definidas
+      return (a.id || '').localeCompare(b.id || '');
+    });
   }, [partidos]);
 
   const statsCompletado = useMemo(() => {
