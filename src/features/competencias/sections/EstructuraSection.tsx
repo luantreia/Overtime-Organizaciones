@@ -350,9 +350,9 @@ export default function EstructuraSection(props: Props) {
         fase={openReglamento.fase}
         todasLasFases={openReglamento.temporadaId ? (fasesPorTemporada[openReglamento.temporadaId] || []) : []}
         onClose={() => setOpenReglamento({ open: false, fase: null })}
-        onSave={async (faseId, config) => {
-          if (openReglamento.temporadaId) {
-            await onEditarFase(openReglamento.fase!, openReglamento.temporadaId, { configuracion: config });
+        onSave={async (_, config) => {
+          if (openReglamento.temporadaId && openReglamento.fase) {
+            await onEditarFase(openReglamento.fase, openReglamento.temporadaId, { configuracion: config });
           }
         }}
       />
