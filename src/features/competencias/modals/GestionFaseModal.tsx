@@ -69,20 +69,31 @@ export default function GestionParticipantesFaseModal({
   const [dragItem, setDragItem] = useState<{ id: string, nombre: string, escudo?: string } | null>(null);
   const [partidosEnCola, setPartidosEnCola] = useState<any[]>([]);
 
-  const handleDragStart = (pt: any) => {
-    const eq = (pt?.participacionTemporada?.equipo as any);
-    const id = typeof eq === 'string' ? eq : eq?._id;
-    const nombre = typeof eq === 'string' ? eq : (eq?.nombre || id);
-    const escudo = eq?.escudo;
-    setDragItem({ id, nombre, escudo });
+  const handleDragStart = (id: string, nombre: string, escudo?: string, type: 'original' | 'ganador' = 'original') => {
+    setDragItem({ id, nombre, escudo, type } as any);
   };
 
   const handleDrop = (slot: 'local' | 'visitante') => {
     if (!dragItem) return;
-    if (slot === 'local') setNuevoLocal(dragItem.id);
-    else setNuevoVisitante(dragItem.id);
+    if (slot === 'local') setNuevoLocal((dragItem as any).id);
+    else setNuevoVisitante((dragItem as any).id);
     setDragItem(null);
   };
+
+  const ganadoresDisponibles = useMemo(() => {
+    return partidos
+      .filter(p => p.estado === 'finalizado')
+      .map(p => {
+        const localGana = (p.marcadorLocal ?? 0) > (p.marcadorVisitante ?? 0);
+        return {
+          id: localGana ? p.equipoLocal?.id : p.equipoVisitante?.id,
+          nombre: localGana ? p.localNombre : p.visitanteNombre,
+          escudo: localGana ? p.equipoLocal?.escudo : p.equipoVisitante?.escudo,
+          etapa: p.etapa
+        };
+      })
+      .filter(g => g.id);
+  }, [partidos]);
 
   useEffect(() => {
     setItems(participantesFase || []);
@@ -522,81 +533,108 @@ export default function GestionParticipantesFaseModal({
 
                 {modoVisual ? (
                   <div className="space-y-6 animate-in zoom-in-95 duration-200">
-                    <div className="flex flex-col md:flex-row gap-6">
-                      {/* Columna Equipos Draggable */}
-                      <div className="md:w-1/3 flex flex-col">
-                        <label className="text-[10px] font-black text-slate-400 uppercase mb-2 flex items-center gap-1">
-                          <span className="flex h-3 w-3 items-center justify-center rounded-full bg-slate-200 text-[8px] text-slate-500">1</span>
-                          Arrastra un Equipo
-                        </label>
-                        <div className="flex-1 grid grid-cols-1 gap-2 max-h-[280px] overflow-y-auto p-2 bg-slate-50 rounded-xl border border-slate-200 shadow-inner">
-                           {items.map((pf: any) => {
+                    <div className="flex flex-col lg:flex-row gap-6">
+                      {/* Sidebar de Equipos */}
+                      <div className="lg:w-72 flex flex-col gap-6 shrink-0 border-r border-slate-100 pr-4">
+                        {/* Inscritos Originales */}
+                        <div>
+                          <h6 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1 flex items-center gap-2">
+                             <div className="w-1.5 h-1.5 rounded-full bg-brand-500"></div>
+                             Inscritos en Fase
+                          </h6>
+                          <div className="flex flex-col gap-2 max-h-[250px] overflow-y-auto pr-2 custom-scrollbar">
+                            {items.map((pf: any) => {
                               const eq = (pf?.participacionTemporada?.equipo as any);
                               const id = typeof eq === 'string' ? eq : eq?._id;
                               const nombre = typeof eq === 'string' ? eq : (eq?.nombre || id);
                               const escudo = eq?.escudo;
-                              const isAlreadySelected = nuevoLocal === id || nuevoVisitante === id;
+                              const isSelected = nuevoLocal === id || nuevoVisitante === id;
 
                               return (
                                 <div
                                   key={pf._id}
-                                  draggable={!isAlreadySelected}
-                                  onDragStart={() => handleDragStart(pf)}
+                                  draggable={!isSelected}
+                                  onDragStart={() => handleDragStart(id, nombre, escudo, 'original')}
                                   className={`group flex items-center gap-3 p-2.5 rounded-xl border text-[11px] font-black uppercase transition-all ${
-                                    isAlreadySelected 
-                                      ? 'opacity-40 cursor-not-allowed bg-slate-100 border-slate-200' 
-                                      : 'bg-white border-slate-200 cursor-grab hover:border-brand-400 hover:shadow-md active:scale-95 active:cursor-grabbing'
+                                    isSelected 
+                                      ? 'opacity-40 cursor-not-allowed bg-slate-100 border-slate-200 text-slate-400' 
+                                      : 'bg-white border-slate-100 cursor-grab hover:border-brand-400 hover:shadow-md active:scale-95 active:cursor-grabbing text-slate-700'
                                   }`}
                                 >
-                                  <div className="h-6 w-6 shrink-0 overflow-hidden rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center">
+                                  <div className="h-6 w-6 shrink-0 overflow-hidden rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center shadow-sm">
                                     {escudo ? <img src={escudo} alt={nombre} className="h-full w-full object-contain" /> : '🛡️'}
                                   </div>
                                   <span className="truncate flex-1">{nombre}</span>
-                                  {!isAlreadySelected && <span className="text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity">⠿</span>}
+                                  {!isSelected && <span className="text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity">⠿</span>}
                                 </div>
                               );
                            })}
                         </div>
                       </div>
 
+                      {/* Ganadores de Rondas Previas */}
+                      {ganadoresDisponibles.length > 0 && (
+                          <div className="animate-in slide-in-from-left-4 duration-500">
+                            <h6 className="text-[10px] font-black text-green-600 uppercase tracking-widest mb-3 px-1 flex items-center gap-2">
+                               <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
+                               Ganadores Avanzando
+                            </h6>
+                            <div className="flex flex-col gap-2 max-h-[200px] overflow-y-auto pr-2 custom-scrollbar">
+                              {ganadoresDisponibles.map((g, idx) => (
+                                <div 
+                                  key={`win-${idx}-${g.id}`}
+                                  draggable
+                                  onDragStart={() => handleDragStart(g.id || '', g.nombre || '', g.escudo, 'ganador')}
+                                  className="group flex items-center gap-3 p-2.5 bg-green-50 border border-green-100 rounded-xl hover:border-green-400 hover:bg-green-50 hover:shadow-md transition-all cursor-grab active:cursor-grabbing"
+                                >
+                                  <div className="h-7 w-7 rounded-full bg-white flex items-center justify-center p-1 border border-green-200 shadow-sm group-hover:scale-110 transition-transform">
+                                    {g.escudo ? <img src={g.escudo} alt={g.nombre || ''} className="h-full w-full object-contain" /> : '🏆'}
+                                  </div>
+                                  <div className="flex flex-col min-w-0 flex-1">
+                                    <span className="text-[10px] font-black text-green-900 truncate leading-none uppercase">{g.nombre}</span>
+                                    <span className="text-[8px] font-bold text-green-600 uppercase mt-1 tracking-tight">Viene de {g.etapa}</span>
+                                  </div>
+                                  <span className="text-green-200 group-hover:text-green-400">⠿</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
                       {/* Canvas de Construcción */}
-                      <div className="flex-1 space-y-4">
-                        <label className="text-[10px] font-black text-slate-400 uppercase mb-2 flex items-center gap-1">
-                          <span className="flex h-3 w-3 items-center justify-center rounded-full bg-slate-200 text-[8px] text-slate-500">2</span>
-                          Define el Encuentro
-                        </label>
-                        
-                        <div className="flex items-center justify-center gap-6 bg-gradient-to-br from-slate-900 to-slate-800 p-8 rounded-2xl shadow-xl relative overflow-hidden border border-slate-700">
-                           <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">
-                              <svg className="w-24 h-24 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                      <div className="flex-1 space-y-6">
+                        <div className="flex items-center justify-center gap-6 bg-slate-900 p-10 rounded-[2.5rem] shadow-2xl relative overflow-hidden border border-slate-800">
+                           {/* BG Decoration */}
+                           <div className="absolute inset-0 opacity-5 pointer-events-none">
+                              <div className="absolute top-0 left-0 w-full h-full" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '24px 24px' }}></div>
                            </div>
 
                            {/* Slot Local */}
                            <div 
                              onDragOver={(e) => e.preventDefault()}
                              onDrop={() => handleDrop('local')}
-                             className={`w-36 h-36 flex flex-col items-center justify-center border-2 border-dashed rounded-3xl transition-all relative z-10 p-2 ${
+                             className={`w-40 h-40 flex flex-col items-center justify-center border-2 border-dashed rounded-[2rem] transition-all relative z-10 p-3 ${
                                nuevoLocal 
-                                 ? 'bg-white border-brand-500 shadow-2xl scale-105' 
-                                 : 'bg-white/5 border-white/20 hover:border-brand-400 hover:bg-white/10'
+                                 ? 'bg-white border-brand-500 shadow-[0_0_50px_-12px_rgba(59,130,246,0.5)] scale-105' 
+                                 : 'bg-slate-800/50 border-slate-700 hover:border-brand-500 hover:bg-slate-800'
                              }`}
                            >
                              {nuevoLocal ? (
                                <>
-                                 <button onClick={() => setNuevoLocal('')} className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-6 h-6 text-xs flex items-center justify-center shadow-lg border-2 border-white hover:bg-red-600 transition-colors">✕</button>
-                                 <span className="text-[9px] text-brand-600 font-black uppercase mb-1 tracking-widest">Local</span>
-                                 <div className="flex flex-col items-center gap-2">
-                                    <div className="w-12 h-12 bg-slate-50 rounded-full border border-slate-100 flex items-center justify-center text-xl overflow-hidden shadow-sm">
+                                 <button onClick={() => setNuevoLocal('')} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-7 h-7 text-xs flex items-center justify-center shadow-lg border-2 border-white hover:bg-red-600 transition-colors z-20">✕</button>
+                                 <div className="flex flex-col items-center gap-3">
+                                    <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center p-2 shadow-sm border border-slate-100">
                                       {(() => {
                                         const pFound = items.find(i => {
                                           const eq = (i.participacionTemporada as any)?.equipo;
                                           return (typeof eq === 'string' ? eq : eq?._id) === nuevoLocal;
                                         });
                                         const escudo = (pFound?.participacionTemporada as any)?.equipo?.escudo;
-                                        return escudo ? <img src={escudo} alt="Escudo Local" className="w-full h-full object-contain" /> : '🏆';
+                                        return escudo ? <img src={escudo} alt="Local" className="w-full h-full object-contain" /> : '🏆';
                                       })()}
                                     </div>
-                                    <span className="text-xs font-black text-slate-800 text-center line-clamp-2 px-1">
+                                    <span className="text-[10px] font-black text-slate-900 text-center uppercase tracking-tight line-clamp-2 px-1">
                                       {(() => {
                                         const pFound = items.find(i => {
                                           const eq = (i.participacionTemporada as any)?.equipo;
@@ -610,40 +648,43 @@ export default function GestionParticipantesFaseModal({
                                </>
                              ) : (
                                <div className="flex flex-col items-center gap-2">
-                                  <div className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center text-white/20">↓</div>
-                                  <span className="text-[9px] text-white/30 font-black uppercase text-center tracking-widest leading-tight">Soltar<br/>Local</span>
+                                  <div className="w-12 h-12 rounded-full border-2 border-slate-700 flex items-center justify-center text-slate-600 group-hover:border-brand-500 group-hover:text-brand-500 transition-colors">
+                                     <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" /></svg>
+                                  </div>
+                                  <span className="text-[9px] text-slate-500 font-black uppercase text-center tracking-[0.2em]">Local</span>
                                </div>
                              )}
                            </div>
 
-                           <div className="text-3xl font-black text-white italic z-10 drop-shadow-lg opacity-50">VS</div>
+                           <div className="flex flex-col items-center gap-1 z-10">
+                              <div className="text-4xl font-black text-white/10 italic">VS</div>
+                           </div>
 
                            {/* Slot Visitante */}
                            <div 
                              onDragOver={(e) => e.preventDefault()}
                              onDrop={() => handleDrop('visitante')}
-                             className={`w-36 h-36 flex flex-col items-center justify-center border-2 border-dashed rounded-3xl transition-all relative z-10 p-2 ${
+                             className={`w-40 h-40 flex flex-col items-center justify-center border-2 border-dashed rounded-[2rem] transition-all relative z-10 p-3 ${
                                nuevoVisitante 
-                                 ? 'bg-white border-brand-500 shadow-2xl scale-105' 
-                                 : 'bg-white/5 border-white/20 hover:border-brand-400 hover:bg-white/10'
+                                 ? 'bg-white border-brand-500 shadow-[0_0_50px_-12px_rgba(59,130,246,0.5)] scale-105' 
+                                 : 'bg-slate-800/50 border-slate-700 hover:border-brand-500 hover:bg-slate-800'
                              }`}
                            >
                              {nuevoVisitante ? (
                                <>
-                                 <button onClick={() => setNuevoVisitante('')} className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-6 h-6 text-xs flex items-center justify-center shadow-lg border-2 border-white hover:bg-red-600 transition-colors">✕</button>
-                                 <span className="text-[9px] text-brand-600 font-black uppercase mb-1 tracking-widest">Visitante</span>
-                                 <div className="flex flex-col items-center gap-2">
-                                    <div className="w-12 h-12 bg-slate-50 rounded-full border border-slate-100 flex items-center justify-center text-xl overflow-hidden shadow-sm">
+                                 <button onClick={() => setNuevoVisitante('')} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-7 h-7 text-xs flex items-center justify-center shadow-lg border-2 border-white hover:bg-red-600 transition-colors z-20">✕</button>
+                                 <div className="flex flex-col items-center gap-3">
+                                    <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center p-2 shadow-sm border border-slate-100">
                                       {(() => {
                                         const pFound = items.find(i => {
                                           const eq = (i.participacionTemporada as any)?.equipo;
                                           return (typeof eq === 'string' ? eq : eq?._id) === nuevoVisitante;
                                         });
                                         const escudo = (pFound?.participacionTemporada as any)?.equipo?.escudo;
-                                        return escudo ? <img src={escudo} alt="Escudo Visitante" className="w-full h-full object-contain" /> : '🛡️';
+                                        return escudo ? <img src={escudo} alt="Visita" className="w-full h-full object-contain" /> : '🛡️';
                                       })()}
                                     </div>
-                                    <span className="text-xs font-black text-slate-800 text-center line-clamp-2 px-1">
+                                    <span className="text-[10px] font-black text-slate-900 text-center uppercase tracking-tight line-clamp-2 px-1">
                                       {(() => {
                                         const pFound = items.find(i => {
                                           const eq = (i.participacionTemporada as any)?.equipo;
@@ -657,87 +698,83 @@ export default function GestionParticipantesFaseModal({
                                </>
                              ) : (
                                <div className="flex flex-col items-center gap-2">
-                                  <div className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center text-white/20">↓</div>
-                                  <span className="text-[9px] text-white/30 font-black uppercase text-center tracking-widest leading-tight">Soltar<br/>Visitante</span>
+                                  <div className="w-12 h-12 rounded-full border-2 border-slate-700 flex items-center justify-center text-slate-600 group-hover:border-brand-500 group-hover:text-brand-500 transition-colors">
+                                     <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" /></svg>
+                                  </div>
+                                  <span className="text-[9px] text-slate-500 font-black uppercase text-center tracking-[0.2em]">Visita</span>
                                </div>
                              )}
                            </div>
                         </div>
 
-                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 pt-2">
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
                             <div className="lg:col-span-1">
-                              <label className="text-[9px] font-black text-slate-400 uppercase mb-1 block ml-1">Etapa</label>
-                              <select className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold focus:ring-2 focus:ring-brand-500/20" value={nuevaEtapa} onChange={(e)=> setNuevaEtapa(e.target.value)}>
+                              <label className="text-[9px] font-black text-slate-400 uppercase mb-2 block ml-1">Etapa de la Llave</label>
+                              <select className="w-full rounded-2xl border-2 border-slate-100 bg-white px-4 py-3 text-xs font-black uppercase tracking-wider focus:ring-4 focus:ring-brand-500/10 focus:border-brand-500 transition-all outline-none" value={nuevaEtapa} onChange={(e)=> setNuevaEtapa(e.target.value)}>
                                 <option value="octavos">Octavos</option>
                                 <option value="cuartos">Cuartos</option>
                                 <option value="semifinal">Semifinal</option>
                                 <option value="final">Final</option>
-                                <option value="tercer_puesto">Tercer Puesto</option>
-                                <option value="repechaje">Repechaje</option>
                               </select>
                             </div>
                             <div className="lg:col-span-2">
-                               <label className="text-[9px] font-black text-slate-400 uppercase mb-1 block ml-1">Fecha del Partido</label>
-                               <input 
-                                 type="date" 
-                                 className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold" 
-                                 value={nuevaFecha} 
-                                 min={fase?.fechaInicio?.split('T')[0]}
-                                 max={fase?.fechaFin?.split('T')[0]}
-                                 onChange={(e)=> setNuevaFecha(e.target.value)} 
-                               />
-                               {fase?.fechaInicio && (
-                                 <p className="text-[8px] text-brand-500 mt-1 italic">Rango fase: {new Date(fase.fechaInicio).toLocaleDateString()} al {new Date(fase.fechaFin || '').toLocaleDateString()}</p>
-                               )}
+                               <label className="text-[9px] font-black text-slate-400 uppercase mb-2 block ml-1">Programación</label>
+                               <div className="flex gap-2">
+                                  <input 
+                                    type="date" 
+                                    className="flex-1 rounded-2xl border-2 border-slate-100 bg-white px-4 py-3 text-xs font-bold focus:border-brand-500 outline-none transition-all" 
+                                    value={nuevaFecha} 
+                                    min={fase?.fechaInicio?.split('T')[0]}
+                                    max={fase?.fechaFin?.split('T')[0]}
+                                    onChange={(e)=> setNuevaFecha(e.target.value)} 
+                                  />
+                                  <input type="time" className="w-28 rounded-2xl border-2 border-slate-100 bg-white px-4 py-3 text-xs font-bold focus:border-brand-500 outline-none transition-all" value={nuevaHora} onChange={(e)=> setNuevaHora(e.target.value)} />
+                               </div>
                             </div>
-                            <div className="lg:col-span-1">
-                               <label className="text-[9px] font-black text-slate-400 uppercase mb-1 block ml-1">Hora</label>
-                               <input type="time" className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold" value={nuevaHora} onChange={(e)=> setNuevaHora(e.target.value)} />
+                            <div className="lg:col-span-1 flex flex-col justify-end">
+                               <button
+                                 type="button"
+                                 className="w-full rounded-2xl bg-slate-900 px-4 py-4 text-[10px] font-black uppercase tracking-widest text-white hover:bg-slate-800 transition shadow-lg active:scale-95"
+                                 disabled={!nuevoLocal || !nuevoVisitante || !nuevaFecha}
+                                 onClick={() => {
+                                   const localFound = items.find(i => (typeof (i.participacionTemporada as any)?.equipo === 'string' ? (i.participacionTemporada as any).equipo : (i.participacionTemporada as any).equipo?._id) === nuevoLocal);
+                                   const visitorFound = items.find(i => (typeof (i.participacionTemporada as any)?.equipo === 'string' ? (i.participacionTemporada as any).equipo : (i.participacionTemporada as any).equipo?._id) === nuevoVisitante);
+                                   
+                                   const item = {
+                                     localId: nuevoLocal,
+                                     localNombre: (localFound?.participacionTemporada as any)?.equipo?.nombre || 'Local',
+                                     visitanteId: nuevoVisitante,
+                                     visitanteNombre: (visitorFound?.participacionTemporada as any)?.equipo?.nombre || 'Visitante',
+                                     fecha: nuevaFecha,
+                                     hora: nuevaHora,
+                                     etapa: nuevaEtapa || 'Cuartos'
+                                   };
+                                   setPartidosEnCola([...partidosEnCola, item]);
+                                   setNuevoLocal(''); setNuevoVisitante('');
+                                 }}
+                               >
+                                 + Encolar Cruce
+                               </button>
                             </div>
                         </div>
 
-                        <div className="flex gap-2 pt-2">
-                          <button
-                            type="button"
-                            className="flex-1 rounded-xl bg-indigo-50 border border-indigo-100 px-4 py-3 text-[10px] font-black uppercase text-indigo-700 hover:bg-indigo-100 transition flex items-center justify-center gap-2"
-                            disabled={!nuevoLocal || !nuevoVisitante || !nuevaFecha}
-                            onClick={() => {
-                              const localFound = items.find(i => (typeof (i.participacionTemporada as any)?.equipo === 'string' ? (i.participacionTemporada as any).equipo : (i.participacionTemporada as any).equipo?._id) === nuevoLocal);
-                              const visitorFound = items.find(i => (typeof (i.participacionTemporada as any)?.equipo === 'string' ? (i.participacionTemporada as any).equipo : (i.participacionTemporada as any).equipo?._id) === nuevoVisitante);
-                              
-                              const item = {
-                                localId: nuevoLocal,
-                                localNombre: (localFound?.participacionTemporada as any)?.equipo?.nombre || 'Local',
-                                visitanteId: nuevoVisitante,
-                                visitanteNombre: (visitorFound?.participacionTemporada as any)?.equipo?.nombre || 'Visitante',
-                                fecha: nuevaFecha,
-                                hora: nuevaHora,
-                                etapa: nuevaEtapa || 'Cuartos'
-                              };
-                              setPartidosEnCola([...partidosEnCola, item]);
-                              setNuevoLocal(''); setNuevoVisitante('');
-                            }}
-                          >
-                            📥 Añadir a Lista (Queue)
-                          </button>
-                          
-                          <button
-                            type="button"
-                            className="flex-1 rounded-xl bg-brand-600 px-4 py-3 text-[10px] font-black uppercase text-white hover:bg-brand-700 shadow-lg shadow-brand-100 transition flex items-center justify-center gap-2"
-                            disabled={!nuevoLocal || !nuevoVisitante || !nuevaFecha}
-                            onClick={async () => {
-                              if (!fase?._id) return;
-                              await crearPartidoCompetencia({ equipoLocalId: nuevoLocal, equipoVisitanteId: nuevoVisitante, fecha: nuevaFecha, hora: nuevaHora || undefined, faseId: fase._id, etapa: nuevaEtapa || undefined, modalidad: modalidadComp, categoria: categoriaComp });
-                              setNuevoLocal(''); setNuevoVisitante('');
-                              const lista = await getPartidosPorFase(fase._id);
-                              setPartidos(lista);
-                              setNotice('✨ Partido creado exitosamente'); setTimeout(()=> setNotice(''), 2000);
-                              onRefresh?.();
-                            }}
-                          >
-                            🚀 Crear Ahora
-                          </button>
-                        </div>
+                        <button
+                          type="button"
+                          className="w-full rounded-2xl bg-brand-600 px-6 py-5 text-xs font-black uppercase tracking-[0.2em] text-white hover:bg-brand-700 shadow-[0_20px_40px_-15px_rgba(59,130,246,0.5)] transition-all flex items-center justify-center gap-3 active:scale-[0.98]"
+                          disabled={!nuevoLocal || !nuevoVisitante || !nuevaFecha}
+                          onClick={async () => {
+                            if (!fase?._id) return;
+                            setNotice('Creando partido...');
+                            await crearPartidoCompetencia({ equipoLocalId: nuevoLocal, equipoVisitanteId: nuevoVisitante, fecha: nuevaFecha, hora: nuevaHora || undefined, faseId: fase._id, etapa: nuevaEtapa || undefined, modalidad: modalidadComp, categoria: categoriaComp });
+                            setNuevoLocal(''); setNuevoVisitante('');
+                            const lista = await getPartidosPorFase(fase._id);
+                            setPartidos(lista);
+                            setNotice('✨ Cruce creado con éxito'); setTimeout(()=> setNotice(''), 2000);
+                            onRefresh?.();
+                          }}
+                        >
+                          ⚡ Generar Cruce Ahora
+                        </button>
                       </div>
                     </div>
 
