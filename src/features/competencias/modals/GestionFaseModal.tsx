@@ -68,12 +68,17 @@ export default function GestionParticipantesFaseModal({
   const [modoVisual, setModoVisual] = useState(false);
   const [dragItem, setDragItem] = useState<{ id: string, nombre: string, escudo?: string } | null>(null);
   const [partidosEnCola, setPartidosEnCola] = useState<any[]>([]);
+  const [sugerencias, setSugerencias] = useState<any[]>([]);
 
   // Quick Edit States
   const [quickEditId, setQuickEditId] = useState<string | null>(null);
   const [quickLocal, setQuickLocal] = useState<number>(0);
   const [quickVisitante, setQuickVisitante] = useState<number>(0);
   const [isSavingQuick, setIsSavingQuick] = useState(false);
+
+  useEffect(() => {
+    setSugerencias([]);
+  }, [activeTab]);
 
   const refrescarPartidos = async () => {
     if (!fase?._id) return;
@@ -531,6 +536,43 @@ export default function GestionParticipantesFaseModal({
                       onAutoCreate={(stage) => {
                         setModoVisual(true);
                         setNuevaEtapa(stage);
+                        
+                        // Generar sugerencias basadas en la rama de la llave
+                        const ST_ORDER = ['octavos', 'cuartos', 'semifinal', 'final'];
+                        const idx = ST_ORDER.indexOf(stage);
+                        if (idx > 0) {
+                          const prevStage = ST_ORDER[idx - 1];
+                          const prevMatches = [...partidos]
+                            .filter(p => p.etapa?.toLowerCase() === prevStage)
+                            // Ordenamos por hora/fecha para mantener la coherencia de las ramas
+                            .sort((a,b) => {
+                              const ta = a.hora ? `${a.fecha}T${a.hora}` : a.fecha;
+                              const tb = b.hora ? `${b.fecha}T${b.hora}` : b.fecha;
+                              return ta.localeCompare(tb);
+                            });
+                          
+                          const sugs = [];
+                          for (let i = 0; i < prevMatches.length; i += 2) {
+                            const m1 = prevMatches[i];
+                            const m2 = prevMatches[i+1];
+                            if (m1 && m2) {
+                              const getW = (m: Partido) => {
+                                if (m.estado !== 'finalizado') return null;
+                                return (m.marcadorLocal ?? 0) > (m.marcadorVisitante ?? 0) ? m.equipoLocal : m.equipoVisitante;
+                              };
+                              sugs.push({
+                                local: getW(m1),
+                                visitante: getW(m2),
+                                labelMatch1: `${m1.localNombre || 'TBD'} vs ${m1.visitanteNombre || 'TBD'}`,
+                                labelMatch2: `${m2.localNombre || 'TBD'} vs ${m2.visitanteNombre || 'TBD'}`
+                              });
+                            }
+                          }
+                          setSugerencias(sugs);
+                        } else {
+                          setSugerencias([]);
+                        }
+
                         document.getElementById('gestion-partidos-header')?.scrollIntoView({ behavior: 'smooth' });
                       }}
                     />
@@ -678,6 +720,41 @@ export default function GestionParticipantesFaseModal({
                     <div className="flex flex-col lg:flex-row gap-6">
                       {/* Sidebar de Equipos */}
                       <div className="lg:w-72 flex flex-col gap-6 shrink-0 border-r border-slate-100 pr-4">
+                        
+                        {/* Cruces Sugeridos (Automáticos por Rama) */}
+                        {sugerencias.length > 0 && (
+                          <div className="animate-in slide-in-from-top-2 duration-400">
+                             <h6 className="text-[10px] font-black text-brand-600 uppercase tracking-widest mb-3 px-1 flex items-center gap-2">
+                               <span className="flex h-4 w-4 items-center justify-center rounded bg-brand-100 text-[10px]">✨</span>
+                               Cruces Sugeridos
+                             </h6>
+                             <div className="flex flex-col gap-2">
+                               {sugerencias.map((s, idx) => (
+                                 <button
+                                   key={idx}
+                                   onClick={() => {
+                                      if (s.local) setNuevoLocal(typeof s.local === 'string' ? s.local : s.local._id);
+                                      if (s.visitante) setNuevoVisitante(typeof s.visitante === 'string' ? s.visitante : s.visitante._id);
+                                   }}
+                                   className="group flex flex-col gap-1 p-2.5 bg-brand-50 border border-brand-100 rounded-xl hover:border-brand-400 hover:bg-white transition-all text-left"
+                                 >
+                                    <div className="flex items-center justify-between text-[8px] font-black text-brand-400 uppercase mb-1">
+                                       <span>{idx % 2 === 0 ? 'Rama Superior' : 'Rama Inferior'}</span>
+                                       <span className="opacity-0 group-hover:opacity-100 transition-opacity">Auto-completar ⚡</span>
+                                    </div>
+                                    <div className="text-[10px] font-bold text-slate-700 leading-tight">
+                                       Ganador {s.labelMatch1} <br/> <span className="text-slate-300 font-bold px-0.5 whitespace-nowrap">vs</span> <br/> Ganador {s.labelMatch2}
+                                    </div>
+                                    {(!s.local || !s.visitante) && (
+                                       <span className="text-[7px] font-bold text-amber-600 uppercase mt-1 italic">* Esperando resultados</span>
+                                    )}
+                                 </button>
+                               ))}
+                             </div>
+                             <div className="h-px bg-slate-100 my-4" />
+                          </div>
+                        )}
+
                         {/* Inscritos Originales */}
                         <div>
                           <h6 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1 flex items-center gap-2">
