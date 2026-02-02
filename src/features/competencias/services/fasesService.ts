@@ -30,6 +30,7 @@ export type BackendFase = {
       };
       destinoGanadores?: string | null;
       destinoPerdedores?: string | null;
+      estrategiaSembrado?: 'posicion_directa' | 'manual' | 'aleatorio';
     };
     playoff?: {
       formato?: 'simple' | 'doble_eliminacion';

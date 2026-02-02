@@ -15,6 +15,7 @@ interface ReglamentoConfig {
     clasificanDirecto: number;
     destinoGanadores: string | null;
     destinoPerdedores: string | null;
+    estrategiaSembrado: 'posicion_directa' | 'manual' | 'aleatorio';
   };
   playoff: {
     formato: 'simple' | 'doble_eliminacion';
@@ -49,6 +50,7 @@ export default function ConfigurarReglamentoModal({ isOpen, onClose, fase, todas
       clasificanDirecto: 0,
       destinoGanadores: '',
       destinoPerdedores: '',
+      estrategiaSembrado: 'posicion_directa'
     },
     playoff: {
       formato: 'simple',
@@ -75,6 +77,7 @@ export default function ConfigurarReglamentoModal({ isOpen, onClose, fase, todas
            clasificanDirecto: conf.progresion?.clasificanDirecto ?? 0,
            destinoGanadores: conf.progresion?.destinoGanadores ?? '',
            destinoPerdedores: conf.progresion?.destinoPerdedores ?? '',
+           estrategiaSembrado: conf.progresion?.estrategiaSembrado ?? 'posicion_directa',
         },
         playoff: {
            formato: conf.playoff?.formato ?? 'simple',
@@ -281,6 +284,19 @@ export default function ConfigurarReglamentoModal({ isOpen, onClose, fase, todas
                       {todasLasFases.filter(f2 => f2._id !== fase._id).map(f2 => (
                         <option key={f2._id} value={f2._id}>{f2.nombre} ({f2.tipo})</option>
                       ))}
+                    </select>
+                  </div>
+                  <div className="md:col-span-1">
+                    <label className="text-[10px] font-black uppercase text-indigo-600">Estrategia de Sembrado (Seed)</label>
+                    <p className="text-[8px] text-slate-400 mb-1 italic">¿Cómo se asigna el número de seed al clasificar?</p>
+                    <select 
+                      value={config.progresion?.estrategiaSembrado}
+                      onChange={(e) => setConfig({...config, progresion: {...config.progresion, estrategiaSembrado: e.target.value as any}})}
+                      className="w-full rounded-lg border-2 border-white p-2 text-xs font-bold text-slate-700 shadow-sm focus:border-indigo-500 focus:outline-none"
+                    >
+                      <option value="posicion_directa">Posición final (1º=Seed 1, 2º=Seed 2...)</option>
+                      <option value="manual">Manual (Sin seed automático)</option>
+                      <option value="aleatorio">Aleatorio (Sorteo)</option>
                     </select>
                   </div>
                   <div className={isPlayoffType ? "md:col-span-2" : ""}>
