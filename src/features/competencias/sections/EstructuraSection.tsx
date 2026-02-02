@@ -272,27 +272,47 @@ export default function EstructuraSection(props: Props) {
                               {(participacionesFasePorId[f._id] || []).length} equipos en esta fase
                             </span>
                             {f.tipo === 'grupo' || f.tipo === 'liga' ? (
-                               <button
-                                 disabled={!esAdmin || f.estado === 'finalizada'}
-                                 onClick={async () => {
-                                   if (window.confirm('¿Estás seguro de finalizar esta fase? Se calcularán las posiciones finales y los equipos clasificarán a la siguiente fase según el reglamento.')) {
-                                      try {
-                                        await finalizarFase(f._id);
-                                        onRefresh?.();
-                                        alert('Fase finalizada con éxito.');
-                                      } catch (err: any) {
-                                        alert('Error al finalizar fase: ' + err.message);
+                              <div className="flex gap-2">
+                                <button
+                                  disabled={!esAdmin || f.estado === 'finalizada'}
+                                  onClick={async () => {
+                                    if (window.confirm('¿Estás seguro de finalizar esta fase? Se calcularán las posiciones finales y los equipos clasificarán a la siguiente fase según el reglamento.')) {
+                                       try {
+                                         await finalizarFase(f._id);
+                                         onRefresh?.();
+                                         alert('Fase finalizada con éxito.');
+                                       } catch (err: any) {
+                                         alert('Error al finalizar fase: ' + err.message);
+                                       }
+                                    }
+                                  }}
+                                  className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
+                                    f.estado === 'finalizada' 
+                                    ? 'bg-emerald-500 text-white cursor-default opacity-50'
+                                    : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-200'
+                                  }`}
+                                >
+                                  {f.estado === 'finalizada' ? '✓ Fase Finalizada' : '🏁 Finalizar y Clasificar'}
+                                </button>
+
+                                {f.estado === 'finalizada' && esAdmin && (
+                                  <button
+                                    onClick={async () => {
+                                      if (window.confirm('¿Reabrir esta fase? Esto permitirá volver a finalizarla, pero recuerda borrar manualmente los equipos que se hayan clasificado erróneamente en las fases de destino.')) {
+                                        try {
+                                          await onEditarFase(f, t._id, { estado: 'en_curso' });
+                                          alert('Fase reabierta.');
+                                        } catch (err) {
+                                          alert('Error al reabrir fase');
+                                        }
                                       }
-                                   }
-                                 }}
-                                 className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
-                                   f.estado === 'finalizada' 
-                                   ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
-                                   : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-200'
-                                 }`}
-                               >
-                                 {f.estado === 'finalizada' ? '✓ Fase Finalizada' : '🏁 Finalizar y Clasificar'}
-                               </button>
+                                    }}
+                                    className="px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest bg-amber-50 text-amber-6100 hover:bg-amber-100 border border-amber-200"
+                                  >
+                                    🔄 Reabrir para Corregir
+                                  </button>
+                                )}
+                              </div>
                             ) : null}
                           </div>
                           <button 
