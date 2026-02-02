@@ -10,7 +10,52 @@ function equipoNombreFromPf(pf: BackendParticipacionFase): string {
   return (eq && (eq as any).nombre) || pf._id;
 }
 
-export default function FasePlayoffSection({ participantes, esAdmin, onUpdate, onDelete }: { participantes: BackendParticipacionFase[]; esAdmin?: boolean; onUpdate?: (id: string, body: Partial<{ seed: number; posicion: number }>) => void | Promise<void>; onDelete?: (id: string) => void | Promise<void> }) {
+export default function FasePlayoffSection({ 
+  participantes, 
+  esAdmin, 
+  onUpdate, 
+  onDelete 
+}: { 
+  participantes: BackendParticipacionFase[]; 
+  esAdmin?: boolean; 
+  onUpdate?: (id: string, body: Partial<{ seed: number; posicion: number }>) => void | Promise<void>; 
+  onDelete?: (id: string) => void | Promise<void> 
+}) {
+  const handleRandomizeSeeds = async () => {
+    if (!onUpdate) return;
+    if (!window.confirm('¿Asignar Seeds aleatorios a todos los participantes?')) return;
+    
+    const shuffled = [...participantes].sort(() => Math.random() - 0.5);
+    for (let i = 0; i < shuffled.length; i++) {
+      await onUpdate(shuffled[i]._id, { seed: i + 1 });
+    }
+  };
+
+  const handlePerformanceSeeds = async () => {
+    if (!onUpdate) return;
+    if (!window.confirm('¿Asignar Seeds basados en el rendimiento (Eficiencia > Dif. Promedio)?')) return;
+    
+    const sorted = [...participantes].sort((a, b) => {
+      // 1. Prioridad por Clasificación (si vienen de una fase donde clasificaron, tienen prioridad)
+      if (a.clasificado && !b.clasificado) return -1;
+      if (!a.clasificado && b.clasificado) return 1;
+
+      // 2. Eficiencia (Puntos por partido jugado) - Esto nivela a quienes jugaron distinta cantidad de partidos
+      const effA = (a.partidosJugados || 0) > 0 ? (a.puntos || 0) / a.partidosJugados! : 0;
+      const effB = (b.partidosJugados || 0) > 0 ? (b.puntos || 0) / b.partidosJugados! : 0;
+      if (effB !== effA) return effB - effA;
+      
+      // 3. Diferencia de Puntos promedio por partido
+      const diffA = (a.partidosJugados || 0) > 0 ? (a.diferenciaPuntos || 0) / a.partidosJugados! : 0;
+      const diffB = (b.partidosJugados || 0) > 0 ? (b.diferenciaPuntos || 0) / b.partidosJugados! : 0;
+      return diffB - diffA;
+    });
+
+    for (let i = 0; i < sorted.length; i++) {
+      await onUpdate(sorted[i]._id, { seed: i + 1 });
+    }
+  };
+
   const rows = [...(participantes || [])].sort((a: any, b: any) => {
     const sa = a?.seed ?? Number.POSITIVE_INFINITY;
     const sb = b?.seed ?? Number.POSITIVE_INFINITY;
@@ -51,7 +96,25 @@ export default function FasePlayoffSection({ participantes, esAdmin, onUpdate, o
   return (
     <div className="space-y-2">
       <div className="flex items-start justify-between gap-3">
-        <h4 className="text-sm font-medium text-slate-800">Participantes</h4>
+        <div className="flex flex-col gap-1">
+          <h4 className="text-sm font-medium text-slate-800">Participantes</h4>
+          {esAdmin && participantes.length > 0 && (
+            <div className="flex gap-4">
+              <button 
+                onClick={handleRandomizeSeeds}
+                className="text-[10px] font-black uppercase text-brand-600 hover:text-brand-700 underline decoration-brand-200 underline-offset-4 decoration-2 text-left"
+              >
+                🎲 Aleatorio
+              </button>
+              <button 
+                onClick={handlePerformanceSeeds}
+                className="text-[10px] font-black uppercase text-brand-600 hover:text-brand-700 underline decoration-brand-200 underline-offset-4 decoration-2 text-left"
+              >
+                📈 Por Rendimiento
+              </button>
+            </div>
+          )}
+        </div>
         <HelpBadge label="Ayuda playoffs">
           <ul className="list-disc pl-4">
             <li>Edite <strong>Seed</strong> para ordenar el emparejamiento inicial.</li>
