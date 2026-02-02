@@ -188,6 +188,10 @@ export default function GestionParticipantesFaseModal({
 
   const partidosOrdenados = useMemo(() => {
     return [...partidos].sort((a, b) => {
+      // Prioridad 1: Posición en el bracket (importante para playoffs)
+      if (typeof a.posicionBracket === 'number' && typeof b.posicionBracket === 'number') {
+        if (a.posicionBracket !== b.posicionBracket) return a.posicionBracket - b.posicionBracket;
+      }
       const ta = a.hora ? `${a.fecha}T${a.hora}` : a.fecha;
       const tb = b.hora ? `${b.fecha}T${b.hora}` : b.fecha;
       if (ta !== tb) return ta.localeCompare(tb);
@@ -576,8 +580,11 @@ export default function GestionParticipantesFaseModal({
                           const prevStage = ST_ORDER[idx - 1];
                           const prevMatches = [...partidos]
                             .filter(p => p.etapa?.toLowerCase() === prevStage)
-                            // Ordenamos por hora/fecha para mantener la coherencia de las ramas
+                            // Ordenamos por posición en el bracket para mantener la coherencia de las ramas
                             .sort((a,b) => {
+                              if (typeof a.posicionBracket === 'number' && typeof b.posicionBracket === 'number') {
+                                return a.posicionBracket - b.posicionBracket;
+                              }
                               const ta = a.hora ? `${a.fecha}T${a.hora}` : a.fecha;
                               const tb = b.hora ? `${b.fecha}T${b.hora}` : b.fecha;
                               if (ta !== tb) return ta.localeCompare(tb);

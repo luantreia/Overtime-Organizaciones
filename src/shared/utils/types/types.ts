@@ -166,6 +166,7 @@ export interface Partido {
   visitanteNombre?: string;
   grupo?: string | null;
   division?: string | null;
+  posicionBracket?: number;
   resultado?: {
     puntosEquipo: number;
     puntosRival: number;

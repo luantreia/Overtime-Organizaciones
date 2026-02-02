@@ -284,6 +284,7 @@ const mapPartido = (partido: BackendPartido, contextoEquipoId?: string): Partido
     visitanteNombre: visitante?.nombre,
     grupo: (partido as any).grupo ?? null,
     division: (partido as any).division ?? null,
+    posicionBracket: (partido as any).posicionBracket ?? 0,
     equipoLocal: local ? { id: local.id, nombre: local.nombre, escudo: local.escudo } : undefined,
     equipoVisitante: visitante ? { id: visitante.id, nombre: visitante.nombre, escudo: visitante.escudo } : undefined,
     marcadorLocal: partido.marcadorLocal,

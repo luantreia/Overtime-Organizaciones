@@ -26,6 +26,9 @@ export const VisualBracket: React.FC<VisualBracketProps> = ({ matches, onMatchCl
   // Ordenar cada etapa para mantener la coherencia visual de las ramas
   Object.keys(matchesByStage).forEach(stage => {
     matchesByStage[stage].sort((a, b) => {
+      if (typeof a.posicionBracket === 'number' && typeof b.posicionBracket === 'number') {
+        return a.posicionBracket - b.posicionBracket;
+      }
       const ta = a.hora ? `${a.fecha}T${a.hora}` : a.fecha;
       const tb = b.hora ? `${b.fecha}T${b.hora}` : b.fecha;
       if (ta !== tb) return ta.localeCompare(tb);
