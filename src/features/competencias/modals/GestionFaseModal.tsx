@@ -5,7 +5,7 @@ import FaseLigaSection from './sections/FaseLigaSection';
 import FaseGruposSection from './sections/FaseGruposSection';
 import FasePlayoffSection from './sections/FasePlayoffSection';
 import { updateParticipacionFase, deleteParticipacionFase } from '../services/participacionFaseService';
-import { getPartidosPorFase, crearPartidoCompetencia, actualizarPartido } from '../../partidos/services/partidoService';
+import { getPartidosPorFase, crearPartidoCompetencia, actualizarPartido, eliminarPartido } from '../../partidos/services/partidoService';
 import type { Partido } from '../../../types';
 import ModalInformacionPartido from '../../partidos/components/modals/ModalInformacionPartido';
 import ModalAlineacionPartido from '../../partidos/components/modals/ModalAlineacionPartido';
@@ -583,22 +583,75 @@ export default function GestionParticipantesFaseModal({
                   <span className="text-lg">⚙️</span>
                   Configuración de Encuentros
                 </h3>
-                <div className="flex flex-wrap gap-3">
-                  <button 
-                    type="button" 
-                    className="flex-1 rounded-xl bg-brand-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-brand-200 hover:bg-brand-700 transition flex items-center justify-center gap-2" 
-                    onClick={async () => { 
-                      if (fase?._id) { 
-                        await onGenerarLlave?.(fase._id); 
-                        onRefresh?.();
-                      } 
-                    }}
-                  >
-                    ⚡ {tipo === 'playoff' || tipo === 'promocion' ? 'Generar Llave de Playoffs' : 'Generar Fixture Automático'}
-                  </button>
+                <div className="flex flex-col gap-4">
+                  {partidos.length > 0 ? (
+                    <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl animate-in fade-in zoom-in-95 duration-300">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100 text-lg">⚠️</div>
+                        <div className="flex flex-col">
+                          <span className="text-[11px] font-black text-amber-900 uppercase tracking-tight">Partidos Detectados</span>
+                          <span className="text-[10px] font-bold text-amber-700 leading-tight">Ya se han generado {partidos.length} partidos. No puedes generar nuevos mientras existan encuentros.</span>
+                        </div>
+                      </div>
+                      
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        <button 
+                          type="button"
+                          className="flex-1 rounded-xl bg-amber-600 px-4 py-3 text-[10px] font-black uppercase tracking-widest text-white hover:bg-amber-700 transition shadow-lg shadow-amber-200 flex items-center justify-center gap-2"
+                          onClick={async () => {
+                            if (!window.confirm('¿Estás SEGURO de eliminar TODOS los partidos de esta fase? Esta acción no se puede deshacer y perderás todos los resultados registrados.')) return;
+                            setNotice('Eliminando partidos...');
+                            try {
+                              for (const p of partidos) {
+                                await eliminarPartido(p.id);
+                              }
+                              await refrescarPartidos();
+                              setNotice('✨ Calendario limpiado. Ya puedes generar uno nuevo.');
+                              setTimeout(() => setNotice(''), 3000);
+                              if (onRefresh) onRefresh();
+                            } catch (e) {
+                              setNotice('❌ Error al eliminar algunos partidos');
+                            }
+                          }}
+                        >
+                          🗑️ Limpiar y Reiniciar Fase
+                        </button>
+                        <button 
+                          onClick={() => setActiveTab('partidos')}
+                          className="flex-1 rounded-xl bg-white border border-amber-200 px-4 py-3 text-[10px] font-black uppercase tracking-widest text-amber-700 hover:bg-amber-100 transition flex items-center justify-center gap-2"
+                        >
+                          📅 Ver Calendario
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button 
+                      type="button" 
+                      className="w-full rounded-xl bg-brand-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-brand-200 hover:bg-brand-700 transition flex items-center justify-center gap-2" 
+                      onClick={async () => { 
+                        if (fase?._id) { 
+                          try {
+                            setNotice('Generando encuentros...');
+                            await onGenerarLlave?.(fase._id); 
+                            await refrescarPartidos();
+                            if (onRefresh) onRefresh();
+                            setNotice('✨ Fixture generado con éxito');
+                            setTimeout(() => setNotice(''), 3000);
+                          } catch (err: any) {
+                            setNotice(`❌ ${err.message || 'Error al generar'}`);
+                          }
+                        } 
+                      }}
+                    >
+                      ⚡ {tipo === 'playoff' || tipo === 'promocion' ? 'Generar Llave de Playoffs' : 'Generar Fixture Automático'}
+                    </button>
+                  )}
                 </div>
                 <p className="mt-3 text-[10px] text-brand-600/70 font-medium italic">
-                  * Esta acción creará los partidos base según los participantes actuales de la fase. Si ya existen partidos, podría duplicarlos o resetearlos según la configuración del servidor.
+                  {partidos.length > 0 
+                    ? '* El calendario ya está configurado. Debes reiniciarlo si deseas cambiar el formato o los participantes.' 
+                    : '* Esta acción creará los partidos base según los participantes actuales de la fase.'
+                  }
                 </p>
               </div>
             )}
