@@ -10,6 +10,31 @@ export type BackendFase = {
   orden?: number;
   fechaInicio?: string;
   fechaFin?: string;
+  configuracion?: {
+    puntuacion?: {
+      victoria?: number;
+      empate?: number;
+      derrota?: number;
+      setGanado?: number;
+      perderPorW?: number;
+    };
+    criteriosDesempate?: string[];
+    progresion?: {
+      clasificanDirecto?: number;
+      mejoresAdicionales?: {
+        cantidad?: number;
+        posicion?: number;
+        criterio?: 'global' | 'por_grupo';
+      };
+      destinoGanadores?: string;
+      destinoPerdedores?: string;
+    };
+    playoff?: {
+      formato?: 'simple' | 'doble_eliminacion';
+      idaYVuelta?: boolean;
+      tercerPuesto?: boolean;
+    };
+  };
 };
 
 export async function listFasesByTemporada(temporadaId: string): Promise<BackendFase[]> {

@@ -140,12 +140,21 @@ const CompetenciaDetallePage = () => {
     setConfirmEliminarTemp(t);
   };
 
-  const onEditarFase = async (fase: BackendFase, temporadaId: string) => {
-    const nuevo = window.prompt('Nuevo nombre de la fase:', fase.nombre || 'Fase') || fase.nombre;
-    if (!nuevo) return;
-    await actualizarFase(fase._id, { nombre: nuevo });
+  const onEditarFase = async (fase: BackendFase, temporadaId: string, payload?: Partial<BackendFase>) => {
+    if (payload) {
+      // Si viene payload (ej: pasando configuracion), lo usamos directamente
+      await actualizarFase(fase._id, payload);
+    } else {
+      // Comportamiento original: prompt para el nombre
+      const nuevo = window.prompt('Nuevo nombre de la fase:', fase.nombre || 'Fase') || fase.nombre;
+      if (!nuevo) return;
+      await actualizarFase(fase._id, { nombre: nuevo });
+    }
     const fases = await listFasesByTemporada(temporadaId);
     setFasesPorTemporada((prev) => ({ ...prev, [temporadaId]: fases }));
+    if (payload?.configuracion) {
+      addToast({ type: 'success', title: 'Reglamento actualizado' });
+    }
   };
 
   const onEliminarFase = async (fase: BackendFase, temporadaId: string) => {

@@ -5,6 +5,7 @@ import CrearFaseModal from '../modals/CrearFaseModal';
 import JugadoresTemporadaModal from '../modals/JugadoresTemporadaModal';
 import GestionEquiposTemporadaModal from '../modals/GestionEquiposTemporadaModal';
 import GestionParticipantesFaseModal from '../modals/GestionFaseModal';
+import ConfigurarReglamentoModal from '../modals/ConfigurarReglamentoModal';
 import { TablaPosiciones } from '../../../shared/components/TablaPosiciones';
 
 type Props = {
@@ -26,12 +27,13 @@ type Props = {
       numeroClasificados?: number;
       faseOrigenA?: string;
       faseOrigenB?: string;
+      configuracion?: any;
     }
   ) => void | Promise<void>;
   onEditarTemporada: (t: BackendTemporada) => void;
   onEliminarTemporada: (t: BackendTemporada) => void;
   onGenerarFixture: (faseId: string) => void;
-  onEditarFase: (fase: BackendFase, temporadaId: string) => void;
+  onEditarFase: (fase: BackendFase, temporadaId: string, payload?: Partial<BackendFase>) => void;
   onEliminarFase: (fase: BackendFase, temporadaId: string) => void;
   participacionesTemporadaPorId: Record<string, BackendParticipacionTemporada[]>;
   participacionesFasePorId: Record<string, BackendParticipacionFase[]>;
@@ -112,6 +114,7 @@ export default function EstructuraSection(props: Props) {
   const [openJugadores, setOpenJugadores] = useState<{ open: boolean; pt?: BackendParticipacionTemporada }>( { open: false });
   const [openGestionEquipos, setOpenGestionEquipos] = useState<{ open: boolean; temporadaId?: string }>({ open: false });
   const [openGestionParticipantesFase, setOpenGestionParticipantesFase] = useState<{ open: boolean; fase?: BackendFase; temporadaId?: string }>({ open: false });
+  const [openReglamento, setOpenReglamento] = useState<{ open: boolean; fase: BackendFase | null; temporadaId?: string }>({ open: false, fase: null });
 
   
 
@@ -235,6 +238,14 @@ export default function EstructuraSection(props: Props) {
                       <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                         <button 
                           disabled={!esAdmin} 
+                          className="rounded-lg p-1.5 text-brand-600 hover:bg-brand-50 transition-colors" 
+                          onClick={() => setOpenReglamento({ open: true, fase: f, temporadaId: t._id })}
+                          title="Configurar Reglamento"
+                        >
+                          🔨
+                        </button>
+                        <button 
+                          disabled={!esAdmin} 
                           className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors" 
                           onClick={() => onEditarFase(f, t._id)}
                           title="Editar"
@@ -332,6 +343,17 @@ export default function EstructuraSection(props: Props) {
         participantesTemporada={openGestionParticipantesFase.temporadaId ? (participacionesTemporadaPorId[openGestionParticipantesFase.temporadaId] || []) : []}
         onAgregar={onCrearParticipacionFase}
         onGenerarLlave={(faseId) => onGenerarFixture(faseId)}
+      />
+
+      <ConfigurarReglamentoModal
+        isOpen={openReglamento.open}
+        fase={openReglamento.fase}
+        onClose={() => setOpenReglamento({ open: false, fase: null })}
+        onSave={async (faseId, config) => {
+          if (openReglamento.temporadaId) {
+            await onEditarFase(openReglamento.fase!, openReglamento.temporadaId, { configuracion: config });
+          }
+        }}
       />
     </>
   );
