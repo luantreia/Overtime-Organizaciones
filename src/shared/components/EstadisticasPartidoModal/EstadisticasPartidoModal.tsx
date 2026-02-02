@@ -7,7 +7,6 @@ import {
   getResumenEstadisticasManual,
 } from './estadisticasService';
 import type {
-  EstadisticaJugadorSetResumen,
   EstadisticaManualEquipo,
   EstadisticaManualJugador,
   EstadisticaSetResumen,
@@ -32,14 +31,6 @@ interface EstadisticasPartidoModalProps {
   };
 }
 
-type TipoVista = 'directas' | 'generales' | 'setASet';
-
-const TIPO_VISTA_MAP: Record<TipoVista, VistaEstadisticas> = {
-  directas: 'general',
-  generales: 'equipos',
-  setASet: 'jugadores',
-};
-
 interface EstadisticasData {
   jugadores: (EstadisticaManualJugador & { fuente?: string; setInfo?: Pick<EstadisticaSetResumen, 'numeroSet' | 'estadoSet' | 'ganadorSet'> })[];
   equipos: EstadisticaManualEquipo[];
@@ -60,12 +51,6 @@ export const EstadisticasPartidoModal: FC<EstadisticasPartidoModalProps> = ({
   const [modoEstadisticasUI, setModoEstadisticasUI] = useState<ModoEstadisticas>(
     partido?.modoEstadisticas ?? 'automatico',
   );
-
-  useEffect(() => {
-    if (isOpen) {
-      cargarEstadisticas();
-    }
-  }, [isOpen, modoEstadisticasUI, partidoId]);
 
   const cargarEstadisticas = useCallback(async (): Promise<void> => {
     try {
@@ -103,6 +88,12 @@ export const EstadisticasPartidoModal: FC<EstadisticasPartidoModalProps> = ({
       setLoading(false);
     }
   }, [modoEstadisticasUI, partidoId]);
+
+  useEffect(() => {
+    if (isOpen) {
+      cargarEstadisticas();
+    }
+  }, [isOpen, modoEstadisticasUI, partidoId, cargarEstadisticas]);
 
   const renderVistaActual = (): ReactNode => {
     if (loading) {

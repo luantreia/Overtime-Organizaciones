@@ -5,7 +5,7 @@ import FaseLigaSection from './sections/FaseLigaSection';
 import FaseGruposSection from './sections/FaseGruposSection';
 import FasePlayoffSection from './sections/FasePlayoffSection';
 import { updateParticipacionFase, deleteParticipacionFase } from '../services/participacionFaseService';
-import { getPartidosPorFase, crearPartidoCompetencia } from '../../partidos/services/partidoService';
+import { getPartidosPorFase, crearPartidoCompetencia, actualizarPartido } from '../../partidos/services/partidoService';
 import type { Partido } from '../../../types';
 import ModalInformacionPartido from '../../partidos/components/modals/ModalInformacionPartido';
 import ModalAlineacionPartido from '../../partidos/components/modals/ModalAlineacionPartido';
@@ -68,6 +68,45 @@ export default function GestionParticipantesFaseModal({
   const [modoVisual, setModoVisual] = useState(false);
   const [dragItem, setDragItem] = useState<{ id: string, nombre: string, escudo?: string } | null>(null);
   const [partidosEnCola, setPartidosEnCola] = useState<any[]>([]);
+
+  // Quick Edit States
+  const [quickEditId, setQuickEditId] = useState<string | null>(null);
+  const [quickLocal, setQuickLocal] = useState<number>(0);
+  const [quickVisitante, setQuickVisitante] = useState<number>(0);
+  const [isSavingQuick, setIsSavingQuick] = useState(false);
+
+  const refrescarPartidos = async () => {
+    if (!fase?._id) return;
+    try {
+      const lista = await getPartidosPorFase(fase._id);
+      setPartidos(lista);
+    } catch (e) {
+      console.error("Error refrescando partidos:", e);
+    }
+  };
+
+  const handleSaveQuickScore = async (partidoId: string) => {
+    try {
+      setIsSavingQuick(true);
+      await actualizarPartido(partidoId, {
+        marcadorLocal: quickLocal,
+        marcadorVisitante: quickVisitante,
+        estado: 'en_progreso'
+      });
+      
+      setQuickEditId(null);
+      setNotice('✅ Marcador actualizado');
+      setTimeout(() => setNotice(''), 3000);
+      
+      await refrescarPartidos();
+      if (onRefresh) onRefresh();
+    } catch (error) {
+      console.error('Error actualizando marcador:', error);
+      alert('Error al guardar el marcador');
+    } finally {
+      setIsSavingQuick(false);
+    }
+  };
 
   const handleDragStart = (id: string, nombre: string, escudo?: string, type: 'original' | 'ganador' = 'original') => {
     setDragItem({ id, nombre, escudo, type } as any);
@@ -222,12 +261,36 @@ export default function GestionParticipantesFaseModal({
         </div>
         
         <div className="flex flex-col items-center px-4">
-          {p.estado === 'programado' ? (
+          {quickEditId === p.id ? (
+            <div className="flex items-center gap-2 animate-in zoom-in-95 duration-200">
+              <input 
+                type="number" 
+                className="w-12 h-10 rounded-lg bg-slate-900 text-white text-center font-black text-lg border border-brand-500 focus:ring-2 focus:ring-brand-500/50 outline-none" 
+                value={quickLocal}
+                onChange={(e) => setQuickLocal(parseInt(e.target.value) || 0)}
+                autoFocus
+              />
+              <span className="text-slate-400 font-bold">-</span>
+              <input 
+                type="number" 
+                className="w-12 h-10 rounded-lg bg-slate-900 text-white text-center font-black text-lg border border-brand-500 focus:ring-2 focus:ring-brand-500/50 outline-none" 
+                value={quickVisitante}
+                onChange={(e) => setQuickVisitante(parseInt(e.target.value) || 0)}
+              />
+            </div>
+          ) : p.estado === 'programado' ? (
             <span className="text-xl font-black text-slate-300 italic">VS</span>
           ) : (
-            <div className="flex items-center gap-3 bg-slate-900 px-4 py-1.5 rounded-xl shadow-lg border border-slate-700">
+            <div 
+              className="flex items-center gap-3 bg-slate-900 px-4 py-1.5 rounded-xl shadow-lg border border-slate-700 cursor-pointer hover:border-brand-500 transition-colors group/score"
+              onClick={() => {
+                setQuickEditId(p.id);
+                setQuickLocal(p.marcadorLocal ?? 0);
+                setQuickVisitante(p.marcadorVisitante ?? 0);
+              }}
+            >
               <span className="text-2xl font-black text-white tabular-nums leading-none">{p.marcadorLocal ?? 0}</span>
-              <span className="h-4 w-px bg-slate-700"></span>
+              <span className="h-4 w-px bg-slate-700 group-hover/score:bg-brand-500 transition-colors"></span>
               <span className="text-2xl font-black text-white tabular-nums leading-none">{p.marcadorVisitante ?? 0}</span>
             </div>
           )}
@@ -240,24 +303,45 @@ export default function GestionParticipantesFaseModal({
       </div>
 
       <div className="mt-4 flex items-center justify-center gap-2 pt-3 border-t border-slate-50">
-        <button 
-          className="rounded-lg bg-slate-50 px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-100 transition"
-          onClick={() => { setPartidoInfoId(p.id); setInfoModalAbierto(true); }}
-        >
-          Info
-        </button>
-        <button 
-          className="rounded-lg bg-brand-50 px-3 py-1.5 text-xs font-bold text-brand-700 hover:bg-brand-100 transition border border-brand-100"
-          onClick={() => { setPartidoSetsId(p.id); setGestionSetsAbierto(true); }}
-        >
-          Sets
-        </button>
-        <button 
-          className="rounded-lg bg-slate-50 px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-100 transition"
-          onClick={() => { setPartidoAlineacionId(p.id); setAlineacionModalAbierto(true); }}
-        >
-          Plantilla
-        </button>
+        {quickEditId === p.id ? (
+          <>
+            <button 
+              className="rounded-lg bg-emerald-600 px-4 py-1.5 text-xs font-bold text-white hover:bg-emerald-700 transition shadow-sm flex items-center gap-1"
+              disabled={isSavingQuick}
+              onClick={() => handleSaveQuickScore(p.id)}
+            >
+              {isSavingQuick ? '...' : 'Guardar'}
+            </button>
+            <button 
+              className="rounded-lg bg-slate-200 px-4 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-300 transition"
+              disabled={isSavingQuick}
+              onClick={() => setQuickEditId(null)}
+            >
+              Cancelar
+            </button>
+          </>
+        ) : (
+          <>
+            <button 
+              className="rounded-lg bg-slate-50 px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-100 transition"
+              onClick={() => { setPartidoInfoId(p.id); setInfoModalAbierto(true); }}
+            >
+              Info
+            </button>
+            <button 
+              className="rounded-lg bg-brand-50 px-3 py-1.5 text-xs font-bold text-brand-700 hover:bg-brand-100 transition border border-brand-100"
+              onClick={() => { setPartidoSetsId(p.id); setGestionSetsAbierto(true); }}
+            >
+              Sets
+            </button>
+            <button 
+              className="rounded-lg bg-slate-50 px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-100 transition"
+              onClick={() => { setPartidoAlineacionId(p.id); setAlineacionModalAbierto(true); }}
+            >
+              Plantilla
+            </button>
+          </>
+        )}
       </div>
     </li>
   );
@@ -444,6 +528,11 @@ export default function GestionParticipantesFaseModal({
                     <VisualBracket 
                       matches={partidos} 
                       onMatchClick={(id) => { setPartidoInfoId(id); setInfoModalAbierto(true); }}
+                      onAutoCreate={(stage) => {
+                        setModoVisual(true);
+                        setNuevaEtapa(stage);
+                        document.getElementById('gestion-partidos-header')?.scrollIntoView({ behavior: 'smooth' });
+                      }}
                     />
                   </div>
                 )}
@@ -516,7 +605,7 @@ export default function GestionParticipantesFaseModal({
 
             {/* Gestión de Playoffs: Agregar Partido */}
             {(tipo === 'playoff' || tipo === 'promocion') && esAdmin && (
-              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+              <div id="gestion-partidos-header" className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                 <div className="flex items-center justify-between mb-4">
                   <h6 className="text-sm font-extrabold text-slate-900 uppercase tracking-tight flex items-center gap-2">
                     <span className="flex h-5 w-5 items-center justify-center rounded bg-brand-100 text-[10px] text-brand-600">+</span>

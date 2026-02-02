@@ -177,7 +177,7 @@ export const useModalSetEstadisticas = ({
     return () => {
       cancelado = true;
     };
-  }, [partidoId]);
+  }, [partidoId, registrarSetsEnMapa]);
 
   useEffect(() => {
     let cancelado = false;

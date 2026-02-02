@@ -1,23 +1,5 @@
 import type { ReactNode } from 'react';
-import type { EstadisticaManualJugador, EstadisticasJugadoresData } from './types';
-
-type JugadorEstadisticaDetalle = EstadisticaManualJugador & {
-  fuente?: string;
-  jugadorPartido?:
-    | string
-    | {
-        _id?: string;
-        jugador?: {
-          nombre?: string;
-          apellido?: string;
-        };
-        equipo?: {
-          _id?: string;
-          nombre?: string;
-          escudo?: string;
-        } | string;
-      };
-};
+import type { EstadisticasJugadoresData } from './types';
 
 export const renderEstadisticasJugadores = (
   estadisticas: EstadisticasJugadoresData,

@@ -323,7 +323,7 @@ export const useEstadisticasModal = (partidoId: string, _token: string): UseEsta
     } finally {
       setLoading(false);
     }
-  }, [partidoId]);
+  }, [partidoId, addToast]);
 
   const cambiarEstadistica = (
     jugadorPartidoId: string,

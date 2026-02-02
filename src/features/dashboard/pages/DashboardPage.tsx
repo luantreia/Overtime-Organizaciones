@@ -9,7 +9,6 @@ import { getSolicitudesJugadores } from '../../jugadores/services/jugadorEquipoS
 import { getEstadisticasEquipo } from '../../estadisticas/services/estadisticasService';
 import type {
   EstadisticaEquipoResumen,
-  EstadisticaJugador,
   Partido,
   SolicitudJugador,
 } from '../../../types';
@@ -21,7 +20,6 @@ const DashboardPage = () => {
   const [proximosPartidos, setProximosPartidos] = useState<Partido[]>([]);
   const [solicitudesPendientes, setSolicitudesPendientes] = useState<SolicitudJugador[]>([]);
   const [resumenEquipo, setResumenEquipo] = useState<EstadisticaEquipoResumen | null>(null);
-  const [rankingJugadores, setRankingJugadores] = useState<EstadisticaJugador[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -31,7 +29,6 @@ const DashboardPage = () => {
       setProximosPartidos([]);
       setSolicitudesPendientes([]);
       setResumenEquipo(null);
-      setRankingJugadores([]);
       return;
     }
 
@@ -54,7 +51,6 @@ const DashboardPage = () => {
         setProximosPartidos(partidosOrdenados);
         setSolicitudesPendientes(solicitudes);
         setResumenEquipo(stats.resumen);
-        setRankingJugadores(stats.jugadores);
         setError(null);
       } catch (err) {
         console.error(err);

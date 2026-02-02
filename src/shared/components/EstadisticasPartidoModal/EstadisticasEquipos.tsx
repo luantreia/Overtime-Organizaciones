@@ -3,7 +3,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   ResponsiveContainer
 } from 'recharts';
-import type { EstadisticaManualEquipo, EstadisticasEquiposData } from './types';
+import type { EstadisticasEquiposData } from './types';
 
 export function renderEstadisticasEquipos(estadisticas: EstadisticasEquiposData, _partido: unknown): ReactNode {
   return (

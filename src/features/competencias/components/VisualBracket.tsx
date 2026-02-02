@@ -4,6 +4,7 @@ import type { Partido } from '../../../types';
 interface VisualBracketProps {
   matches: Partido[];
   onMatchClick?: (matchId: string) => void;
+  onAutoCreate?: (stage: string) => void;
 }
 
 const STAGE_ORDER = ['octavos', 'cuartos', 'semifinal', 'final'];
@@ -14,7 +15,7 @@ const STAGE_LABELS: Record<string, string> = {
   final: 'Gran Final',
 };
 
-export const VisualBracket: React.FC<VisualBracketProps> = ({ matches, onMatchClick }) => {
+export const VisualBracket: React.FC<VisualBracketProps> = ({ matches, onMatchClick, onAutoCreate }) => {
   const matchesByStage = matches.reduce((acc, match) => {
     const stage = match.etapa?.toLowerCase() || 'otro';
     if (!acc[stage]) acc[stage] = [];
@@ -71,7 +72,9 @@ export const VisualBracket: React.FC<VisualBracketProps> = ({ matches, onMatchCl
                       <div 
                         onClick={() => onMatchClick?.(m.id)}
                         className={`relative z-10 bg-white border-2 rounded-2xl p-3 transition-all cursor-pointer overflow-hidden
-                          ${m.estado === 'en_juego' ? 'border-red-500 shadow-lg shadow-red-100' : 'border-slate-200 hover:border-brand-500 hover:shadow-xl'}`}
+                          ${m.estado === 'en_juego' 
+                            ? 'border-red-500 shadow-lg shadow-red-100' 
+                            : 'border-slate-200 hover:border-brand-500 hover:-translate-y-1 hover:shadow-xl hover:shadow-brand-100/20 active:scale-[0.98]'}`}
                       >
                         <div className="absolute top-0 right-0 flex">
                            {m.estado === 'en_juego' && <span className="bg-red-500 text-[8px] text-white font-black px-2 py-0.5 uppercase tracking-tighter animate-pulse rounded-bl-lg">En Vivo</span>}
@@ -118,12 +121,15 @@ export const VisualBracket: React.FC<VisualBracketProps> = ({ matches, onMatchCl
                     </div>
                   );
                 }) : (
-                  <div className="bg-slate-50/50 border-2 border-dashed border-slate-200 rounded-2xl p-6 flex flex-col items-center justify-center opacity-40">
-                    <span className="text-[10px] font-black text-slate-400 uppercase">Sin cruces</span>
+                  <button 
+                    onClick={() => onAutoCreate?.(stage)}
+                    className="group bg-slate-50/50 border-2 border-dashed border-slate-200 rounded-2xl p-6 flex flex-col items-center justify-center opacity-60 hover:opacity-100 hover:border-brand-400 hover:bg-white transition-all cursor-pointer"
+                  >
+                    <span className="text-[10px] font-black text-slate-400 group-hover:text-brand-600 uppercase transition-colors">+ Crear {STAGE_LABELS[stage]}</span>
                     <div className="mt-2 text-[9px] font-bold text-slate-300 italic text-center">
                       Ganadores de<br/>{STAGE_LABELS[STAGE_ORDER[STAGE_ORDER.indexOf(stage)-1]]}
                     </div>
-                  </div>
+                  </button>
                 )}
               </div>
             </div>

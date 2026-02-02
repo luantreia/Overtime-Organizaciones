@@ -1,8 +1,5 @@
 import type { ReactNode } from 'react';
 import type {
-  EstadisticaManualEquipo,
-  EstadisticaManualJugador,
-  EstadisticaSetResumen,
   ModoEstadisticas,
   EstadisticasGeneralesData,
 } from './types';

@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { authFetch } from '../../utils/authFetch';
 
 interface SearchResult {
@@ -14,7 +13,6 @@ export default function GlobalSearch() {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [showResults, setShowResults] = useState(false);
-  const navigate = useNavigate();
   const wrapperRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
