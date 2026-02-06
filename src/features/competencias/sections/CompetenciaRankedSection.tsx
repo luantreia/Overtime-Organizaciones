@@ -124,7 +124,7 @@ export default function CompetenciaRankedSection({
       const lb = await getLeaderboard({ 
         modalidad: modalidad as string, 
         categoria: categoria as string, 
-        competition: lbScope === 'competition' ? competenciaId : undefined, 
+        competition: competenciaId, 
         season: lbScope === 'competition' ? (selectedTemporada || undefined) : undefined,
         limit: 500 
       });

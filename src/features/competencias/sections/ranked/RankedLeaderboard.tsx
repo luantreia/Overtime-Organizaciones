@@ -52,7 +52,7 @@ export const RankedLeaderboard: React.FC<RankedLeaderboardProps> = ({
         playerIds: selectedIds,
         modalidad,
         categoria,
-        competition: lbScope === 'competition' ? competenciaId : undefined,
+        competition: competenciaId,
         season: lbScope === 'competition' ? (seasonId || undefined) : undefined
       });
       setSelectedIds([]);
