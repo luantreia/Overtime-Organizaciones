@@ -101,8 +101,8 @@ export async function getLeaderboard(params: { modalidad: string; categoria: str
     minMatches: String(params.minMatches ?? 0),
     limit: String(params.limit ?? 50),
   });
-  if (params.competition) sp.set('competition', params.competition);
-  if (params.season) sp.set('season', params.season);
+  if (params.competition && params.competition !== 'null') sp.set('competition', params.competition);
+  if (params.season && params.season !== 'null' && params.season !== 'global') sp.set('season', params.season);
   return authFetch<{ ok: boolean; items: Array<{ playerId: string; rating: number; matchesPlayed: number; lastDelta?: number; playerName?: string; nombre?: string }> }>(`${BASE}/leaderboard?${sp.toString()}`);
 }
 
