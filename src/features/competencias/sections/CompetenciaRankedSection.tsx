@@ -9,6 +9,7 @@ import {
   resetAllRankings, 
   resetScopeRankings, 
   recalculateGlobalRankings,
+  recalculateScopeRankings,
   syncAllWins,
   cleanupGhostPlayers
 } from '../../ranked/services/rankedService';
@@ -384,6 +385,27 @@ export default function CompetenciaRankedSection({
     );
   };
 
+  const handleRecalculateScopeRankings = () => {
+    showConfirm(
+      'Recalcular MMR del Scope',
+      'Se recalcularán los MMR desde los snapshots de este scope. Esto puede tardar unos segundos.',
+      async () => {
+        try {
+          const res = await recalculateScopeRankings({
+            competenciaId,
+            temporadaId: selectedTemporada || undefined,
+            modalidad,
+            categoria
+          });
+          setSuccess(`MMR recalculado (${res.updatedCount} jugadores)`);
+          fetchLeaderboard();
+        } catch (e: any) {
+          setError(e.message || 'Error recalculando MMR');
+        }
+      }
+    );
+  };
+
   const handleResetScope = () => {
     const scope = `${modalidad} - ${categoria}${selectedTemporada ? ` - Temporada seleccionada` : ''}`;
     showConfirm(
@@ -714,6 +736,7 @@ export default function CompetenciaRankedSection({
           onRevertMatch={handleRevertMatch}
           onResetScopeRankings={handleResetScope}
           onResetAllRankings={handleResetAll}
+          onRecalculateScopeRankings={handleRecalculateScopeRankings}
           onRecalculateGlobalRankings={async () => {
              try {
                await recalculateGlobalRankings();

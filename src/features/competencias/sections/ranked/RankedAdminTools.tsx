@@ -11,6 +11,7 @@ interface RankedAdminToolsProps {
   onResetScopeRankings: () => void;
   onResetAllRankings: () => void;
   onRecalculateGlobalRankings: () => void;
+  onRecalculateScopeRankings: () => void;
   onSyncWins: () => void;
   onCleanupGhosts: () => void;
   busy: boolean;
@@ -32,6 +33,7 @@ export const RankedAdminTools: React.FC<RankedAdminToolsProps> = ({
   onRevertMatch,
   onResetScopeRankings,
   onResetAllRankings,
+  onRecalculateScopeRankings,
   onRecalculateGlobalRankings,
   onSyncWins,
   onCleanupGhosts,
@@ -221,6 +223,15 @@ export const RankedAdminTools: React.FC<RankedAdminToolsProps> = ({
               </div>
 
               <div className="grid gap-3 sm:grid-cols-2">
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  className="text-amber-700 border-amber-300 bg-amber-50 hover:bg-amber-100"
+                  onClick={onRecalculateScopeRankings} 
+                  disabled={busy || !modalidad || !categoria}
+                >
+                  Recalcular MMR Scope
+                </Button>
                 <Button 
                   size="sm" 
                   variant="outline" 

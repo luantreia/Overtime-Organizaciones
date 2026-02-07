@@ -155,6 +155,13 @@ export async function recalculateGlobalRankings() {
   });
 }
 
+export async function recalculateScopeRankings(params: { competenciaId: string; temporadaId?: string; modalidad: string; categoria: string }) {
+  return authFetch<{ ok: boolean; updatedCount: number }>(`${BASE}/recalculate-scope`, {
+    method: 'POST',
+    body: params,
+  });
+}
+
 export async function syncAllWins() {
   return authFetch<{ ok: boolean; updatedCount: number }>(`${BASE}/dev/sync-all-wins`, {
     method: 'POST',
