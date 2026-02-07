@@ -292,6 +292,7 @@ const mapPartido = (partido: BackendPartido, contextoEquipoId?: string): Partido
     isRanked: (partido as any).isRanked,
     rojoPlayers: (partido as any).rojoPlayers || (partido as any).matchTeams?.find((t: any) => t.color === 'rojo')?.players,
     azulPlayers: (partido as any).azulPlayers || (partido as any).matchTeams?.find((t: any) => t.color === 'azul')?.players,
+    ratingDeltas: (partido as any).ratingDeltas,
     sets: (partido as any).sets,
     modalidad: (partido as any).modalidad,
     categoria: (partido as any).categoria,

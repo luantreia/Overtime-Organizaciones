@@ -187,6 +187,7 @@ export interface Partido {
   isRanked?: boolean;
   rojoPlayers?: string[];
   azulPlayers?: string[];
+  ratingDeltas?: Array<{ player: string; delta: number }>;
   modalidad?: string;
   categoria?: string;
 }

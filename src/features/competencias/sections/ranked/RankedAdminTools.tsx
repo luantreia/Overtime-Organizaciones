@@ -97,6 +97,20 @@ export const RankedAdminTools: React.FC<RankedAdminToolsProps> = ({
                      </div>
                   </div>
 
+                  {isFinalizado && (m.ratingDeltas?.length > 0) && (
+                    <div className="mb-3 px-2 py-1.5 bg-brand-50/50 rounded border border-brand-100 flex items-center justify-between">
+                       <span className="text-[9px] font-bold text-brand-700 uppercase">Resumen Delta</span>
+                       <div className="flex gap-2">
+                          <span className="text-[10px] font-bold text-emerald-600">
+                             Max: +{Math.max(...m.ratingDeltas.map((d: any) => d.delta || 0)).toFixed(1)}
+                          </span>
+                          <span className="text-[10px] font-bold text-red-600">
+                             Min: {Math.min(...m.ratingDeltas.map((d: any) => d.delta || 0)).toFixed(1)}
+                          </span>
+                       </div>
+                    </div>
+                  )}
+
                   <Button 
                     size="sm" 
                     variant={isFinalizado ? 'outline' : 'primary'} 
