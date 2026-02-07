@@ -344,6 +344,7 @@ export const getPartido = async (partidoId: string, equipoId?: string): Promise<
 export const getPartidosPorCompetencia = async (competenciaId: string): Promise<Partido[]> => {
   const params = new URLSearchParams();
   if (competenciaId) params.set('competencia', competenciaId);
+  params.set('_ts', Date.now().toString());
   const response = await authFetch<BackendPartido[] | PaginatedResponse<BackendPartido>>(`/partidos?${params.toString()}`);
   const partidos = handlePartidosResponse(response);
   return partidos.map((partido) => mapPartido(partido));
