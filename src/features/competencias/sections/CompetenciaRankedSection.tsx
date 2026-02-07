@@ -73,6 +73,8 @@ export default function CompetenciaRankedSection({
   const [showAll, setShowAll] = useState<boolean>(false);
   const [priorizarNoJugados, setPriorizarNoJugados] = useState<boolean>(true);
   const [recentMatches, setRecentMatches] = useState<any[]>([]);
+  const [recentMatchesLimit, setRecentMatchesLimit] = useState<number>(50);
+  const [recentMatchesTotal, setRecentMatchesTotal] = useState<number>(0);
   const [lbScope, setLbScope] = useState<'competition' | 'global'>('competition');
 
   // Temporadas
@@ -142,10 +144,10 @@ export default function CompetenciaRankedSection({
           m.categoria === categoria
         )
         .sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime())
-        .slice(0, 50);
-      setRecentMatches(ranked);
+      setRecentMatchesTotal(ranked.length);
+      setRecentMatches(ranked.slice(0, recentMatchesLimit));
     } catch {}
-  }, [competenciaId, modalidad, categoria]);
+  }, [competenciaId, modalidad, categoria, recentMatchesLimit]);
 
   const {
     matchId,
@@ -736,6 +738,8 @@ export default function CompetenciaRankedSection({
           selectedTemporada={selectedTemporada}
           recentMatches={recentMatches}
           onEditResult={handleEditResult}
+          hasMoreRecentMatches={recentMatchesTotal > recentMatches.length}
+          onLoadMoreRecentMatches={() => setRecentMatchesLimit(prev => prev + 50)}
         />
       </div>
 

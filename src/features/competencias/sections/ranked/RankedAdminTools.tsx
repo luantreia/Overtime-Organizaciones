@@ -19,6 +19,8 @@ interface RankedAdminToolsProps {
   selectedTemporada: string;
   recentMatches: any[];
   onEditResult: (m: any) => void;
+  hasMoreRecentMatches?: boolean;
+  onLoadMoreRecentMatches?: () => void;
 }
 
 export const RankedAdminTools: React.FC<RankedAdminToolsProps> = ({
@@ -38,7 +40,9 @@ export const RankedAdminTools: React.FC<RankedAdminToolsProps> = ({
   categoria,
   selectedTemporada,
   recentMatches,
-  onEditResult
+  onEditResult,
+  hasMoreRecentMatches,
+  onLoadMoreRecentMatches
 }) => {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -125,6 +129,16 @@ export const RankedAdminTools: React.FC<RankedAdminToolsProps> = ({
                 </div>
               );
             })
+          )}
+          {hasMoreRecentMatches && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={onLoadMoreRecentMatches}
+              className="w-full h-8 text-[10px] font-bold uppercase tracking-wider border-slate-200 text-slate-600"
+            >
+              Ver más partidos
+            </Button>
           )}
         </div>
       </Card>
