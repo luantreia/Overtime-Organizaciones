@@ -57,30 +57,54 @@ export const RankedAdminTools: React.FC<RankedAdminToolsProps> = ({
               const isFinalizado = m.estado === 'finalizado';
               const matchId = (m.id || m._id || '').toString();
               return (
-                <div key={matchId} className="flex items-center justify-between p-1.5 sm:p-2 rounded-lg border border-slate-50 bg-slate-50/50 hover:bg-slate-50 transition-colors">
-                  <div className="flex flex-col min-w-0">
-                    <div className="flex items-center gap-1.5 overflow-hidden">
-                      <span className="text-[8px] sm:text-[10px] font-mono text-slate-400 uppercase truncate">ID: {matchId.slice(-6).toUpperCase()}</span>
-                      <span className={`text-[7px] sm:text-[8px] font-bold px-1 rounded uppercase tracking-tighter shrink-0 ${
-                        isFinalizado ? 'bg-slate-200 text-slate-600' : 'bg-emerald-100 text-emerald-700 animate-pulse'
-                      }`}>
-                        {isFinalizado ? 'Final' : 'Abierto'}
-                      </span>
+                <div key={matchId} className="flex flex-col p-2.5 rounded-lg border border-slate-100 bg-white hover:border-brand-200 transition-all shadow-sm">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex flex-col">
+                       <div className="flex items-center gap-2">
+                          <span className="text-[9px] font-mono font-bold text-slate-400 bg-slate-50 px-1.5 py-0.5 rounded border">
+                            ID: {matchId.slice(-6).toUpperCase()}
+                          </span>
+                          <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded uppercase tracking-tight ${
+                            isFinalizado ? 'bg-slate-100 text-slate-500' : 'bg-emerald-50 text-emerald-600 border border-emerald-100 animate-pulse'
+                          }`}>
+                            {isFinalizado ? 'Finalizado' : 'En Juego'}
+                          </span>
+                       </div>
+                       <span className="text-[10px] text-slate-400 font-medium mt-1">
+                          {new Date(m.fecha).toLocaleString([], { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                       </span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-black text-red-600 leading-none">{m.marcadorLocal}</span>
-                      <span className="text-xs text-slate-300 leading-none">-</span>
-                      <span className="text-sm font-black text-blue-600 leading-none">{m.marcadorVisitante}</span>
+                    
+                    <div className="flex items-center gap-3 bg-slate-50 px-3 py-1 rounded-full border border-slate-100">
+                      <span className="text-base font-black text-red-600 leading-none">{m.marcadorLocal}</span>
+                      <span className="text-[10px] text-slate-300 font-bold">VS</span>
+                      <span className="text-base font-black text-blue-600 leading-none">{m.marcadorVisitante}</span>
                     </div>
                   </div>
+
+                  <div className="grid grid-cols-2 gap-2 mb-3 py-2 border-y border-slate-50">
+                     <div className="flex items-center gap-1">
+                        <div className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                        <span className="text-[9px] text-slate-400 font-medium uppercase">
+                          {m.matchTeams?.find((t: any) => t.color === 'rojo')?.players?.length || 0} Jugadores
+                        </span>
+                     </div>
+                     <div className="flex items-center gap-1">
+                        <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                        <span className="text-[9px] text-slate-400 font-medium uppercase">
+                          {m.matchTeams?.find((t: any) => t.color === 'azul')?.players?.length || 0} Jugadores
+                        </span>
+                     </div>
+                  </div>
+
                   <Button 
                     size="sm" 
                     variant={isFinalizado ? 'outline' : 'primary'} 
-                    className={`h-7 text-[10px] sm:text-xs ${isFinalizado ? 'border-slate-200 bg-white' : 'px-4'}`}
+                    className={`w-full h-8 text-[10px] font-bold uppercase tracking-wider ${isFinalizado ? 'border-brand-200 text-brand-600 hover:bg-brand-50' : ''}`}
                     onClick={() => onEditResult(m)}
                     disabled={busy}
                   >
-                    {isFinalizado ? 'Corregir' : 'Continuar'}
+                    {isFinalizado ? 'Reabrir y Corregir' : 'Continuar Partido'}
                   </Button>
                 </div>
               );
