@@ -174,9 +174,13 @@ export const PlayerAdvancedSettingsModal: React.FC<PlayerAdvancedSettingsModalPr
                                 </td>
                                 <td className="p-1.5 sm:p-2 text-center font-black">
                                    <div className="flex flex-col items-center">
-                                      <span className={`${h.delta > 0 ? 'text-emerald-500' : 'text-red-500'} text-xs`}>
-                                         {h.delta > 0 ? `+${h.delta}` : h.delta}
-                                      </span>
+                                      {typeof h.delta === 'number' ? (
+                                        <span className={`${h.delta > 0 ? 'text-emerald-500' : h.delta < 0 ? 'text-red-500' : 'text-slate-400'} text-xs`}>
+                                           {h.delta > 0 ? `+${h.delta.toFixed(1)}` : h.delta.toFixed(1)}
+                                        </span>
+                                      ) : (
+                                        <span className="text-slate-300 text-[10px]">N/A</span>
+                                      )}
                                    </div>
                                 </td>
                                 <td className="p-1.5 sm:p-2 text-center text-slate-500 hidden xs:table-cell">
