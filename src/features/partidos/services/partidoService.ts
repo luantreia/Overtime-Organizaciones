@@ -350,6 +350,15 @@ export const getPartidosPorCompetencia = async (competenciaId: string): Promise<
   return partidos.map((partido) => mapPartido(partido));
 };
 
+export const getPartidosPorTemporada = async (temporadaId: string): Promise<Partido[]> => {
+  const params = new URLSearchParams();
+  if (temporadaId) params.set('temporadaId', temporadaId);
+  params.set('_ts', Date.now().toString());
+  const response = await authFetch<BackendPartido[] | PaginatedResponse<BackendPartido>>(`/partidos?${params.toString()}`);
+  const partidos = handlePartidosResponse(response);
+  return partidos.map((partido) => mapPartido(partido));
+};
+
 export const getPartidosPorFase = async (faseId: string): Promise<Partido[]> => {
   const params = new URLSearchParams();
   if (faseId) params.set('fase', faseId);

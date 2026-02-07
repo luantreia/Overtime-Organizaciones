@@ -17,7 +17,7 @@ import {
   listJugadoresCompetencia, 
   eliminarJugadorCompetencia 
 } from '../../jugadores/services/jugadorCompetenciaService';
-import { getPartidosPorCompetencia } from '../../partidos/services/partidoService';
+import { getPartidosPorCompetencia, getPartidosPorTemporada } from '../../partidos/services/partidoService';
 import { listTemporadasByCompetencia, type BackendTemporada } from '../services';
 
 // Hooks
@@ -136,8 +136,21 @@ export default function CompetenciaRankedSection({
 
   const fetchRecentMatches = useCallback(async () => {
     try {
-      const all = await getPartidosPorCompetencia(competenciaId);
-      const ranked = all
+      const [byComp, byTemp] = await Promise.all([
+        getPartidosPorCompetencia(competenciaId),
+        selectedTemporada ? getPartidosPorTemporada(selectedTemporada) : Promise.resolve([])
+      ]);
+
+      const merged = [...byComp, ...byTemp];
+      const seen = new Set<string>();
+      const unique = merged.filter((m: any) => {
+        const id = (m?.id || m?._id || '').toString();
+        if (!id || seen.has(id)) return false;
+        seen.add(id);
+        return true;
+      });
+
+      const ranked = unique
         .filter((m: any) => 
           m.isRanked && 
           m.modalidad === modalidad && 
@@ -147,7 +160,7 @@ export default function CompetenciaRankedSection({
       setRecentMatchesTotal(ranked.length);
       setRecentMatches(ranked.slice(0, recentMatchesLimit));
     } catch {}
-  }, [competenciaId, modalidad, categoria, recentMatchesLimit]);
+  }, [competenciaId, modalidad, categoria, recentMatchesLimit, selectedTemporada]);
 
   const {
     matchId,
