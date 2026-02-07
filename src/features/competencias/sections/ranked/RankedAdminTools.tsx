@@ -86,13 +86,13 @@ export const RankedAdminTools: React.FC<RankedAdminToolsProps> = ({
                      <div className="flex items-center gap-1">
                         <div className="w-1.5 h-1.5 rounded-full bg-red-500" />
                         <span className="text-[9px] text-slate-400 font-medium uppercase">
-                          {m.matchTeams?.find((t: any) => t.color === 'rojo')?.players?.length || 0} Jugadores
+                          {m.rojoPlayers?.length || 0} Jugadores
                         </span>
                      </div>
                      <div className="flex items-center gap-1">
                         <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
                         <span className="text-[9px] text-slate-400 font-medium uppercase">
-                          {m.matchTeams?.find((t: any) => t.color === 'azul')?.players?.length || 0} Jugadores
+                          {m.azulPlayers?.length || 0} Jugadores
                         </span>
                      </div>
                   </div>
