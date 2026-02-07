@@ -676,6 +676,7 @@ export default function CompetenciaRankedSection({
             modalidad={modalidad as string}
             categoria={categoria as string}
             seasonId={selectedTemporada}
+            seasonName={temporadas.find(t => t._id === selectedTemporada)?.nombre}
             rojoIds={rojo}
             azulIds={azul}
             nameById={nameById}

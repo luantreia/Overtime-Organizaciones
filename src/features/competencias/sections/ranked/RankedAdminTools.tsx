@@ -170,24 +170,6 @@ export const RankedAdminTools: React.FC<RankedAdminToolsProps> = ({
                 <Button 
                   size="sm" 
                   variant="outline" 
-                  className="text-red-700 border-red-500 bg-red-50 hover:bg-red-100"
-                  onClick={onResetAllRankings} 
-                  disabled={busy}
-                >
-                  Reset TODO el Sistema
-                </Button>
-                <Button 
-                  size="sm" 
-                  variant="outline" 
-                  className="text-orange-700 border-orange-500 bg-orange-50 hover:bg-orange-100"
-                  onClick={onRecalculateGlobalRankings} 
-                  disabled={busy}
-                >
-                  Regenerar ELO Global
-                </Button>
-                <Button 
-                  size="sm" 
-                  variant="outline" 
                   className="text-brand-700 border-brand-500 bg-brand-50 hover:bg-brand-100"
                   onClick={onSyncWins} 
                   disabled={busy}

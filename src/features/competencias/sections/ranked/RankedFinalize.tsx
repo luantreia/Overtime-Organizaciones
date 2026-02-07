@@ -32,6 +32,7 @@ interface RankedFinalizeProps {
   modalidad: string;
   categoria: string;
   seasonId?: string;
+  seasonName?: string;
   rojoIds?: string[];
   azulIds?: string[];
   nameById?: (id: string) => string;
@@ -90,6 +91,7 @@ export const RankedFinalize: React.FC<RankedFinalizeProps> = ({
   modalidad,
   categoria,
   seasonId,
+  seasonName,
   rojoIds = [],
   azulIds = [],
   nameById = (id) => id,
@@ -336,6 +338,7 @@ export const RankedFinalize: React.FC<RankedFinalizeProps> = ({
         modalidad={modalidad}
         categoria={categoria}
         seasonId={seasonId}
+        seasonName={seasonName}
       />
 
       <RankedMatchSettingsModal 

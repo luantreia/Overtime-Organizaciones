@@ -13,6 +13,7 @@ interface RankedLeaderboardProps {
   modalidad: string;
   categoria: string;
   seasonId?: string;
+  seasonName?: string;
 }
 
 export const RankedLeaderboard: React.FC<RankedLeaderboardProps> = ({
@@ -24,7 +25,8 @@ export const RankedLeaderboard: React.FC<RankedLeaderboardProps> = ({
   competenciaId,
   modalidad,
   categoria,
-  seasonId
+  seasonId,
+  seasonName
 }) => {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [deleting, setDeleting] = useState(false);
@@ -90,7 +92,7 @@ export const RankedLeaderboard: React.FC<RankedLeaderboardProps> = ({
               }}
               className={`px-2 py-1 text-[9px] font-bold rounded-md transition-all ${lbScope === 'competition' ? 'bg-white text-brand-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
             >
-              COMP.
+              TEMPORADA {seasonName ? `(${seasonName})` : ''}
             </button>
             <button 
               onClick={() => {
@@ -99,7 +101,7 @@ export const RankedLeaderboard: React.FC<RankedLeaderboardProps> = ({
               }}
               className={`px-2 py-1 text-[9px] font-bold rounded-md transition-all ${lbScope === 'global' ? 'bg-white text-brand-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
             >
-              GLOBAL
+              COMPETENCIA (HISTÓRICO)
             </button>
           </div>
         </div>
