@@ -390,7 +390,17 @@ export function useRankedMatch({
       
       syncMatchAttendance(matchId, currentPlayers);
 
-      await apiFinalizeMatch(matchId, score.local, score.visitante, sets, afkIds, user?.id || 'org-ui', startTime || undefined);
+      await apiFinalizeMatch(
+        matchId,
+        score.local,
+        score.visitante,
+        sets,
+        afkIds,
+        user?.id || 'org-ui',
+        startTime || undefined,
+        rojo,
+        azul
+      );
       onSuccess?.('Partido finalizado con éxito');
       resetMatchState();
       onFinalized?.();

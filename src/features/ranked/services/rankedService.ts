@@ -45,10 +45,10 @@ export async function updateMatchConfig(partidoId: string, config: {
   });
 }
 
-export async function finalizeMatch(partidoId: string, marcadorLocal: number, marcadorVisitante: number, sets?: any[], afkPlayers?: string[], creadoPor?: string, startTime?: number) {
+export async function finalizeMatch(partidoId: string, marcadorLocal: number, marcadorVisitante: number, sets?: any[], afkPlayers?: string[], creadoPor?: string, startTime?: number, rojoPlayers?: string[], azulPlayers?: string[]) {
   return authFetch<{ ok: boolean; rankedMeta?: any; ratingDeltas?: any[] }>(`${BASE}/match/${partidoId}/finalize`, {
     method: 'POST',
-    body: { marcadorLocal, marcadorVisitante, sets, afkPlayers, creadoPor, startTime },
+    body: { marcadorLocal, marcadorVisitante, sets, afkPlayers, creadoPor, startTime, rojoPlayers, azulPlayers },
   });
 }
 
