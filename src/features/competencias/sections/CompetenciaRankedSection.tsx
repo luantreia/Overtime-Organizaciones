@@ -142,7 +142,7 @@ export default function CompetenciaRankedSection({
           m.categoria === categoria
         )
         .sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime())
-        .slice(0, 10);
+        .slice(0, 50);
       setRecentMatches(ranked);
     } catch {}
   }, [competenciaId, modalidad, categoria]);
