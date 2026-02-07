@@ -184,12 +184,12 @@ export const RankedLeaderboard: React.FC<RankedLeaderboardProps> = ({
                     </td>
                     <td className="px-1 py-2 text-center text-slate-500 font-medium hidden sm:table-cell">{r.matchesPlayed}</td>
                     <td className="px-1 py-2 text-center text-slate-400 font-bold hidden sm:table-cell">
-                      {r.matchesPlayed > 0 ? `${Math.round(((r.wins || 0) / r.matchesPlayed) * 100)}%` : '-'}
+                      {r.matchesPlayed > 0 ? `${Math.min(100, Math.max(0, Math.round(((r.wins || 0) / r.matchesPlayed) * 100)))}%` : '-'}
                     </td>
                     <td className="px-1 py-2 text-center text-[11px] sm:text-xs">
-                      {r.lastDelta ? (
-                        <span className={`font-bold ${r.lastDelta > 0 ? 'text-emerald-500' : 'text-red-500'}`}>
-                          {r.lastDelta > 0 ? `+${r.lastDelta}` : r.lastDelta}
+                      {typeof r.lastDelta === 'number' ? (
+                        <span className={`font-bold ${r.lastDelta > 0 ? 'text-emerald-500' : r.lastDelta < 0 ? 'text-red-500' : 'text-slate-300'}`}>
+                          {r.lastDelta > 0 ? `+${r.lastDelta.toFixed(1)}` : r.lastDelta.toFixed(1)}
                         </span>
                       ) : (
                         <span className="text-slate-300">-</span>
