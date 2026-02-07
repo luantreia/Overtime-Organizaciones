@@ -166,7 +166,7 @@ export const RankedLeaderboard: React.FC<RankedLeaderboardProps> = ({
                              id: r.playerId, 
                              name: r.playerName || r.nombre || 'Desconocido',
                              competenciaId: r.competenciaId,
-                             temporadaId: lbScope === 'competition' ? (selectedTemporada || undefined) : undefined
+                             temporadaId: lbScope === 'competition' ? (seasonId || undefined) : undefined
                            })}
                            className="p-1 text-slate-400 hover:text-brand-500 hover:bg-slate-100 transition-all rounded"
                            title="Ajustes avanzados"
