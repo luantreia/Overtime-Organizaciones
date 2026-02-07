@@ -393,7 +393,7 @@ export default function CompetenciaRankedSection({
         try {
           const res = await recalculateScopeRankings({
             competenciaId,
-            temporadaId: selectedTemporada || undefined,
+            temporadaId: lbScope === 'competition' ? (selectedTemporada || undefined) : undefined,
             modalidad,
             categoria
           });
