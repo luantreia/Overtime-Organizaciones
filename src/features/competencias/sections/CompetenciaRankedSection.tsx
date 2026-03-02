@@ -115,12 +115,51 @@ export default function CompetenciaRankedSection({
     togglePresente, 
     addManyPresentes,
     playedCounts, 
+    lastMatchPlayedIndex,
+    matchTimelineLength,
     syncMatchAttendance,
     removeMatchAttendance,
     resetPlayedCounts, 
     clearPresentes, 
     markAllPresent 
   } = useAttendance(competenciaId);
+
+  // Sistema de puntuación de prioridad para ordenamiento
+  const getPlayerScore = useCallback((playerId: string) => {
+    let score = 0;
+
+    // 1. Prioridad base: Estar presente (Crucial)
+    const isPresent = presentes.includes(playerId);
+    if (isPresent) score += 10000;
+
+    // 2. Penalización por partidos jugados hoy (Priorizar a los que menos jugaron)
+    const count = playedCounts[playerId] || 0;
+    score -= (count * 1000);
+
+    // 3. Bonus por descanso (Recency Bias)
+    // lastMatchPlayedIndex es 1-based. Si matchTimelineLength es 5 y el jugador participó en el 5, su index es 5.
+    // Descanso = timelineLength - lastIndex.
+    const lastIndex = lastMatchPlayedIndex[playerId] || 0;
+    const restDuration = lastIndex > 0 ? (matchTimelineLength - lastIndex) : 99; // 99 si no ha jugado nunca
+    
+    // Si acaba de jugar (restDuration 0), pierde mucha prioridad.
+    // Si lleva 2 o más sin jugar, sube drásticamente.
+    score += (restDuration * 100);
+
+    return score;
+  }, [presentes, playedCounts, lastMatchPlayedIndex, matchTimelineLength]);
+
+  const sortedPlayers = useMemo(() => {
+    return [...players].sort((a, b) => {
+      const scoreA = getPlayerScore(a._id);
+      const scoreB = getPlayerScore(b._id);
+
+      if (scoreA !== scoreB) return scoreB - scoreA;
+
+      // Desempate alfabético
+      return a.nombre.localeCompare(b.nombre);
+    });
+  }, [players, getPlayerScore]);
 
   const fetchLeaderboard = useCallback(async () => {
     try {
@@ -640,13 +679,15 @@ export default function CompetenciaRankedSection({
       <div className="grid gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
         <div>
            <RankedPlayerSelector
-              players={players}
+              players={sortedPlayers}
               compPlayers={compPlayers}
               filter={filter}
               setFilter={setFilter}
               selected={selected}
               toggleSelect={toggleSelect}
               presentes={presentes}
+              lastMatchPlayedIndex={lastMatchPlayedIndex}
+              matchTimelineLength={matchTimelineLength}
               togglePresente={togglePresente}
               playedCounts={playedCounts}
               showAll={showAll}

@@ -3,6 +3,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 export function useAttendance(competenciaId: string) {
   const [presentes, setPresentes] = useState<string[]>([]);
   const [matchParticipations, setMatchParticipations] = useState<Record<string, string[]>>({});
+  const [matchTimeline, setMatchTimeline] = useState<string[]>([]); // Orden de finalización de partidos
 
   const sessionKey = useMemo(() => {
     const today = new Date();
@@ -21,6 +22,18 @@ export function useAttendance(competenciaId: string) {
     return counts;
   }, [matchParticipations]);
 
+  // Devuelve en qué posición del timeline jugó por última vez cada jugador
+  const lastMatchPlayedIndex = useMemo(() => {
+    const lastIndices: Record<string, number> = {};
+    matchTimeline.forEach((matchId, index) => {
+      const players = matchParticipations[matchId] || [];
+      players.forEach(pid => {
+        lastIndices[pid] = index + 1; // 1-based index
+      });
+    });
+    return lastIndices;
+  }, [matchTimeline, matchParticipations]);
+
   useEffect(() => {
     try {
       const raw = localStorage.getItem(sessionKey);
@@ -28,24 +41,31 @@ export function useAttendance(competenciaId: string) {
         const parsed = JSON.parse(raw);
         setPresentes(Array.isArray(parsed.presentes) ? parsed.presentes : []);
         setMatchParticipations(parsed.matchParticipations || {});
+        setMatchTimeline(parsed.matchTimeline || []);
       } else {
         setPresentes([]);
         setMatchParticipations({});
+        setMatchTimeline([]);
       }
     } catch {
       setPresentes([]);
       setMatchParticipations({});
+      setMatchTimeline([]);
     }
   }, [sessionKey]);
 
   useEffect(() => {
     if (!competenciaId) return;
     try {
-      localStorage.setItem(sessionKey, JSON.stringify({ presentes, matchParticipations }));
+      localStorage.setItem(sessionKey, JSON.stringify({ 
+        presentes, 
+        matchParticipations,
+        matchTimeline 
+      }));
     } catch (e) {
       console.error('Error saving attendance to localStorage', e);
     }
-  }, [sessionKey, presentes, matchParticipations, competenciaId]);
+  }, [sessionKey, presentes, matchParticipations, matchTimeline, competenciaId]);
 
   const togglePresente = useCallback((id: string, isPresent: boolean) => {
     setPresentes((prev) => 
@@ -65,6 +85,10 @@ export function useAttendance(competenciaId: string) {
       ...prev,
       [matchId]: [...new Set(playerIds)]
     }));
+    setMatchTimeline(prev => {
+      if (prev.includes(matchId)) return prev;
+      return [...prev, matchId];
+    });
   }, []);
 
   const removeMatchAttendance = useCallback((matchId: string) => {
@@ -74,9 +98,14 @@ export function useAttendance(competenciaId: string) {
       delete next[matchId];
       return next;
     });
+    setMatchTimeline(prev => prev.filter(id => id !== matchId));
   }, []);
 
-  const resetPlayedCounts = useCallback(() => setMatchParticipations({}), []);
+  const resetPlayedCounts = useCallback(() => {
+    setMatchParticipations({});
+    setMatchTimeline([]);
+  }, []);
+
   const clearPresentes = useCallback(() => setPresentes([]), []);
   const markAllPresent = useCallback((playerIds: string[]) => setPresentes(playerIds), []);
 
@@ -86,6 +115,8 @@ export function useAttendance(competenciaId: string) {
     togglePresente,
     addManyPresentes,
     playedCounts,
+    lastMatchPlayedIndex,
+    matchTimelineLength: matchTimeline.length,
     syncMatchAttendance,
     removeMatchAttendance,
     resetPlayedCounts,

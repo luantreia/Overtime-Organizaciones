@@ -21,6 +21,8 @@ interface RankedPlayerSelectorProps {
   selected: string[];
   toggleSelect: (id: string) => void;
   presentes: string[];
+  lastMatchPlayedIndex?: Record<string, number>;
+  matchTimelineLength?: number;
   togglePresente: (id: string, isPresent: boolean) => void;
   playedCounts: Record<string, number>;
   showAll: boolean;
@@ -73,10 +75,22 @@ export const RankedPlayerSelector: React.FC<RankedPlayerSelectorProps> = ({
   onAutoAssign,
   onAddToRojo,
   onAddToAzul,
-  matchActive
+  matchActive,
+  lastMatchPlayedIndex = {},
+  matchTimelineLength = 0
 }) => {
   const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
   const filtered = players.filter(p => !filter || p.nombre.toLowerCase().includes(filter.toLowerCase()));
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && filter.trim() && filtered.length > 0) {
+      const topPlayer = filtered[0];
+      if (!presentes.includes(topPlayer._id)) {
+        togglePresente(topPlayer._id, true);
+        setFilter('');
+      }
+    }
+  };
 
   return (
     <div className="rounded-lg border border-slate-200 bg-white p-3 sm:p-4">
@@ -111,111 +125,156 @@ export const RankedPlayerSelector: React.FC<RankedPlayerSelectorProps> = ({
         <input 
           value={filter} 
           onChange={(e) => setFilter(e.target.value)} 
-          placeholder="Buscar..." 
-          className="w-full sm:w-auto rounded-md border px-2 py-1 text-sm focus:ring-1 focus:ring-brand-500 outline-none" 
+          onKeyDown={handleKeyDown}
+          placeholder="Buscar... (Enter p/ check-in)" 
+          className="w-full sm:w-auto rounded-md border px-2 py-1 text-xs focus:ring-1 focus:ring-brand-500 outline-none" 
         />
       </div>
 
-      <div className="h-64 sm:h-80 overflow-auto rounded border divide-y">
-        {filtered.map((p, idx) => {
-          const isCompPlayer = compPlayers.some(cp => cp._id === p._id);
-          const isPresent = presentes.includes(p._id);
-          const isSelected = selected.includes(p._id);
-          const pjHoy = playedCounts[p._id] || 0;
-
-          return (
-            <div key={p._id} className="flex flex-col gap-1 px-3 py-2 text-sm hover:bg-slate-50 transition-colors">
-              <div className="flex items-center justify-between gap-2 min-w-0">
-                <div className="flex items-center gap-2 min-w-0 flex-1">
-                  <span className="text-[9px] font-mono text-slate-300 w-4 shrink-0">{idx + 1}</span>
-                  <label className="flex items-center gap-2 cursor-pointer min-w-0 flex-1">
-                    <input 
-                      type="checkbox" 
-                      checked={isSelected} 
-                      onChange={() => toggleSelect(p._id)} 
-                      className="rounded text-brand-600 focus:ring-brand-500 h-3.5 w-3.5"
-                    />
-                    <span className="truncate text-[11px] sm:text-xs font-bold text-slate-700">{p.nombre}</span>
-                  </label>
-                </div>
-                
-                <div className="flex items-center gap-1 shrink-0">
-                  <Menu as="div" className="relative inline-block text-left">
-                    <Menu.Button className="flex items-center rounded-full p-1 text-slate-400 hover:text-brand-600 hover:bg-slate-100 transition-colors">
-                      <EllipsisVerticalIcon className="h-4 w-4" />
-                    </Menu.Button>
-                    <Transition
-                      as={Fragment}
-                      enter="transition ease-out duration-100"
-                      enterFrom="transform opacity-0 scale-95"
-                      enterTo="transform opacity-100 scale-100"
-                      leave="transition ease-in duration-75"
-                      leaveFrom="transform opacity-100 scale-100"
-                      leaveTo="transform opacity-0 scale-95"
-                    >
-                      <Menu.Items className="absolute right-0 z-10 mt-1 w-32 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-                        <div className="py-1">
-                          {showAll && !isCompPlayer ? (
-                            <Menu.Item>
-                              {({ active }) => (
-                                <button
-                                  onClick={() => onAgregarJugador(p._id)}
-                                  className={`${
-                                    active ? 'bg-slate-100 text-brand-700' : 'text-slate-700'
-                                  } flex w-full items-center px-3 py-1.5 text-[10px] font-medium`}
-                                >
-                                  <UserPlusIcon className="mr-2 h-3.5 w-3.5 text-brand-500" />
-                                  Añadir a Competencia
-                                </button>
-                              )}
-                            </Menu.Item>
-                          ) : isCompPlayer ? (
-                            <Menu.Item>
-                              {({ active }) => (
-                                <button
-                                  onClick={() => onEliminarJugador(p._id)}
-                                  className={`${
-                                    active ? 'bg-rose-50 text-rose-700' : 'text-rose-700'
-                                  } flex w-full items-center px-3 py-1.5 text-[10px] font-medium`}
-                                >
-                                  <TrashIcon className="mr-2 h-3.5 w-3.5 text-rose-500" />
-                                  Quitar
-                                </button>
-                              )}
-                            </Menu.Item>
-                          ) : null}
-                        </div>
-                      </Menu.Items>
-                    </Transition>
-                  </Menu>
-                </div>
+      <div className="h-64 sm:h-[450px] overflow-auto rounded border divide-y bg-slate-50/30">
+        {/* Grupos Dinámicos */}
+        {[
+          { label: 'Presentes y Listos', items: filtered.filter(p => presentes.includes(p._id)), color: 'text-emerald-600' },
+          { label: 'Ausentes / Por llegar', items: filtered.filter(p => !presentes.includes(p._id)), color: 'text-slate-400' }
+        ].map((group, gIdx) => (
+          group.items.length > 0 && (
+            <div key={gIdx} className="bg-white">
+              <div className="sticky top-0 bg-slate-50/90 backdrop-blur-sm z-10 px-3 py-1.5 flex items-center justify-between border-b border-slate-200">
+                <span className={`text-[10px] uppercase font-black tracking-tight ${group.color}`}>
+                  {group.label} ({group.items.length})
+                </span>
               </div>
               
-              <div className="flex items-center justify-between gap-2 mt-0.5">
-                <div className="flex items-center gap-1.5">
-                  {pjHoy > 0 && (
-                    <span className="flex items-center gap-1 rounded bg-blue-50 px-1.5 py-0.5 text-[9px] font-bold text-blue-600 border border-blue-100">
-                      PJ: {pjHoy}
-                    </span>
-                  )}
-                </div>
+              <div className="divide-y divide-slate-100">
+                {group.items.map((p) => {
+                  const isCompPlayer = compPlayers.some(cp => cp._id === p._id);
+                  const isPresent = presentes.includes(p._id);
+                  const isSelected = selected.includes(p._id);
+                  const pjHoy = playedCounts[p._id] || 0;
+                  
+                  // Calcular descanso (Recency Bias)
+                  const lastIdx = lastMatchPlayedIndex[p._id] || 0;
+                  const rest = lastIdx > 0 ? (matchTimelineLength - lastIdx) : -1;
 
-                <button 
-                  type="button"
-                  onClick={() => togglePresente(p._id, !isPresent)}
-                  className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase transition-all border ${
-                    isPresent 
-                      ? 'bg-green-50 text-green-700 border-green-200' 
-                      : 'bg-rose-50 text-rose-600 border-rose-100'
-                  }`}
-                >
-                  <span className={`h-1.5 w-1.5 rounded-full ${isPresent ? 'bg-green-500 animate-pulse' : 'bg-rose-500'}`} />
-                  {isPresent ? 'Presente' : 'Ausente'}
-                </button>
+                  return (
+                    <div key={p._id} className={`flex flex-col gap-1 px-3 py-2 text-sm transition-colors ${isSelected ? 'bg-brand-50/50' : 'hover:bg-slate-50'}`}>
+                      <div className="flex items-center justify-between gap-2 min-w-0">
+                        <div className="flex items-center gap-2 min-w-0 flex-1">
+                          <label className="flex items-center gap-2 cursor-pointer min-w-0 flex-1">
+                            <input 
+                              type="checkbox" 
+                              checked={isSelected} 
+                              onChange={() => toggleSelect(p._id)} 
+                              className="rounded text-brand-600 focus:ring-brand-500 h-3.5 w-3.5 border-slate-300"
+                            />
+                            <span className={`truncate text-[11px] sm:text-xs font-bold ${isPresent ? 'text-slate-800' : 'text-slate-400 font-medium italic'}`}>
+                              {p.nombre}
+                            </span>
+                          </label>
+                        </div>
+                        
+                        <div className="flex items-center gap-1 shrink-0">
+                          {/* Botón de Presencia Mini */}
+                          <button 
+                            type="button"
+                            onClick={() => togglePresente(p._id, !isPresent)}
+                            className={`h-3 w-3 rounded-full transition-all border-2 ${
+                              isPresent 
+                                ? 'bg-emerald-500 border-emerald-200 shadow-[0_0_8px_rgba(16,185,129,0.4)]' 
+                                : 'bg-slate-200 border-slate-100'
+                            }`}
+                          />
+                          
+                          <Menu as="div" className="relative inline-block text-left">
+                            <Menu.Button className="flex items-center rounded-full p-0.5 text-slate-300 hover:text-brand-600 transition-colors">
+                              <EllipsisVerticalIcon className="h-4 w-4" />
+                            </Menu.Button>
+                            <Transition
+                              as={Fragment}
+                              enter="transition ease-out duration-100"
+                              enterFrom="transform opacity-0 scale-95"
+                              enterTo="transform opacity-100 scale-100"
+                              leave="transition ease-in duration-75"
+                              leaveFrom="transform opacity-100 scale-100"
+                              leaveTo="transform opacity-0 scale-95"
+                            >
+                              <Menu.Items className="absolute right-0 z-10 mt-1 w-32 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                <div className="py-1">
+                                  {showAll && !isCompPlayer ? (
+                                    <Menu.Item>
+                                      {({ active }) => (
+                                        <button
+                                          onClick={() => onAgregarJugador(p._id)}
+                                          className={`${
+                                            active ? 'bg-slate-100 text-brand-700' : 'text-slate-700'
+                                          } flex w-full items-center px-3 py-1.5 text-[10px] font-medium`}
+                                        >
+                                          <UserPlusIcon className="mr-2 h-3.5 w-3.5 text-brand-500" />
+                                          Añadir a Competencia
+                                        </button>
+                                      )}
+                                    </Menu.Item>
+                                  ) : isCompPlayer ? (
+                                    <Menu.Item>
+                                      {({ active }) => (
+                                        <button
+                                          onClick={() => onEliminarJugador(p._id)}
+                                          className={`${
+                                            active ? 'bg-rose-50 text-rose-700' : 'text-rose-700'
+                                          } flex w-full items-center px-3 py-1.5 text-[10px] font-medium`}
+                                        >
+                                          <TrashIcon className="mr-2 h-3.5 w-3.5 text-rose-500" />
+                                          Quitar
+                                        </button>
+                                      )}
+                                    </Menu.Item>
+                                  ) : null}
+                                </div>
+                              </Menu.Items>
+                            </Transition>
+                          </Menu>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center justify-between gap-2 mt-0.5">
+                        <div className="flex items-center gap-1.5 pl-5.5">
+                          {/* PJ Hoy */}
+                          <span className={`flex items-center gap-1 rounded px-1.5 py-0.5 text-[9px] font-black border ${
+                            pjHoy === 0 
+                              ? 'bg-emerald-50 text-emerald-600 border-emerald-100' 
+                              : 'bg-slate-50 text-slate-500 border-slate-100'
+                          }`}>
+                            PJ: {pjHoy}
+                          </span>
+
+                          {/* Descanso (D: X) */}
+                          {isPresent && rest >= 0 && (
+                            <span 
+                              className={`flex items-center gap-1 rounded px-1.5 py-0.5 text-[9px] font-black border ${
+                                rest === 0 
+                                  ? 'bg-red-50 text-red-600 border-red-200 animate-pulse' 
+                                  : rest >= 2 
+                                    ? 'bg-brand-50 text-brand-700 border-brand-200'
+                                    : 'bg-slate-50 text-slate-600 border-slate-200'
+                              }`}
+                              title="Partidos desde su última participación"
+                            >
+                              {rest === 0 ? 'RECIENTE' : `D: ${rest}`}
+                            </span>
+                          )}
+                        </div>
+
+                        <span className={`text-[8px] font-black uppercase tracking-tighter ${isPresent ? 'text-emerald-500' : 'text-slate-300'}`}>
+                          {isPresent ? 'LISTO' : 'FUERA'}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
-          );
-        })}
+          )
+        ))}
       </div>
 
       <div className="mt-3 space-y-3">
