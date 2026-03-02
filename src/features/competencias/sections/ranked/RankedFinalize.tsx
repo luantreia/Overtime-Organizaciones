@@ -124,7 +124,7 @@ export const RankedFinalize: React.FC<RankedFinalizeProps> = ({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" id="ranked-leaderboard-section">
       <Card className="p-3 sm:p-6 border-emerald-100 bg-emerald-50/20">
         <div className="flex items-center justify-between mb-3 sm:mb-4">
           <div className="flex items-center gap-2">

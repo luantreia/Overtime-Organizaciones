@@ -50,6 +50,33 @@ export const RankedAdminTools: React.FC<RankedAdminToolsProps> = ({
 
   return (
     <div className="space-y-4">
+      <Card className="p-3 sm:p-4 border-slate-100 shadow-sm bg-brand-50/20 border-l-4 border-l-brand-400">
+        <h3 className="mb-3 text-[11px] sm:text-sm font-black text-brand-800 uppercase flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
+          </svg>
+          Acceso Rápido al Leaderboard
+        </h3>
+        <p className="text-[10px] text-brand-700/70 font-medium mb-3 leading-tight">
+          Gestiona el ELO, ajusta puntos manuales y elimina registros de la tabla de posiciones oficial.
+        </p>
+        <Button 
+          variant="primary" 
+          size="sm"
+          className="w-full bg-brand-600 hover:bg-brand-700 shadow-md shadow-brand-200 h-9 text-[10px] font-black uppercase tracking-widest transition-all active:scale-95"
+          onClick={() => {
+            const el = document.getElementById('ranked-leaderboard-section');
+            if (el) {
+              el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              el.classList.add('ring-4', 'ring-brand-400/30', 'transition-all');
+              setTimeout(() => el.classList.remove('ring-4', 'ring-brand-400/30'), 2000);
+            }
+          }}
+        >
+          Abrir Panel de Rankings
+        </Button>
+      </Card>
+
       <Card className="p-3 sm:p-4 border-slate-100 shadow-sm bg-white">
         <h3 className="mb-3 text-[11px] sm:text-sm font-bold text-slate-700 flex items-center justify-between">
           <span>Historial y Partidos Abiertos</span>
