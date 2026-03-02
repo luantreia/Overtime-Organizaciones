@@ -53,6 +53,7 @@ export default function CompetenciaRankedSection({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [loadingMatch, setLoadingMatch] = useState<boolean>(false);
+  const [showAdminPanel, setShowAdminPanel] = useState<boolean>(false);
 
   // Auto-dismiss notifications
   useEffect(() => {
@@ -688,8 +689,8 @@ export default function CompetenciaRankedSection({
       </Card>
 
       {/* Main Workflow Grid */}
-      <div className="grid gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
-        <div>
+      <div className="grid gap-6 grid-cols-1 xl:grid-cols-12">
+        <div className="xl:col-span-4">
            <RankedPlayerSelector
               players={sortedPlayers}
               compPlayers={compPlayers}
@@ -725,111 +726,139 @@ export default function CompetenciaRankedSection({
            />
         </div>
 
-        <div>
-          <TeamBuilder 
-            rojo={rojo}
-            azul={azul}
-            nameById={nameById}
-            onRemoveFromRojo={(id) => setRojo(prev => prev.filter(x => x !== id))}
-            onRemoveFromAzul={(id) => setAzul(prev => prev.filter(x => x !== id))}
-            onSaveAssignment={onSaveAssignment}
-            busy={busy}
-            matchActive={!!matchId}
-          />
-        </div>
+        <div className="xl:col-span-8 space-y-6">
+          <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
+            <div>
+              <TeamBuilder 
+                rojo={rojo}
+                azul={azul}
+                nameById={nameById}
+                onRemoveFromRojo={(id) => setRojo(prev => prev.filter(x => x !== id))}
+                onRemoveFromAzul={(id) => setAzul(prev => prev.filter(x => x !== id))}
+                onSaveAssignment={onSaveAssignment}
+                busy={busy}
+                matchActive={!!matchId}
+              />
+            </div>
 
-        <div className="md:col-span-2 xl:col-span-1">
-          <RankedFinalize 
-            score={score}
-            sets={sets}
-            addSet={addSet}
-            removeLastSet={removeLastSet}
-            adjustScore={adjustScore}
-            onFinalize={(afkIds) => showConfirm('¿Finalizar Partido?', 'Los puntos se aplicarán permanentemente.', () => onFinalizeMatch(afkIds))}
-            busy={busy}
-            matchActive={!!matchId}
-            board={board}
-            lbScope={lbScope}
-            setLbScope={setLbScope}
-            startTime={startTime}
-            accumulatedTime={accumulatedTime}
-            isPaused={isPaused}
-            getEffectiveElapsed={getEffectiveElapsed}
-            togglePause={togglePause}
-            startNextSet={startNextSet}
-            setStartTime={(val: number | null) => setStartTime(val)}
-            currentSetStartTime={currentSetStartTime}
-            isWaitingForNextSet={isWaitingForNextSet}
-            startTimer={startTimer}
-            onRefreshLeaderboard={fetchLeaderboard}
-            competenciaId={competenciaId}
-            modalidad={modalidad as string}
-            categoria={categoria as string}
-            seasonId={selectedTemporada}
-            seasonName={temporadas.find(t => t._id === selectedTemporada)?.nombre}
-            rojoIds={rojo}
-            azulIds={azul}
-            nameById={nameById}
-            matchId={matchId}
-            matchConfig={matchConfig}
-            isBasicMode={isBasicMode}
-            onUpdateConfig={onUpdateConfig}
-          />
-        </div>
-      </div>
+            <RankedFinalize 
+              score={score}
+              sets={sets}
+              addSet={addSet}
+              removeLastSet={removeLastSet}
+              adjustScore={adjustScore}
+              onFinalize={(afkIds) => showConfirm('¿Finalizar Partido?', 'Los puntos se aplicarán permanentemente.', () => onFinalizeMatch(afkIds))}
+              busy={busy}
+              matchActive={!!matchId}
+              board={board}
+              lbScope={lbScope}
+              setLbScope={setLbScope}
+              startTime={startTime}
+              accumulatedTime={accumulatedTime}
+              isPaused={isPaused}
+              getEffectiveElapsed={getEffectiveElapsed}
+              togglePause={togglePause}
+              startNextSet={startNextSet}
+              setStartTime={(val: number | null) => setStartTime(val)}
+              currentSetStartTime={currentSetStartTime}
+              isWaitingForNextSet={isWaitingForNextSet}
+              startTimer={startTimer}
+              onRefreshLeaderboard={fetchLeaderboard}
+              competenciaId={competenciaId}
+              modalidad={modalidad as string}
+              categoria={categoria as string}
+              seasonId={selectedTemporada}
+              seasonName={temporadas.find(t => t._id === selectedTemporada)?.nombre}
+              rojoIds={rojo}
+              azulIds={azul}
+              nameById={nameById}
+              matchId={matchId}
+              matchConfig={matchConfig}
+              isBasicMode={isBasicMode}
+              onUpdateConfig={onUpdateConfig}
+              simpleMode={!showAdminPanel}
+            />
+          </div>
 
-      {/* Admin Section */}
-      <div className="pt-8 border-t border-slate-100">
-        <RankedAdminTools 
-          convertId={convertId}
-          setConvertId={setConvertId}
-          onMarkAsRanked={handleMarkAsRanked}
-          revertId={revertId}
-          setRevertId={setRevertId}
-          onRevertMatch={handleRevertMatch}
-          onResetScopeRankings={handleResetScope}
-          onResetAllRankings={handleResetAll}
-          onRecalculateScopeRankings={handleRecalculateScopeRankings}
-          onRecalculateGlobalRankings={async () => {
-             try {
-               await recalculateGlobalRankings();
-               setSuccess('ELO Global recalculado');
-             } catch(e: any) { setError(e.message); }
-          }}
-          onSyncWins={async () => {
-             try {
-               const res = await syncAllWins();
-               setSuccess(`Winrates sincronizados (${res.updatedCount} jugadores)`);
-               fetchLeaderboard();
-             } catch(e: any) { setError(e.message); }
-          }}
-          onCleanupGhosts={async () => {
-            showConfirm(
-              '¿Limpiar Fantasmas?',
-              'Se eliminarán del ranking todos los jugadores con 0 partidos en este scope.',
-              async () => {
-                try {
-                  const res = await cleanupGhostPlayers({
-                    competition: competenciaId,
-                    season: selectedTemporada || undefined,
-                    modalidad,
-                    categoria
-                  });
-                  setSuccess(`Se eliminaron ${res.deletedCount} registros vacíos.`);
-                  fetchLeaderboard();
-                } catch(e: any) { setError(e.message); }
-              }
-            );
-          }}
-          busy={busy || loadingMatch}
-          modalidad={modalidad}
-          categoria={categoria}
-          selectedTemporada={selectedTemporada}
-          recentMatches={recentMatches}
-          onEditResult={handleEditResult}
-          hasMoreRecentMatches={recentMatchesTotal > recentMatches.length}
-          onLoadMoreRecentMatches={() => setRecentMatchesLimit(prev => prev + 50)}
-        />
+          {!showAdminPanel ? (
+            <div className="flex justify-center pt-4">
+              <button 
+                onClick={() => setShowAdminPanel(true)}
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-800 font-black text-[10px] sm:text-xs uppercase tracking-widest transition-all shadow-sm border border-slate-200"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
+                </svg>
+                Ver Leaderboard y Configuración Avanzada
+              </button>
+            </div>
+          ) : (
+            <div className="pt-6 border-t border-slate-200 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-sm font-black text-slate-400 uppercase tracking-widest">Panel de Administración Avanzada</h2>
+                <button 
+                  onClick={() => setShowAdminPanel(false)}
+                  className="text-[10px] font-bold text-slate-500 hover:text-slate-800 underline uppercase"
+                >
+                  Ocultar Panel
+                </button>
+              </div>
+              
+              <div className="grid gap-8 grid-cols-1">
+                <RankedAdminTools 
+                  convertId={convertId}
+                  setConvertId={setConvertId}
+                  onMarkAsRanked={handleMarkAsRanked}
+                  revertId={revertId}
+                  setRevertId={setRevertId}
+                  onRevertMatch={handleRevertMatch}
+                  onResetScopeRankings={handleResetScope}
+                  onResetAllRankings={handleResetAll}
+                  onRecalculateScopeRankings={handleRecalculateScopeRankings}
+                  onRecalculateGlobalRankings={async () => {
+                    try {
+                      await recalculateGlobalRankings();
+                      setSuccess('ELO Global recalculado');
+                    } catch(e: any) { setError(e.message); }
+                  }}
+                  onSyncWins={async () => {
+                    try {
+                      const res = await syncAllWins();
+                      setSuccess(`Winrates sincronizados (${res.updatedCount} jugadores)`);
+                      fetchLeaderboard();
+                    } catch(e: any) { setError(e.message); }
+                  }}
+                  onCleanupGhosts={async () => {
+                    showConfirm(
+                      '¿Limpiar Fantasmas?',
+                      'Se eliminarán del ranking todos los jugadores con 0 partidos en este scope.',
+                      async () => {
+                        try {
+                          const res = await cleanupGhostPlayers({
+                            competition: competenciaId,
+                            season: selectedTemporada || undefined,
+                            modalidad,
+                            categoria
+                          });
+                          setSuccess(`Se eliminaron ${res.deletedCount} registros vacíos.`);
+                          fetchLeaderboard();
+                        } catch(e: any) { setError(e.message); }
+                      }
+                    );
+                  }}
+                  busy={busy || loadingMatch}
+                  modalidad={modalidad}
+                  categoria={categoria}
+                  selectedTemporada={selectedTemporada}
+                  recentMatches={recentMatches}
+                  onEditResult={handleEditResult}
+                  hasMoreRecentMatches={recentMatchesTotal > recentMatches.length}
+                  onLoadMoreRecentMatches={() => setRecentMatchesLimit(prev => prev + 50)}
+                />
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       <ConfirmModal 

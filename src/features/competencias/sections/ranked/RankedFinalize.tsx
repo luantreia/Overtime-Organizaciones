@@ -62,6 +62,7 @@ interface RankedFinalizeProps {
     voiceRate?: number;
     voiceIndex?: number;
   }>) => Promise<void>;
+  simpleMode?: boolean;
 }
 
 export const RankedFinalize: React.FC<RankedFinalizeProps> = ({
@@ -98,7 +99,8 @@ export const RankedFinalize: React.FC<RankedFinalizeProps> = ({
   matchId,
   matchConfig,
   isBasicMode,
-  onUpdateConfig
+  onUpdateConfig,
+  simpleMode
 }) => {
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [afkPlayers, setAfkPlayers] = useState<string[]>([]);
@@ -328,18 +330,20 @@ export const RankedFinalize: React.FC<RankedFinalizeProps> = ({
         </Button>
       </Card>
 
-      <RankedLeaderboard 
-        board={board}
-        lbScope={lbScope}
-        setLbScope={setLbScope}
-        onRefreshLeaderboard={onRefreshLeaderboard}
-        busy={busy}
-        competenciaId={competenciaId}
-        modalidad={modalidad}
-        categoria={categoria}
-        seasonId={seasonId}
-        seasonName={seasonName}
-      />
+      {!simpleMode && (
+        <RankedLeaderboard 
+          board={board}
+          lbScope={lbScope}
+          setLbScope={setLbScope}
+          onRefreshLeaderboard={onRefreshLeaderboard}
+          busy={busy}
+          competenciaId={competenciaId}
+          modalidad={modalidad}
+          categoria={categoria}
+          seasonId={seasonId}
+          seasonName={seasonName}
+        />
+      )}
 
       <RankedMatchSettingsModal 
         isOpen={showAdvanced}
