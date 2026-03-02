@@ -174,16 +174,21 @@ export const RankedPlayerSelector: React.FC<RankedPlayerSelectorProps> = ({
                         </div>
                         
                         <div className="flex items-center gap-1 shrink-0">
-                          {/* Botón de Presencia Mini */}
+                          {/* Botón de Presencia - Badge Dinámico */}
                           <button 
                             type="button"
                             onClick={() => togglePresente(p._id, !isPresent)}
-                            className={`h-3 w-3 rounded-full transition-all border-2 ${
+                            className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] font-black uppercase transition-all border ${
                               isPresent 
-                                ? 'bg-emerald-500 border-emerald-200 shadow-[0_0_8px_rgba(16,185,129,0.4)]' 
-                                : 'bg-slate-200 border-slate-100'
+                                ? 'bg-emerald-50 text-emerald-700 border-emerald-200 shadow-sm' 
+                                : 'bg-slate-50 text-slate-400 border-slate-200'
                             }`}
-                          />
+                          >
+                            <span className={`h-1.5 w-1.5 rounded-full ${
+                              isPresent ? 'bg-emerald-500 animate-pulse' : 'bg-slate-300'
+                            }`} />
+                            {isPresent ? 'Presente' : 'Ausente'}
+                          </button>
                           
                           <Menu as="div" className="relative inline-block text-left">
                             <Menu.Button className="flex items-center rounded-full p-0.5 text-slate-300 hover:text-brand-600 transition-colors">
@@ -265,7 +270,7 @@ export const RankedPlayerSelector: React.FC<RankedPlayerSelectorProps> = ({
                         </div>
 
                         <span className={`text-[8px] font-black uppercase tracking-tighter ${isPresent ? 'text-emerald-500' : 'text-slate-300'}`}>
-                          {isPresent ? 'LISTO' : 'FUERA'}
+                          {isPresent ? 'LISTO P/ JUGAR' : 'NO DISPONIBLE'}
                         </span>
                       </div>
                     </div>

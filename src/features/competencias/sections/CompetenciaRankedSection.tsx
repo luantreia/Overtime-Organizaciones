@@ -132,13 +132,25 @@ export default function CompetenciaRankedSection({
     const isPresent = presentes.includes(playerId);
     if (isPresent) score += 10000;
 
+    // 1.5 Bonus de Fidelidad (Bonus de Liga)
+    // Buscamos al jugador en el leaderboard actual (board)
+    const stats = board.find(item => {
+      const pId = typeof item.jugador === 'string' ? item.jugador : item.jugador?._id;
+      return pId === playerId;
+    });
+    // Damos un pequeño empujón basado en su historial (1 punto por partido total)
+    // Esto solo afecta el orden inicial para darles el "Presente" más rápido
+    if (stats?.partidosJugados) {
+      score += (stats.partidosJugados * 5); // +5 por cada partido histórico
+    }
+
     // 2. Penalización por partidos jugados hoy (Priorizar a los que menos jugaron)
+    // Esto es mucho más fuerte (-1000) que el bonus histórico (+5), por lo que 
+    // una vez que todos están presentes, la rotación diaria es la que manda.
     const count = playedCounts[playerId] || 0;
     score -= (count * 1000);
 
     // 3. Bonus por descanso (Recency Bias)
-    // lastMatchPlayedIndex es 1-based. Si matchTimelineLength es 5 y el jugador participó en el 5, su index es 5.
-    // Descanso = timelineLength - lastIndex.
     const lastIndex = lastMatchPlayedIndex[playerId] || 0;
     const restDuration = lastIndex > 0 ? (matchTimelineLength - lastIndex) : 99; // 99 si no ha jugado nunca
     
