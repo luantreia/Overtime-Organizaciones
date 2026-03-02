@@ -105,7 +105,7 @@ export function useRankedMatch({
     voiceIndex: 0
   });
   const [pjMarked, setPjMarked] = useState<boolean>(false);
-  const [isBasicMode, setIsBasicMode] = useState<boolean>(false);
+  const [isBasicMode, setIsBasicMode] = useState<boolean>(true);
   const [busy, setBusy] = useState(false);
   const hasLoadedRef = useRef(false);
 
