@@ -160,7 +160,7 @@ export default function CompetenciaRankedSection({
     score += (restDuration * 100);
 
     return score;
-  }, [presentes, playedCounts, lastMatchPlayedIndex, matchTimelineLength]);
+  }, [presentes, playedCounts, lastMatchPlayedIndex, matchTimelineLength, board]);
 
   const sortedPlayers = useMemo(() => {
     return [...players].sort((a, b) => {
