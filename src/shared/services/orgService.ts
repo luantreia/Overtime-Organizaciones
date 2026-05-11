@@ -2,11 +2,9 @@
 import { authFetch } from '../utils/authFetch';
 import type { 
   OrgMember, 
-  OrgPermissions, 
-  CreateOrgMemberData, 
-  UpdateOrgMemberData,
-  OrgMemberRole,
-  OrgPermission 
+  OrgPermissions,
+  CreateOrgMemberData,
+  UpdateOrgMemberData
 } from '../utils/types/orgTypes';
 
 // Obtener permisos del usuario en una organización

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getMisPermisosOrganizacion } from '../../../shared/services/orgService';
 import type { OrgPermissions } from '../../../shared/utils/types/orgTypes';
 
@@ -7,7 +7,7 @@ export const useOrgPermissions = (organizacionId: string | null) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const loadPermissions = async () => {
+  const loadPermissions = useCallback(async () => {
     if (!organizacionId) {
       setPermissions(null);
       return;
@@ -24,11 +24,11 @@ export const useOrgPermissions = (organizacionId: string | null) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [organizacionId]);
 
   useEffect(() => {
     loadPermissions();
-  }, [organizacionId]);
+  }, [organizacionId, loadPermissions]);
 
   const can = {
     manageTeams: permissions?.canManageTeams || false,

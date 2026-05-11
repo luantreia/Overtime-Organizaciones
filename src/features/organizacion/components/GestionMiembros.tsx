@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '../../../shared/components/Toast/ToastProvider';
 import { 
   getMiembrosOrganizacion, 
@@ -42,7 +42,7 @@ const GestionMiembros: React.FC<GestionMiembrosProps> = ({
   const [notas, setNotas] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  const cargarMiembros = async () => {
+  const cargarMiembros = useCallback(async () => {
     if (!canManageMembers) return;
     
     try {
@@ -54,11 +54,11 @@ const GestionMiembros: React.FC<GestionMiembrosProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [canManageMembers, organizacionId, addToast]);
 
   useEffect(() => {
     cargarMiembros();
-  }, [organizacionId, canManageMembers]);
+  }, [organizacionId, canManageMembers, cargarMiembros]);
 
   const resetForm = () => {
     setEmail('');
