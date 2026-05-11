@@ -127,7 +127,10 @@ const GestionMiembros: React.FC<GestionMiembrosProps> = ({
   };
 
   const handleEliminarMiembro = async (miembro: OrgMember) => {
-    if (!confirm(`¿Estás seguro de eliminar a ${miembro.usuarioId?.nombre || 'este miembro'}?`)) {
+    const nombreMiembro = (miembro.usuarioId as any)?.nombre || 'este miembro';
+    const confirmar = window.confirm(`¿Estás seguro de eliminar a ${nombreMiembro}?`);
+    
+    if (!confirmar) {
       return;
     }
 
@@ -142,7 +145,7 @@ const GestionMiembros: React.FC<GestionMiembrosProps> = ({
 
   const startEdit = (miembro: OrgMember) => {
     setEditingMember(miembro);
-    setEmail(miembro.usuarioId?.email || '');
+    setEmail((miembro.usuarioId as any)?.email || '');
     setRol(miembro.rol);
     setPermisos(miembro.permisos || []);
     setNotas(miembro.notas || '');

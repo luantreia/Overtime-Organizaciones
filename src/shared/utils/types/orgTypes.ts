@@ -27,7 +27,7 @@ export type OrgPermission =
 
 export interface OrgMember {
   _id: string;
-  organizacion: string;
+  organizacionId: string;
   usuarioId: string;
   rol: OrgMemberRole;
   permisos: OrgPermission[];
@@ -36,12 +36,12 @@ export interface OrgMember {
   creadoPor: string;
   createdAt: string;
   updatedAt: string;
-  usuarioId?: {
+  usuarioDetails?: {
     _id: string;
     nombre: string;
     email: string;
   };
-  creadoPor?: {
+  creadoPorDetails?: {
     _id: string;
     nombre: string;
     email: string;
