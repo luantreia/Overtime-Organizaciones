@@ -8,10 +8,13 @@ import {
   updateOrganizacion 
 } from '../services/organizacionService';
 import { useToast } from '../../../shared/components/Toast/ToastProvider';
+import { useOrgPermissions } from '../hooks/useOrgPermissions';
+import GestionMiembros from '../components/GestionMiembros';
 
 const OrganizacionPage = () => {
   const { organizacionSeleccionada, recargarOrganizaciones } = useOrganizacion();
   const { addToast } = useToast();
+  const { can, loading: permissionsLoading } = useOrgPermissions(organizacionSeleccionada?.id || null);
   const [modalAdminsOpen, setModalAdminsOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -79,6 +82,35 @@ const OrganizacionPage = () => {
         <div className="flex flex-col gap-1">
           <h1 className="text-2xl font-semibold text-slate-900">{organizacionSeleccionada.nombre}</h1>
           <p className="text-sm text-slate-500">Panel de organización</p>
+          {!permissionsLoading && (
+            <div className="flex flex-wrap gap-1 mt-1">
+              {can.manageTeams && (
+                <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800">
+                  🏆 Equipos
+                </span>
+              )}
+              {can.manageEvents && (
+                <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">
+                  📅 Eventos
+                </span>
+              )}
+              {can.manageMembers && (
+                <span className="inline-flex items-center rounded-full bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-800">
+                  👥 Miembros
+                </span>
+              )}
+              {can.manageFinances && (
+                <span className="inline-flex items-center rounded-full bg-yellow-100 px-2 py-0.5 text-xs font-medium text-yellow-800">
+                  💰 Finanzas
+                </span>
+              )}
+              {can.viewPrivate && (
+                <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-800">
+                  👁️ Privado
+                </span>
+              )}
+            </div>
+          )}
         </div>
       </header>
 
@@ -208,7 +240,31 @@ const OrganizacionPage = () => {
             Gestioná los administradores de esta organización
           </p>
         </div>
+
+        {can.manageMembers && (
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-card">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-slate-900">Miembros</h2>
+              <span className="text-sm text-slate-500">
+                {permissionsLoading ? 'Cargando...' : 'Gestión completa'}
+              </span>
+            </div>
+            <p className="mt-2 text-sm text-slate-500">
+              Gestioná los miembros y roles de esta organización
+            </p>
+          </div>
+        )}
       </section>
+
+      {/* Sección de gestión de miembros */}
+      {can.manageMembers && (
+        <section className="space-y-6">
+          <GestionMiembros 
+            organizacionId={organizacionSeleccionada.id} 
+            canManageMembers={can.manageMembers} 
+          />
+        </section>
+      )}
 
       <ModalGestionAdministradoresEntidad
         isOpen={modalAdminsOpen}
