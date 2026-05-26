@@ -362,6 +362,8 @@ export const getPartidosPorTemporada = async (temporadaId: string): Promise<Part
 export const getPartidosPorFase = async (faseId: string): Promise<Partido[]> => {
   const params = new URLSearchParams();
   if (faseId) params.set('fase', faseId);
+  // El backend pagina por defecto (20). Solicitamos un límite mayor para traer todos los partidos de la fase.
+  if (!params.has('limit')) params.set('limit', '1000');
   const response = await authFetch<BackendPartido[] | PaginatedResponse<BackendPartido>>(`/partidos?${params.toString()}`);
   const partidos = handlePartidosResponse(response);
   return partidos.map((partido) => mapPartido(partido));
