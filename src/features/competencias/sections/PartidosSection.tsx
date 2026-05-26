@@ -1,19 +1,38 @@
 import { useState } from 'react';
 import type { Partido } from '../../../types';
+import type { BackendTemporada, BackendFase } from '../services';
 import PartidoCard from '../../../shared/components/PartidoCard/PartidoCard';
 import { ModalPartidoAdmin } from '../../partidos/components';
 import ModalAlineacionPartido from '../../partidos/components/modals/ModalAlineacionPartido';
 import ModalInformacionPartido from '../../partidos/components/modals/ModalInformacionPartido';
+import ModalBulkEditFechasPartidos from '../../partidos/components/modals/ModalBulkEditFechasPartidos';
 import { useToken } from '../../../app/providers/AuthContext';
 
 type Props = {
   partidos: Partido[];
   filtroEstado: string;
   setFiltroEstado: (v: string) => void;
+  temporadas: BackendTemporada[];
+  fasesPorTemporada: Record<string, BackendFase[]>;
+  selectedTemporadaId: string;
+  selectedFaseId: string;
+  setSelectedTemporadaId: (v: string) => void;
+  setSelectedFaseId: (v: string) => void;
   onRefresh?: () => void; // Para recargar datos después de cerrar modales si es necesario
 };
 
-export default function PartidosSection({ partidos, filtroEstado, setFiltroEstado, onRefresh }: Props) {
+export default function PartidosSection({
+  partidos,
+  filtroEstado,
+  setFiltroEstado,
+  temporadas,
+  fasesPorTemporada,
+  selectedTemporadaId,
+  selectedFaseId,
+  setSelectedTemporadaId,
+  setSelectedFaseId,
+  onRefresh,
+}: Props) {
   const token = useToken();
   
   // Estados para los modales calcados de PartidosPage
@@ -23,10 +42,16 @@ export default function PartidosSection({ partidos, filtroEstado, setFiltroEstad
   const [partidoAlineacionId, setPartidoAlineacionId] = useState<string | null>(null);
   const [infoModalAbierto, setInfoModalAbierto] = useState(false);
   const [partidoInfoId, setPartidoInfoId] = useState<string | null>(null);
+  const [bulkEditAbierto, setBulkEditAbierto] = useState(false);
 
   const handleSeleccionar = (id: string) => {
     setPartidoAdminId(id);
     setModalAdminAbierto(true);
+  };
+
+  const handleSelectTemporada = (id: string) => {
+    setSelectedTemporadaId(id);
+    setSelectedFaseId('');
   };
 
   const handleAbrirAlineacion = (id: string) => {
@@ -43,23 +68,66 @@ export default function PartidosSection({ partidos, filtroEstado, setFiltroEstad
 
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-6 shadow-card">
-      <div className="mb-6 flex flex-col sm:flex-row sm:items-end justify-between gap-3">
-        <div className="w-full sm:w-auto">
-          <label className="mb-1 block text-xs font-medium text-slate-600">Estado</label>
-          <select 
-            className="w-full sm:w-48 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:border-brand-500 focus:ring-brand-500" 
-            value={filtroEstado} 
-            onChange={(e)=>setFiltroEstado(e.target.value)}
-          >
-            <option value="">Todos los estados</option>
-            <option value="pendiente">Pendiente</option>
-            <option value="confirmado">Confirmado</option>
-            <option value="finalizado">Finalizado</option>
-            <option value="cancelado">Cancelado</option>
-          </select>
+      <div className="mb-6 space-y-4">
+        <div className="grid gap-3 lg:grid-cols-[1fr_auto] lg:items-end">
+          <div className="grid gap-3 sm:grid-cols-3">
+            <label className="block text-xs font-medium text-slate-600">
+              Temporada
+              <select
+                className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:border-brand-500 focus:ring-brand-500"
+                value={selectedTemporadaId}
+                onChange={(e) => handleSelectTemporada(e.target.value)}
+              >
+                <option value="">Todas las temporadas</option>
+                {temporadas.map((temp) => (
+                  <option key={temp._id} value={temp._id}>{temp.nombre || temp._id}</option>
+                ))}
+              </select>
+            </label>
+            <label className="block text-xs font-medium text-slate-600">
+              Fase
+              <select
+                className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:border-brand-500 focus:ring-brand-500"
+                value={selectedFaseId}
+                onChange={(e) => setSelectedFaseId(e.target.value)}
+                disabled={!selectedTemporadaId}
+              >
+                <option value="">Todas las fases</option>
+                {(fasesPorTemporada[selectedTemporadaId] || []).map((fase) => (
+                  <option key={fase._id} value={fase._id}>{fase.nombre || fase._id}</option>
+                ))}
+              </select>
+            </label>
+            <label className="block text-xs font-medium text-slate-600">
+              Estado
+              <select
+                className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:border-brand-500 focus:ring-brand-500"
+                value={filtroEstado}
+                onChange={(e) => setFiltroEstado(e.target.value)}
+              >
+                <option value="">Todos los estados</option>
+                <option value="pendiente">Pendiente</option>
+                <option value="confirmado">Confirmado</option>
+                <option value="finalizado">Finalizado</option>
+                <option value="cancelado">Cancelado</option>
+              </select>
+            </label>
+          </div>
+          <div className="flex items-center justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => setBulkEditAbierto(true)}
+              className="inline-flex items-center justify-center rounded-lg bg-brand-600 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-brand-700"
+            >
+              📅 Editar fecha de partidos
+            </button>
+          </div>
         </div>
-        <div className="text-xs font-medium uppercase tracking-wider text-slate-400">
-          {partidosFiltrados.length} {partidosFiltrados.length === 1 ? 'Partido' : 'Partidos'}
+        <div className="flex items-center justify-between gap-2 text-xs font-medium uppercase tracking-wider text-slate-400">
+          <span>{partidosFiltrados.length} {partidosFiltrados.length === 1 ? 'Partido' : 'Partidos'}</span>
+          {selectedTemporadaId ? (
+            <span>{(fasesPorTemporada[selectedTemporadaId] || []).length} fase(s) cargada(s)</span>
+          ) : null}
         </div>
       </div>
 
@@ -141,6 +209,16 @@ export default function PartidosSection({ partidos, filtroEstado, setFiltroEstad
         onClose={() => {
           setInfoModalAbierto(false);
           setPartidoInfoId(null);
+        }}
+      />
+
+      <ModalBulkEditFechasPartidos
+        isOpen={bulkEditAbierto}
+        partidos={partidosFiltrados}
+        onClose={() => setBulkEditAbierto(false)}
+        onUpdated={() => {
+          setBulkEditAbierto(false);
+          onRefresh?.();
         }}
       />
     </section>

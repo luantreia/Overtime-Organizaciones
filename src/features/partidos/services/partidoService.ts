@@ -50,6 +50,7 @@ type PartidoUpdatePayload = {
   modalidad?: string;
   categoria?: string;
   competencia?: string | BackendCompetencia;
+  etapa?: string;
 };
 
 type PartidoCreatePayload = {

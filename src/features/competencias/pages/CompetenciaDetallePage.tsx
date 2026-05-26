@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { listTemporadasByCompetencia, crearTemporada, BackendTemporada, actualizarTemporada, eliminarTemporada, listFasesByTemporada, crearFase, generarFixture, BackendFase, actualizarFase, eliminarFase, addCompetenciaAdministrador, getCompetenciaAdministradores, getCompetenciaById, removeCompetenciaAdministrador, actualizarCompetencia, eliminarCompetencia, type AdminUser, listParticipacionesByTemporada, type BackendParticipacionTemporada, crearSolicitudParticipacionTemporada, listParticipacionesByFase, type BackendParticipacionFase, crearParticipacionFase, updateParticipacionTemporada, deleteParticipacionTemporada } from '../services';
-import { getPartidosPorCompetencia } from '../../partidos/services/partidoService';
+import { getPartidosPorCompetencia, getPartidosPorTemporada, getPartidosPorFase } from '../../partidos/services/partidoService';
 import type { Partido } from '../../../types';
 import { useToast } from '../../../shared/components/Toast/ToastProvider';
 import { useAuth } from '../../../app/providers/AuthContext';
@@ -37,6 +37,8 @@ const CompetenciaDetallePage = () => {
   // partidos
   const [partidos, setPartidos] = useState<Partido[]>([]);
   const [filtroEstado, setFiltroEstado] = useState<string>('');
+  const [selectedTemporadaId, setSelectedTemporadaId] = useState<string>('');
+  const [selectedFaseId, setSelectedFaseId] = useState<string>('');
 
   // participaciones
   const [participacionesTemporada, setParticipacionesTemporada] = useState<Record<string, BackendParticipacionTemporada[]>>({});
@@ -110,18 +112,38 @@ const CompetenciaDetallePage = () => {
         }
       }
       setParticipacionesFase(pfMap);
-
-      // partidos
-      const listaPartidos = await getPartidosPorCompetencia(competenciaId);
-      setPartidos(listaPartidos);
     } finally {
       setLoading(false);
     }
   }, [competenciaId]);
 
+  const loadPartidos = useCallback(async () => {
+    if (!competenciaId) return;
+    setLoading(true);
+    try {
+      let listaPartidos: Partido[] = [];
+      if (selectedFaseId) {
+        listaPartidos = await getPartidosPorFase(selectedFaseId);
+      } else if (selectedTemporadaId) {
+        listaPartidos = await getPartidosPorTemporada(selectedTemporadaId);
+      } else {
+        listaPartidos = await getPartidosPorCompetencia(competenciaId);
+      }
+      setPartidos(listaPartidos);
+    } catch (error) {
+      console.error('Error cargando partidos:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [competenciaId, selectedFaseId, selectedTemporadaId]);
+
   useEffect(() => {
     void loadAll();
   }, [loadAll]);
+
+  useEffect(() => {
+    void loadPartidos();
+  }, [loadPartidos]);
 
   const onGenerarFixture = async (faseId: string) => {
     await generarFixture(faseId);
@@ -348,7 +370,18 @@ const CompetenciaDetallePage = () => {
       
 
       {tab === 'partidos' ? (
-        <PartidosSection partidos={partidos} filtroEstado={filtroEstado} setFiltroEstado={setFiltroEstado} />
+        <PartidosSection
+          partidos={partidos}
+          filtroEstado={filtroEstado}
+          setFiltroEstado={setFiltroEstado}
+          temporadas={temporadas}
+          fasesPorTemporada={fasesPorTemporada}
+          selectedTemporadaId={selectedTemporadaId}
+          selectedFaseId={selectedFaseId}
+          setSelectedTemporadaId={setSelectedTemporadaId}
+          setSelectedFaseId={setSelectedFaseId}
+          onRefresh={loadPartidos}
+        />
       ) : null}
 
       {tab === 'ranked' ? (
