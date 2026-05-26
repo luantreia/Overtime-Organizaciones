@@ -89,9 +89,6 @@ export default function GestionParticipantesFaseModal({
   // Eliminar partidos
   const [eliminarConfirmId, setEliminarConfirmId] = useState<string | null>(null);
 
-  // Crear partidos adicionales (disponible para todas las fases)
-  const [seccionPartidosAdicionalesVisible, setSeccionPartidosAdicionalesVisible] = useState(false);
-
   useEffect(() => {
     if (activeTab !== 'configuracion') {
       setSugerencias([]);
