@@ -64,7 +64,14 @@ const getJugadoresElegibles = async (equipoId: string, partido: any): Promise<Ju
   // Si el partido tiene fase, intentamos buscar jugadores inscritos en la temporada
   if (partido.fase) {
     try {
-      const fase = await getFaseById(partido.fase);
+      const faseId =
+        typeof partido.fase === 'string'
+          ? partido.fase
+          : partido.fase?._id || partido.fase?.id;
+
+      if (!faseId) return [];
+
+      const fase = await getFaseById(faseId);
       if (fase && fase.temporada) {
         const participaciones = await listParticipacionesByTemporada(fase.temporada);
         const miParticipacion = participaciones.find(p => 
