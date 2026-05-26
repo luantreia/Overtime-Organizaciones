@@ -97,7 +97,19 @@ const getJugadoresElegibles = async (equipoId: string, partido: any): Promise<Ju
   }
   
   // Fallback: jugadores con contrato activo
-  const jugadores = await getJugadoresEquipo({ equipoId, estado: 'activo' });
+  const response = await getJugadoresEquipo({
+    equipoId,
+    estado: 'activo'
+  });
+
+  const jugadores = Array.isArray(response)
+    ? response
+    : Array.isArray((response as any)?.jugadores)
+      ? (response as any).jugadores
+      : Array.isArray((response as any)?.docs)
+        ? (response as any).docs
+        : [];
+
   return jugadores.map(mapJugadorOption);
 };
 
