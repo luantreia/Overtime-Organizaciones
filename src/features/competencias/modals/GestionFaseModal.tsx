@@ -82,6 +82,16 @@ export default function GestionParticipantesFaseModal({
   const [quickVisitante, setQuickVisitante] = useState<number>(0);
   const [isSavingQuick, setIsSavingQuick] = useState(false);
 
+  // Paginación de partidos
+  const [pagePartidos, setPagePartidos] = useState(1);
+  const partidosPorPagina = 12;
+
+  // Eliminar partidos
+  const [eliminarConfirmId, setEliminarConfirmId] = useState<string | null>(null);
+
+  // Crear partidos adicionales (disponible para todas las fases)
+  const [seccionPartidosAdicionalesVisible, setSeccionPartidosAdicionalesVisible] = useState(false);
+
   useEffect(() => {
     if (activeTab !== 'configuracion') {
       setSugerencias([]);
@@ -95,6 +105,28 @@ export default function GestionParticipantesFaseModal({
       setPartidos(lista);
     } catch (e) {
       console.error("Error refrescando partidos:", e);
+    }
+  };
+
+  const handleEliminarPartido = async (partidoId: string) => {
+    try {
+      setNotice('Eliminando partido...');
+      await eliminarPartido(partidoId);
+      
+      // Recalcular estadísticas después de eliminar
+      if (fase?._id) {
+        await recalcularFase(fase._id);
+      }
+      
+      await refrescarPartidos();
+      setEliminarConfirmId(null);
+      setNotice('✅ Partido eliminado exitosamente');
+      setTimeout(() => setNotice(''), 2000);
+      onRefresh?.();
+    } catch (error) {
+      console.error('Error eliminando partido:', error);
+      setNotice('❌ Error al eliminar el partido');
+      setTimeout(() => setNotice(''), 3000);
     }
   };
 
@@ -217,36 +249,51 @@ export default function GestionParticipantesFaseModal({
     });
   }, [partidosOrdenados, searchTerm, filterEstado]);
 
+  // Resetear página al cambiar filtros o lista de partidos
+  useEffect(() => {
+    setPagePartidos(1);
+  }, [searchTerm, filterEstado, partidos.length]);
+
+  // Paginación de partidos filtrados
+  const totalPaginas = Math.ceil(partidosFiltrados.length / partidosPorPagina);
+  const paginaActual = Math.min(pagePartidos, totalPaginas || 1);
+  
+  const partidosPaginados = useMemo(() => {
+    const inicio = (paginaActual - 1) * partidosPorPagina;
+    const fin = inicio + partidosPorPagina;
+    return partidosFiltrados.slice(inicio, fin);
+  }, [partidosFiltrados, paginaActual, partidosPorPagina]);
+
   const ordenEtapas = ['octavos', 'cuartos', 'semifinal', 'final', 'tercer_puesto', 'repechaje', 'otro'];
   const porEtapa = useMemo(() => {
     const map: Record<string, Partido[]> = {};
-    for (const p of partidosFiltrados) {
+    for (const p of partidosPaginados) {
       const e = (p.etapa || 'otro').toString();
       if (!map[e]) map[e] = [];
       map[e].push(p);
     }
     return map;
-  }, [partidosFiltrados]);
+  }, [partidosPaginados]);
 
   const porGrupo = useMemo(() => {
     const map: Record<string, Partido[]> = {};
-    for (const p of partidosFiltrados) {
+    for (const p of partidosPaginados) {
       const g = (p.grupo ?? '—').toString();
       if (!map[g]) map[g] = [];
       map[g].push(p);
     }
     return map;
-  }, [partidosFiltrados]);
+  }, [partidosPaginados]);
 
   const porDivision = useMemo(() => {
     const map: Record<string, Partido[]> = {};
-    for (const p of partidosFiltrados) {
+    for (const p of partidosPaginados) {
       const d = (p.division ?? '—').toString();
       if (!map[d]) map[d] = [];
       map[d].push(p);
     }
     return map;
-  }, [partidosFiltrados]);
+  }, [partidosPaginados]);
 
   const seccionAgregarVisible = esAdmin && opcionesAgregar.length > 0 && !!fase?._id;
 
@@ -269,7 +316,17 @@ export default function GestionParticipantesFaseModal({
             {new Date(p.fecha).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' })} {p.hora ? `· ${p.hora} hs` : ''}
           </span>
         </div>
-        {renderStatusBadge(p.estado)}
+        <div className="flex items-center gap-2">
+          {esAdmin && (
+            <button
+              onClick={() => setEliminarConfirmId(p.id)}
+              className="opacity-0 group-hover:opacity-100 transition-opacity rounded-lg bg-red-50 px-2 py-1 text-[9px] font-bold text-red-600 hover:bg-red-100 border border-red-100"
+            >
+              🗑️
+            </button>
+          )}
+          {renderStatusBadge(p.estado)}
+        </div>
       </div>
 
       <div className="flex items-center justify-between gap-4">
@@ -361,6 +418,29 @@ export default function GestionParticipantesFaseModal({
           </>
         )}
       </div>
+
+      {/* Modal de confirmación de eliminación */}
+      {eliminarConfirmId === p.id && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-xl z-50 backdrop-blur-sm">
+          <div className="bg-white rounded-lg p-4 shadow-xl max-w-xs">
+            <p className="text-sm font-bold text-slate-900 mb-4">¿Eliminar este partido?</p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => handleEliminarPartido(p.id)}
+                className="flex-1 bg-red-600 text-white px-3 py-2 rounded-lg text-xs font-bold hover:bg-red-700 transition"
+              >
+                Eliminar
+              </button>
+              <button
+                onClick={() => setEliminarConfirmId(null)}
+                className="flex-1 bg-slate-200 text-slate-700 px-3 py-2 rounded-lg text-xs font-bold hover:bg-slate-300 transition"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </li>
   );
 
@@ -657,6 +737,28 @@ export default function GestionParticipantesFaseModal({
                     ))}
                   </div>
                 )}
+                {/* Paginación */}
+                {partidosFiltrados.length > partidosPorPagina && (
+                  <div className="mt-6 flex items-center justify-center gap-3">
+                    <button
+                      type="button"
+                      disabled={paginaActual <= 1}
+                      onClick={() => setPagePartidos((p) => Math.max(1, p - 1))}
+                      className="rounded-lg px-3 py-1.5 text-xs font-bold bg-slate-100 hover:bg-slate-200 disabled:opacity-50"
+                    >
+                      ← Anterior
+                    </button>
+                    <div className="text-sm font-bold text-slate-600">Página {paginaActual} / {totalPaginas || 1}</div>
+                    <button
+                      type="button"
+                      disabled={paginaActual >= totalPaginas}
+                      onClick={() => setPagePartidos((p) => Math.min(totalPaginas, p + 1))}
+                      className="rounded-lg px-3 py-1.5 text-xs font-bold bg-slate-100 hover:bg-slate-200 disabled:opacity-50"
+                    >
+                      Siguiente →
+                    </button>
+                  </div>
+                )}
               </>
             )}
           </section>
@@ -745,20 +847,20 @@ export default function GestionParticipantesFaseModal({
               </div>
             )}
 
-            {/* Gestión de Playoffs: Agregar Partido */}
-            {(tipo === 'playoff' || tipo === 'promocion') && esAdmin && (
+            {/* Partidos Adicionales: Disponible para todas las fases */}
+            {esAdmin && (
               <div id="gestion-partidos-header" className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                 <div className="flex items-center justify-between mb-4">
                   <h6 className="text-sm font-extrabold text-slate-900 uppercase tracking-tight flex items-center gap-2">
                     <span className="flex h-5 w-5 items-center justify-center rounded bg-brand-100 text-[10px] text-brand-600">+</span>
-                    {modoVisual ? 'Creador Visual de Llaves' : 'Agregar Partido Manual'}
+                    {modoVisual ? 'Crear Partidos (Visual)' : 'Crear Partidos (Manual)'}
                   </h6>
                   <button 
                     type="button"
                     onClick={() => setModoVisual(!modoVisual)}
                     className="text-[10px] font-black uppercase text-brand-600 bg-brand-50 px-3 py-1.5 rounded-lg border border-brand-100 hover:bg-brand-100 transition shadow-sm"
                   >
-                    {modoVisual ? '⌨️ Modo Formulario' : '🖱️ Modo Visual (Drag & Drop)'}
+                    {modoVisual ? '⌨️ Modo Formulario' : '🖱️ Modo Visual'}
                   </button>
                 </div>
 
@@ -1301,7 +1403,7 @@ export default function GestionParticipantesFaseModal({
               </div>
             )}
 
-            {!seccionAgregarVisible && !((tipo === 'playoff' || tipo === 'promocion') && esAdmin) && (
+            {!seccionAgregarVisible && !esAdmin && (
               <div className="text-center py-10">
                 <p className="text-sm text-slate-500 font-medium italic">No hay opciones de configuración adicionales para esta fase.</p>
               </div>
