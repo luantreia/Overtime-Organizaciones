@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import ModalBase from '../../../../shared/components/ModalBase/ModalBase';
 import type { Partido } from '../../../../types';
 import { actualizarPartido } from '../../services/partidoService';
@@ -30,6 +30,21 @@ const ModalBulkEditFechasPartidos = ({ isOpen, partidos, onClose, onUpdated }: M
   const [error, setError] = useState('');
 
   const availablePartidos = useMemo(() => partidos, [partidos]);
+
+  // Reset modal state cada vez que se abre para evitar estados persistentes
+  useEffect(() => {
+    if (isOpen) {
+      setSelectedIds([]);
+      setEtapa('');
+      setFecha('');
+      setHora('');
+      setUbicacion('');
+      setEstado('');
+      setMarcadorLocal('');
+      setMarcadorVisitante('');
+      setError('');
+    }
+  }, [isOpen]);
 
   const togglePartido = (id: string) => {
     setSelectedIds((prev) =>
@@ -123,7 +138,9 @@ const ModalBulkEditFechasPartidos = ({ isOpen, partidos, onClose, onUpdated }: M
                     />
                     <div className="min-w-0">
                       <div className="flex items-center justify-between gap-2 text-sm font-semibold text-slate-900">
-                        <span>{partido.rival}</span>
+                        <span>
+                          {(partido.equipoLocal?.nombre || partido.localNombre || 'Local')} vs {(partido.equipoVisitante?.nombre || partido.visitanteNombre || partido.rival || 'Visitante')}
+                        </span>
                         <span className="text-xs uppercase tracking-wide text-slate-400">{partido.estado}</span>
                       </div>
                       <p className="text-xs text-slate-500">
