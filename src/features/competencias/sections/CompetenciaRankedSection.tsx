@@ -588,30 +588,30 @@ export default function CompetenciaRankedSection({
 
       {/* Notifications */}
       {error && (
-        <div 
+        <div
           onClick={() => setError(null)}
-          className="fixed top-4 right-4 z-[100] cursor-pointer rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700 shadow-lg animate-in fade-in slide-in-from-top-4 min-w-[200px]"
+          className="fixed top-4 right-4 z-[100] cursor-pointer rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700 shadow-lg animate-in fade-in slide-in-from-top-4 min-w-[200px] max-w-xs"
         >
           <div className="flex justify-between items-start gap-4">
             <div>
               <p className="font-bold">Error</p>
               <p>{error}</p>
             </div>
-            <span className="text-red-400 font-bold">×</span>
+            <span className="text-red-400 font-bold shrink-0">×</span>
           </div>
         </div>
       )}
       {success && (
-        <div 
+        <div
           onClick={() => setSuccess(null)}
-          className="fixed top-4 right-4 z-[100] cursor-pointer rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-700 shadow-lg animate-in fade-in slide-in-from-top-4 min-w-[200px]"
+          className="fixed bottom-4 right-4 z-[100] cursor-pointer rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-700 shadow-lg animate-in fade-in slide-in-from-bottom-4 min-w-[200px] max-w-xs"
         >
           <div className="flex justify-between items-start gap-4">
             <div>
               <p className="font-bold">Éxito</p>
               <p>{success}</p>
             </div>
-            <span className="text-emerald-400 font-bold">×</span>
+            <span className="text-emerald-400 font-bold shrink-0">×</span>
           </div>
         </div>
       )}
@@ -619,14 +619,14 @@ export default function CompetenciaRankedSection({
       {/* Header Config */}
       <Card className="p-3 sm:p-4 border-slate-100 shadow-sm">
         <div className="flex flex-col sm:flex-row sm:items-end gap-3">
-          <div className="flex gap-3">
-            <div className="flex-1 space-y-1">
-              <label className="text-[10px] uppercase tracking-wider font-bold text-slate-500">Modalidad</label>
-              <div className="h-9 px-3 flex items-center bg-slate-50 rounded border text-xs sm:text-sm font-medium text-slate-700">{modalidad || 'N/A'}</div>
+          <div className="flex gap-4">
+            <div className="flex flex-col gap-0.5">
+              <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Modalidad</span>
+              <span className="text-sm font-black text-slate-800">{modalidad || '—'}</span>
             </div>
-            <div className="flex-1 space-y-1">
-              <label className="text-[10px] uppercase tracking-wider font-bold text-slate-500">Categoría</label>
-              <div className="h-9 px-3 flex items-center bg-slate-50 rounded border text-xs sm:text-sm font-medium text-slate-700">{categoria || 'N/A'}</div>
+            <div className="flex flex-col gap-0.5">
+              <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Categoría</span>
+              <span className="text-sm font-black text-slate-800">{categoria || '—'}</span>
             </div>
           </div>
           
@@ -646,19 +646,23 @@ export default function CompetenciaRankedSection({
           </div>
 
           <div className="space-y-1">
-            <label className="text-[10px] uppercase tracking-wider font-bold text-slate-500">Modo de Gestión</label>
+            <label className="text-[10px] uppercase tracking-wider font-bold text-slate-400" title="Online: sincroniza con el servidor. Offline: guarda solo localmente.">
+              Modo
+            </label>
             <div className="flex items-center h-9 bg-slate-50 border border-slate-200 rounded-md p-1 gap-1">
-              <button 
+              <button
                 onClick={() => setIsBasicMode(false)}
                 className={`flex-1 px-2 py-1 rounded text-[10px] font-bold transition-all ${!isBasicMode ? 'bg-white shadow-sm text-brand-600' : 'text-slate-400'}`}
+                title="Sincroniza equipos y sets con el servidor en tiempo real"
               >
-                SYNC
+                Online
               </button>
-              <button 
+              <button
                 onClick={() => setIsBasicMode(true)}
                 className={`flex-1 px-2 py-1 rounded text-[10px] font-bold transition-all ${isBasicMode ? 'bg-white shadow-sm text-brand-600' : 'text-slate-400'}`}
+                title="Guarda el estado solo en este dispositivo"
               >
-                LOCAL
+                Offline
               </button>
             </div>
           </div>
@@ -671,7 +675,7 @@ export default function CompetenciaRankedSection({
                 disabled={busy || !modalidad || !categoria}
                 className="w-full sm:w-auto px-6 whitespace-nowrap"
               >
-                Iniciar sesión Ranked
+                Nuevo Partido Ranked
               </Button>
             ) : (
               <div className="flex flex-wrap gap-2 items-center bg-brand-50 rounded-lg p-1.5 pr-3 border border-brand-100 w-full sm:w-auto">
@@ -776,20 +780,20 @@ export default function CompetenciaRankedSection({
               matchConfig={matchConfig}
               isBasicMode={isBasicMode}
               onUpdateConfig={onUpdateConfig}
-              simpleMode={!showAdminPanel}
+              simpleMode={false}
             />
           </div>
 
           {!showAdminPanel ? (
             <div className="flex justify-center pt-4">
-              <button 
+              <button
                 onClick={() => setShowAdminPanel(true)}
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-800 font-black text-[10px] sm:text-xs uppercase tracking-widest transition-all shadow-sm border border-slate-200"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-white text-slate-500 hover:text-slate-700 hover:bg-slate-50 font-medium text-[10px] uppercase tracking-wider transition-all border border-slate-200"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
                 </svg>
-                Ver Leaderboard y Configuración Avanzada
+                Admin Avanzado
               </button>
             </div>
           ) : (

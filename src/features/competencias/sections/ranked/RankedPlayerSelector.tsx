@@ -96,7 +96,10 @@ export const RankedPlayerSelector: React.FC<RankedPlayerSelectorProps> = ({
     <div className="rounded-lg border border-slate-200 bg-white p-3 sm:p-4">
       <div className="mb-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div className="flex items-center gap-2 flex-wrap">
-          <h2 className="text-sm font-semibold">Jugadores</h2>
+          <h2 className="text-sm font-semibold flex items-center gap-1.5">
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-brand-600 text-[9px] font-black text-white">1</span>
+            Jugadores
+          </h2>
           <div className="flex rounded border text-[10px] overflow-hidden">
             <button 
               type="button" 
@@ -241,37 +244,31 @@ export const RankedPlayerSelector: React.FC<RankedPlayerSelectorProps> = ({
                         </div>
                       </div>
                       
-                      <div className="flex items-center justify-between gap-2 mt-0.5">
-                        <div className="flex items-center gap-1.5 pl-5.5">
-                          {/* PJ Hoy */}
-                          <span className={`flex items-center gap-1 rounded px-1.5 py-0.5 text-[9px] font-black border ${
-                            pjHoy === 0 
-                              ? 'bg-emerald-50 text-emerald-600 border-emerald-100' 
-                              : 'bg-slate-50 text-slate-500 border-slate-100'
-                          }`}>
-                            PJ: {pjHoy}
-                          </span>
-
-                          {/* Descanso (D: X) */}
-                          {isPresent && rest >= 0 && (
-                            <span 
-                              className={`flex items-center gap-1 rounded px-1.5 py-0.5 text-[9px] font-black border ${
-                                rest === 0 
-                                  ? 'bg-red-50 text-red-600 border-red-200 animate-pulse' 
-                                  : rest >= 2 
-                                    ? 'bg-brand-50 text-brand-700 border-brand-200'
-                                    : 'bg-slate-50 text-slate-600 border-slate-200'
-                              }`}
-                              title="Partidos desde su última participación"
-                            >
-                              {rest === 0 ? 'RECIENTE' : `D: ${rest}`}
-                            </span>
-                          )}
-                        </div>
-
-                        <span className={`text-[8px] font-black uppercase tracking-tighter ${isPresent ? 'text-emerald-500' : 'text-slate-300'}`}>
-                          {isPresent ? 'LISTO P/ JUGAR' : 'NO DISPONIBLE'}
+                      <div className="flex items-center gap-1.5 mt-0.5 pl-5.5">
+                        {/* PJ Hoy */}
+                        <span className={`flex items-center gap-1 rounded px-1.5 py-0.5 text-[9px] font-black border ${
+                          pjHoy === 0
+                            ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
+                            : 'bg-slate-50 text-slate-500 border-slate-100'
+                        }`}>
+                          {pjHoy === 0 ? '★ Sin jugar' : `PJ: ${pjHoy}`}
                         </span>
+
+                        {/* Descanso (D: X) */}
+                        {isPresent && rest >= 0 && (
+                          <span
+                            className={`flex items-center gap-1 rounded px-1.5 py-0.5 text-[9px] font-black border ${
+                              rest === 0
+                                ? 'bg-red-50 text-red-600 border-red-200 animate-pulse'
+                                : rest >= 2
+                                  ? 'bg-brand-50 text-brand-700 border-brand-200'
+                                  : 'bg-slate-50 text-slate-600 border-slate-200'
+                            }`}
+                            title="Partidos desde su última participación"
+                          >
+                            {rest === 0 ? 'RECIENTE' : `D: ${rest}`}
+                          </span>
+                        )}
                       </div>
                     </div>
                   );
@@ -346,7 +343,9 @@ export const RankedPlayerSelector: React.FC<RankedPlayerSelectorProps> = ({
             <button type="button" className="text-[9px] text-slate-500 hover:text-brand-600" onClick={onMarkAllPresent}>Todos presentes</button>
             <button type="button" className="text-[9px] text-slate-500 hover:text-brand-600" onClick={onClearPresentes}>Limpiar presentes</button>
             <button type="button" className="text-[9px] text-slate-500 hover:text-brand-600" onClick={onClearSelected} disabled={selected.length === 0}>Deseleccionar ({selected.length})</button>
-            <button type="button" className="text-[9px] text-red-500 hover:text-red-700 font-medium" onClick={onResetPJHoy}>Reset PJ diario</button>
+          </div>
+          <div className="pt-1 border-t border-slate-100 flex justify-center">
+            <button type="button" className="text-[9px] text-red-500 hover:text-red-700 font-bold underline underline-offset-2" onClick={onResetPJHoy}>⚠ Reset PJ diario</button>
           </div>
         </div>
       </div>

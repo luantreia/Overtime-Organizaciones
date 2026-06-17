@@ -104,14 +104,20 @@ export const RankedFinalize: React.FC<RankedFinalizeProps> = ({
 }) => {
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [afkPlayers, setAfkPlayers] = useState<string[]>([]);
+  const [editingTimer, setEditingTimer] = useState(false);
+  const [timerInputVal, setTimerInputVal] = useState('');
 
   const handleEditTimer = () => {
-    if (!setStartTime) return;
-    const val = prompt('Minutos transcurridos del partido (ej 5.5):');
-    if (val && !isNaN(+val)) {
-      const ms = parseFloat(val) * 60 * 1000;
+    setTimerInputVal('');
+    setEditingTimer(true);
+  };
+
+  const commitTimerEdit = () => {
+    if (setStartTime && timerInputVal && !isNaN(+timerInputVal)) {
+      const ms = parseFloat(timerInputVal) * 60 * 1000;
       setStartTime(Date.now() - ms);
     }
+    setEditingTimer(false);
   };
 
   const toggleAFK = (id: string) => {
@@ -130,7 +136,10 @@ export const RankedFinalize: React.FC<RankedFinalizeProps> = ({
       <Card className="p-3 sm:p-6 border-emerald-100 bg-emerald-50/20">
         <div className="flex items-center justify-between mb-3 sm:mb-4">
           <div className="flex items-center gap-2">
-            <h2 className="text-[11px] sm:text-sm font-bold text-emerald-800 uppercase">Cancha en Vivo</h2>
+            <h2 className="text-[11px] sm:text-sm font-bold text-emerald-800 uppercase flex items-center gap-1.5">
+              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600 text-[9px] font-black text-white">3</span>
+              Cancha en Vivo
+            </h2>
             {isBasicMode && (
               <span className="bg-amber-100 text-amber-700 text-[8px] px-1 py-0.5 rounded font-black uppercase tracking-tighter border border-amber-200">
                 LOCAL
@@ -194,15 +203,33 @@ export const RankedFinalize: React.FC<RankedFinalizeProps> = ({
                   matchDuration={matchConfig?.matchDuration}
                   audioConfig={matchConfig}
                 />
-                {startTime && (
-                  <button 
+                {startTime && !editingTimer && (
+                  <button
                     onClick={handleEditTimer}
                     className="p-1 text-emerald-400 hover:text-emerald-600 transition-colors"
+                    title="Ajustar tiempo"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                     </svg>
                   </button>
+                )}
+                {startTime && editingTimer && (
+                  <div className="flex items-center gap-1">
+                    <input
+                      autoFocus
+                      type="number"
+                      step="0.5"
+                      min="0"
+                      placeholder="min"
+                      value={timerInputVal}
+                      onChange={e => setTimerInputVal(e.target.value)}
+                      onKeyDown={e => { if (e.key === 'Enter') commitTimerEdit(); if (e.key === 'Escape') setEditingTimer(false); }}
+                      className="w-14 rounded border border-emerald-300 px-1.5 py-0.5 text-[10px] text-center focus:outline-none focus:ring-1 focus:ring-emerald-400"
+                    />
+                    <button onClick={commitTimerEdit} className="text-[9px] font-bold text-emerald-600 hover:text-emerald-800">OK</button>
+                    <button onClick={() => setEditingTimer(false)} className="text-[9px] text-slate-400 hover:text-slate-600">✕</button>
+                  </div>
                 )}
               </div>
             </div>
