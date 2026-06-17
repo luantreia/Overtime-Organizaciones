@@ -85,7 +85,7 @@ export default function CompetenciaRankedSection({
   // Broadcast rooms
   const [broadcastRoom, setBroadcastRoom] = useState<string>('cancha-1');
   const [rooms, setRooms] = useState<BroadcastRoom[]>([]);
-  const PARTIDO_URL = process.env.REACT_APP_PARTIDO_URL || 'http://localhost:3000';
+  const PARTIDO_URL = process.env.REACT_APP_PARTIDO_URL || 'https://overtime-partido.vercel.app';
 
   // Temporadas
   const [temporadas, setTemporadas] = useState<BackendTemporada[]>([]);
