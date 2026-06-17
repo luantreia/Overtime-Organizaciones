@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import type { ISolicitudEdicion, SolicitudEdicionTipo, SolicitudEdicionEstado } from '../../solicitudes/types/solicitudesEdicion';
+import type { ISolicitudEdicion, SolicitudEdicionTipo } from '../../solicitudes/types/solicitudesEdicion';
 import { getSolicitudesEdicion } from '../../solicitudes/services/solicitudesEdicionService';
 import type { UseNotificacionesDataResult } from '../types/notificacionesTypes';
 import type { Scope } from '../types/notificacionesTypes';
@@ -65,11 +65,11 @@ export const useNotificacionesData = ({
     } finally {
       setLoading(false);
     }
-  }, [scope, allowedTipos, entityType, refreshTrigger]);
+  }, [scope, allowedTipos]);
 
   useEffect(() => {
     fetchSolicitudes();
-  }, [fetchSolicitudes]);
+  }, [fetchSolicitudes, refreshTrigger]);
 
   // Auto-refresh cada 30 segundos
   useEffect(() => {
