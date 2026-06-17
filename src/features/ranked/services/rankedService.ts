@@ -216,3 +216,21 @@ export async function cleanupGhostPlayers(params: { competition?: string; season
     body: params,
   });
 }
+
+// ── BROADCAST ROOMS ──────────────────────────────────────────────────────
+export interface BroadcastRoom {
+  roomId: string;
+  matchId: string | null;
+  label: string;
+}
+
+export async function getRooms() {
+  return authFetch<BroadcastRoom[]>('/api/rooms');
+}
+
+export async function assignMatchToRoom(roomId: string, matchId: string | null) {
+  return authFetch<{ ok: boolean; roomId: string; matchId: string | null }>(`/api/rooms/${encodeURIComponent(roomId)}/assign`, {
+    method: 'POST',
+    body: { matchId },
+  });
+}

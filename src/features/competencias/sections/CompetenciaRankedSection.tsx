@@ -1,17 +1,20 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
-import { 
-  getLeaderboard, 
-  markMatchAsRanked, 
+import {
+  getLeaderboard,
+  markMatchAsRanked,
   getRankedMatch as getLeaderboardMatch,
-  listJugadores, 
+  listJugadores,
   crearJugador,
-  revertMatch, 
-  resetAllRankings, 
-  resetScopeRankings, 
+  revertMatch,
+  resetAllRankings,
+  resetScopeRankings,
   recalculateGlobalRankings,
   recalculateScopeRankings,
   syncAllWins,
-  cleanupGhostPlayers
+  cleanupGhostPlayers,
+  getRooms,
+  assignMatchToRoom,
+  type BroadcastRoom
 } from '../../ranked/services/rankedService';
 import { 
   crearJugadorCompetencia, 
@@ -78,6 +81,11 @@ export default function CompetenciaRankedSection({
   const [recentMatchesLimit, setRecentMatchesLimit] = useState<number>(5);
   const [recentMatchesTotal, setRecentMatchesTotal] = useState<number>(0);
   const [lbScope, setLbScope] = useState<'competition' | 'global'>('competition');
+
+  // Broadcast rooms
+  const [broadcastRoom, setBroadcastRoom] = useState<string>('cancha-1');
+  const [rooms, setRooms] = useState<BroadcastRoom[]>([]);
+  const PARTIDO_URL = process.env.REACT_APP_PARTIDO_URL || 'http://localhost:3000';
 
   // Temporadas
   const [temporadas, setTemporadas] = useState<BackendTemporada[]>([]);
@@ -397,6 +405,12 @@ export default function CompetenciaRankedSection({
     fetchRecentMatches();
   }, [fetchLeaderboard, fetchRecentMatches]);
 
+  useEffect(() => {
+    getRooms().then(setRooms).catch(() => {});
+    const interval = setInterval(() => getRooms().then(setRooms).catch(() => {}), 15000);
+    return () => clearInterval(interval);
+  }, []);
+
   const toggleSelect = (id: string) => {
     setSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   };
@@ -669,9 +683,9 @@ export default function CompetenciaRankedSection({
 
           <div className="flex-1 flex items-end">
             {!matchId ? (
-              <Button 
-                variant="primary" 
-                onClick={onCreateMatch} 
+              <Button
+                variant="primary"
+                onClick={onCreateMatch}
                 disabled={busy || !modalidad || !categoria}
                 className="w-full sm:w-auto px-6 whitespace-nowrap"
               >
@@ -688,6 +702,65 @@ export default function CompetenciaRankedSection({
                  </div>
               </div>
             )}
+          </div>
+        </div>
+
+        {/* Broadcast row */}
+        <div className="mt-3 pt-3 border-t border-slate-100 flex flex-wrap items-center gap-2">
+          <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400 shrink-0">Broadcast</span>
+          <div className="flex items-center gap-1">
+            <input
+              list="rooms-datalist"
+              value={broadcastRoom}
+              onChange={e => setBroadcastRoom(e.target.value)}
+              placeholder="nombre-sala"
+              className="h-7 w-28 rounded border border-slate-200 px-2 text-xs outline-none focus:ring-1 focus:ring-brand-500"
+            />
+            <datalist id="rooms-datalist">
+              {rooms.map(r => <option key={r.roomId} value={r.roomId} />)}
+              <option value="cancha-1" />
+              <option value="cancha-2" />
+              <option value="cancha-3" />
+            </datalist>
+            {matchId && (
+              <button
+                type="button"
+                onClick={async () => {
+                  if (!broadcastRoom.trim()) return;
+                  try {
+                    await assignMatchToRoom(broadcastRoom.trim(), matchId);
+                    setSuccess(`Partido asignado a "${broadcastRoom}"`);
+                    getRooms().then(setRooms).catch(() => {});
+                  } catch (e: any) {
+                    setError(e.message || 'Error asignando sala');
+                  }
+                }}
+                disabled={busy || !broadcastRoom.trim()}
+                className="h-7 px-2 rounded bg-brand-600 text-white text-[10px] font-bold hover:bg-brand-700 disabled:opacity-50 whitespace-nowrap"
+              >
+                Asignar
+              </button>
+            )}
+          </div>
+          <div className="flex items-center gap-1.5 ml-auto">
+            <a
+              href={`${PARTIDO_URL}/overlay?room=${encodeURIComponent(broadcastRoom || 'cancha-1')}&transparent=true`}
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center gap-1 h-7 px-2.5 rounded border border-slate-200 text-[10px] font-bold text-slate-600 hover:bg-slate-50 hover:border-slate-300 transition-colors whitespace-nowrap"
+              title="Abrir overlay OBS (fondo transparente)"
+            >
+              🖥 Overlay
+            </a>
+            <a
+              href={`${PARTIDO_URL}/broadcast?room=${encodeURIComponent(broadcastRoom || 'cancha-1')}`}
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center gap-1 h-7 px-2.5 rounded border border-slate-200 text-[10px] font-bold text-slate-600 hover:bg-slate-50 hover:border-slate-300 transition-colors whitespace-nowrap"
+              title="Abrir consola de broadcast"
+            >
+              📺 Broadcast
+            </a>
           </div>
         </div>
       </Card>
