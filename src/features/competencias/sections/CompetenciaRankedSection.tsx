@@ -75,7 +75,7 @@ export default function CompetenciaRankedSection({
   const [showAll, setShowAll] = useState<boolean>(false);
   const [priorizarNoJugados, setPriorizarNoJugados] = useState<boolean>(true);
   const [recentMatches, setRecentMatches] = useState<any[]>([]);
-  const [recentMatchesLimit, setRecentMatchesLimit] = useState<number>(50);
+  const [recentMatchesLimit, setRecentMatchesLimit] = useState<number>(5);
   const [recentMatchesTotal, setRecentMatchesTotal] = useState<number>(0);
   const [lbScope, setLbScope] = useState<'competition' | 'global'>('competition');
 
@@ -857,7 +857,7 @@ export default function CompetenciaRankedSection({
                   recentMatches={recentMatches}
                   onEditResult={handleEditResult}
                   hasMoreRecentMatches={recentMatchesTotal > recentMatches.length}
-                  onLoadMoreRecentMatches={() => setRecentMatchesLimit(prev => prev + 50)}
+                  onLoadMoreRecentMatches={() => setRecentMatchesLimit(prev => prev + 5)}
                 />
               </div>
             </div>

@@ -283,10 +283,10 @@ export const RankedPlayerSelector: React.FC<RankedPlayerSelectorProps> = ({
         <div className="flex flex-col gap-2">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <span className="text-xs font-medium text-slate-600 text-center sm:text-left">Seleccionados: {selected.length}</span>
-            <Button 
-              size="sm" 
+            <Button
+              size="sm"
               variant="outline"
-              disabled={busy || !matchActive || selected.length < 2} 
+              disabled={busy || !matchActive || selected.length < 2}
               onClick={onAutoAssign}
               className="text-[10px] py-1 h-auto"
             >
