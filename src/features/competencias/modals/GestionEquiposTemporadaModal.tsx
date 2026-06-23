@@ -34,7 +34,8 @@ export default function GestionEquiposTemporadaModal({
   const [equipoSearch, setEquipoSearch] = useState('');
   const [equipoOptions, setEquipoOptions] = useState<EquipoDisponibleOpcion[]>([]);
   const [equipoSeleccionado, setEquipoSeleccionado] = useState<{ id: string; nombre: string } | null>(null);
-  const [solicitudes, setSolicitudes] = useState<SolicitudEdicion[]>([]);
+  const [solicitudesAprobables, setSolicitudesAprobables] = useState<SolicitudEdicion[]>([]);
+  const [solicitudesPropias, setSolicitudesPropias] = useState<SolicitudEdicion[]>([]);
   const [loadingSolicitudes, setLoadingSolicitudes] = useState(false);
   const { addToast } = useToast();
 
@@ -42,13 +43,13 @@ export default function GestionEquiposTemporadaModal({
     if (!temporadaId || !isOpen) return;
     try {
       setLoadingSolicitudes(true);
-      const data = await getSolicitudesEdicion({ 
-        tipo: 'participacion-temporada-crear', 
-        estado: 'pendiente' 
-      });
-      // Filtramos las que pertenecen a esta temporadaId
-      const filtradas = data.solicitudes.filter(s => s.datosPropuestos?.temporadaId === temporadaId);
-      setSolicitudes(filtradas.map(s => ({ ...s, id: s._id })));
+      const [aprobables, propias] = await Promise.all([
+        getSolicitudesEdicion({ tipo: 'participacion-temporada-crear', estado: 'pendiente', scope: 'aprobables' } as any),
+        getSolicitudesEdicion({ tipo: 'participacion-temporada-crear', estado: 'pendiente', scope: 'mine' } as any),
+      ]);
+      const porTemporada = (s: SolicitudEdicion) => s.datosPropuestos?.temporadaId === temporadaId;
+      setSolicitudesAprobables(aprobables.solicitudes.filter(porTemporada).map(s => ({ ...s, id: s._id })));
+      setSolicitudesPropias(propias.solicitudes.filter(porTemporada).map(s => ({ ...s, id: s._id })));
     } catch (error) {
       console.error('Error cargando solicitudes:', error);
     } finally {
@@ -65,14 +66,9 @@ export default function GestionEquiposTemporadaModal({
   const handleResolverSolicitud = async (id: string, estado: 'aceptado' | 'rechazado') => {
     try {
       await actualizarSolicitudEdicion(id, { estado });
-      addToast({ 
-        type: 'success', 
-        title: estado === 'aceptado' ? 'Solicitud aprobada' : 'Solicitud rechazada' 
-      });
+      addToast({ type: 'success', title: estado === 'aceptado' ? 'Solicitud aprobada' : 'Solicitud rechazada' });
       await cargarSolicitudes();
-      if (estado === 'aceptado' && onRefresh) {
-        await onRefresh();
-      }
+      if (estado === 'aceptado' && onRefresh) await onRefresh();
     } catch (error: any) {
       addToast({ type: 'error', title: 'Error', message: error.message });
     }
@@ -95,17 +91,17 @@ export default function GestionEquiposTemporadaModal({
       title="Equipos en temporada"
       message={
         <div className="space-y-6">
-          {/* SECCIÓN DE SOLICITUDES PENDIENTES */}
-          {solicitudes.length > 0 && (
+          {/* Solicitudes que el DT inició — yo puedo aprobar */}
+          {solicitudesAprobables.length > 0 && (
             <div className="rounded-xl border border-brand-200 bg-brand-50/30 p-4">
               <h4 className="flex items-center gap-2 text-sm font-bold text-brand-700 uppercase tracking-tight mb-3">
                 <span className="flex h-5 w-5 items-center justify-center rounded-full bg-brand-100 text-[10px]">
-                  {solicitudes.length}
+                  {solicitudesAprobables.length}
                 </span>
-                Solicitudes de ingreso
+                Solicitudes de ingreso pendientes
               </h4>
               <ul className="space-y-2">
-                {solicitudes.map((s) => (
+                {solicitudesAprobables.map((s) => (
                   <li key={s.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-3 rounded-lg border border-brand-100 shadow-sm">
                     <div className="flex flex-col">
                       <span className="font-bold text-slate-900 leading-tight">
@@ -116,14 +112,14 @@ export default function GestionEquiposTemporadaModal({
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <button 
+                      <button
                         className="rounded-lg bg-green-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-green-700 transition shadow-sm"
                         onClick={() => handleResolverSolicitud(s.id, 'aceptado')}
                         disabled={!esAdmin}
                       >
                         Aprobar
                       </button>
-                      <button 
+                      <button
                         className="rounded-lg bg-white px-3 py-1.5 text-xs font-bold text-rose-600 border border-rose-200 hover:bg-rose-50 transition"
                         onClick={() => handleResolverSolicitud(s.id, 'rechazado')}
                         disabled={!esAdmin}
@@ -131,6 +127,32 @@ export default function GestionEquiposTemporadaModal({
                         Rechazar
                       </button>
                     </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Inscripciones que yo inicié — esperando confirmación del equipo */}
+          {solicitudesPropias.length > 0 && (
+            <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4">
+              <h4 className="text-sm font-bold text-slate-500 uppercase tracking-tight mb-3">
+                Esperando confirmación del equipo
+              </h4>
+              <ul className="space-y-2">
+                {solicitudesPropias.map((s) => (
+                  <li key={s.id} className="flex items-center justify-between gap-3 bg-white p-3 rounded-lg border border-slate-100 shadow-sm">
+                    <div className="flex flex-col">
+                      <span className="font-bold text-slate-700 leading-tight">
+                        {s.datosPropuestos?.equipoNombre || s.datosPropuestos?.equipoId || 'Equipo'}
+                      </span>
+                      <span className="text-[10px] text-slate-400 uppercase font-medium">
+                        Enviado {new Date(s.createdAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <span className="rounded-full bg-amber-50 px-2.5 py-1 text-[10px] font-bold text-amber-700 uppercase tracking-wide border border-amber-100">
+                      Pendiente
+                    </span>
                   </li>
                 ))}
               </ul>
