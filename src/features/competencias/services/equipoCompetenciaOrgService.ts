@@ -31,5 +31,6 @@ export async function getEquiposAceptadosPorCompetencia(competenciaId: string): 
   const params = new URLSearchParams();
   params.set('competencia', competenciaId);
   params.set('estado', 'aceptado');
-  return authFetch<EquipoCompetenciaVinculo[]>(`/equipos-competencia?${params.toString()}`);
+  const todos = await authFetch<EquipoCompetenciaVinculo[]>(`/equipos-competencia?${params.toString()}`);
+  return todos.filter(ec => !ec.estado || ec.estado === 'aceptado');
 }
