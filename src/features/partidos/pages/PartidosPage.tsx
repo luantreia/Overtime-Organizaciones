@@ -7,6 +7,7 @@ import {
 } from '../services/partidoService';
 import type { JugadorPartido, Partido } from '../../../types';
 import { ModalPartidoAdmin } from '../components';
+import CalendarioPartidos from '../components/CalendarioPartidos';
 import { useToken } from '../../../app/providers/AuthContext';
 // Eliminado: ModalCrearPartido (no se crean partidos desde esta página)
 import ModalAlineacionPartido from '../components/modals/ModalAlineacionPartido';
@@ -38,6 +39,7 @@ const PartidosPage = () => {
   const [competenciaId, setCompetenciaId] = useState<string>('');
   const [temporadaId, setTemporadaId] = useState<string>('');
   const [faseId, setFaseId] = useState<string>('');
+  const [vista, setVista] = useState<'lista' | 'calendario'>('lista');
 
   const refreshPartidos = useCallback(async () => {
     try {
@@ -152,11 +154,29 @@ const PartidosPage = () => {
 
   return (
     <div className="space-y-8">
-      <header className="flex flex-col gap-2">
-        <h1 className="text-2xl font-semibold text-slate-900">Partidos</h1>
-        <p className="text-sm text-slate-500">
-          Gestioná los encuentros de las competencias de {organizacionSeleccionada?.nombre}
-        </p>
+      <header className="flex items-start justify-between gap-4">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-2xl font-semibold text-slate-900">Partidos</h1>
+          <p className="text-sm text-slate-500">
+            Gestioná los encuentros de las competencias de {organizacionSeleccionada?.nombre}
+          </p>
+        </div>
+        <div className="flex rounded-lg border border-slate-200 bg-white p-0.5 shadow-sm">
+          <button
+            type="button"
+            onClick={() => setVista('lista')}
+            className={`rounded-md px-3 py-1.5 text-xs font-medium transition ${vista === 'lista' ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}
+          >
+            Lista
+          </button>
+          <button
+            type="button"
+            onClick={() => setVista('calendario')}
+            className={`rounded-md px-3 py-1.5 text-xs font-medium transition ${vista === 'calendario' ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}
+          >
+            Calendario
+          </button>
+        </div>
       </header>
 
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-card">
@@ -241,83 +261,88 @@ const PartidosPage = () => {
         onClose={handleCerrarInformacion}
       />
 
-      {/* Lista única con paginación */}
-      <section className="space-y-4">
-        <header className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-slate-900">Todos los partidos filtrados</h2>
-          <span className="text-xs uppercase tracking-wide text-slate-400">{todos.length} en total</span>
-        </header>
-        {loading ? (
-          <div className="space-y-3">
-            {Array.from({ length: 4 }).map((_, index) => (
-              <div key={index} className="h-32 animate-pulse rounded-2xl bg-slate-200" />
-            ))}
-          </div>
-        ) : todos.length ? (
-          <>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {todos.slice((page - 1) * pageSize, page * pageSize).map((partido) => (
-                <PartidoCard
-                  key={partido.id}
-                  partido={partido}
-                  variante={partido.resultado ? 'resultado' : 'proximo'}
-                  actions={
-                    <>
-                      <button
-                        type="button"
-                        onClick={() => handleAbrirAlineacion(partido.id)}
-                        className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:border-slate-300 hover:text-slate-900"
-                      >
-                        🏐 Alineación
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleAbrirInformacion(partido.id)}
-                        className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:border-slate-300 hover:text-slate-900"
-                      >
-                        🖊️ Datos
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleSeleccionar(partido.id)}
-                        className="inline-flex items-center gap-1 rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-brand-700"
-                      >
-                        📊 Estadísticas
-                      </button>
-                    </>
-                  }
-                />
+      {vista === 'calendario' ? (
+        loading ? (
+          <div className="h-96 animate-pulse rounded-2xl bg-slate-100" />
+        ) : (
+          <CalendarioPartidos partidos={todos} onSeleccionar={handleSeleccionar} />
+        )
+      ) : (
+        /* Lista única con paginación */
+        <section className="space-y-4">
+          <header className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-slate-900">Todos los partidos filtrados</h2>
+            <span className="text-xs uppercase tracking-wide text-slate-400">{todos.length} en total</span>
+          </header>
+          {loading ? (
+            <div className="space-y-3">
+              {Array.from({ length: 4 }).map((_, index) => (
+                <div key={index} className="h-32 animate-pulse rounded-2xl bg-slate-200" />
               ))}
             </div>
-            {/* Paginación */}
-            <div className="mt-4 flex items-center justify-between">
-              <button
-                type="button"
-                className="rounded border border-slate-200 px-3 py-1.5 text-xs hover:bg-slate-50 disabled:opacity-50"
-                onClick={() => setPage(p => Math.max(1, p - 1))}
-                disabled={page === 1}
-              >
-                ← Anterior
-              </button>
-              <div className="flex items-center gap-2 text-xs text-slate-600">
-                <span>Página {page} de {Math.max(1, Math.ceil(todos.length / pageSize))}</span>
+          ) : todos.length ? (
+            <>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {todos.slice((page - 1) * pageSize, page * pageSize).map((partido) => (
+                  <PartidoCard
+                    key={partido.id}
+                    partido={partido}
+                    variante={partido.resultado ? 'resultado' : 'proximo'}
+                    actions={
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => handleAbrirAlineacion(partido.id)}
+                          className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:border-slate-300 hover:text-slate-900"
+                        >
+                          🏐 Alineación
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleAbrirInformacion(partido.id)}
+                          className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:border-slate-300 hover:text-slate-900"
+                        >
+                          🖊️ Datos
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleSeleccionar(partido.id)}
+                          className="inline-flex items-center gap-1 rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-brand-700"
+                        >
+                          📊 Estadísticas
+                        </button>
+                      </>
+                    }
+                  />
+                ))}
               </div>
-              <button
-                type="button"
-                className="rounded border border-slate-200 px-3 py-1.5 text-xs hover:bg-slate-50 disabled:opacity-50"
-                onClick={() => setPage(p => Math.min(Math.ceil(todos.length / pageSize), p + 1))}
-                disabled={page >= Math.ceil(todos.length / pageSize)}
-              >
-                Siguiente →
-              </button>
-            </div>
-          </>
-        ) : (
-          <p className="rounded-xl border border-dashed border-slate-200 px-4 py-6 text-sm text-slate-500">
-            No hay partidos para los filtros seleccionados.
-          </p>
-        )}
-      </section>
+              <div className="mt-4 flex items-center justify-between">
+                <button
+                  type="button"
+                  className="rounded border border-slate-200 px-3 py-1.5 text-xs hover:bg-slate-50 disabled:opacity-50"
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                >
+                  ← Anterior
+                </button>
+                <span className="text-xs text-slate-600">Página {page} de {Math.max(1, Math.ceil(todos.length / pageSize))}</span>
+                <button
+                  type="button"
+                  className="rounded border border-slate-200 px-3 py-1.5 text-xs hover:bg-slate-50 disabled:opacity-50"
+                  onClick={() => setPage(p => Math.min(Math.ceil(todos.length / pageSize), p + 1))}
+                  disabled={page >= Math.ceil(todos.length / pageSize)}
+                >
+                  Siguiente →
+                </button>
+              </div>
+            </>
+          ) : (
+            <p className="rounded-xl border border-dashed border-slate-200 px-4 py-6 text-sm text-slate-500">
+              No hay partidos para los filtros seleccionados.
+            </p>
+          )}
+        </section>
+      )}
     </div>
   );
 };

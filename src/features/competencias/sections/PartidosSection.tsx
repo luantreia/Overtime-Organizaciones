@@ -6,6 +6,7 @@ import { ModalPartidoAdmin } from '../../partidos/components';
 import ModalAlineacionPartido from '../../partidos/components/modals/ModalAlineacionPartido';
 import ModalInformacionPartido from '../../partidos/components/modals/ModalInformacionPartido';
 import ModalBulkEditFechasPartidos from '../../partidos/components/modals/ModalBulkEditFechasPartidos';
+import CalendarioPartidos from '../../partidos/components/CalendarioPartidos';
 import { useToken } from '../../../app/providers/AuthContext';
 
 type Props = {
@@ -43,6 +44,7 @@ export default function PartidosSection({
   const [infoModalAbierto, setInfoModalAbierto] = useState(false);
   const [partidoInfoId, setPartidoInfoId] = useState<string | null>(null);
   const [bulkEditAbierto, setBulkEditAbierto] = useState(false);
+  const [vista, setVista] = useState<'lista' | 'calendario'>('lista');
 
   const handleSeleccionar = (id: string) => {
     setPartidoAdminId(id);
@@ -106,14 +108,30 @@ export default function PartidosSection({
                 onChange={(e) => setFiltroEstado(e.target.value)}
               >
                 <option value="">Todos los estados</option>
-                <option value="pendiente">Pendiente</option>
-                <option value="confirmado">Confirmado</option>
+                <option value="programado">Programado</option>
+                <option value="en_juego">En juego</option>
                 <option value="finalizado">Finalizado</option>
                 <option value="cancelado">Cancelado</option>
               </select>
             </label>
           </div>
           <div className="flex items-center justify-end gap-2">
+            <div className="flex rounded-lg border border-slate-200 bg-white p-0.5">
+              <button
+                type="button"
+                onClick={() => setVista('lista')}
+                className={`rounded-md px-3 py-1 text-xs font-medium transition ${vista === 'lista' ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}
+              >
+                Lista
+              </button>
+              <button
+                type="button"
+                onClick={() => setVista('calendario')}
+                className={`rounded-md px-3 py-1 text-xs font-medium transition ${vista === 'calendario' ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}
+              >
+                Calendario
+              </button>
+            </div>
             <button
               type="button"
               onClick={() => setBulkEditAbierto(true)}
@@ -131,7 +149,9 @@ export default function PartidosSection({
         </div>
       </div>
 
-      {partidosFiltrados.length === 0 ? (
+      {vista === 'calendario' ? (
+        <CalendarioPartidos partidos={partidosFiltrados} onSeleccionar={handleSeleccionar} />
+      ) : partidosFiltrados.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 py-12 text-center">
           <p className="text-sm text-slate-500">No hay partidos con estos criterios.</p>
         </div>
