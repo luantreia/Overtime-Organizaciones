@@ -338,6 +338,7 @@ const CompetenciaDetallePage = () => {
         <EstructuraSection
           esAdmin={esAdmin}
           loading={loading}
+          competenciaId={competenciaId}
           onRefresh={loadAll}
           onSubmitCrearTemporada={crearTemporadaHandler}
           temporadas={temporadas}

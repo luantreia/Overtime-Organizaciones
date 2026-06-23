@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import ConfirmModal from '../../../shared/components/ConfirmModal/ConfirmModal';
 import type { BackendParticipacionTemporada } from '../services';
 import { opcionesEquiposParaTemporada, type EquipoDisponibleOpcion } from '../services/participacionTemporadaService';
+import { getEquiposAceptadosPorCompetencia, type EquipoCompetenciaVinculo } from '../services/equipoCompetenciaOrgService';
 import { getSolicitudesEdicion, actualizarSolicitudEdicion } from '../../../shared/features/solicitudes/services/solicitudesEdicionService';
 import type { SolicitudEdicion, ISolicitudEdicion } from '../../../shared/features/solicitudes/types/solicitudesEdicion';
 import { useToast } from '../../../shared/components/Toast/ToastProvider';
@@ -10,6 +11,7 @@ type Props = {
   isOpen: boolean;
   onClose: () => void;
   esAdmin: boolean;
+  competenciaId: string;
   temporadaId: string;
   participaciones: BackendParticipacionTemporada[];
   onUpdateParticipacionTemporada: (id: string, body: Partial<{ estado: string }>) => void | Promise<void>;
@@ -19,17 +21,18 @@ type Props = {
   onRefresh?: () => void | Promise<void>;
 };
 
-export default function GestionEquiposTemporadaModal({ 
-  isOpen, 
-  onClose, 
-  esAdmin, 
-  temporadaId, 
-  participaciones, 
-  onUpdateParticipacionTemporada, 
-  onDeleteParticipacionTemporada, 
-  onCrearSolicitudParticipacionTemporada, 
+export default function GestionEquiposTemporadaModal({
+  isOpen,
+  onClose,
+  esAdmin,
+  competenciaId,
+  temporadaId,
+  participaciones,
+  onUpdateParticipacionTemporada,
+  onDeleteParticipacionTemporada,
+  onCrearSolicitudParticipacionTemporada,
   onOpenJugadores,
-  onRefresh 
+  onRefresh
 }: Props) {
   const [equipoSearch, setEquipoSearch] = useState('');
   const [equipoOptions, setEquipoOptions] = useState<EquipoDisponibleOpcion[]>([]);
@@ -37,6 +40,8 @@ export default function GestionEquiposTemporadaModal({
   const [solicitudesAprobables, setSolicitudesAprobables] = useState<SolicitudEdicion[]>([]);
   const [solicitudesPropias, setSolicitudesPropias] = useState<SolicitudEdicion[]>([]);
   const [loadingSolicitudes, setLoadingSolicitudes] = useState(false);
+  const [sugeridos, setSugeridos] = useState<EquipoCompetenciaVinculo[]>([]);
+  const [enviando, setEnviando] = useState<string | null>(null);
   const { addToast } = useToast();
 
   const cargarSolicitudes = useCallback(async () => {
@@ -60,8 +65,13 @@ export default function GestionEquiposTemporadaModal({
   useEffect(() => {
     if (isOpen) {
       cargarSolicitudes();
+      if (competenciaId) {
+        getEquiposAceptadosPorCompetencia(competenciaId)
+          .then(setSugeridos)
+          .catch(() => setSugeridos([]));
+      }
     }
-  }, [isOpen, cargarSolicitudes]);
+  }, [isOpen, cargarSolicitudes, competenciaId]);
 
   const handleResolverSolicitud = async (id: string, estado: 'aceptado' | 'rechazado') => {
     try {
@@ -186,6 +196,55 @@ export default function GestionEquiposTemporadaModal({
               {loadingSolicitudes && <li className="py-4 text-center text-xs text-slate-400 animate-pulse">Buscando solicitudes...</li>}
             </ul>
           </div>
+
+          {/* Sugeridos de la competencia */}
+          {(() => {
+            const yaInscritos = new Set(participaciones.map(pt =>
+              typeof pt.equipo === 'string' ? pt.equipo : ((pt.equipo as any)?._id ?? '')
+            ));
+            const disponibles = sugeridos.filter(ec => {
+              const id = typeof ec.equipo === 'string' ? ec.equipo : ((ec.equipo as any)?._id ?? '');
+              return id && !yaInscritos.has(id);
+            });
+            if (disponibles.length === 0) return null;
+            return (
+              <div className="rounded-xl border border-brand-100 bg-brand-50/40 p-4">
+                <h4 className="text-xs font-bold text-brand-600 uppercase tracking-widest mb-3">
+                  Equipos de la competencia — agregar a temporada
+                </h4>
+                <div className="flex flex-wrap gap-2">
+                  {disponibles.map(ec => {
+                    const eqId   = typeof ec.equipo === 'string' ? ec.equipo : ((ec.equipo as any)?._id ?? '');
+                    const nombre = typeof ec.equipo === 'string' ? ec.equipo : ((ec.equipo as any)?.nombre ?? 'Equipo');
+                    const isSending = enviando === eqId;
+                    return (
+                      <button
+                        key={ec._id}
+                        type="button"
+                        disabled={!esAdmin || isSending}
+                        onClick={async () => {
+                          if (!eqId) return;
+                          setEnviando(eqId);
+                          try {
+                            await onCrearSolicitudParticipacionTemporada(temporadaId, eqId);
+                            setSugeridos(prev => prev.filter(s => {
+                              const sid = typeof s.equipo === 'string' ? s.equipo : ((s.equipo as any)?._id ?? '');
+                              return sid !== eqId;
+                            }));
+                          } finally {
+                            setEnviando(null);
+                          }
+                        }}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-brand-200 bg-white px-3 py-1.5 text-xs font-semibold text-brand-700 shadow-sm transition hover:bg-brand-50 disabled:opacity-50"
+                      >
+                        {isSending ? '…' : '+ '}{nombre}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })()}
 
           <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4">
             <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Inscripción manual</h4>

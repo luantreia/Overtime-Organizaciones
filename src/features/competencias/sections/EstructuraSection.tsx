@@ -126,6 +126,7 @@ function PlayoffBracketOverview({ faseId }: { faseId: string }) {
 type Props = {
   esAdmin: boolean;
   loading: boolean;
+  competenciaId: string;
   onRefresh?: () => void | Promise<void>;
   onSubmitCrearTemporada: (payload: { nombre: string; fechaInicio: string; fechaFin?: string }) => void | Promise<void>;
   temporadas: BackendTemporada[];
@@ -163,7 +164,7 @@ type Props = {
 
 export default function EstructuraSection(props: Props) {
   const {
-    esAdmin, loading, onRefresh,
+    esAdmin, loading, competenciaId, onRefresh,
     onSubmitCrearTemporada, temporadas, fasesPorTemporada, onSubmitCrearFase,
     onEditarTemporada, onAsignarCampeon, onEliminarTemporada, onGenerarFixture,
     onEditarFase, onEliminarFase,
@@ -840,6 +841,7 @@ export default function EstructuraSection(props: Props) {
         onClose={() => setOpenGestionEquipos({ open: false })}
         esAdmin={esAdmin}
         onRefresh={onRefresh}
+        competenciaId={competenciaId}
         temporadaId={openGestionEquipos.temporadaId || ''}
         participaciones={openGestionEquipos.temporadaId ? (participacionesTemporadaPorId[openGestionEquipos.temporadaId] || []) : []}
         onUpdateParticipacionTemporada={onUpdateParticipacionTemporada}

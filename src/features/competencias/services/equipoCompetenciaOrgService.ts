@@ -20,3 +20,16 @@ export async function getSolicitudesPorCompetencia(competenciaId: string, estado
   if (estado) params.set('estado', estado);
   return authFetch<SolicitudEquipoCompetencia[]>(`/equipos-competencia/solicitudes?${params.toString()}`);
 }
+
+export type EquipoCompetenciaVinculo = {
+  _id: string;
+  equipo: { _id: string; nombre?: string } | string;
+  estado?: string;
+};
+
+export async function getEquiposAceptadosPorCompetencia(competenciaId: string): Promise<EquipoCompetenciaVinculo[]> {
+  const params = new URLSearchParams();
+  params.set('competencia', competenciaId);
+  params.set('estado', 'aceptado');
+  return authFetch<EquipoCompetenciaVinculo[]>(`/equipos-competencia?${params.toString()}`);
+}
