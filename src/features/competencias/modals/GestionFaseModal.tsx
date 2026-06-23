@@ -76,18 +76,30 @@ export default function GestionParticipantesFaseModal({
   const [partidosEnCola, setPartidosEnCola] = useState<any[]>([]);
   const [sugerencias, setSugerencias] = useState<any[]>([]);
 
-  // Quick Edit States
-  const [quickEditId, setQuickEditId] = useState<string | null>(null);
-  const [quickLocal, setQuickLocal] = useState<number>(0);
-  const [quickVisitante, setQuickVisitante] = useState<number>(0);
-  const [quickFinalizar, setQuickFinalizar] = useState(true);
-  const [isSavingQuick, setIsSavingQuick] = useState(false);
+  // Quick Edit States — one entry per partido, supports simultaneous edits
+  type QuickEntry = { local: number; visitante: number; finalizar: boolean; saving: boolean };
+  const [quickEdits, setQuickEdits] = useState<Map<string, QuickEntry>>(new Map());
 
   const openQuickEdit = (p: Partido) => {
-    setQuickEditId(p.id);
-    setQuickLocal(p.marcadorLocal ?? 0);
-    setQuickVisitante(p.marcadorVisitante ?? 0);
-    setQuickFinalizar(p.estado !== 'en_juego');
+    setQuickEdits(prev => {
+      const next = new Map(prev);
+      next.set(p.id, { local: p.marcadorLocal ?? 0, visitante: p.marcadorVisitante ?? 0, finalizar: p.estado !== 'en_juego', saving: false });
+      return next;
+    });
+  };
+
+  const closeQuickEdit = (id: string) => {
+    setQuickEdits(prev => { const next = new Map(prev); next.delete(id); return next; });
+  };
+
+  const patchQuickEdit = (id: string, patch: Partial<QuickEntry>) => {
+    setQuickEdits(prev => {
+      const entry = prev.get(id);
+      if (!entry) return prev;
+      const next = new Map(prev);
+      next.set(id, { ...entry, ...patch });
+      return next;
+    });
   };
 
   // Paginación de partidos
@@ -136,25 +148,26 @@ export default function GestionParticipantesFaseModal({
   };
 
   const handleSaveQuickScore = async (partidoId: string) => {
+    const entry = quickEdits.get(partidoId);
+    if (!entry) return;
+    patchQuickEdit(partidoId, { saving: true });
     try {
-      setIsSavingQuick(true);
       await actualizarPartido(partidoId, {
-        marcadorLocal: quickLocal,
-        marcadorVisitante: quickVisitante,
+        marcadorLocal: entry.local,
+        marcadorVisitante: entry.visitante,
         marcadorModificadoManualmente: true,
-        estado: quickFinalizar ? 'finalizado' : 'en_juego',
+        estado: entry.finalizar ? 'finalizado' : 'en_juego',
       });
-      setQuickEditId(null);
-      setNotice(quickFinalizar ? '✅ Resultado guardado' : '✅ Marcador actualizado');
+      closeQuickEdit(partidoId);
+      setNotice(entry.finalizar ? '✅ Resultado guardado' : '✅ Marcador actualizado');
       setTimeout(() => setNotice(''), 2500);
       await refrescarPartidos();
       onRefresh?.();
     } catch (error) {
       console.error('Error actualizando marcador:', error);
+      patchQuickEdit(partidoId, { saving: false });
       setNotice('❌ Error al guardar');
       setTimeout(() => setNotice(''), 3000);
-    } finally {
-      setIsSavingQuick(false);
     }
   };
 
@@ -317,7 +330,8 @@ export default function GestionParticipantesFaseModal({
   };
 
   const renderMatchCard = (p: Partido) => {
-    const isEditing = quickEditId === p.id;
+    const entry = quickEdits.get(p.id);
+    const isEditing = !!entry;
     const esProgramado = p.estado === 'programado';
     return (
     <li key={p.id} className={`group relative flex flex-col rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:shadow-md ${borderByEstado(p.estado)}`}>
@@ -350,16 +364,16 @@ export default function GestionParticipantesFaseModal({
         <span className="flex-1 text-center text-sm font-bold text-slate-900 line-clamp-2 leading-tight">{p.localNombre || 'Local'}</span>
 
         <div className="shrink-0 px-2">
-          {isEditing ? (
+          {isEditing && entry ? (
             <div className="flex flex-col items-center gap-2">
               <div className="flex items-center gap-1.5">
                 <input
                   type="number"
                   min={0}
                   className="w-12 h-10 rounded-lg bg-slate-900 text-white text-center font-black text-lg border border-brand-500 focus:ring-2 focus:ring-brand-500/40 outline-none"
-                  value={quickLocal}
-                  onChange={e => setQuickLocal(Math.max(0, parseInt(e.target.value) || 0))}
-                  onKeyDown={e => { if (e.key === 'Enter') void handleSaveQuickScore(p.id); if (e.key === 'Escape') setQuickEditId(null); }}
+                  value={entry.local}
+                  onChange={e => patchQuickEdit(p.id, { local: Math.max(0, parseInt(e.target.value) || 0) })}
+                  onKeyDown={e => { if (e.key === 'Enter') void handleSaveQuickScore(p.id); if (e.key === 'Escape') closeQuickEdit(p.id); }}
                   autoFocus
                 />
                 <span className="text-slate-400 font-bold text-sm">-</span>
@@ -367,23 +381,23 @@ export default function GestionParticipantesFaseModal({
                   type="number"
                   min={0}
                   className="w-12 h-10 rounded-lg bg-slate-900 text-white text-center font-black text-lg border border-brand-500 focus:ring-2 focus:ring-brand-500/40 outline-none"
-                  value={quickVisitante}
-                  onChange={e => setQuickVisitante(Math.max(0, parseInt(e.target.value) || 0))}
-                  onKeyDown={e => { if (e.key === 'Enter') void handleSaveQuickScore(p.id); if (e.key === 'Escape') setQuickEditId(null); }}
+                  value={entry.visitante}
+                  onChange={e => patchQuickEdit(p.id, { visitante: Math.max(0, parseInt(e.target.value) || 0) })}
+                  onKeyDown={e => { if (e.key === 'Enter') void handleSaveQuickScore(p.id); if (e.key === 'Escape') closeQuickEdit(p.id); }}
                 />
               </div>
               {/* Finalizar toggle */}
               <button
                 type="button"
-                onClick={() => setQuickFinalizar(v => !v)}
+                onClick={() => patchQuickEdit(p.id, { finalizar: !entry.finalizar })}
                 className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-bold uppercase transition-colors ${
-                  quickFinalizar
+                  entry.finalizar
                     ? 'bg-emerald-100 text-emerald-700 border border-emerald-200'
                     : 'bg-amber-50 text-amber-600 border border-amber-200'
                 }`}
               >
-                <span className={`h-1.5 w-1.5 rounded-full ${quickFinalizar ? 'bg-emerald-500' : 'bg-amber-400'}`} />
-                {quickFinalizar ? 'Finalizar partido' : 'Solo actualizar'}
+                <span className={`h-1.5 w-1.5 rounded-full ${entry.finalizar ? 'bg-emerald-500' : 'bg-amber-400'}`} />
+                {entry.finalizar ? 'Finalizar partido' : 'Solo actualizar'}
               </button>
             </div>
           ) : esProgramado ? (
@@ -418,19 +432,19 @@ export default function GestionParticipantesFaseModal({
 
       {/* Actions */}
       <div className="mt-3 flex items-center justify-center gap-2 pt-3 border-t border-slate-100">
-        {isEditing ? (
+        {isEditing && entry ? (
           <>
             <button
               className="rounded-lg bg-emerald-600 px-4 py-1.5 text-xs font-bold text-white hover:bg-emerald-700 transition shadow-sm disabled:opacity-60"
-              disabled={isSavingQuick}
+              disabled={entry.saving}
               onClick={() => void handleSaveQuickScore(p.id)}
             >
-              {isSavingQuick ? 'Guardando…' : 'Guardar'}
+              {entry.saving ? 'Guardando…' : 'Guardar'}
             </button>
             <button
               className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-200 transition"
-              disabled={isSavingQuick}
-              onClick={() => setQuickEditId(null)}
+              disabled={entry.saving}
+              onClick={() => closeQuickEdit(p.id)}
             >
               Cancelar
             </button>
