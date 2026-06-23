@@ -309,7 +309,7 @@ const PartidosPage = () => {
                           onClick={() => handleSeleccionar(partido.id)}
                           className="inline-flex items-center gap-1 rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-brand-700"
                         >
-                          📊 Estadísticas
+                          {partido.resultado ? 'Ver resultado' : 'Cargar resultado'}
                         </button>
                       </>
                     }

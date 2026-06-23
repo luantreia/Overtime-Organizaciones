@@ -66,7 +66,11 @@ export default function PartidosSection({
     setInfoModalAbierto(true);
   };
 
-  const partidosFiltrados = !filtroEstado ? partidos : partidos.filter((p) => p.estado === filtroEstado);
+  const partidosFiltrados = !filtroEstado
+    ? partidos
+    : filtroEstado === 'sin_resultado'
+    ? partidos.filter((p) => !p.resultado)
+    : partidos.filter((p) => p.estado === filtroEstado);
 
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-6 shadow-card">
@@ -108,6 +112,7 @@ export default function PartidosSection({
                 onChange={(e) => setFiltroEstado(e.target.value)}
               >
                 <option value="">Todos los estados</option>
+                <option value="sin_resultado">Sin resultado cargado</option>
                 <option value="programado">Programado</option>
                 <option value="en_juego">En juego</option>
                 <option value="finalizado">Finalizado</option>
@@ -183,7 +188,7 @@ export default function PartidosSection({
                     onClick={() => handleSeleccionar(p.id)}
                     className="flex-1 inline-flex items-center justify-center gap-1 rounded-lg bg-brand-600 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-brand-700"
                   >
-                    📊 Stats
+                    {p.resultado ? 'Ver resultado' : 'Cargar resultado'}
                   </button>
                 </div>
               }
