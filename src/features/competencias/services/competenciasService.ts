@@ -73,3 +73,51 @@ export async function removeCompetenciaAdministrador(id: string, adminUid: strin
 export async function getCompetenciaById(id: string): Promise<BackendCompetenciaDetalle> {
   return authFetch<BackendCompetenciaDetalle>(`/competencias/${id}`);
 }
+
+export type BackendFaseConParticipaciones = {
+  _id: string;
+  temporada: string;
+  nombre?: string;
+  tipo?: string;
+  estado?: string;
+  orden?: number;
+  fechaInicio?: string;
+  fechaFin?: string;
+  configuracion?: Record<string, unknown>;
+  participaciones: Array<{
+    _id: string;
+    fase: string;
+    participacionTemporada: string | { _id: string; equipo?: string | { _id: string; nombre?: string } };
+    grupo?: string;
+    division?: string;
+    puntos?: number;
+    posicion?: number;
+    clasificado?: boolean;
+    eliminado?: boolean;
+    seed?: number;
+  }>;
+};
+
+export type BackendTemporadaConDatos = {
+  _id: string;
+  competencia: string;
+  nombre: string;
+  descripcion?: string;
+  fechaInicio?: string;
+  fechaFin?: string;
+  participaciones: Array<{
+    _id: string;
+    temporada: string;
+    equipo: string | { _id: string; nombre?: string };
+    estado?: string;
+  }>;
+  fases: BackendFaseConParticipaciones[];
+};
+
+export type BackendCompetenciaDetalleCompleto = BackendCompetenciaDetalle & {
+  temporadas: BackendTemporadaConDatos[];
+};
+
+export async function getCompetenciaDetalle(id: string): Promise<BackendCompetenciaDetalleCompleto> {
+  return authFetch<BackendCompetenciaDetalleCompleto>(`/competencias/${id}/detalle`);
+}

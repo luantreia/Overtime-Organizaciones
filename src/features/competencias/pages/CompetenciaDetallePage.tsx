@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { listTemporadasByCompetencia, crearTemporada, BackendTemporada, actualizarTemporada, eliminarTemporada, listFasesByTemporada, crearFase, generarFixture, BackendFase, actualizarFase, eliminarFase, addCompetenciaAdministrador, getCompetenciaAdministradores, getCompetenciaById, removeCompetenciaAdministrador, actualizarCompetencia, eliminarCompetencia, type AdminUser, listParticipacionesByTemporada, type BackendParticipacionTemporada, crearSolicitudParticipacionTemporada, listParticipacionesByFase, type BackendParticipacionFase, crearParticipacionFase, updateParticipacionTemporada, deleteParticipacionTemporada } from '../services';
+import { listTemporadasByCompetencia, crearTemporada, BackendTemporada, actualizarTemporada, eliminarTemporada, listFasesByTemporada, crearFase, generarFixture, BackendFase, actualizarFase, eliminarFase, addCompetenciaAdministrador, getCompetenciaAdministradores, getCompetenciaById, removeCompetenciaAdministrador, actualizarCompetencia, eliminarCompetencia, type AdminUser, listParticipacionesByTemporada, type BackendParticipacionTemporada, crearSolicitudParticipacionTemporada, listParticipacionesByFase, type BackendParticipacionFase, crearParticipacionFase, updateParticipacionTemporada, deleteParticipacionTemporada, getCompetenciaDetalle } from '../services';
 import { getPartidosPorCompetencia, getPartidosPorTemporada, getPartidosPorFase } from '../../partidos/services/partidoService';
 import type { Partido } from '../../../types';
 import { useToast } from '../../../shared/components/Toast/ToastProvider';
@@ -68,8 +68,8 @@ const CompetenciaDetallePage = () => {
     if (!competenciaId) return;
     setLoading(true);
     try {
-      // detalle competencia
-      const detalle = await getCompetenciaById(competenciaId);
+      const detalle = await getCompetenciaDetalle(competenciaId);
+
       setNombre(detalle.nombre ?? 'Competencia');
       setModalidad((detalle.modalidad as any) ?? '');
       setCategoria((detalle.categoria as any) ?? '');
@@ -77,40 +77,27 @@ const CompetenciaDetallePage = () => {
       setFechaInicio(detalle.fechaInicio ? detalle.fechaInicio.slice(0, 10) : '');
       setFechaFin(detalle.fechaFin ? detalle.fechaFin.slice(0, 10) : '');
       setDescripcion((detalle as any).descripcion ?? '');
-      setRankedEnabled(Boolean((detalle as any).rankedEnabled));
-      setEsAdminBackend(Boolean((detalle as any).esAdmin));
-      if ((detalle as any).administradores) {
-        setAdmins(((detalle as any).administradores as AdminUser[]) || []);
-      }
+      setRankedEnabled(Boolean(detalle.rankedEnabled));
+      setEsAdminBackend(Boolean(detalle.esAdmin));
+      setAdmins((detalle.administradores as AdminUser[]) || []);
 
-      // admins
-      try {
-        const { administradores } = await getCompetenciaAdministradores(competenciaId);
-        setAdmins(administradores || []);
-      } catch {}
+      const temps = detalle.temporadas ?? [];
+      setTemporadas(temps as unknown as BackendTemporada[]);
 
-      const temps = await listTemporadasByCompetencia(competenciaId);
-      setTemporadas(temps);
       const fasesMap: Record<string, BackendFase[]> = {};
-      for (const t of temps) {
-        fasesMap[t._id] = await listFasesByTemporada(t._id);
-      }
-      setFasesPorTemporada(fasesMap);
-
-      // participaciones de temporada
       const ptsMap: Record<string, BackendParticipacionTemporada[]> = {};
-      for (const t of temps) {
-        ptsMap[t._id] = await listParticipacionesByTemporada(t._id);
-      }
-      setParticipacionesTemporada(ptsMap);
-
-      // participaciones por fase
       const pfMap: Record<string, BackendParticipacionFase[]> = {};
+
       for (const t of temps) {
-        for (const f of fasesMap[t._id] || []) {
-          pfMap[f._id] = await listParticipacionesByFase(f._id);
+        fasesMap[t._id] = t.fases as unknown as BackendFase[];
+        ptsMap[t._id] = t.participaciones as unknown as BackendParticipacionTemporada[];
+        for (const f of t.fases) {
+          pfMap[f._id] = f.participaciones as unknown as BackendParticipacionFase[];
         }
       }
+
+      setFasesPorTemporada(fasesMap);
+      setParticipacionesTemporada(ptsMap);
       setParticipacionesFase(pfMap);
     } finally {
       setLoading(false);
