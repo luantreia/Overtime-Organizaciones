@@ -3,7 +3,7 @@ import type { Partido, JugadorPartido, Competencia } from '../../../types';
 
 type PartidoQuery = {
   equipoId: string;
-  estado?: 'pendiente' | 'confirmado' | 'finalizado' | 'cancelado';
+  estado?: 'programado' | 'en_juego' | 'finalizado' | 'cancelado';
   competenciaId?: string;
 };
 
@@ -221,11 +221,9 @@ export const mapEstadoPartidoToBackend = (
 ): BackendPartido['estado'] => {
   switch (estado) {
     case 'programado':
-    case 'pendiente':
     case undefined:
       return 'programado';
     case 'en_juego':
-    case 'confirmado':
       return 'en_juego';
     case 'finalizado':
       return 'finalizado';

@@ -38,7 +38,7 @@ const DashboardPage = () => {
       try {
         setLoading(true);
         const [partidos, solicitudes, stats] = await Promise.all([
-          getPartidos({ equipoId: organizacionSeleccionada.id, estado: 'pendiente' }),
+          getPartidos({ equipoId: organizacionSeleccionada.id, estado: 'programado' }),
           getSolicitudesJugadores(organizacionId),
           getEstadisticasEquipo(organizacionId),
         ]);
