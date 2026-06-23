@@ -137,10 +137,8 @@ const CompetenciaDetallePage = () => {
     addToast({ type: 'success', title: 'Fixture generado' });
   };
 
-  const onEditarTemporada = async (t: BackendTemporada) => {
-    const nuevo = window.prompt('Nuevo nombre de la temporada:', t.nombre) || t.nombre;
-    if (!nuevo) return;
-    await actualizarTemporada(t._id, { nombre: nuevo });
+  const onEditarTemporada = async (t: BackendTemporada, nuevoNombre: string) => {
+    await actualizarTemporada(t._id, { nombre: nuevoNombre });
     const temps = await listTemporadasByCompetencia(competenciaId!);
     setTemporadas(temps);
   };

@@ -7,10 +7,114 @@ import JugadoresTemporadaModal from '../modals/JugadoresTemporadaModal';
 import GestionEquiposTemporadaModal from '../modals/GestionEquiposTemporadaModal';
 import GestionParticipantesFaseModal from '../modals/GestionFaseModal';
 import ConfigurarReglamentoModal from '../modals/ConfigurarReglamentoModal';
+import ConfirmModal from '../../../shared/components/ConfirmModal/ConfirmModal';
 import { TablaPosiciones } from '../../../shared/components/TablaPosiciones';
 import { VisualBracket } from '../components/VisualBracket';
 import { getPartidosPorFase } from '../../partidos/services/partidoService';
 import type { Partido } from '../../../types';
+import { useToast } from '../../../shared/components/Toast/ToastProvider';
+
+// ─── Icons ────────────────────────────────────────────────────────────────────
+
+const IconPencil = () => (
+  <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+    <path d="M2.695 14.763l-1.262 3.154a.5.5 0 00.65.65l3.155-1.262a4 4 0 001.343-.885L17.5 5.5a2.121 2.121 0 00-3-3L3.58 13.42a4 4 0 00-.885 1.343z" />
+  </svg>
+);
+
+const IconTrash = () => (
+  <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+    <path fillRule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 10.23 1.482l.149-.022.841 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.742-2.53l.841-10.52.149.023a.75.75 0 00.23-1.482A41.03 41.03 0 0014 4.193V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4zM8.58 7.72a.75.75 0 00-1.5.06l.3 7.5a.75.75 0 101.5-.06l-.3-7.5zm4.34.06a.75.75 0 10-1.5-.06l-.3 7.5a.75.75 0 101.5.06l.3-7.5z" clipRule="evenodd" />
+  </svg>
+);
+
+const IconCog = () => (
+  <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+    <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
+  </svg>
+);
+
+const IconChevronDown = () => (
+  <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+    <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
+  </svg>
+);
+
+const IconChevronRight = () => (
+  <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+    <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" />
+  </svg>
+);
+
+const IconPlus = () => (
+  <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+    <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
+  </svg>
+);
+
+const IconCheck = () => (
+  <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3">
+    <path d="M1 6l3.5 3.5L11 2" />
+  </svg>
+);
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function tipoBadgeClass(tipo?: string): string {
+  switch (tipo) {
+    case 'grupo':     return 'bg-amber-100 text-amber-700 border-amber-200';
+    case 'liga':      return 'bg-blue-100 text-blue-700 border-blue-200';
+    case 'playoff':   return 'bg-purple-100 text-purple-700 border-purple-200';
+    case 'promocion': return 'bg-green-100 text-green-700 border-green-200';
+    default:          return 'bg-slate-100 text-slate-600 border-slate-200';
+  }
+}
+
+function mapParticipacionesFase(participaciones: BackendParticipacionFase[]) {
+  return participaciones.map(p => ({
+    id: p._id,
+    participacionTemporada: p.participacionTemporada as any,
+    grupo: p.grupo,
+    division: p.division,
+    puntos: p.puntos || 0,
+    partidosJugados: p.partidosJugados || 0,
+    partidosGanados: p.partidosGanados || 0,
+    partidosPerdidos: p.partidosPerdidos || 0,
+    partidosEmpatados: p.partidosEmpatados || 0,
+    diferenciaPuntos: p.diferenciaPuntos || 0,
+    posicion: p.posicion,
+  }));
+}
+
+// ─── PlayoffBracketOverview (fuera del render para evitar re-mounts) ──────────
+
+function PlayoffBracketOverview({ faseId }: { faseId: string }) {
+  const [matches, setMatches] = useState<Partido[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getPartidosPorFase(faseId)
+      .then(setMatches)
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, [faseId]);
+
+  if (loading) return <div className="py-6 text-center text-xs text-slate-400">Cargando llaves…</div>;
+  if (matches.length === 0) return (
+    <div className="rounded-xl border border-dashed border-slate-200 py-6 text-center text-xs text-slate-400">
+      No hay partidos generados todavía.
+    </div>
+  );
+  return (
+    <div className="overflow-x-auto py-2">
+      <div className="min-w-[800px]">
+        <VisualBracket matches={matches} />
+      </div>
+    </div>
+  );
+}
+
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 type Props = {
   esAdmin: boolean;
@@ -34,7 +138,7 @@ type Props = {
       configuracion?: any;
     }
   ) => void | Promise<void>;
-  onEditarTemporada: (t: BackendTemporada) => void;
+  onEditarTemporada: (t: BackendTemporada, nuevoNombre: string) => void | Promise<void>;
   onEliminarTemporada: (t: BackendTemporada) => void;
   onGenerarFixture: (faseId: string) => void;
   onEditarFase: (fase: BackendFase, temporadaId: string, payload?: Partial<BackendFase>) => void;
@@ -47,40 +151,33 @@ type Props = {
   onDeleteParticipacionTemporada: (id: string, temporadaId: string) => void | Promise<void>;
 };
 
+// ─── Component ────────────────────────────────────────────────────────────────
+
 export default function EstructuraSection(props: Props) {
   const {
-    esAdmin,
-    loading,
-    onRefresh,
-    onSubmitCrearTemporada,
-    temporadas,
-    fasesPorTemporada,
-    onSubmitCrearFase,
-    onEditarTemporada,
-    onEliminarTemporada,
-    onGenerarFixture,
-    onEditarFase,
-    onEliminarFase,
-    participacionesTemporadaPorId,
-    participacionesFasePorId,
-    onCrearSolicitudParticipacionTemporada,
-    onCrearParticipacionFase,
-    onUpdateParticipacionTemporada,
-    onDeleteParticipacionTemporada,
+    esAdmin, loading, onRefresh,
+    onSubmitCrearTemporada, temporadas, fasesPorTemporada, onSubmitCrearFase,
+    onEditarTemporada, onEliminarTemporada, onGenerarFixture,
+    onEditarFase, onEliminarFase,
+    participacionesTemporadaPorId, participacionesFasePorId,
+    onCrearSolicitudParticipacionTemporada, onCrearParticipacionFase,
+    onUpdateParticipacionTemporada, onDeleteParticipacionTemporada,
   } = props;
 
+  const { addToast } = useToast();
+
+  // ── Temporada selection ───────────────────────────────────────────────────
   const [selectedTemporadaId, setSelectedTemporadaId] = useState<string | null>(null);
 
-  // Ordenamos temporadas por fecha (más reciente primero)
-  const sortedTemporadas = useMemo(() => {
-    return [...temporadas].sort((a, b) => {
-      const dateA = a.fechaInicio ? new Date(a.fechaInicio).getTime() : 0;
-      const dateB = b.fechaInicio ? new Date(b.fechaInicio).getTime() : 0;
-      return dateB - dateA;
-    });
-  }, [temporadas]);
+  const sortedTemporadas = useMemo(
+    () => [...temporadas].sort((a, b) => {
+      const dA = a.fechaInicio ? new Date(a.fechaInicio).getTime() : 0;
+      const dB = b.fechaInicio ? new Date(b.fechaInicio).getTime() : 0;
+      return dB - dA;
+    }),
+    [temporadas],
+  );
 
-  // Si no hay seleccionada o la que estaba ya no existe, elegimos la más reciente
   useEffect(() => {
     if (sortedTemporadas.length > 0) {
       if (!selectedTemporadaId || !sortedTemporadas.some(st => st._id === selectedTemporadaId)) {
@@ -91,343 +188,451 @@ export default function EstructuraSection(props: Props) {
     }
   }, [sortedTemporadas, selectedTemporadaId]);
 
-  const t = useMemo(() => {
-    return sortedTemporadas.find(temp => temp._id === selectedTemporadaId) || sortedTemporadas[0];
-  }, [sortedTemporadas, selectedTemporadaId]);
+  const t = useMemo(
+    () => sortedTemporadas.find(temp => temp._id === selectedTemporadaId) || sortedTemporadas[0],
+    [sortedTemporadas, selectedTemporadaId],
+  );
 
-  // --- NUEVOS ESTADOS PARA UX/UI ---
+  // ── Fase accordion ───────────────────────────────────────────────────────
   const [expandedFases, setExpandedFases] = useState<Record<string, boolean>>({});
-
-  const toggleFase = (faseId: string) => {
+  const toggleFase = (faseId: string) =>
     setExpandedFases(prev => ({ ...prev, [faseId]: !prev[faseId] }));
-  };
 
-  const getTipoBadgeClass = (tipo?: string) => {
-    switch (tipo) {
-      case 'grupo': return 'bg-amber-100 text-amber-700 border-amber-200';
-      case 'liga': return 'bg-blue-100 text-blue-700 border-blue-200';
-      case 'playoff': return 'bg-purple-100 text-purple-700 border-purple-200';
-      default: return 'bg-slate-100 text-slate-700 border-slate-200';
-    }
-  };
+  // ── Stepper (computed) ───────────────────────────────────────────────────
+  const stepperSteps = useMemo(() => {
+    if (!t) return [];
+    const equiposCount = (participacionesTemporadaPorId[t._id] || []).length;
+    const fasesCount   = (fasesPorTemporada[t._id] || []).length;
+    return [
+      { label: 'Temporada creada', done: true },
+      { label: `${equiposCount} equipo${equiposCount !== 1 ? 's' : ''} inscripto${equiposCount !== 1 ? 's' : ''}`, done: equiposCount > 0 },
+      { label: `${fasesCount} fase${fasesCount !== 1 ? 's' : ''} definida${fasesCount !== 1 ? 's' : ''}`, done: fasesCount > 0 },
+    ];
+  }, [t, participacionesTemporadaPorId, fasesPorTemporada]);
 
-  const PlayoffBracketOverview = ({ faseId }: { faseId: string }) => {
-    const [matches, setMatches] = useState<Partido[]>([]);
-    const [loading, setLoading] = useState(true);
+  // ── Edit temporada modal ──────────────────────────────────────────────────
+  const [editandoTemporada, setEditandoTemporada]         = useState<BackendTemporada | null>(null);
+  const [nuevoNombreTemporada, setNuevoNombreTemporada]   = useState('');
+  const [savingRenombre, setSavingRenombre]               = useState(false);
 
-    useEffect(() => {
-      const fetchMatches = async () => {
-        try {
-          const data = await getPartidosPorFase(faseId);
-          setMatches(data);
-        } catch (error) {
-          console.error('Error al cargar partidos del bracket:', error);
-        } finally {
-          setLoading(false);
-        }
-      };
-      fetchMatches();
-    }, [faseId]);
+  // ── Finalizar / Reabrir fase ──────────────────────────────────────────────
+  const [confirmFinalizarFase, setConfirmFinalizarFase] = useState<{ fase: BackendFase; temporadaId: string } | null>(null);
+  const [confirmReabrirFase,   setConfirmReabrirFase]   = useState<{ fase: BackendFase; temporadaId: string } | null>(null);
+  const [savingFaseAction, setSavingFaseAction]         = useState(false);
 
-    if (loading) return <div className="py-8 text-center text-xs text-slate-400">Cargando llaves...</div>;
-    if (matches.length === 0) return (
-      <div className="py-8 text-center text-xs text-slate-400 border border-dashed border-slate-200 rounded-xl">
-        No hay partidos generados para esta llave.
-      </div>
-    );
-
-    return (
-      <div className="overflow-x-auto py-4 scrollbar-thin scrollbar-thumb-slate-200">
-        <div className="min-w-[800px]">
-          <VisualBracket matches={matches} />
-        </div>
-      </div>
-    );
-  };
-
-  // ---------------------------------
-
+  // ── Other modals ──────────────────────────────────────────────────────────
   const [openCrearTemporada, setOpenCrearTemporada] = useState(false);
   const [openCrearFase, setOpenCrearFase] = useState<{ open: boolean; temporadaId?: string }>({ open: false });
-  const [openJugadores, setOpenJugadores] = useState<{ open: boolean; pt?: BackendParticipacionTemporada }>( { open: false });
+  const [openJugadores, setOpenJugadores] = useState<{ open: boolean; pt?: BackendParticipacionTemporada }>({ open: false });
   const [openGestionEquipos, setOpenGestionEquipos] = useState<{ open: boolean; temporadaId?: string }>({ open: false });
   const [openGestionParticipantesFase, setOpenGestionParticipantesFase] = useState<{ open: boolean; fase?: BackendFase; temporadaId?: string }>({ open: false });
   const [openReglamento, setOpenReglamento] = useState<{ open: boolean; fase: BackendFase | null; temporadaId?: string }>({ open: false, fase: null });
 
-  
-
+  // ─────────────────────────────────────────────────────────────────────────
   return (
     <>
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-          <h2 className="text-lg font-semibold text-slate-900">Temporadas y fases</h2>
-          {temporadas.length > 0 && (
-            <select
-              className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
-              value={selectedTemporadaId || ''}
-              onChange={(e) => setSelectedTemporadaId(e.target.value)}
-            >
-              {sortedTemporadas.map((temp) => (
-                <option key={temp._id} value={temp._id}>
-                  {temp.nombre} {temp.fechaInicio ? `(${new Date(temp.fechaInicio).getFullYear()})` : ''}
-                </option>
-              ))}
-            </select>
-          )}
-        </div>
-        <button type="button" disabled={!esAdmin} onClick={() => setOpenCrearTemporada(true)} className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-700 disabled:opacity-50">Crear temporada</button>
+      {/* ── Header ─────────────────────────────────────────────────────── */}
+      <div className="flex items-center justify-between gap-4">
+        <h2 className="text-lg font-semibold text-slate-900">Temporadas y fases</h2>
+        <button
+          type="button"
+          disabled={!esAdmin}
+          onClick={() => setOpenCrearTemporada(true)}
+          className="inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-3 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-brand-700 disabled:opacity-50 transition-colors"
+        >
+          <IconPlus />
+          Nueva temporada
+        </button>
       </div>
 
-      <section className="space-y-4 mt-6">
-        {loading ? (
-          <p className="text-sm text-slate-500">Cargando…</p>
-        ) : !t ? (
-          <div className="rounded-2xl border-2 border-dashed border-slate-200 bg-white px-6 py-12 text-center">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-slate-50 text-slate-400">
-              📅
-            </div>
-            <h3 className="mt-4 text-sm font-semibold text-slate-900">No hay temporadas</h3>
-            <p className="mt-1 text-sm text-slate-500">Comenzá creando una temporada para organizar las fases y equipos.</p>
-            <div className="mt-6">
+      {/* ── Temporada tabs ──────────────────────────────────────────────── */}
+      {sortedTemporadas.length > 0 && (
+        <div className="mt-3 flex gap-2 overflow-x-auto pb-1 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
+          {sortedTemporadas.map(temp => {
+            const isActive = (selectedTemporadaId ?? sortedTemporadas[0]?._id) === temp._id;
+            return (
               <button
+                key={temp._id}
                 type="button"
-                disabled={!esAdmin}
-                onClick={() => setOpenCrearTemporada(true)}
-                className="inline-flex items-center rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-700 disabled:opacity-50"
+                onClick={() => setSelectedTemporadaId(temp._id)}
+                className={`rounded-lg px-3 py-1.5 text-sm whitespace-nowrap transition-colors ${
+                  isActive
+                    ? 'bg-brand-100 text-brand-700 font-semibold'
+                    : 'border border-slate-200 text-slate-600 hover:bg-slate-50'
+                }`}
               >
-                + Crear temporada
+                {temp.nombre}
+                {temp.fechaInicio && (
+                  <span className="ml-1.5 text-[11px] opacity-60">
+                    {new Date(temp.fechaInicio).getFullYear()}
+                  </span>
+                )}
               </button>
+            );
+          })}
+        </div>
+      )}
+
+      {/* ── Content ─────────────────────────────────────────────────────── */}
+      <section className="mt-4">
+        {loading ? (
+          <div className="py-10 text-center text-sm text-slate-400">Cargando…</div>
+        ) : !t ? (
+          /* ── Empty state ──────────────────────────────────────────────── */
+          <div className="rounded-2xl border-2 border-dashed border-slate-200 bg-white px-6 py-14 text-center">
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-400">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-6 w-6">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 9v7.5" />
+              </svg>
             </div>
+            <h3 className="text-sm font-semibold text-slate-900">Sin temporadas</h3>
+            <p className="mt-1 text-sm text-slate-500">Creá una temporada para empezar a organizar las fases y equipos.</p>
+            <button
+              type="button"
+              disabled={!esAdmin}
+              onClick={() => setOpenCrearTemporada(true)}
+              className="mt-6 inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-700 disabled:opacity-50"
+            >
+              <IconPlus />
+              Crear primera temporada
+            </button>
           </div>
         ) : (
-          <div key={t._id} className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-6 shadow-card">
-            {/* Timeline / Progress Indicator */}
-            <div className="mb-8 border-b border-slate-100 pb-6">
-              <h4 className="mb-4 text-xs font-bold uppercase tracking-wider text-slate-400">Guía de configuración</h4>
-              <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide">
-                {[
-                  { label: 'Temporada', done: true },
-                  { label: 'Cargar Equipos', done: (participacionesTemporadaPorId[t._id] || []).length > 0 },
-                  { label: 'Crear Fases', done: (fasesPorTemporada[t._id] || []).length > 0 },
-                  { label: 'Generar Fixtures', done: false }, // Simplificado
-                ].map((step, idx, arr) => (
-                  <div key={step.label} className="flex items-center shrink-0">
-                    <div className={`flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold ${step.done ? 'bg-green-100 text-green-600' : 'bg-slate-100 text-slate-400'}`}>
-                      {step.done ? '✓' : idx + 1}
+          /* ── Temporada card ───────────────────────────────────────────── */
+          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+
+            {/* Stepper */}
+            <div className="border-b border-slate-100 bg-slate-50/60 px-6 py-3.5">
+              <div className="flex items-center gap-2 sm:gap-5 overflow-x-auto scrollbar-hide">
+                {stepperSteps.map((step, idx) => (
+                  <div key={step.label} className="flex items-center gap-2 shrink-0">
+                    <div className={`flex h-5 w-5 items-center justify-center rounded-full ${
+                      step.done ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-400'
+                    }`}>
+                      {step.done ? <IconCheck /> : <span className="text-[10px] font-bold">{idx + 1}</span>}
                     </div>
-                    <span className={`ml-2 text-xs font-medium ${step.done ? 'text-slate-900' : 'text-slate-400'}`}>{step.label}</span>
-                    {idx < arr.length - 1 && <div className="mx-4 h-px w-8 bg-slate-200" />}
+                    <span className={`text-xs whitespace-nowrap ${step.done ? 'font-medium text-slate-700' : 'text-slate-400'}`}>
+                      {step.label}
+                    </span>
+                    {idx < stepperSteps.length - 1 && (
+                      <div className="ml-1 h-px w-5 shrink-0 bg-slate-200" />
+                    )}
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
-                <h3 className="text-xl font-bold text-slate-900">{t.nombre}</h3>
-                <div className="mt-1 flex items-center gap-3">
-                  <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
-                     {(participacionesTemporadaPorId[t._id] || []).length} equipos inscritos
-                  </span>
-                  <button type="button" className="text-xs font-semibold text-brand-600 hover:text-brand-700 disabled:opacity-50" onClick={()=> setOpenGestionEquipos({ open: true, temporadaId: t._id })} disabled={!esAdmin}>
-                    Gestionar altas →
-                  </button>
-                </div>
+            {/* Temporada info */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 px-6 py-4">
+              <div className="flex flex-wrap items-center gap-3">
+                <h3 className="text-base font-bold text-slate-900">{t.nombre}</h3>
+                <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-0.5 text-xs font-medium text-slate-600">
+                  {(participacionesTemporadaPorId[t._id] || []).length} equipo{(participacionesTemporadaPorId[t._id] || []).length !== 1 ? 's' : ''}
+                </span>
+                <button
+                  type="button"
+                  disabled={!esAdmin}
+                  onClick={() => setOpenGestionEquipos({ open: true, temporadaId: t._id })}
+                  className="text-xs font-semibold text-brand-600 hover:text-brand-700 disabled:opacity-50"
+                >
+                  Gestionar equipos →
+                </button>
               </div>
-              <div className="flex gap-2">
-                <button disabled={!esAdmin} className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50" onClick={() => onEditarTemporada(t)}>Editar</button>
-                <button disabled={!esAdmin} className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-100 disabled:opacity-50" onClick={() => onEliminarTemporada(t)}>Eliminar</button>
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  disabled={!esAdmin}
+                  title="Editar nombre de temporada"
+                  onClick={() => { setEditandoTemporada(t); setNuevoNombreTemporada(t.nombre); }}
+                  className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 disabled:opacity-40"
+                >
+                  <IconPencil />
+                </button>
+                <button
+                  type="button"
+                  disabled={!esAdmin}
+                  title="Eliminar temporada"
+                  onClick={() => onEliminarTemporada(t)}
+                  className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-600 disabled:opacity-40"
+                >
+                  <IconTrash />
+                </button>
               </div>
             </div>
 
-            <div className="flex items-center justify-between mb-4 mt-8 border-t border-slate-100 pt-6">
-              <h4 className="text-sm font-bold text-slate-900 uppercase tracking-tight">Fases de la competencia</h4>
-              <button 
-                disabled={!esAdmin} 
-                className="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-slate-800 disabled:opacity-50 transition-colors" 
-                onClick={() => setOpenCrearFase({ open: true, temporadaId: t._id })}
-              >
-                + Nueva fase
-              </button>
-            </div>
+            {/* Fases */}
+            <div className="px-6 py-5">
+              <div className="mb-4 flex items-center justify-between">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">Fases</h4>
+                <button
+                  type="button"
+                  disabled={!esAdmin}
+                  onClick={() => setOpenCrearFase({ open: true, temporadaId: t._id })}
+                  className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-50"
+                >
+                  <IconPlus />
+                  Nueva fase
+                </button>
+              </div>
 
-            <div className="space-y-3">
               {(fasesPorTemporada[t._id] || []).length === 0 ? (
-                <div className="rounded-xl border border-dashed border-slate-200 p-8 text-center">
-                  <span className="text-sm text-slate-400">Aún no hay fases definidas para esta temporada.</span>
+                <div className="rounded-xl border border-dashed border-slate-200 py-8 text-center">
+                  <p className="text-sm text-slate-400">Aún no hay fases. Creá la primera para organizar los partidos.</p>
                 </div>
               ) : (
-                fasesPorTemporada[t._id].map((f) => (
-                  <div key={f._id} className="overflow-hidden rounded-xl border border-slate-200 transition-all hover:border-slate-300">
-                    <div 
-                      className="flex cursor-pointer items-center justify-between bg-slate-50/50 p-4 transition-colors hover:bg-slate-50"
-                      onClick={() => toggleFase(f._id)}
-                    >
-                      <div className="flex items-center gap-3">
-                        <span className="text-lg">{expandedFases[f._id] ? '▾' : '▸'}</span>
-                        <span className="font-bold text-slate-900">{f.nombre ?? 'Fase'}</span>
-                        <span className={`rounded-md border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${getTipoBadgeClass(f.tipo)}`}>
-                          {f.tipo || 'otro'}
-                        </span>
-                        {f.estado && (
-                          <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse" title="Fase en curso" />
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                        <button 
-                          disabled={!esAdmin} 
-                          className="rounded-lg p-1.5 text-brand-600 hover:bg-brand-50 transition-colors" 
-                          onClick={() => setOpenReglamento({ open: true, fase: f, temporadaId: t._id })}
-                          title="Configurar Reglamento"
-                        >
-                          🔨
-                        </button>
-                        <button 
-                          disabled={!esAdmin} 
-                          className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors" 
-                          onClick={() => onEditarFase(f, t._id)}
-                          title="Editar"
-                        >
-                          ✏️
-                        </button>
-                        <button 
-                          disabled={!esAdmin} 
-                          className="rounded-lg p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition-colors" 
-                          onClick={() => onEliminarFase(f, t._id)}
-                          title="Eliminar"
-                        >
-                          🗑️
-                        </button>
-                      </div>
-                    </div>
+                <div className="space-y-2">
+                  {fasesPorTemporada[t._id].map(f => {
+                    const participantesFase = participacionesFasePorId[f._id] || [];
+                    const isExpanded    = expandedFases[f._id];
+                    const esFinalizada  = f.estado === 'finalizada';
+                    const esGrupoOLiga  = f.tipo === 'grupo' || f.tipo === 'liga';
 
-                    {expandedFases[f._id] && (
-                      <div className="border-t border-slate-200 bg-white p-4 animate-in slide-in-from-top-2 duration-200">
-                        <div className="mb-4 flex items-center justify-between">
-                          <div className="flex items-center gap-4">
-                            <span className="text-xs font-medium text-slate-500">
-                              {(participacionesFasePorId[f._id] || []).length} equipos en esta fase
+                    return (
+                      <div key={f._id} className="overflow-hidden rounded-xl border border-slate-200 transition-colors hover:border-slate-300">
+
+                        {/* Fase header */}
+                        <div
+                          className="flex cursor-pointer items-center justify-between px-4 py-3 transition-colors hover:bg-slate-50"
+                          onClick={() => toggleFase(f._id)}
+                        >
+                          <div className="flex min-w-0 items-center gap-2.5">
+                            <span className="shrink-0 text-slate-400">
+                              {isExpanded ? <IconChevronDown /> : <IconChevronRight />}
                             </span>
-                            {f.tipo === 'grupo' || f.tipo === 'liga' ? (
-                              <div className="flex gap-2">
-                                <button
-                                  disabled={!esAdmin || f.estado === 'finalizada'}
-                                  onClick={async () => {
-                                    if (window.confirm('¿Estás seguro de finalizar esta fase? Se calcularán las posiciones finales y los equipos clasificarán a la siguiente fase según el reglamento.')) {
-                                       try {
-                                         await finalizarFase(f._id);
-                                         onRefresh?.();
-                                         alert('Fase finalizada con éxito.');
-                                       } catch (err: any) {
-                                         alert('Error al finalizar fase: ' + err.message);
-                                       }
-                                    }
-                                  }}
-                                  className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
-                                    f.estado === 'finalizada' 
-                                    ? 'bg-emerald-500 text-white cursor-default opacity-50'
-                                    : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-200'
-                                  }`}
-                                >
-                                  {f.estado === 'finalizada' ? '✓ Fase Finalizada' : '🏁 Finalizar y Clasificar'}
-                                </button>
+                            <span className="truncate font-semibold text-slate-900">{f.nombre ?? 'Fase'}</span>
+                            <span className={`shrink-0 rounded border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${tipoBadgeClass(f.tipo)}`}>
+                              {f.tipo || 'otro'}
+                            </span>
+                            {esFinalizada && (
+                              <span className="shrink-0 rounded border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-700">
+                                finalizada
+                              </span>
+                            )}
+                            <span className="shrink-0 text-xs text-slate-400">{participantesFase.length} eq.</span>
+                          </div>
 
-                                {f.estado === 'finalizada' && esAdmin && (
+                          <div className="ml-2 flex items-center gap-0.5" onClick={e => e.stopPropagation()}>
+                            <button
+                              type="button"
+                              disabled={!esAdmin}
+                              title="Configurar reglamento"
+                              onClick={() => setOpenReglamento({ open: true, fase: f, temporadaId: t._id })}
+                              className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 disabled:opacity-40"
+                            >
+                              <IconCog />
+                            </button>
+                            <button
+                              type="button"
+                              disabled={!esAdmin}
+                              title="Editar fase"
+                              onClick={() => onEditarFase(f, t._id)}
+                              className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 disabled:opacity-40"
+                            >
+                              <IconPencil />
+                            </button>
+                            <button
+                              type="button"
+                              disabled={!esAdmin}
+                              title="Eliminar fase"
+                              onClick={() => onEliminarFase(f, t._id)}
+                              className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-600 disabled:opacity-40"
+                            >
+                              <IconTrash />
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Fase expanded */}
+                        {isExpanded && (
+                          <div className="space-y-4 border-t border-slate-100 bg-white px-4 py-4">
+
+                            {/* Actions row */}
+                            <div className="flex flex-wrap items-center justify-between gap-3">
+                              <button
+                                type="button"
+                                disabled={!esAdmin}
+                                onClick={() => setOpenGestionParticipantesFase({ open: true, fase: f, temporadaId: t._id })}
+                                className="text-xs font-semibold text-brand-600 hover:text-brand-700 disabled:opacity-50"
+                              >
+                                Gestionar participantes →
+                              </button>
+
+                              {esGrupoOLiga && esAdmin && (
+                                esFinalizada ? (
                                   <button
-                                    onClick={async () => {
-                                      if (window.confirm('¿Reabrir esta fase? Esto permitirá volver a finalizarla. Importante: debes borrar manualmente los equipos en las fases de destino (Oro/Plata) antes de volver a clasificarlos para evitar duplicados.')) {
-                                        try {
-                                          await onEditarFase(f, t._id, { estado: 'en_curso' });
-                                          alert('Fase reabierta. Limpia las fases destino y vuelve a finalizar cuando estés listo.');
-                                        } catch (err) {
-                                          alert('Error al reabrir fase');
-                                        }
-                                      }
-                                    }}
-                                    className="px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest bg-amber-50 text-amber-600 hover:bg-amber-100 border border-amber-200"
+                                    type="button"
+                                    onClick={() => setConfirmReabrirFase({ fase: f, temporadaId: t._id })}
+                                    className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-amber-700 transition-colors hover:bg-amber-100"
                                   >
-                                    🔄 Reabrir para Corregir
+                                    Reabrir para corregir
                                   </button>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    onClick={() => setConfirmFinalizarFase({ fase: f, temporadaId: t._id })}
+                                    className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-emerald-700 transition-colors hover:bg-emerald-100"
+                                  >
+                                    Finalizar y clasificar
+                                  </button>
+                                )
+                              )}
+                            </div>
+
+                            {/* Content */}
+                            {f.tipo === 'playoff' ? (
+                              <div className="space-y-4">
+                                <div className="rounded-xl border border-slate-100 bg-slate-50/40 p-3">
+                                  <p className="mb-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">Bracket</p>
+                                  <PlayoffBracketOverview faseId={f._id} />
+                                </div>
+                                {participantesFase.length > 0 && (
+                                  <div>
+                                    <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">Participantes</p>
+                                    <TablaPosiciones participaciones={mapParticipacionesFase(participantesFase)} />
+                                  </div>
                                 )}
                               </div>
-                            ) : null}
+                            ) : (
+                              participantesFase.length > 0 && (
+                                <TablaPosiciones participaciones={mapParticipacionesFase(participantesFase)} />
+                              )
+                            )}
                           </div>
-                          <button 
-                            disabled={!esAdmin} 
-                            className="text-xs font-bold text-brand-600 hover:underline disabled:opacity-50" 
-                            onClick={() => setOpenGestionParticipantesFase({ open: true, fase: f, temporadaId: t._id })}
-                          >
-                            Gestionar participantes →
-                          </button>
-                        </div>
-                        {/* Contenido de la fase según su tipo */}
-                        {f.tipo === 'playoff' ? (
-                          <div className="space-y-6">
-                            <div className="rounded-xl border border-slate-100 bg-slate-50/30 p-4">
-                              <h5 className="mb-4 text-[10px] font-bold uppercase tracking-widest text-slate-400">Esquema de la Fase</h5>
-                              <PlayoffBracketOverview faseId={f._id} />
-                            </div>
-                            
-                            <div>
-                                <h5 className="mb-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">Lista de Participantes</h5>
-                                <TablaPosiciones participaciones={(participacionesFasePorId[f._id] || []).map(p => ({
-                                  id: p._id,
-                                  participacionTemporada: p.participacionTemporada as any, // Asumir populate
-                                  grupo: p.grupo,
-                                  division: p.division,
-                                  puntos: p.puntos || 0,
-                                  partidosJugados: p.partidosJugados || 0,
-                                  partidosGanados: p.partidosGanados || 0,
-                                  partidosPerdidos: p.partidosPerdidos || 0,
-                                  partidosEmpatados: p.partidosEmpatados || 0,
-                                  diferenciaPuntos: p.diferenciaPuntos || 0,
-                                  posicion: p.posicion,
-                                }))} />
-                            </div>
-                          </div>
-                        ) : (
-                          <TablaPosiciones participaciones={(participacionesFasePorId[f._id] || []).map(p => ({
-                            id: p._id,
-                            participacionTemporada: p.participacionTemporada as any, // Asumir populate
-                            grupo: p.grupo,
-                            division: p.division,
-                            puntos: p.puntos || 0,
-                            partidosJugados: p.partidosJugados || 0,
-                            partidosGanados: p.partidosGanados || 0,
-                            partidosPerdidos: p.partidosPerdidos || 0,
-                            partidosEmpatados: p.partidosEmpatados || 0,
-                            diferenciaPuntos: p.diferenciaPuntos || 0,
-                            posicion: p.posicion,
-                          }))} />
                         )}
                       </div>
-                    )}
-                  </div>
-                ))
+                    );
+                  })}
+                </div>
               )}
             </div>
           </div>
         )}
       </section>
 
+      {/* ══ Modals ══════════════════════════════════════════════════════════ */}
+
+      {/* Renombrar temporada */}
+      <ConfirmModal
+        isOpen={!!editandoTemporada}
+        title="Editar temporada"
+        message={
+          <div>
+            <label className="mb-1 block text-xs font-medium text-slate-600">Nombre</label>
+            <input
+              autoFocus
+              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+              value={nuevoNombreTemporada}
+              onChange={e => setNuevoNombreTemporada(e.target.value)}
+              onKeyDown={e => {
+                if (e.key === 'Enter') e.currentTarget.closest('form')?.requestSubmit();
+              }}
+            />
+          </div> as any
+        }
+        confirmLabel={savingRenombre ? 'Guardando…' : 'Guardar'}
+        variant="primary"
+        onConfirm={async () => {
+          if (!editandoTemporada || !nuevoNombreTemporada.trim()) return;
+          setSavingRenombre(true);
+          try {
+            await onEditarTemporada(editandoTemporada, nuevoNombreTemporada.trim());
+            setEditandoTemporada(null);
+          } finally {
+            setSavingRenombre(false);
+          }
+        }}
+        onCancel={() => setEditandoTemporada(null)}
+      />
+
+      {/* Finalizar fase */}
+      <ConfirmModal
+        isOpen={!!confirmFinalizarFase}
+        title="Finalizar fase"
+        message={
+          <div className="space-y-2">
+            <p className="text-sm text-slate-700">
+              Se calcularán las posiciones finales y los equipos clasificarán a la siguiente fase según el reglamento.
+            </p>
+            <p className="text-xs text-slate-500">Esta acción puede deshacerse usando "Reabrir para corregir".</p>
+          </div> as any
+        }
+        confirmLabel={savingFaseAction ? 'Finalizando…' : 'Finalizar y clasificar'}
+        variant="primary"
+        onConfirm={async () => {
+          if (!confirmFinalizarFase) return;
+          setSavingFaseAction(true);
+          try {
+            await finalizarFase(confirmFinalizarFase.fase._id);
+            addToast({ type: 'success', title: 'Fase finalizada correctamente' });
+            onRefresh?.();
+            setConfirmFinalizarFase(null);
+          } catch (err: any) {
+            addToast({ type: 'error', title: 'Error al finalizar fase', message: err?.message });
+          } finally {
+            setSavingFaseAction(false);
+          }
+        }}
+        onCancel={() => setConfirmFinalizarFase(null)}
+      />
+
+      {/* Reabrir fase */}
+      <ConfirmModal
+        isOpen={!!confirmReabrirFase}
+        title="Reabrir fase"
+        message={
+          <div className="space-y-3">
+            <p className="text-sm text-slate-700">La fase volverá al estado "en curso" y podrás volver a finalizarla.</p>
+            <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-700">
+              Importante: eliminá manualmente los equipos en las fases de destino antes de volver a clasificarlos para evitar duplicados.
+            </p>
+          </div> as any
+        }
+        confirmLabel={savingFaseAction ? 'Reabriendo…' : 'Reabrir'}
+        variant="default"
+        onConfirm={async () => {
+          if (!confirmReabrirFase) return;
+          setSavingFaseAction(true);
+          try {
+            await onEditarFase(confirmReabrirFase.fase, confirmReabrirFase.temporadaId, { estado: 'en_curso' });
+            addToast({ type: 'success', title: 'Fase reabierta' });
+            setConfirmReabrirFase(null);
+          } catch {
+            addToast({ type: 'error', title: 'Error al reabrir la fase' });
+          } finally {
+            setSavingFaseAction(false);
+          }
+        }}
+        onCancel={() => setConfirmReabrirFase(null)}
+      />
+
+      {/* Crear temporada */}
       <CrearTemporadaModal
         isOpen={openCrearTemporada}
         onClose={() => setOpenCrearTemporada(false)}
-        onSubmit={async (payload: { nombre: string; fechaInicio: string; fechaFin?: string }) => { await onSubmitCrearTemporada(payload); }}
+        onSubmit={onSubmitCrearTemporada}
       />
 
+      {/* Crear fase */}
       <CrearFaseModal
         isOpen={openCrearFase.open}
         onClose={() => setOpenCrearFase({ open: false })}
-        onSubmit={async (payload: { nombre: string; descripcion?: string }) => { if (openCrearFase.temporadaId) { await onSubmitCrearFase(openCrearFase.temporadaId, payload); setOpenCrearFase({ open: false }); } }}
+        onSubmit={payload => {
+          if (openCrearFase.temporadaId) {
+            void Promise.resolve(onSubmitCrearFase(openCrearFase.temporadaId, payload)).then(() => {
+              setOpenCrearFase({ open: false });
+            });
+          }
+        }}
       />
 
+      {/* Jugadores */}
       <JugadoresTemporadaModal
         isOpen={openJugadores.open}
         onClose={() => setOpenJugadores({ open: false })}
         participacion={openJugadores.pt}
       />
 
+      {/* Gestión equipos temporada */}
       <GestionEquiposTemporadaModal
         isOpen={openGestionEquipos.open}
         onClose={() => setOpenGestionEquipos({ open: false })}
@@ -438,9 +643,10 @@ export default function EstructuraSection(props: Props) {
         onUpdateParticipacionTemporada={onUpdateParticipacionTemporada}
         onDeleteParticipacionTemporada={onDeleteParticipacionTemporada}
         onCrearSolicitudParticipacionTemporada={onCrearSolicitudParticipacionTemporada}
-        onOpenJugadores={(pt) => setOpenJugadores({ open: true, pt })}
+        onOpenJugadores={pt => setOpenJugadores({ open: true, pt })}
       />
 
+      {/* Gestión participantes fase */}
       <GestionParticipantesFaseModal
         isOpen={openGestionParticipantesFase.open}
         onClose={() => setOpenGestionParticipantesFase({ open: false })}
@@ -451,9 +657,10 @@ export default function EstructuraSection(props: Props) {
         participantesFase={openGestionParticipantesFase.fase ? (participacionesFasePorId[openGestionParticipantesFase.fase._id] || []) : []}
         participantesTemporada={openGestionParticipantesFase.temporadaId ? (participacionesTemporadaPorId[openGestionParticipantesFase.temporadaId] || []) : []}
         onAgregar={onCrearParticipacionFase}
-        onGenerarLlave={(faseId) => onGenerarFixture(faseId)}
+        onGenerarLlave={faseId => onGenerarFixture(faseId)}
       />
 
+      {/* Reglamento */}
       <ConfigurarReglamentoModal
         isOpen={openReglamento.open}
         fase={openReglamento.fase}
