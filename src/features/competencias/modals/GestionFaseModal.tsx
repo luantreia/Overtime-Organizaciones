@@ -80,7 +80,15 @@ export default function GestionParticipantesFaseModal({
   const [quickEditId, setQuickEditId] = useState<string | null>(null);
   const [quickLocal, setQuickLocal] = useState<number>(0);
   const [quickVisitante, setQuickVisitante] = useState<number>(0);
+  const [quickFinalizar, setQuickFinalizar] = useState(true);
   const [isSavingQuick, setIsSavingQuick] = useState(false);
+
+  const openQuickEdit = (p: Partido) => {
+    setQuickEditId(p.id);
+    setQuickLocal(p.marcadorLocal ?? 0);
+    setQuickVisitante(p.marcadorVisitante ?? 0);
+    setQuickFinalizar(p.estado !== 'en_juego');
+  };
 
   // Paginación de partidos
   const [pagePartidos, setPagePartidos] = useState(1);
@@ -133,18 +141,18 @@ export default function GestionParticipantesFaseModal({
       await actualizarPartido(partidoId, {
         marcadorLocal: quickLocal,
         marcadorVisitante: quickVisitante,
-        estado: 'en_progreso'
+        marcadorModificadoManualmente: true,
+        estado: quickFinalizar ? 'finalizado' : 'en_juego',
       });
-      
       setQuickEditId(null);
-      setNotice('✅ Marcador actualizado');
-      setTimeout(() => setNotice(''), 3000);
-      
+      setNotice(quickFinalizar ? '✅ Resultado guardado' : '✅ Marcador actualizado');
+      setTimeout(() => setNotice(''), 2500);
       await refrescarPartidos();
-      if (onRefresh) onRefresh();
+      onRefresh?.();
     } catch (error) {
       console.error('Error actualizando marcador:', error);
-      alert('Error al guardar el marcador');
+      setNotice('❌ Error al guardar');
+      setTimeout(() => setNotice(''), 3000);
     } finally {
       setIsSavingQuick(false);
     }
@@ -302,90 +310,125 @@ export default function GestionParticipantesFaseModal({
     }
   };
 
-  const renderMatchCard = (p: Partido) => (
-    <li key={p.id} className="group relative flex flex-col rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-brand-300 hover:shadow-md">
+  const borderByEstado = (estado: string) => {
+    if (estado === 'finalizado') return 'border-l-4 border-l-emerald-400';
+    if (estado === 'en_juego')   return 'border-l-4 border-l-amber-400';
+    return 'border-l-4 border-l-slate-200';
+  };
+
+  const renderMatchCard = (p: Partido) => {
+    const isEditing = quickEditId === p.id;
+    const esProgramado = p.estado === 'programado';
+    return (
+    <li key={p.id} className={`group relative flex flex-col rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:shadow-md ${borderByEstado(p.estado)}`}>
+      {/* Header */}
       <div className="mb-3 flex items-center justify-between">
         <div className="flex flex-col">
           <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
             {p.etapa ? p.etapa.replace('_', ' ') : (p.grupo ? `Grupo ${p.grupo}` : (p.division ? `División ${p.division}` : 'Partido'))}
           </span>
-          <span className="text-xs font-medium text-slate-600">
-            {new Date(p.fecha).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' })} {p.hora ? `· ${p.hora} hs` : ''}
+          <span className="text-xs font-medium text-slate-500">
+            {new Date(p.fecha).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' })} {p.hora ? `· ${p.hora}` : ''}
           </span>
         </div>
         <div className="flex items-center gap-2">
-          {esAdmin && (
+          {esAdmin && !isEditing && (
             <button
               onClick={() => setEliminarConfirmId(p.id)}
-              className="opacity-0 group-hover:opacity-100 transition-opacity rounded-lg bg-red-50 px-2 py-1 text-[9px] font-bold text-red-600 hover:bg-red-100 border border-red-100"
+              className="opacity-0 group-hover:opacity-100 transition-opacity rounded p-1 text-slate-300 hover:text-rose-500"
+              title="Eliminar"
             >
-              🗑️
+              <svg viewBox="0 0 16 16" fill="currentColor" className="h-3.5 w-3.5"><path d="M6 2a1 1 0 00-1 1H3.5a.5.5 0 000 1h9a.5.5 0 000-1H11a1 1 0 00-1-1H6zM3 5.5a.5.5 0 01.5-.5h9a.5.5 0 01.5.5v7A1.5 1.5 0 0111.5 14h-7A1.5 1.5 0 013 12.5v-7z"/></svg>
             </button>
           )}
           {renderStatusBadge(p.estado)}
         </div>
       </div>
 
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex flex-1 flex-col items-center text-center">
-          <div className="mb-1 h-8 w-8 rounded-full bg-slate-50 flex items-center justify-center text-sm">🏟️</div>
-          <span className="text-sm font-bold text-slate-900 line-clamp-1">{p.localNombre || 'Local'}</span>
-        </div>
-        
-        <div className="flex flex-col items-center px-4">
-          {quickEditId === p.id ? (
-            <div className="flex items-center gap-2 animate-in zoom-in-95 duration-200">
-              <input 
-                type="number" 
-                className="w-12 h-10 rounded-lg bg-slate-900 text-white text-center font-black text-lg border border-brand-500 focus:ring-2 focus:ring-brand-500/50 outline-none" 
-                value={quickLocal}
-                onChange={(e) => setQuickLocal(parseInt(e.target.value) || 0)}
-                autoFocus
-              />
-              <span className="text-slate-400 font-bold">-</span>
-              <input 
-                type="number" 
-                className="w-12 h-10 rounded-lg bg-slate-900 text-white text-center font-black text-lg border border-brand-500 focus:ring-2 focus:ring-brand-500/50 outline-none" 
-                value={quickVisitante}
-                onChange={(e) => setQuickVisitante(parseInt(e.target.value) || 0)}
-              />
+      {/* Score area */}
+      <div className="flex items-center justify-between gap-2">
+        <span className="flex-1 text-center text-sm font-bold text-slate-900 line-clamp-2 leading-tight">{p.localNombre || 'Local'}</span>
+
+        <div className="shrink-0 px-2">
+          {isEditing ? (
+            <div className="flex flex-col items-center gap-2">
+              <div className="flex items-center gap-1.5">
+                <input
+                  type="number"
+                  min={0}
+                  className="w-12 h-10 rounded-lg bg-slate-900 text-white text-center font-black text-lg border border-brand-500 focus:ring-2 focus:ring-brand-500/40 outline-none"
+                  value={quickLocal}
+                  onChange={e => setQuickLocal(Math.max(0, parseInt(e.target.value) || 0))}
+                  onKeyDown={e => { if (e.key === 'Enter') void handleSaveQuickScore(p.id); if (e.key === 'Escape') setQuickEditId(null); }}
+                  autoFocus
+                />
+                <span className="text-slate-400 font-bold text-sm">-</span>
+                <input
+                  type="number"
+                  min={0}
+                  className="w-12 h-10 rounded-lg bg-slate-900 text-white text-center font-black text-lg border border-brand-500 focus:ring-2 focus:ring-brand-500/40 outline-none"
+                  value={quickVisitante}
+                  onChange={e => setQuickVisitante(Math.max(0, parseInt(e.target.value) || 0))}
+                  onKeyDown={e => { if (e.key === 'Enter') void handleSaveQuickScore(p.id); if (e.key === 'Escape') setQuickEditId(null); }}
+                />
+              </div>
+              {/* Finalizar toggle */}
+              <button
+                type="button"
+                onClick={() => setQuickFinalizar(v => !v)}
+                className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-bold uppercase transition-colors ${
+                  quickFinalizar
+                    ? 'bg-emerald-100 text-emerald-700 border border-emerald-200'
+                    : 'bg-amber-50 text-amber-600 border border-amber-200'
+                }`}
+              >
+                <span className={`h-1.5 w-1.5 rounded-full ${quickFinalizar ? 'bg-emerald-500' : 'bg-amber-400'}`} />
+                {quickFinalizar ? 'Finalizar partido' : 'Solo actualizar'}
+              </button>
             </div>
-          ) : p.estado === 'programado' ? (
-            <span className="text-xl font-black text-slate-300 italic">VS</span>
+          ) : esProgramado ? (
+            esAdmin ? (
+              <button
+                type="button"
+                onClick={() => openQuickEdit(p)}
+                className="flex flex-col items-center gap-0.5 group/vs px-2 py-1 rounded-lg hover:bg-brand-50 transition-colors"
+              >
+                <span className="text-lg font-black text-slate-300 group-hover/vs:text-brand-500 transition-colors">VS</span>
+                <span className="text-[9px] font-bold text-slate-300 group-hover/vs:text-brand-500 uppercase tracking-wide transition-colors">cargar</span>
+              </button>
+            ) : (
+              <span className="text-xl font-black text-slate-300 px-2">VS</span>
+            )
           ) : (
-            <div 
-              className="flex items-center gap-3 bg-slate-900 px-4 py-1.5 rounded-xl shadow-lg border border-slate-700 cursor-pointer hover:border-brand-500 transition-colors group/score"
-              onClick={() => {
-                setQuickEditId(p.id);
-                setQuickLocal(p.marcadorLocal ?? 0);
-                setQuickVisitante(p.marcadorVisitante ?? 0);
-              }}
+            <button
+              type="button"
+              disabled={!esAdmin}
+              onClick={() => esAdmin && openQuickEdit(p)}
+              className="flex items-center gap-2 bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-700 hover:border-brand-500 transition-colors disabled:cursor-default group/score"
             >
-              <span className="text-2xl font-black text-white tabular-nums leading-none">{p.marcadorLocal ?? 0}</span>
-              <span className="h-4 w-px bg-slate-700 group-hover/score:bg-brand-500 transition-colors"></span>
-              <span className="text-2xl font-black text-white tabular-nums leading-none">{p.marcadorVisitante ?? 0}</span>
-            </div>
+              <span className="text-xl font-black text-white tabular-nums leading-none">{p.marcadorLocal ?? 0}</span>
+              <span className="h-3.5 w-px bg-slate-600 group-hover/score:bg-brand-500 transition-colors" />
+              <span className="text-xl font-black text-white tabular-nums leading-none">{p.marcadorVisitante ?? 0}</span>
+            </button>
           )}
         </div>
 
-        <div className="flex flex-1 flex-col items-center text-center">
-          <div className="mb-1 h-8 w-8 rounded-full bg-slate-50 flex items-center justify-center text-sm">🛡️</div>
-          <span className="text-sm font-bold text-slate-900 line-clamp-1">{p.visitanteNombre || p.rival || 'Visitante'}</span>
-        </div>
+        <span className="flex-1 text-center text-sm font-bold text-slate-900 line-clamp-2 leading-tight">{p.visitanteNombre || p.rival || 'Visitante'}</span>
       </div>
 
-      <div className="mt-4 flex items-center justify-center gap-2 pt-3 border-t border-slate-50">
-        {quickEditId === p.id ? (
+      {/* Actions */}
+      <div className="mt-3 flex items-center justify-center gap-2 pt-3 border-t border-slate-100">
+        {isEditing ? (
           <>
-            <button 
-              className="rounded-lg bg-emerald-600 px-4 py-1.5 text-xs font-bold text-white hover:bg-emerald-700 transition shadow-sm flex items-center gap-1"
+            <button
+              className="rounded-lg bg-emerald-600 px-4 py-1.5 text-xs font-bold text-white hover:bg-emerald-700 transition shadow-sm disabled:opacity-60"
               disabled={isSavingQuick}
-              onClick={() => handleSaveQuickScore(p.id)}
+              onClick={() => void handleSaveQuickScore(p.id)}
             >
-              {isSavingQuick ? '...' : 'Guardar'}
+              {isSavingQuick ? 'Guardando…' : 'Guardar'}
             </button>
-            <button 
-              className="rounded-lg bg-slate-200 px-4 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-300 transition"
+            <button
+              className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-200 transition"
               disabled={isSavingQuick}
               onClick={() => setQuickEditId(null)}
             >
@@ -394,20 +437,30 @@ export default function GestionParticipantesFaseModal({
           </>
         ) : (
           <>
-            <button 
-              className="rounded-lg bg-slate-50 px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-100 transition"
+            {esProgramado && esAdmin && (
+              <button
+                className="rounded-lg bg-brand-600 px-4 py-1.5 text-xs font-bold text-white hover:bg-brand-700 transition shadow-sm"
+                onClick={() => openQuickEdit(p)}
+              >
+                Cargar resultado
+              </button>
+            )}
+            <button
+              className="rounded-lg bg-slate-50 px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-100 transition"
               onClick={() => { setPartidoInfoId(p.id); setInfoModalAbierto(true); }}
             >
               Info
             </button>
-            <button 
-              className="rounded-lg bg-brand-50 px-3 py-1.5 text-xs font-bold text-brand-700 hover:bg-brand-100 transition border border-brand-100"
-              onClick={() => { setPartidoSetsId(p.id); setGestionSetsAbierto(true); }}
-            >
-              Sets
-            </button>
-            <button 
-              className="rounded-lg bg-slate-50 px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-100 transition"
+            {!esProgramado && (
+              <button
+                className="rounded-lg bg-slate-50 px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-100 transition border border-slate-200"
+                onClick={() => { setPartidoSetsId(p.id); setGestionSetsAbierto(true); }}
+              >
+                Sets
+              </button>
+            )}
+            <button
+              className="rounded-lg bg-slate-50 px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-100 transition"
               onClick={() => { setPartidoAlineacionId(p.id); setAlineacionModalAbierto(true); }}
             >
               Plantilla
@@ -416,30 +469,21 @@ export default function GestionParticipantesFaseModal({
         )}
       </div>
 
-      {/* Modal de confirmación de eliminación */}
+      {/* Confirm delete overlay */}
       {eliminarConfirmId === p.id && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-xl z-50 backdrop-blur-sm">
-          <div className="bg-white rounded-lg p-4 shadow-xl max-w-xs">
+          <div className="bg-white rounded-xl p-4 shadow-xl max-w-[200px] text-center">
             <p className="text-sm font-bold text-slate-900 mb-4">¿Eliminar este partido?</p>
             <div className="flex gap-2">
-              <button
-                onClick={() => handleEliminarPartido(p.id)}
-                className="flex-1 bg-red-600 text-white px-3 py-2 rounded-lg text-xs font-bold hover:bg-red-700 transition"
-              >
-                Eliminar
-              </button>
-              <button
-                onClick={() => setEliminarConfirmId(null)}
-                className="flex-1 bg-slate-200 text-slate-700 px-3 py-2 rounded-lg text-xs font-bold hover:bg-slate-300 transition"
-              >
-                Cancelar
-              </button>
+              <button onClick={() => void handleEliminarPartido(p.id)} className="flex-1 bg-rose-600 text-white px-3 py-2 rounded-lg text-xs font-bold hover:bg-rose-700 transition">Eliminar</button>
+              <button onClick={() => setEliminarConfirmId(null)} className="flex-1 bg-slate-100 text-slate-700 px-3 py-2 rounded-lg text-xs font-bold hover:bg-slate-200 transition">Cancelar</button>
             </div>
           </div>
         </div>
       )}
     </li>
   );
+  };
 
   const contenido = (
     <div className="max-h-[80vh] overflow-y-auto">
