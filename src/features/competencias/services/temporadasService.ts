@@ -7,6 +7,8 @@ export type BackendTemporada = {
   descripcion?: string;
   fechaInicio?: string;
   fechaFin?: string;
+  estado?: 'en_creacion' | 'en_curso' | 'finalizada';
+  ganador?: string | { _id: string; nombre?: string; escudo?: string };
 };
 
 export async function listTemporadasByCompetencia(competenciaId: string): Promise<BackendTemporada[]> {

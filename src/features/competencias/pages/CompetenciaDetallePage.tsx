@@ -137,10 +137,15 @@ const CompetenciaDetallePage = () => {
     addToast({ type: 'success', title: 'Fixture generado' });
   };
 
-  const onEditarTemporada = async (t: BackendTemporada, nuevoNombre: string) => {
-    await actualizarTemporada(t._id, { nombre: nuevoNombre });
-    const temps = await listTemporadasByCompetencia(competenciaId!);
-    setTemporadas(temps);
+  const onEditarTemporada = async (t: BackendTemporada, payload: { nombre?: string; fechaInicio?: string; fechaFin?: string; estado?: string }) => {
+    await actualizarTemporada(t._id, payload as Partial<BackendTemporada>);
+    void loadAll();
+  };
+
+  const onAsignarCampeon = async (temporadaId: string, ganadorId: string | null) => {
+    await actualizarTemporada(temporadaId, { ganador: ganadorId } as any);
+    addToast({ type: 'success', title: ganadorId ? 'Campeón asignado' : 'Campeón removido' });
+    void loadAll();
   };
 
   const onEliminarTemporada = async (t: BackendTemporada) => {
@@ -339,6 +344,7 @@ const CompetenciaDetallePage = () => {
           fasesPorTemporada={fasesPorTemporada}
           onSubmitCrearFase={crearFaseHandler}
           onEditarTemporada={onEditarTemporada}
+          onAsignarCampeon={onAsignarCampeon}
           onEliminarTemporada={onEliminarTemporada}
           onGenerarFixture={onGenerarFixture}
           onEditarFase={onEditarFase}
