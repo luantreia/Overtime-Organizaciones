@@ -3,7 +3,7 @@ import ConfirmModal from '../../../shared/components/ConfirmModal/ConfirmModal';
 import type { BackendParticipacionTemporada } from '../services';
 import { opcionesEquiposParaTemporada, type EquipoDisponibleOpcion } from '../services/participacionTemporadaService';
 import { getSolicitudesEdicion, actualizarSolicitudEdicion } from '../../../shared/features/solicitudes/services/solicitudesEdicionService';
-import type { SolicitudEdicion } from '../../../shared/features/solicitudes/types/solicitudesEdicion';
+import type { SolicitudEdicion, ISolicitudEdicion } from '../../../shared/features/solicitudes/types/solicitudesEdicion';
 import { useToast } from '../../../shared/components/Toast/ToastProvider';
 
 type Props = {
@@ -47,7 +47,7 @@ export default function GestionEquiposTemporadaModal({
         getSolicitudesEdicion({ tipo: 'participacion-temporada-crear', estado: 'pendiente', scope: 'aprobables' } as any),
         getSolicitudesEdicion({ tipo: 'participacion-temporada-crear', estado: 'pendiente', scope: 'mine' } as any),
       ]);
-      const porTemporada = (s: SolicitudEdicion) => s.datosPropuestos?.temporadaId === temporadaId;
+      const porTemporada = (s: ISolicitudEdicion) => s.datosPropuestos?.temporadaId === temporadaId;
       setSolicitudesAprobables(aprobables.solicitudes.filter(porTemporada).map(s => ({ ...s, id: s._id })));
       setSolicitudesPropias(propias.solicitudes.filter(porTemporada).map(s => ({ ...s, id: s._id })));
     } catch (error) {
