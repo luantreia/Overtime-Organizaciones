@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import ConfirmModal from '../../../shared/components/ConfirmModal/ConfirmModal';
 import type { BackendParticipacionTemporada } from '../services';
 import { opcionesEquiposParaTemporada, type EquipoDisponibleOpcion } from '../services/participacionTemporadaService';
-import { getEquiposAceptadosPorCompetencia, type EquipoCompetenciaVinculo } from '../services/equipoCompetenciaOrgService';
+import { getEquiposAceptadosPorCompetencia, getEquiposDeOrganizacion, type EquipoCompetenciaVinculo } from '../services/equipoCompetenciaOrgService';
 import { getSolicitudesEdicion, actualizarSolicitudEdicion } from '../../../shared/features/solicitudes/services/solicitudesEdicionService';
 import type { SolicitudEdicion, ISolicitudEdicion } from '../../../shared/features/solicitudes/types/solicitudesEdicion';
 import { useToast } from '../../../shared/components/Toast/ToastProvider';
@@ -13,6 +13,7 @@ type Props = {
   esAdmin: boolean;
   competenciaId: string;
   temporadaId: string;
+  organizacionId?: string;
   participaciones: BackendParticipacionTemporada[];
   onUpdateParticipacionTemporada: (id: string, body: Partial<{ estado: string }>) => void | Promise<void>;
   onDeleteParticipacionTemporada: (id: string, temporadaId: string) => void | Promise<void>;
@@ -27,6 +28,7 @@ export default function GestionEquiposTemporadaModal({
   esAdmin,
   competenciaId,
   temporadaId,
+  organizacionId,
   participaciones,
   onUpdateParticipacionTemporada,
   onDeleteParticipacionTemporada,
@@ -41,6 +43,7 @@ export default function GestionEquiposTemporadaModal({
   const [solicitudesPropias, setSolicitudesPropias] = useState<SolicitudEdicion[]>([]);
   const [loadingSolicitudes, setLoadingSolicitudes] = useState(false);
   const [sugeridos, setSugeridos] = useState<EquipoCompetenciaVinculo[]>([]);
+  const [sugeridosOrg, setSugeridosOrg] = useState<EquipoCompetenciaVinculo[]>([]);
   const [enviando, setEnviando] = useState<string | null>(null);
   const { addToast } = useToast();
 
@@ -70,8 +73,13 @@ export default function GestionEquiposTemporadaModal({
           .then(setSugeridos)
           .catch(() => setSugeridos([]));
       }
+      if (organizacionId) {
+        getEquiposDeOrganizacion(organizacionId, competenciaId)
+          .then(setSugeridosOrg)
+          .catch(() => setSugeridosOrg([]));
+      }
     }
-  }, [isOpen, cargarSolicitudes, competenciaId]);
+  }, [isOpen, cargarSolicitudes, competenciaId, organizacionId]);
 
   const handleResolverSolicitud = async (id: string, estado: 'aceptado' | 'rechazado') => {
     try {
@@ -236,6 +244,58 @@ export default function GestionEquiposTemporadaModal({
                           }
                         }}
                         className="inline-flex items-center gap-1.5 rounded-lg border border-brand-200 bg-white px-3 py-1.5 text-xs font-semibold text-brand-700 shadow-sm transition hover:bg-brand-50 disabled:opacity-50"
+                      >
+                        {isSending ? '…' : '+ '}{nombre}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* Sugeridos de otras competencias de la organización */}
+          {(() => {
+            const yaInscritos = new Set(participaciones.map(pt =>
+              typeof pt.equipo === 'string' ? pt.equipo : ((pt.equipo as any)?._id ?? '')
+            ));
+            const yaEnComp = new Set(sugeridos.map(ec =>
+              typeof ec.equipo === 'string' ? ec.equipo : ((ec.equipo as any)?._id ?? '')
+            ));
+            const disponibles = sugeridosOrg.filter(ec => {
+              const eqId = typeof ec.equipo === 'string' ? ec.equipo : ((ec.equipo as any)?._id ?? '');
+              return eqId && !yaInscritos.has(eqId) && !yaEnComp.has(eqId);
+            });
+            if (disponibles.length === 0) return null;
+            return (
+              <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-4">
+                <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">
+                  Otros equipos de la organización
+                </h4>
+                <div className="flex flex-wrap gap-2">
+                  {disponibles.map(ec => {
+                    const eqId   = typeof ec.equipo === 'string' ? ec.equipo : ((ec.equipo as any)?._id ?? '');
+                    const nombre = typeof ec.equipo === 'string' ? ec.equipo : ((ec.equipo as any)?.nombre ?? 'Equipo');
+                    const isSending = enviando === eqId;
+                    return (
+                      <button
+                        key={ec._id}
+                        type="button"
+                        disabled={!esAdmin || isSending}
+                        onClick={async () => {
+                          if (!eqId) return;
+                          setEnviando(eqId);
+                          try {
+                            await onCrearSolicitudParticipacionTemporada(temporadaId, eqId);
+                            setSugeridosOrg(prev => prev.filter(s => {
+                              const sid = typeof s.equipo === 'string' ? s.equipo : ((s.equipo as any)?._id ?? '');
+                              return sid !== eqId;
+                            }));
+                          } finally {
+                            setEnviando(null);
+                          }
+                        }}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition hover:bg-slate-100 disabled:opacity-50"
                       >
                         {isSending ? '…' : '+ '}{nombre}
                       </button>

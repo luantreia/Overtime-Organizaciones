@@ -22,6 +22,7 @@ const CompetenciaDetallePage = () => {
 
   // detalle competencia y admins
   const [nombre, setNombre] = useState('');
+  const [organizacionId, setOrganizacionId] = useState('');
   const [modalidad, setModalidad] = useState<'Foam' | 'Cloth' | ''>('');
   const [categoria, setCategoria] = useState<'Masculino' | 'Femenino' | 'Mixto' | 'Libre' | ''>('');
   const [tipo, setTipo] = useState<'liga' | 'torneo' | 'otro' | ''>('');
@@ -80,6 +81,8 @@ const CompetenciaDetallePage = () => {
       setRankedEnabled(Boolean(detalle.rankedEnabled));
       setEsAdminBackend(Boolean(detalle.esAdmin));
       setAdmins((detalle.administradores as AdminUser[]) || []);
+      const org = (detalle as any).organizacion;
+      setOrganizacionId(typeof org === 'string' ? org : org?._id ?? '');
 
       const temps = detalle.temporadas ?? [];
       setTemporadas(temps as unknown as BackendTemporada[]);
@@ -339,6 +342,7 @@ const CompetenciaDetallePage = () => {
           esAdmin={esAdmin}
           loading={loading}
           competenciaId={competenciaId}
+          organizacionId={organizacionId || undefined}
           onRefresh={loadAll}
           onSubmitCrearTemporada={crearTemporadaHandler}
           temporadas={temporadas}

@@ -127,6 +127,7 @@ type Props = {
   esAdmin: boolean;
   loading: boolean;
   competenciaId: string;
+  organizacionId?: string;
   onRefresh?: () => void | Promise<void>;
   onSubmitCrearTemporada: (payload: { nombre: string; fechaInicio: string; fechaFin?: string }) => void | Promise<void>;
   temporadas: BackendTemporada[];
@@ -164,7 +165,7 @@ type Props = {
 
 export default function EstructuraSection(props: Props) {
   const {
-    esAdmin, loading, competenciaId, onRefresh,
+    esAdmin, loading, competenciaId, organizacionId, onRefresh,
     onSubmitCrearTemporada, temporadas, fasesPorTemporada, onSubmitCrearFase,
     onEditarTemporada, onAsignarCampeon, onEliminarTemporada, onGenerarFixture,
     onEditarFase, onEliminarFase,
@@ -842,6 +843,7 @@ export default function EstructuraSection(props: Props) {
         esAdmin={esAdmin}
         onRefresh={onRefresh}
         competenciaId={competenciaId}
+        organizacionId={organizacionId}
         temporadaId={openGestionEquipos.temporadaId || ''}
         participaciones={openGestionEquipos.temporadaId ? (participacionesTemporadaPorId[openGestionEquipos.temporadaId] || []) : []}
         onUpdateParticipacionTemporada={onUpdateParticipacionTemporada}
