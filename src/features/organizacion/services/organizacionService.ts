@@ -1,5 +1,5 @@
 import { authFetch } from '../../../shared/utils/authFetch';
-import type { Organizacion } from '../../../types';
+import type { Organizacion, RedesSociales } from '../../../types';
 
 type BackendOrganizacion = {
   _id: string;
@@ -7,6 +7,7 @@ type BackendOrganizacion = {
   descripcion?: string;
   logo?: string;
   sitioWeb?: string;
+  redesSociales?: RedesSociales;
   activa?: boolean;
 };
 
@@ -16,6 +17,7 @@ const mapOrganizacion = (o: BackendOrganizacion): Organizacion => ({
   descripcion: o.descripcion,
   logoUrl: o.logo,
   sitioWeb: o.sitioWeb,
+  redesSociales: o.redesSociales,
 });
 
 export async function getOrganizacionesDelUsuario(): Promise<Organizacion[]> {
@@ -29,6 +31,7 @@ export async function updateOrganizacion(id: string, payload: Partial<Organizaci
     descripcion: payload.descripcion,
     logo: payload.logoUrl,
     sitioWeb: payload.sitioWeb,
+    redesSociales: payload.redesSociales,
   };
   const data = await authFetch<BackendOrganizacion>(`/organizaciones/${id}`, {
     method: 'PUT',

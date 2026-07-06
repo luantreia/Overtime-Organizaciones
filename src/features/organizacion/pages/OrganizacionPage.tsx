@@ -23,7 +23,14 @@ const OrganizacionPage = () => {
     nombre: '',
     descripcion: '',
     sitioWeb: '',
-    logoUrl: ''
+    logoUrl: '',
+    redesSociales: {
+      instagram: '',
+      facebook: '',
+      twitter: '',
+      tiktok: '',
+      youtube: '',
+    },
   });
 
   useEffect(() => {
@@ -32,7 +39,14 @@ const OrganizacionPage = () => {
         nombre: organizacionSeleccionada.nombre || '',
         descripcion: organizacionSeleccionada.descripcion || '',
         sitioWeb: organizacionSeleccionada.sitioWeb || '',
-        logoUrl: organizacionSeleccionada.logoUrl || ''
+        logoUrl: organizacionSeleccionada.logoUrl || '',
+        redesSociales: {
+          instagram: organizacionSeleccionada.redesSociales?.instagram || '',
+          facebook: organizacionSeleccionada.redesSociales?.facebook || '',
+          twitter: organizacionSeleccionada.redesSociales?.twitter || '',
+          tiktok: organizacionSeleccionada.redesSociales?.tiktok || '',
+          youtube: organizacionSeleccionada.redesSociales?.youtube || '',
+        },
       });
     }
   }, [organizacionSeleccionada]);
@@ -134,7 +148,14 @@ const OrganizacionPage = () => {
                       nombre: organizacionSeleccionada.nombre || '',
                       descripcion: organizacionSeleccionada.descripcion || '',
                       sitioWeb: organizacionSeleccionada.sitioWeb || '',
-                      logoUrl: organizacionSeleccionada.logoUrl || ''
+                      logoUrl: organizacionSeleccionada.logoUrl || '',
+                      redesSociales: {
+                        instagram: organizacionSeleccionada.redesSociales?.instagram || '',
+                        facebook: organizacionSeleccionada.redesSociales?.facebook || '',
+                        twitter: organizacionSeleccionada.redesSociales?.twitter || '',
+                        tiktok: organizacionSeleccionada.redesSociales?.tiktok || '',
+                        youtube: organizacionSeleccionada.redesSociales?.youtube || '',
+                      },
                     });
                   }}
                   className="text-sm font-medium text-slate-500 hover:text-slate-700 transition"
@@ -181,6 +202,34 @@ const OrganizacionPage = () => {
                   </a>
                 </p>
               )}
+              {organizacionSeleccionada.redesSociales && Object.values(organizacionSeleccionada.redesSociales).some(Boolean) && (
+                <p className="flex flex-col">
+                  <span className="text-xs font-medium uppercase tracking-wider text-slate-500">Redes sociales</span>
+                  <span className="flex flex-wrap gap-3">
+                    {([
+                      ['instagram', 'Instagram'],
+                      ['facebook', 'Facebook'],
+                      ['twitter', 'X / Twitter'],
+                      ['tiktok', 'TikTok'],
+                      ['youtube', 'YouTube'],
+                    ] as const).map(([key, label]) => {
+                      const url = organizacionSeleccionada.redesSociales?.[key];
+                      if (!url) return null;
+                      return (
+                        <a
+                          key={key}
+                          href={url.startsWith('http') ? url : `https://${url}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-brand-600 hover:underline"
+                        >
+                          {label}
+                        </a>
+                      );
+                    })}
+                  </span>
+                </p>
+              )}
             </div>
           ) : (
             <div className="space-y-4">
@@ -221,6 +270,27 @@ const OrganizacionPage = () => {
                   value={form.logoUrl}
                   onChange={(e) => setForm({...form, logoUrl: e.target.value})}
                 />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-medium text-slate-500 uppercase">Redes sociales</label>
+                <div className="grid gap-2">
+                  {([
+                    ['instagram', 'Instagram', 'https://instagram.com/...'],
+                    ['facebook', 'Facebook', 'https://facebook.com/...'],
+                    ['twitter', 'X / Twitter', 'https://x.com/...'],
+                    ['tiktok', 'TikTok', 'https://tiktok.com/@...'],
+                    ['youtube', 'YouTube', 'https://youtube.com/...'],
+                  ] as const).map(([key, label, placeholder]) => (
+                    <input
+                      key={key}
+                      type="text"
+                      className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none"
+                      placeholder={`${label}: ${placeholder}`}
+                      value={form.redesSociales[key]}
+                      onChange={(e) => setForm({...form, redesSociales: {...form.redesSociales, [key]: e.target.value}})}
+                    />
+                  ))}
+                </div>
               </div>
             </div>
           )}
