@@ -19,6 +19,7 @@ import {
   ORG_PERMISSION_OPTIONS
 } from '../../../shared/utils/types/orgTypes';
 import { Button, Input, Select } from '../../../shared/components/ui';
+import ConfirmModal from '../../../shared/components/ConfirmModal/ConfirmModal';
 
 interface GestionMiembrosProps {
   organizacionId: string;
@@ -41,6 +42,7 @@ const GestionMiembros: React.FC<GestionMiembrosProps> = ({
   const [permisos, setPermisos] = useState<OrgPermission[]>([]);
   const [notas, setNotas] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [confirmEliminarMiembro, setConfirmEliminarMiembro] = useState<OrgMember | null>(null);
 
   const cargarMiembros = useCallback(async () => {
     if (!canManageMembers) return;
@@ -126,14 +128,14 @@ const GestionMiembros: React.FC<GestionMiembrosProps> = ({
     }
   };
 
-  const handleEliminarMiembro = async (miembro: OrgMember) => {
-    const nombreMiembro = (miembro.usuarioId as any)?.nombre || 'este miembro';
-    const confirmar = window.confirm(`¿Estás seguro de eliminar a ${nombreMiembro}?`);
-    
-    if (!confirmar) {
-      return;
-    }
+  const handleEliminarMiembro = (miembro: OrgMember) => {
+    setConfirmEliminarMiembro(miembro);
+  };
 
+  const handleConfirmEliminarMiembro = async () => {
+    if (!confirmEliminarMiembro) return;
+    const miembro = confirmEliminarMiembro;
+    setConfirmEliminarMiembro(null);
     try {
       await eliminarMiembroOrganizacion(organizacionId, miembro._id);
       addToast({ type: 'success', title: 'Éxito', message: 'Miembro eliminado correctamente' });
@@ -352,6 +354,16 @@ const GestionMiembros: React.FC<GestionMiembrosProps> = ({
           </table>
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={!!confirmEliminarMiembro}
+        title="Eliminar miembro"
+        message={`¿Estás seguro de eliminar a ${(confirmEliminarMiembro?.usuarioId as any)?.nombre || 'este miembro'}?`}
+        confirmLabel="Eliminar"
+        variant="danger"
+        onConfirm={handleConfirmEliminarMiembro}
+        onCancel={() => setConfirmEliminarMiembro(null)}
+      />
     </div>
   );
 };

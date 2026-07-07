@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Card } from '../../../../shared/components/ui';
 import { bulkDeletePlayerRatings } from '../../../ranked/services/rankedService';
 import { PlayerAdvancedSettingsModal } from './PlayerAdvancedSettingsModal';
+import ConfirmModal from '../../../../shared/components/ConfirmModal/ConfirmModal';
+import { useToast } from '../../../../shared/components/Toast/ToastProvider';
 
 interface RankedLeaderboardProps {
   board: any[];
@@ -31,6 +33,8 @@ export const RankedLeaderboard: React.FC<RankedLeaderboardProps> = ({
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [deleting, setDeleting] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState<{ id: string; name: string; competenciaId?: string; temporadaId?: string } | null>(null);
+  const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
+  const { addToast } = useToast();
 
   const toggleSelect = (id: string) => {
     setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
@@ -44,10 +48,13 @@ export const RankedLeaderboard: React.FC<RankedLeaderboardProps> = ({
     }
   };
 
-  const handleBulkDelete = async () => {
+  const handleBulkDelete = () => {
     if (!selectedIds.length) return;
-    if (!window.confirm(`¿Eliminar ${selectedIds.length} registros del leaderboard? Se borrarán sus puntos y PJs.`)) return;
+    setConfirmBulkDelete(true);
+  };
 
+  const handleConfirmBulkDelete = async () => {
+    setConfirmBulkDelete(false);
     try {
       setDeleting(true);
       await bulkDeletePlayerRatings({
@@ -61,7 +68,7 @@ export const RankedLeaderboard: React.FC<RankedLeaderboardProps> = ({
       onRefreshLeaderboard?.();
     } catch (err) {
       console.error('Error deleting:', err);
-      alert('Error al borrar los registros');
+      addToast({ type: 'error', title: 'Error', message: 'Error al borrar los registros' });
     } finally {
       setDeleting(false);
     }
@@ -216,6 +223,16 @@ export const RankedLeaderboard: React.FC<RankedLeaderboardProps> = ({
           onUpdated={onRefreshLeaderboard}
         />
       )}
+
+      <ConfirmModal
+        isOpen={confirmBulkDelete}
+        title="Eliminar registros"
+        message={`¿Eliminar ${selectedIds.length} registros del leaderboard? Se borrarán sus puntos y PJs.`}
+        confirmLabel="Eliminar"
+        variant="danger"
+        onConfirm={handleConfirmBulkDelete}
+        onCancel={() => setConfirmBulkDelete(false)}
+      />
     </>
   );
 };

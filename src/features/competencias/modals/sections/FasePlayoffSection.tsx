@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import type { BackendParticipacionFase } from '../../services';
 import HelpBadge from '../../../../shared/components/HelpBadge/HelpBadge';
+import ConfirmModal from '../../../../shared/components/ConfirmModal/ConfirmModal';
 
 function equipoNombreFromPf(pf: BackendParticipacionFase): string {
   const pt: any = (pf as any).participacionTemporada;
@@ -21,20 +23,28 @@ export default function FasePlayoffSection({
   onUpdate?: (id: string, body: Partial<{ seed: number; posicion: number }>) => void | Promise<void>; 
   onDelete?: (id: string) => void | Promise<void> 
 }) {
-  const handleRandomizeSeeds = async () => {
+  const [confirmSeedMode, setConfirmSeedMode] = useState<'random' | 'performance' | null>(null);
+
+  const handleRandomizeSeeds = () => {
     if (!onUpdate) return;
-    if (!window.confirm('¿Asignar Seeds aleatorios a todos los participantes?')) return;
-    
+    setConfirmSeedMode('random');
+  };
+
+  const handleRandomizeSeedsInternal = async () => {
+    if (!onUpdate) return;
     const shuffled = [...participantes].sort(() => Math.random() - 0.5);
     for (let i = 0; i < shuffled.length; i++) {
       await onUpdate(shuffled[i]._id, { seed: i + 1 });
     }
   };
 
-  const handlePerformanceSeeds = async () => {
+  const handlePerformanceSeeds = () => {
     if (!onUpdate) return;
-    if (!window.confirm('¿Asignar Seeds basados en el rendimiento (Eficiencia > Dif. Promedio)?')) return;
-    
+    setConfirmSeedMode('performance');
+  };
+
+  const handlePerformanceSeedsInternal = async () => {
+    if (!onUpdate) return;
     const sorted = [...participantes].sort((a, b) => {
       // 1. Prioridad por Clasificación (si vienen de una fase donde clasificaron, tienen prioridad)
       if (a.clasificado && !b.clasificado) return -1;
@@ -54,6 +64,13 @@ export default function FasePlayoffSection({
     for (let i = 0; i < sorted.length; i++) {
       await onUpdate(sorted[i]._id, { seed: i + 1 });
     }
+  };
+
+  const handleConfirmSeedMode = async () => {
+    const mode = confirmSeedMode;
+    setConfirmSeedMode(null);
+    if (mode === 'random') await handleRandomizeSeedsInternal();
+    else if (mode === 'performance') await handlePerformanceSeedsInternal();
   };
 
   const rows = [...(participantes || [])].sort((a: any, b: any) => {
@@ -186,6 +203,20 @@ export default function FasePlayoffSection({
           </div>
         </div>
       ) : null}
+
+      <ConfirmModal
+        isOpen={!!confirmSeedMode}
+        title="Asignar seeds"
+        message={
+          confirmSeedMode === 'random'
+            ? '¿Asignar Seeds aleatorios a todos los participantes?'
+            : '¿Asignar Seeds basados en el rendimiento (Eficiencia > Dif. Promedio)?'
+        }
+        confirmLabel="Asignar"
+        variant="primary"
+        onConfirm={handleConfirmSeedMode}
+        onCancel={() => setConfirmSeedMode(null)}
+      />
     </div>
   );
 }

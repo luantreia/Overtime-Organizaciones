@@ -246,6 +246,7 @@ export default function EstructuraSection(props: Props) {
   // ── Finalizar / Reabrir fase ──────────────────────────────────────────────
   const [confirmFinalizarFase, setConfirmFinalizarFase] = useState<{ fase: BackendFase; temporadaId: string } | null>(null);
   const [confirmReabrirFase,   setConfirmReabrirFase]   = useState<{ fase: BackendFase; temporadaId: string } | null>(null);
+  const [reabrirFaseRiesgoAceptado, setReabrirFaseRiesgoAceptado] = useState(false);
   const [savingFaseAction, setSavingFaseAction]         = useState(false);
 
   // ── Other modals ──────────────────────────────────────────────────────────
@@ -253,7 +254,7 @@ export default function EstructuraSection(props: Props) {
   const [openCrearFase, setOpenCrearFase] = useState<{ open: boolean; temporadaId?: string }>({ open: false });
   const [openJugadores, setOpenJugadores] = useState<{ open: boolean; pt?: BackendParticipacionTemporada }>({ open: false });
   const [openGestionEquipos, setOpenGestionEquipos] = useState<{ open: boolean; temporadaId?: string }>({ open: false });
-  const [openGestionParticipantesFase, setOpenGestionParticipantesFase] = useState<{ open: boolean; fase?: BackendFase; temporadaId?: string }>({ open: false });
+  const [openGestionParticipantesFase, setOpenGestionParticipantesFase] = useState<{ open: boolean; fase?: BackendFase; temporadaId?: string; initialTab?: 'participantes' | 'partidos' | 'configuracion' }>({ open: false });
   const [openReglamento, setOpenReglamento] = useState<{ open: boolean; fase: BackendFase | null; temporadaId?: string }>({ open: false, fase: null });
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -383,7 +384,7 @@ export default function EstructuraSection(props: Props) {
                   onClick={() => setOpenGestionEquipos({ open: true, temporadaId: t._id })}
                   className="text-xs font-semibold text-brand-600 hover:text-brand-700 disabled:opacity-50"
                 >
-                  Gestionar equipos →
+                  Gestionar equipos de la temporada →
                 </button>
               </div>
               <div className="flex items-center gap-1">
@@ -521,14 +522,24 @@ export default function EstructuraSection(props: Props) {
                                 onClick={() => setOpenGestionParticipantesFase({ open: true, fase: f, temporadaId: t._id })}
                                 className="text-xs font-semibold text-brand-600 hover:text-brand-700 disabled:opacity-50"
                               >
-                                Gestionar participantes →
+                                Gestionar participantes de la fase →
                               </button>
+
+                              {esAdmin && (
+                                <button
+                                  type="button"
+                                  onClick={() => setOpenGestionParticipantesFase({ open: true, fase: f, temporadaId: t._id, initialTab: 'configuracion' })}
+                                  className="rounded-lg border border-brand-200 bg-brand-50 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-brand-700 transition-colors hover:bg-brand-100"
+                                >
+                                  ⚡ Generar fixture
+                                </button>
+                              )}
 
                               {esGrupoOLiga && esAdmin && (
                                 esFinalizada ? (
                                   <button
                                     type="button"
-                                    onClick={() => setConfirmReabrirFase({ fase: f, temporadaId: t._id })}
+                                    onClick={() => { setReabrirFaseRiesgoAceptado(false); setConfirmReabrirFase({ fase: f, temporadaId: t._id }); }}
                                     className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-amber-700 transition-colors hover:bg-amber-100"
                                   >
                                     Reabrir para corregir
@@ -787,14 +798,27 @@ export default function EstructuraSection(props: Props) {
           <div className="space-y-3">
             <p className="text-sm text-slate-700">La fase volverá al estado "en curso" y podrás volver a finalizarla.</p>
             <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-700">
-              Importante: eliminá manualmente los equipos en las fases de destino antes de volver a clasificarlos para evitar duplicados.
+              Importante: eliminá manualmente los equipos en las fases de destino antes de volver a clasificarlos, o quedarán duplicados.
             </p>
+            <label className="flex items-start gap-2 text-xs font-semibold text-slate-700">
+              <input
+                type="checkbox"
+                className="mt-0.5"
+                checked={reabrirFaseRiesgoAceptado}
+                onChange={(e) => setReabrirFaseRiesgoAceptado(e.target.checked)}
+              />
+              Entiendo el riesgo de duplicados y ya revisé las fases de destino.
+            </label>
           </div> as any
         }
         confirmLabel={savingFaseAction ? 'Reabriendo…' : 'Reabrir'}
-        variant="default"
+        variant="danger"
         onConfirm={async () => {
           if (!confirmReabrirFase) return;
+          if (!reabrirFaseRiesgoAceptado) {
+            addToast({ type: 'error', title: 'Confirmá que revisaste el riesgo antes de continuar' });
+            return;
+          }
           setSavingFaseAction(true);
           try {
             await onEditarFase(confirmReabrirFase.fase, confirmReabrirFase.temporadaId, { estado: 'en_curso' });
@@ -860,6 +884,7 @@ export default function EstructuraSection(props: Props) {
         onRefresh={onRefresh}
         fase={openGestionParticipantesFase.fase}
         temporadaId={openGestionParticipantesFase.temporadaId}
+        initialTab={openGestionParticipantesFase.initialTab}
         participantesFase={openGestionParticipantesFase.fase ? (participacionesFasePorId[openGestionParticipantesFase.fase._id] || []) : []}
         participantesTemporada={openGestionParticipantesFase.temporadaId ? (participacionesTemporadaPorId[openGestionParticipantesFase.temporadaId] || []) : []}
         onAgregar={onCrearParticipacionFase}

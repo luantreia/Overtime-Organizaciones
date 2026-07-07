@@ -41,7 +41,7 @@ export default function Navbar() {
           ))}
         </nav>
 
-        <div className="hidden items-center gap-3 lg:flex flex-1 justify-end">
+        <div className="hidden items-center gap-3 xl:flex flex-1 justify-end">
           <OrganizationSelector />
           {!isAuthenticated && (
             <NavLink to="/login" className="rounded-lg px-3 py-2 text-sm font-semibold text-brand-600 transition hover:text-brand-700">
@@ -51,7 +51,7 @@ export default function Navbar() {
         </div>
 
         <button
-          className="inline-flex items-center rounded-md border border-slate-300 p-2 text-slate-700 hover:bg-slate-50 lg:hidden"
+          className="inline-flex items-center rounded-md border border-slate-300 p-2 text-slate-700 hover:bg-slate-50 xl:hidden"
           onClick={() => setOpen((v) => !v)}
           aria-label="Abrir menú"
         >
@@ -60,7 +60,7 @@ export default function Navbar() {
       </div>
 
       {open && (
-        <div className="border-t border-slate-200 bg-white px-4 py-3 lg:hidden">
+        <div className="border-t border-slate-200 bg-white px-4 py-3 xl:hidden">
           <div className="flex flex-col gap-2">
             {links.map((l) => (
               <NavLink key={l.to} to={l.to} className={navLinkClass} onClick={() => setOpen(false)}>

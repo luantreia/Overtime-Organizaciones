@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { Button } from '../../../../shared/components/ui';
 import { getPlayerRatingDetail, recalculatePlayerRating, deletePlayerRating, deleteMatchPlayerSnapshot } from '../../../ranked/services/rankedService';
+import ConfirmModal from '../../../../shared/components/ConfirmModal/ConfirmModal';
 
 interface PlayerAdvancedSettingsModalProps {
   isOpen: boolean;
@@ -30,6 +31,8 @@ export const PlayerAdvancedSettingsModal: React.FC<PlayerAdvancedSettingsModalPr
   const [rating, setRating] = useState<any>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [confirmDeleteRating, setConfirmDeleteRating] = useState(false);
+  const [confirmDeleteSnapshotId, setConfirmDeleteSnapshotId] = useState<string | null>(null);
 
   const fetchDetail = useCallback(async () => {
     setLoading(true);
@@ -73,8 +76,12 @@ export const PlayerAdvancedSettingsModal: React.FC<PlayerAdvancedSettingsModalPr
     }
   };
 
-  const handleDelete = async () => {
-    if (!window.confirm('¿Seguro? Se borrará el registro de este jugador en este ranking. No borra al jugador del sistema, solo su ranking actual.')) return;
+  const handleDelete = () => {
+    setConfirmDeleteRating(true);
+  };
+
+  const handleConfirmDeleteRating = async () => {
+    setConfirmDeleteRating(false);
     setBusy(true);
     try {
       await deletePlayerRating(playerId, {
@@ -92,8 +99,14 @@ export const PlayerAdvancedSettingsModal: React.FC<PlayerAdvancedSettingsModalPr
     }
   };
 
-  const handleDeleteSnapshot = async (id: string) => {
-    if (!window.confirm('¿Eliminar este registro de partido? El MMR del jugador se recalculará automáticamente sin estos puntos.')) return;
+  const handleDeleteSnapshot = (id: string) => {
+    setConfirmDeleteSnapshotId(id);
+  };
+
+  const handleConfirmDeleteSnapshot = async () => {
+    if (!confirmDeleteSnapshotId) return;
+    const id = confirmDeleteSnapshotId;
+    setConfirmDeleteSnapshotId(null);
     setBusy(true);
     try {
       await deleteMatchPlayerSnapshot(id);
@@ -242,6 +255,26 @@ export const PlayerAdvancedSettingsModal: React.FC<PlayerAdvancedSettingsModalPr
            </Button>
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={confirmDeleteRating}
+        title="Eliminar registro de ranking"
+        message="¿Seguro? Se borrará el registro de este jugador en este ranking. No borra al jugador del sistema, solo su ranking actual."
+        confirmLabel="Eliminar"
+        variant="danger"
+        onConfirm={handleConfirmDeleteRating}
+        onCancel={() => setConfirmDeleteRating(false)}
+      />
+
+      <ConfirmModal
+        isOpen={!!confirmDeleteSnapshotId}
+        title="Eliminar registro de partido"
+        message="¿Eliminar este registro de partido? El MMR del jugador se recalculará automáticamente sin estos puntos."
+        confirmLabel="Eliminar"
+        variant="danger"
+        onConfirm={handleConfirmDeleteSnapshot}
+        onCancel={() => setConfirmDeleteSnapshotId(null)}
+      />
     </div>
   );
 };

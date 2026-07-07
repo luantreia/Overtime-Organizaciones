@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { listTemporadasByCompetencia, crearTemporada, BackendTemporada, actualizarTemporada, eliminarTemporada, listFasesByTemporada, crearFase, generarFixture, BackendFase, actualizarFase, eliminarFase, addCompetenciaAdministrador, getCompetenciaAdministradores, removeCompetenciaAdministrador, actualizarCompetencia, eliminarCompetencia, type AdminUser, listParticipacionesByTemporada, type BackendParticipacionTemporada, crearSolicitudParticipacionTemporada, listParticipacionesByFase, type BackendParticipacionFase, crearParticipacionFase, updateParticipacionTemporada, deleteParticipacionTemporada, getCompetenciaDetalle } from '../services';
 import { getPartidosPorCompetencia, getPartidosPorTemporada, getPartidosPorFase } from '../../partidos/services/partidoService';
 import type { Partido } from '../../../types';
@@ -12,14 +12,24 @@ import ConfirmEliminarTemporadaModal from '../modals/ConfirmEliminarTemporadaMod
 import ConfirmEliminarFaseModal from '../modals/ConfirmEliminarFaseModal';
 import ConfirmEliminarCompetenciaModal from '../modals/ConfirmEliminarCompetenciaModal';
 import CompetenciaRankedSection from '../sections/CompetenciaRankedSection';
+import ModalBase from '../../../shared/components/ModalBase/ModalBase';
 
 const CompetenciaDetallePage = () => {
   const { id: competenciaId } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [temporadas, setTemporadas] = useState<BackendTemporada[]>([]);
   const [fasesPorTemporada, setFasesPorTemporada] = useState<Record<string, BackendFase[]>>({});
   const [loading, setLoading] = useState(false);
-  const [tab, setTab] = useState<'general' | 'estructura' | 'partidos' | 'ranked'>('estructura');
+  const tab = (searchParams.get('tab') as 'general' | 'estructura' | 'partidos' | 'ranked') || 'estructura';
+  const setTab = useCallback((next: 'general' | 'estructura' | 'partidos' | 'ranked') => {
+    setSearchParams((prev) => {
+      const params = new URLSearchParams(prev);
+      if (next === 'estructura') params.delete('tab');
+      else params.set('tab', next);
+      return params;
+    }, { replace: true });
+  }, [setSearchParams]);
 
   // detalle competencia y admins
   const [nombre, setNombre] = useState('');
@@ -49,6 +59,7 @@ const CompetenciaDetallePage = () => {
   // confirm dialogs
   const [confirmEliminarTemp, setConfirmEliminarTemp] = useState<BackendTemporada | null>(null);
   const [confirmEliminarFase, setConfirmEliminarFase] = useState<{ fase: BackendFase; temporadaId: string } | null>(null);
+  const [renameFase, setRenameFase] = useState<{ fase: BackendFase; temporadaId: string; value: string } | null>(null);
   const [confirmEliminarComp, setConfirmEliminarComp] = useState(false);
 
   const { addToast } = useToast();
@@ -160,17 +171,25 @@ const CompetenciaDetallePage = () => {
     if (payload) {
       // Si viene payload (ej: pasando configuracion), lo usamos directamente
       await actualizarFase(fase._id, payload);
-    } else {
-      // Comportamiento original: prompt para el nombre
-      const nuevo = window.prompt('Nuevo nombre de la fase:', fase.nombre || 'Fase') || fase.nombre;
-      if (!nuevo) return;
-      await actualizarFase(fase._id, { nombre: nuevo });
+      const fases = await listFasesByTemporada(temporadaId);
+      setFasesPorTemporada((prev) => ({ ...prev, [temporadaId]: fases }));
+      if (payload?.configuracion) {
+        addToast({ type: 'success', title: 'Reglamento actualizado' });
+      }
+      return;
     }
+    setRenameFase({ fase, temporadaId, value: fase.nombre || 'Fase' });
+  };
+
+  const handleConfirmRenameFase = async () => {
+    if (!renameFase) return;
+    const { fase, temporadaId, value } = renameFase;
+    setRenameFase(null);
+    const nuevo = value.trim() || fase.nombre;
+    if (!nuevo) return;
+    await actualizarFase(fase._id, { nombre: nuevo });
     const fases = await listFasesByTemporada(temporadaId);
     setFasesPorTemporada((prev) => ({ ...prev, [temporadaId]: fases }));
-    if (payload?.configuracion) {
-      addToast({ type: 'success', title: 'Reglamento actualizado' });
-    }
   };
 
   const onEliminarFase = async (fase: BackendFase, temporadaId: string) => {
@@ -418,6 +437,28 @@ const CompetenciaDetallePage = () => {
           }}
           onCancel={() => setConfirmEliminarFase(null)}
         />
+      ) : null}
+
+      {renameFase ? (
+        <ModalBase isOpen onClose={() => setRenameFase(null)} title="Renombrar fase" size="sm">
+          <div className="p-4 space-y-4">
+            <label className="block text-sm text-slate-600">
+              Nuevo nombre de la fase
+              <input
+                type="text"
+                autoFocus
+                value={renameFase.value}
+                onChange={(e) => setRenameFase({ ...renameFase, value: e.target.value })}
+                onKeyDown={(e) => { if (e.key === 'Enter') handleConfirmRenameFase(); }}
+                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              />
+            </label>
+            <div className="flex justify-end gap-3">
+              <button type="button" onClick={() => setRenameFase(null)} className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:border-slate-300">Cancelar</button>
+              <button type="button" onClick={handleConfirmRenameFase} className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">Guardar</button>
+            </div>
+          </div>
+        </ModalBase>
       ) : null}
 
       {confirmEliminarComp ? (

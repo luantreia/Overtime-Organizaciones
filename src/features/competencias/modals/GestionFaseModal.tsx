@@ -26,26 +26,65 @@ type Props = {
   onAgregar: (faseId: string, ptId: string, opts?: { grupo?: string; division?: string }) => void | Promise<void>;
   onGenerarLlave?: (faseId: string) => void | Promise<void>;
   onRefresh?: () => void | Promise<void>;
+  initialTab?: 'participantes' | 'partidos' | 'configuracion';
 };
 
-export default function GestionParticipantesFaseModal({ 
-  isOpen, 
-  onClose, 
-  esAdmin, 
-  fase, 
-  temporadaId, 
-  participantesFase, 
-  participantesTemporada, 
-  onAgregar, 
+export default function GestionParticipantesFaseModal({
+  isOpen,
+  onClose,
+  esAdmin,
+  fase,
+  temporadaId,
+  participantesFase,
+  participantesTemporada,
+  onAgregar,
   onGenerarLlave,
-  onRefresh
+  onRefresh,
+  initialTab
 }: Props) {
-  const [activeTab, setActiveTab] = useState<'participantes' | 'partidos' | 'configuracion'>('participantes');
+  const [activeTab, setActiveTab] = useState<'participantes' | 'partidos' | 'configuracion'>(initialTab || 'participantes');
+
+  useEffect(() => {
+    if (isOpen) setActiveTab(initialTab || 'participantes');
+  }, [isOpen, initialTab]);
   const [selectedPTs, setSelectedPTs] = useState<string[]>([]);
   const [grupo, setGrupo] = useState('');
   const [division, setDivision] = useState('');
   const [items, setItems] = useState<BackendParticipacionFase[]>(participantesFase || []);
   const [notice, setNotice] = useState<string>('');
+  const [confirmDeleteParticipanteId, setConfirmDeleteParticipanteId] = useState<string | null>(null);
+  const [confirmDeleteAllPartidos, setConfirmDeleteAllPartidos] = useState(false);
+
+  const handleDeleteParticipante = (id: string) => {
+    setConfirmDeleteParticipanteId(id);
+  };
+
+  const handleConfirmDeleteParticipante = async () => {
+    if (!confirmDeleteParticipanteId) return;
+    const id = confirmDeleteParticipanteId;
+    setConfirmDeleteParticipanteId(null);
+    await deleteParticipacionFase(id);
+    setItems((prev) => prev.filter((p) => p._id !== id));
+    setNotice('Participante eliminado'); setTimeout(() => setNotice(''), 1200);
+    onRefresh?.();
+  };
+
+  const handleConfirmDeleteAllPartidos = async () => {
+    setConfirmDeleteAllPartidos(false);
+    setNotice('Eliminando partidos...');
+    try {
+      for (const p of partidos) {
+        await eliminarPartido(p.id);
+      }
+      if (fase?._id) await recalcularFase(fase._id);
+      await refrescarPartidos();
+      setNotice('✨ Calendario limpiado. Ya puedes generar uno nuevo.');
+      setTimeout(() => setNotice(''), 3000);
+      if (onRefresh) onRefresh();
+    } catch (e) {
+      setNotice('❌ Error al eliminar algunos partidos');
+    }
+  };
 
   useEffect(() => {
     setItems(participantesFase || []);
@@ -594,13 +633,7 @@ export default function GestionParticipantesFaseModal({
                   setNotice('Cambios guardados'); setTimeout(()=> setNotice(''), 1200);
                   onRefresh?.();
                 }}
-                onDelete={async (id: string) => {
-                  if (!window.confirm('¿Eliminar este participante de la fase?')) return;
-                  await deleteParticipacionFase(id);
-                  setItems((prev)=> prev.filter(p=> p._id !== id));
-                  setNotice('Participante eliminado'); setTimeout(()=> setNotice(''), 1200);
-                  onRefresh?.();
-                }}
+                onDelete={handleDeleteParticipante}
               />
             ) : tipo === 'grupo' ? (
               <FaseGruposSection
@@ -612,13 +645,7 @@ export default function GestionParticipantesFaseModal({
                   setNotice('Cambios guardados'); setTimeout(()=> setNotice(''), 1200);
                   onRefresh?.();
                 }}
-                onDelete={async (id: string) => {
-                  if (!window.confirm('¿Eliminar este participante de la fase?')) return;
-                  await deleteParticipacionFase(id);
-                  setItems((prev)=> prev.filter(p=> p._id !== id));
-                  setNotice('Participante eliminado'); setTimeout(()=> setNotice(''), 1200);
-                  onRefresh?.();
-                }}
+                onDelete={handleDeleteParticipante}
               />
             ) : (tipo === 'playoff' || tipo === 'promocion') ? (
               <FasePlayoffSection
@@ -630,16 +657,10 @@ export default function GestionParticipantesFaseModal({
                   setNotice('Cambios guardados'); setTimeout(()=> setNotice(''), 1200);
                   onRefresh?.();
                 }}
-                onDelete={async (id: string) => {
-                  if (!window.confirm('¿Eliminar este participante de la fase?')) return;
-                  await deleteParticipacionFase(id);
-                  setItems((prev)=> prev.filter(p=> p._id !== id));
-                  setNotice('Participante eliminado'); setTimeout(()=> setNotice(''), 1200);
-                  onRefresh?.();
-                }}
+                onDelete={handleDeleteParticipante}
               />
             ) : (
-              <FaseGruposSection participantes={items} esAdmin={esAdmin} onUpdate={async (id: string, body: Partial<{ grupo: string }>) => { await updateParticipacionFase(id, body); setItems((prev)=> prev.map(p=> p._id===id ? ({...p, ...body} as any) : p)); setNotice('Cambios guardados'); setTimeout(()=> setNotice(''), 1200); onRefresh?.(); }} onDelete={async (id: string) => { if (!window.confirm('¿Eliminar este participante de la fase?')) return; await deleteParticipacionFase(id); setItems((prev)=> prev.filter(p=> p._id !== id)); setNotice('Participante eliminado'); setTimeout(()=> setNotice(''), 1200); onRefresh?.(); }} />
+              <FaseGruposSection participantes={items} esAdmin={esAdmin} onUpdate={async (id: string, body: Partial<{ grupo: string }>) => { await updateParticipacionFase(id, body); setItems((prev)=> prev.map(p=> p._id===id ? ({...p, ...body} as any) : p)); setNotice('Cambios guardados'); setTimeout(()=> setNotice(''), 1200); onRefresh?.(); }} onDelete={handleDeleteParticipante} />
             )}
           </section>
         )}
@@ -843,22 +864,7 @@ export default function GestionParticipantesFaseModal({
                         <button 
                           type="button"
                           className="flex-1 rounded-xl bg-amber-600 px-4 py-3 text-[10px] font-black uppercase tracking-widest text-white hover:bg-amber-700 transition shadow-lg shadow-amber-200 flex items-center justify-center gap-2"
-                          onClick={async () => {
-                            if (!window.confirm('¿Estás SEGURO de eliminar TODOS los partidos de esta fase? Esta acción no se puede deshacer y perderás todos los resultados registrados.')) return;
-                            setNotice('Eliminando partidos...');
-                            try {
-                              for (const p of partidos) {
-                                await eliminarPartido(p.id);
-                              }
-                              if (fase?._id) await recalcularFase(fase._id);
-                              await refrescarPartidos();
-                              setNotice('✨ Calendario limpiado. Ya puedes generar uno nuevo.');
-                              setTimeout(() => setNotice(''), 3000);
-                              if (onRefresh) onRefresh();
-                            } catch (e) {
-                              setNotice('❌ Error al eliminar algunos partidos');
-                            }
-                          }}
+                          onClick={() => setConfirmDeleteAllPartidos(true)}
                         >
                           🗑️ Limpiar y Reiniciar Fase
                         </button>
@@ -1520,6 +1526,26 @@ export default function GestionParticipantesFaseModal({
             setPartidos(lista);
           }
         }}
+      />
+
+      <ConfirmModal
+        isOpen={!!confirmDeleteParticipanteId}
+        title="Eliminar participante"
+        message="¿Eliminar este participante de la fase?"
+        confirmLabel="Eliminar"
+        variant="danger"
+        onConfirm={handleConfirmDeleteParticipante}
+        onCancel={() => setConfirmDeleteParticipanteId(null)}
+      />
+
+      <ConfirmModal
+        isOpen={confirmDeleteAllPartidos}
+        title="Eliminar todos los partidos"
+        message="¿Estás SEGURO de eliminar TODOS los partidos de esta fase? Esta acción no se puede deshacer y perderás todos los resultados registrados."
+        confirmLabel="Eliminar todo"
+        variant="danger"
+        onConfirm={handleConfirmDeleteAllPartidos}
+        onCancel={() => setConfirmDeleteAllPartidos(false)}
       />
     </>
   );
