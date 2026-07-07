@@ -14,6 +14,7 @@ import ModalGestionSets from '../../partidos/components/modals/ModalGestionSets'
 import { getTemporadaById } from '../services/temporadasService';
 import { getCompetenciaById } from '../services/competenciasService';
 import { VisualBracket } from '../components/VisualBracket';
+import ConfigurarReglamentoModal from './ConfigurarReglamentoModal';
 
 type Props = {
   isOpen: boolean;
@@ -23,8 +24,10 @@ type Props = {
   temporadaId?: string;
   participantesFase: BackendParticipacionFase[];
   participantesTemporada: BackendParticipacionTemporada[];
+  todasLasFases: BackendFase[];
   onAgregar: (faseId: string, ptId: string, opts?: { grupo?: string; division?: string }) => void | Promise<void>;
   onGenerarLlave?: (faseId: string) => void | Promise<void>;
+  onEditarFase: (fase: BackendFase, temporadaId: string, payload?: Partial<BackendFase>) => void | Promise<void>;
   onRefresh?: () => void | Promise<void>;
   initialTab?: 'participantes' | 'partidos' | 'configuracion';
 };
@@ -37,11 +40,14 @@ export default function GestionParticipantesFaseModal({
   temporadaId,
   participantesFase,
   participantesTemporada,
+  todasLasFases,
   onAgregar,
   onGenerarLlave,
+  onEditarFase,
   onRefresh,
   initialTab
 }: Props) {
+  const [reglamentoOpen, setReglamentoOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'participantes' | 'partidos' | 'configuracion'>(initialTab || 'participantes');
 
   useEffect(() => {
@@ -842,6 +848,29 @@ export default function GestionParticipantesFaseModal({
 
         {activeTab === 'configuracion' && (
           <section className="space-y-8 animate-in fade-in duration-300">
+            {/* Reglamento de la fase */}
+            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h3 className="text-sm font-extrabold text-slate-900 uppercase tracking-tight flex items-center gap-2">
+                    <span className="text-lg">⚙️</span>
+                    Reglamento
+                  </h3>
+                  <p className="mt-1 text-xs text-slate-500">
+                    Puntuación, criterios de desempate, clasificados y destino de ganadores/perdedores.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  disabled={!esAdmin}
+                  onClick={() => setReglamentoOpen(true)}
+                  className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
+                >
+                  Configurar reglamento
+                </button>
+              </div>
+            </div>
+
             {/* Acciones de Fase */}
             {esAdmin && (
               <div className="rounded-2xl border border-brand-100 bg-brand-50/20 p-5 shadow-sm">
@@ -1546,6 +1575,18 @@ export default function GestionParticipantesFaseModal({
         variant="danger"
         onConfirm={handleConfirmDeleteAllPartidos}
         onCancel={() => setConfirmDeleteAllPartidos(false)}
+      />
+
+      <ConfigurarReglamentoModal
+        isOpen={reglamentoOpen}
+        fase={fase || null}
+        todasLasFases={todasLasFases}
+        onClose={() => setReglamentoOpen(false)}
+        onSave={async (_, config) => {
+          if (temporadaId && fase) {
+            await onEditarFase(fase, temporadaId, { configuracion: config });
+          }
+        }}
       />
     </>
   );

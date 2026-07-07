@@ -8,7 +8,6 @@ import CrearFaseModal from '../modals/CrearFaseModal';
 import JugadoresTemporadaModal from '../modals/JugadoresTemporadaModal';
 import GestionEquiposTemporadaModal from '../modals/GestionEquiposTemporadaModal';
 import GestionParticipantesFaseModal from '../modals/GestionFaseModal';
-import ConfigurarReglamentoModal from '../modals/ConfigurarReglamentoModal';
 import ConfirmModal from '../../../shared/components/ConfirmModal/ConfirmModal';
 import { TablaPosiciones } from '../../../shared/components/TablaPosiciones';
 import { VisualBracket } from '../components/VisualBracket';
@@ -27,12 +26,6 @@ const IconPencil = () => (
 const IconTrash = () => (
   <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
     <path fillRule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 10.23 1.482l.149-.022.841 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.742-2.53l.841-10.52.149.023a.75.75 0 00.23-1.482A41.03 41.03 0 0014 4.193V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4zM8.58 7.72a.75.75 0 00-1.5.06l.3 7.5a.75.75 0 101.5-.06l-.3-7.5zm4.34.06a.75.75 0 10-1.5-.06l-.3 7.5a.75.75 0 101.5.06l.3-7.5z" clipRule="evenodd" />
-  </svg>
-);
-
-const IconCog = () => (
-  <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
-    <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
   </svg>
 );
 
@@ -255,8 +248,7 @@ export default function EstructuraSection(props: Props) {
   const [openCrearFase, setOpenCrearFase] = useState<{ open: boolean; temporadaId?: string }>({ open: false });
   const [openJugadores, setOpenJugadores] = useState<{ open: boolean; pt?: BackendParticipacionTemporada }>({ open: false });
   const [openGestionEquipos, setOpenGestionEquipos] = useState<{ open: boolean; temporadaId?: string }>({ open: false });
-  const [openGestionParticipantesFase, setOpenGestionParticipantesFase] = useState<{ open: boolean; fase?: BackendFase; temporadaId?: string; initialTab?: 'participantes' | 'partidos' | 'configuracion' }>({ open: false });
-  const [openReglamento, setOpenReglamento] = useState<{ open: boolean; fase: BackendFase | null; temporadaId?: string }>({ open: false, fase: null });
+  const [openGestionParticipantesFase, setOpenGestionParticipantesFase] = useState<{ open: boolean; fase?: BackendFase; temporadaId?: string }>({ open: false });
 
   // ─────────────────────────────────────────────────────────────────────────
   return (
@@ -485,15 +477,6 @@ export default function EstructuraSection(props: Props) {
                             <button
                               type="button"
                               disabled={!esAdmin}
-                              title="Configurar reglamento"
-                              onClick={() => setOpenReglamento({ open: true, fase: f, temporadaId: t._id })}
-                              className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 disabled:opacity-40"
-                            >
-                              <IconCog />
-                            </button>
-                            <button
-                              type="button"
-                              disabled={!esAdmin}
                               title="Editar fase"
                               onClick={() => onEditarFase(f, t._id)}
                               className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 disabled:opacity-40"
@@ -524,18 +507,8 @@ export default function EstructuraSection(props: Props) {
                                 onClick={() => setOpenGestionParticipantesFase({ open: true, fase: f, temporadaId: t._id })}
                                 className="text-xs font-semibold text-brand-600 hover:text-brand-700 disabled:opacity-50"
                               >
-                                Gestionar participantes de la fase →
+                                Gestionar fase →
                               </button>
-
-                              {esAdmin && (
-                                <button
-                                  type="button"
-                                  onClick={() => setOpenGestionParticipantesFase({ open: true, fase: f, temporadaId: t._id, initialTab: 'configuracion' })}
-                                  className="rounded-lg border border-brand-200 bg-brand-50 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-brand-700 transition-colors hover:bg-brand-100"
-                                >
-                                  ⚡ Generar fixture
-                                </button>
-                              )}
 
                               {esGrupoOLiga && esAdmin && (
                                 esFinalizada ? (
@@ -878,7 +851,7 @@ export default function EstructuraSection(props: Props) {
         onOpenJugadores={pt => setOpenJugadores({ open: true, pt })}
       />
 
-      {/* Gestión participantes fase */}
+      {/* Gestión de fase (participantes, calendario, configuración y reglamento) */}
       <GestionParticipantesFaseModal
         isOpen={openGestionParticipantesFase.open}
         onClose={() => setOpenGestionParticipantesFase({ open: false })}
@@ -886,24 +859,12 @@ export default function EstructuraSection(props: Props) {
         onRefresh={onRefresh}
         fase={openGestionParticipantesFase.fase}
         temporadaId={openGestionParticipantesFase.temporadaId}
-        initialTab={openGestionParticipantesFase.initialTab}
+        todasLasFases={openGestionParticipantesFase.temporadaId ? (fasesPorTemporada[openGestionParticipantesFase.temporadaId] || []) : []}
         participantesFase={openGestionParticipantesFase.fase ? (participacionesFasePorId[openGestionParticipantesFase.fase._id] || []) : []}
         participantesTemporada={openGestionParticipantesFase.temporadaId ? (participacionesTemporadaPorId[openGestionParticipantesFase.temporadaId] || []) : []}
         onAgregar={onCrearParticipacionFase}
         onGenerarLlave={faseId => onGenerarFixture(faseId)}
-      />
-
-      {/* Reglamento */}
-      <ConfigurarReglamentoModal
-        isOpen={openReglamento.open}
-        fase={openReglamento.fase}
-        todasLasFases={openReglamento.temporadaId ? (fasesPorTemporada[openReglamento.temporadaId] || []) : []}
-        onClose={() => setOpenReglamento({ open: false, fase: null })}
-        onSave={async (_, config) => {
-          if (openReglamento.temporadaId && openReglamento.fase) {
-            await onEditarFase(openReglamento.fase, openReglamento.temporadaId, { configuracion: config });
-          }
-        }}
+        onEditarFase={onEditarFase}
       />
     </>
   );
