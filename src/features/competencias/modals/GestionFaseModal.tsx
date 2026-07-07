@@ -6,15 +6,17 @@ import FaseLigaSection from './sections/FaseLigaSection';
 import FaseGruposSection from './sections/FaseGruposSection';
 import FasePlayoffSection from './sections/FasePlayoffSection';
 import { updateParticipacionFase, deleteParticipacionFase } from '../services/participacionFaseService';
-import { getPartidosPorFase, crearPartidoCompetencia, actualizarPartido, eliminarPartido } from '../../partidos/services/partidoService';
+import { getPartidosPorFase, crearPartidoCompetencia, actualizarPartido, eliminarPartido, getPartidoDetallado, type PartidoDetallado } from '../../partidos/services/partidoService';
 import type { Partido } from '../../../types';
 import ModalInformacionPartido from '../../partidos/components/modals/ModalInformacionPartido';
 import ModalAlineacionPartido from '../../partidos/components/modals/ModalAlineacionPartido';
 import ModalGestionSets from '../../partidos/components/modals/ModalGestionSets';
+import ModalCapturaSetEstadisticas from '../../partidos/components/modals/ModalCapturaSetEstadisticas';
 import { getTemporadaById } from '../services/temporadasService';
 import { getCompetenciaById } from '../services/competenciasService';
 import { VisualBracket } from '../components/VisualBracket';
 import ConfigurarReglamentoModal from './ConfigurarReglamentoModal';
+import { useToken } from '../../../app/providers/AuthContext';
 
 type Props = {
   isOpen: boolean;
@@ -106,6 +108,10 @@ export default function GestionParticipantesFaseModal({
   const [partidoInfoId, setPartidoInfoId] = useState<string | null>(null);
   const [gestionSetsAbierto, setGestionSetsAbierto] = useState(false);
   const [partidoSetsId, setPartidoSetsId] = useState<string | null>(null);
+  const [capturaSetAbierta, setCapturaSetAbierta] = useState(false);
+  const [numeroSetEnCaptura, setNumeroSetEnCaptura] = useState<number | null>(null);
+  const [partidoDetalladoCaptura, setPartidoDetalladoCaptura] = useState<PartidoDetallado | null>(null);
+  const token = useToken();
   const [alineacionModalAbierto, setAlineacionModalAbierto] = useState(false);
   const [partidoAlineacionId, setPartidoAlineacionId] = useState<string | null>(null);
   const [modalidadComp, setModalidadComp] = useState<string | undefined>(undefined);
@@ -168,6 +174,27 @@ export default function GestionParticipantesFaseModal({
     } catch (e) {
       console.error("Error refrescando partidos:", e);
     }
+  };
+
+  const abrirCapturaSet = async (partidoId: string, numeroSet?: number) => {
+    setNumeroSetEnCaptura(numeroSet ?? null);
+    setGestionSetsAbierto(false);
+    setCapturaSetAbierta(true);
+    try {
+      const detalle = await getPartidoDetallado(partidoId);
+      setPartidoDetalladoCaptura(detalle);
+    } catch (e) {
+      console.error('Error cargando detalle del partido para captura:', e);
+      setNotice('❌ No pudimos cargar el detalle del partido');
+      setTimeout(() => setNotice(''), 3000);
+    }
+  };
+
+  const cerrarCapturaSet = async () => {
+    setCapturaSetAbierta(false);
+    setNumeroSetEnCaptura(null);
+    setPartidoDetalladoCaptura(null);
+    await refrescarPartidos();
   };
 
   const handleEliminarPartido = async (partidoId: string) => {
@@ -1542,6 +1569,19 @@ export default function GestionParticipantesFaseModal({
             setPartidos(lista);
           }
         }}
+        onAbrirCaptura={(numero) => {
+          if (partidoSetsId) void abrirCapturaSet(partidoSetsId, numero);
+        }}
+      />
+
+      <ModalCapturaSetEstadisticas
+        partido={partidoDetalladoCaptura}
+        partidoId={partidoSetsId || ''}
+        token={token ?? ''}
+        isOpen={capturaSetAbierta}
+        onClose={cerrarCapturaSet}
+        numeroSetInicial={numeroSetEnCaptura}
+        onRefresh={refrescarPartidos}
       />
 
       <ModalAlineacionPartido
