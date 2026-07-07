@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
+import { UsersIcon } from '@heroicons/react/20/solid';
 import type { BackendTemporada, BackendFase, BackendParticipacionTemporada, BackendParticipacionFase } from '../services';
 import { finalizarFase } from '../services';
 import { opcionesEquiposParaTemporada, type EquipoDisponibleOpcion } from '../services/participacionTemporadaService';
@@ -382,8 +383,9 @@ export default function EstructuraSection(props: Props) {
                   type="button"
                   disabled={!esAdmin}
                   onClick={() => setOpenGestionEquipos({ open: true, temporadaId: t._id })}
-                  className="text-xs font-semibold text-brand-600 hover:text-brand-700 disabled:opacity-50"
+                  className="inline-flex items-center gap-1 text-xs font-semibold text-brand-600 hover:text-brand-700 disabled:opacity-50"
                 >
+                  <UsersIcon className="h-3.5 w-3.5" />
                   Gestionar equipos de la temporada →
                 </button>
               </div>
