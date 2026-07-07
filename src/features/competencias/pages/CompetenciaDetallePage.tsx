@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { listTemporadasByCompetencia, crearTemporada, BackendTemporada, actualizarTemporada, eliminarTemporada, listFasesByTemporada, crearFase, generarFixture, BackendFase, actualizarFase, eliminarFase, addCompetenciaAdministrador, getCompetenciaAdministradores, removeCompetenciaAdministrador, actualizarCompetencia, eliminarCompetencia, type AdminUser, listParticipacionesByTemporada, type BackendParticipacionTemporada, crearSolicitudParticipacionTemporada, listParticipacionesByFase, type BackendParticipacionFase, crearParticipacionFase, updateParticipacionTemporada, deleteParticipacionTemporada, getCompetenciaDetalle } from '../services';
 import { getPartidosPorCompetencia, getPartidosPorTemporada, getPartidosPorFase } from '../../partidos/services/partidoService';
 import type { Partido } from '../../../types';
@@ -15,6 +15,7 @@ import CompetenciaRankedSection from '../sections/CompetenciaRankedSection';
 
 const CompetenciaDetallePage = () => {
   const { id: competenciaId } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [temporadas, setTemporadas] = useState<BackendTemporada[]>([]);
   const [fasesPorTemporada, setFasesPorTemporada] = useState<Record<string, BackendFase[]>>({});
   const [loading, setLoading] = useState(false);
@@ -425,7 +426,8 @@ const CompetenciaDetallePage = () => {
           onConfirm={async () => {
             if (!competenciaId) return;
             await eliminarCompetencia(competenciaId);
-            window.location.href = '/competencias';
+            addToast({ type: 'success', title: 'Competencia eliminada' });
+            navigate('/competencias');
           }}
           onCancel={() => setConfirmEliminarComp(false)}
         />
