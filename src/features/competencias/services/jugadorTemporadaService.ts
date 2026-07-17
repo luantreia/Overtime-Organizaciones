@@ -23,10 +23,6 @@ export async function updateJugadorTemporada(id: string, body: Partial<{ estado:
   return authFetch<BackendJugadorTemporada>(`/jugador-temporada/${id}`, { method: 'PUT', body });
 }
 
-export async function deleteJugadorTemporada(id: string) {
-  return authFetch<{ mensaje?: string }>(`/jugador-temporada/${id}`, { method: 'DELETE' });
-}
-
 export type JugadorEquipoOpcion = { _id: string; jugador: { _id: string; nombre?: string; alias?: string; foto?: string; nacionalidad?: string } };
 
 export async function opcionesJugadorTemporada(equipoId: string, participacionTemporadaId: string, q?: string): Promise<JugadorEquipoOpcion[]> {

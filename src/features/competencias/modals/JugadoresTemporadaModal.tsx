@@ -3,7 +3,7 @@ import { TrashIcon, UserGroupIcon, UserPlusIcon } from '@heroicons/react/20/soli
 import ConfirmModal from '../../../shared/components/ConfirmModal/ConfirmModal';
 import { useToast } from '../../../shared/components/Toast/ToastProvider';
 import type { BackendParticipacionTemporada } from '../services';
-import { listJugadorTemporadaByParticipacion, updateJugadorTemporada, deleteJugadorTemporada, type BackendJugadorTemporada, opcionesJugadorTemporada, type JugadorEquipoOpcion } from '../services/jugadorTemporadaService';
+import { listJugadorTemporadaByParticipacion, updateJugadorTemporada, type BackendJugadorTemporada, opcionesJugadorTemporada, type JugadorEquipoOpcion } from '../services/jugadorTemporadaService';
 import { crearSolicitudEdicion } from '../../../shared/features/solicitudes';
 
 // NOTE: Para agregar jugadores a la temporada, se pueden seleccionar múltiples jugadores
@@ -48,7 +48,25 @@ export default function JugadoresTemporadaModal({ isOpen, onClose, participacion
   const [seleccionados, setSeleccionados] = useState<Set<string>>(new Set());
   const [estado, setEstado] = useState<'aceptado' | 'baja' | 'suspendido'>('aceptado');
   const [rol, setRol] = useState<'jugador' | 'entrenador'>('jugador');
+  const [bajaSolicitada, setBajaSolicitada] = useState<Set<string>>(new Set());
   const { addToast } = useToast();
+
+  const handleSolicitarBaja = async (jugadorTemporadaId: string, nombre: string) => {
+    try {
+      await crearSolicitudEdicion({
+        tipo: 'jugador-temporada-eliminar',
+        datosPropuestos: { jugadorTemporadaId },
+      });
+      setBajaSolicitada((prev) => new Set(prev).add(jugadorTemporadaId));
+      addToast({
+        type: 'success',
+        title: 'Solicitud de baja enviada',
+        message: `Se pidió quitar a ${nombre} de la temporada — requiere doble confirmación de un admin.`,
+      });
+    } catch (error: any) {
+      addToast({ type: 'error', title: 'Error', message: error.message });
+    }
+  };
 
   const equipoId = useMemo(() => {
     const eq = participacion?.equipo as any;
@@ -139,12 +157,10 @@ export default function JugadoresTemporadaModal({ isOpen, onClose, participacion
                         </select>
                         <button
                           type="button"
-                          title="Eliminar jugador de la temporada"
-                          className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-600"
-                          onClick={async () => {
-                            await deleteJugadorTemporada(it._id);
-                            setItems((prev) => prev.filter(x => x._id !== it._id));
-                          }}
+                          title={bajaSolicitada.has(it._id) ? 'Solicitud de baja ya enviada' : 'Solicitar eliminación de la temporada (requiere doble confirmación)'}
+                          className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-600 disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-slate-400"
+                          onClick={() => handleSolicitarBaja(it._id, nombre)}
+                          disabled={bajaSolicitada.has(it._id)}
                         >
                           <TrashIcon className="h-4 w-4" />
                         </button>

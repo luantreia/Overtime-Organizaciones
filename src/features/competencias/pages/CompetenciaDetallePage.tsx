@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { listTemporadasByCompetencia, crearTemporada, BackendTemporada, actualizarTemporada, eliminarTemporada, listFasesByTemporada, crearFase, generarFixture, BackendFase, actualizarFase, eliminarFase, addCompetenciaAdministrador, getCompetenciaAdministradores, removeCompetenciaAdministrador, actualizarCompetencia, eliminarCompetencia, type AdminUser, listParticipacionesByTemporada, type BackendParticipacionTemporada, crearSolicitudParticipacionTemporada, listParticipacionesByFase, type BackendParticipacionFase, crearParticipacionFase, updateParticipacionTemporada, deleteParticipacionTemporada, getCompetenciaDetalle } from '../services';
+import { listTemporadasByCompetencia, crearTemporada, BackendTemporada, actualizarTemporada, eliminarTemporada, listFasesByTemporada, crearFase, generarFixture, BackendFase, actualizarFase, eliminarFase, addCompetenciaAdministrador, getCompetenciaAdministradores, removeCompetenciaAdministrador, actualizarCompetencia, eliminarCompetencia, type AdminUser, listParticipacionesByTemporada, type BackendParticipacionTemporada, crearSolicitudParticipacionTemporada, listParticipacionesByFase, type BackendParticipacionFase, crearParticipacionFase, updateParticipacionTemporada, getCompetenciaDetalle } from '../services';
 import { getPartidosPorCompetencia, getPartidosPorTemporada, getPartidosPorFase } from '../../partidos/services/partidoService';
 import type { Partido } from '../../../types';
 import { useToast } from '../../../shared/components/Toast/ToastProvider';
@@ -289,12 +289,6 @@ const CompetenciaDetallePage = () => {
     }
   };
 
-  const deleteParticipacionTemporadaHandler = async (id: string, temporadaId: string) => {
-    await deleteParticipacionTemporada(id);
-    const list = await listParticipacionesByTemporada(temporadaId);
-    setParticipacionesTemporada((prev) => ({ ...prev, [temporadaId]: list }));
-  };
-
   if (!competenciaId) {
     return (
       <div className="rounded-2xl border border-dashed border-slate-300 bg-white/70 px-6 py-12 text-center">
@@ -379,7 +373,6 @@ const CompetenciaDetallePage = () => {
           onCrearSolicitudParticipacionTemporada={crearSolicitudParticipacionTemporadaHandler}
           onCrearParticipacionFase={crearParticipacionFaseHandler}
           onUpdateParticipacionTemporada={updateParticipacionTemporadaHandler}
-          onDeleteParticipacionTemporada={deleteParticipacionTemporadaHandler}
         />
       ) : null}
 

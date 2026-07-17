@@ -14,6 +14,7 @@ import { opcionesEquiposParaTemporada, type EquipoDisponibleOpcion } from '../se
 import { getEquiposAceptadosPorCompetencia, getEquiposDeOrganizacion, type EquipoCompetenciaVinculo } from '../services/equipoCompetenciaOrgService';
 import { getSolicitudesEdicion, actualizarSolicitudEdicion } from '../../../shared/features/solicitudes/services/solicitudesEdicionService';
 import type { SolicitudEdicion, ISolicitudEdicion } from '../../../shared/features/solicitudes/types/solicitudesEdicion';
+import { crearSolicitudEdicion } from '../../../shared/features/solicitudes';
 import { useToast } from '../../../shared/components/Toast/ToastProvider';
 
 type Props = {
@@ -25,7 +26,6 @@ type Props = {
   organizacionId?: string;
   participaciones: BackendParticipacionTemporada[];
   onUpdateParticipacionTemporada: (id: string, body: Partial<{ estado: string }>) => void | Promise<void>;
-  onDeleteParticipacionTemporada: (id: string, temporadaId: string) => void | Promise<void>;
   onCrearSolicitudParticipacionTemporada: (temporadaId: string, equipoId: string) => void | Promise<void>;
   onOpenJugadores: (pt: BackendParticipacionTemporada) => void;
   onRefresh?: () => void | Promise<void>;
@@ -63,7 +63,6 @@ export default function GestionEquiposTemporadaModal({
   organizacionId,
   participaciones,
   onUpdateParticipacionTemporada,
-  onDeleteParticipacionTemporada,
   onCrearSolicitudParticipacionTemporada,
   onOpenJugadores,
   onRefresh
@@ -77,7 +76,25 @@ export default function GestionEquiposTemporadaModal({
   const [sugeridos, setSugeridos] = useState<EquipoCompetenciaVinculo[]>([]);
   const [sugeridosOrg, setSugeridosOrg] = useState<EquipoCompetenciaVinculo[]>([]);
   const [enviando, setEnviando] = useState<string | null>(null);
+  const [bajaSolicitada, setBajaSolicitada] = useState<Set<string>>(new Set());
   const { addToast } = useToast();
+
+  const handleSolicitarBaja = async (participacionId: string, nombre: string) => {
+    try {
+      await crearSolicitudEdicion({
+        tipo: 'participacion-temporada-eliminar',
+        datosPropuestos: { participacionTemporadaId: participacionId, equipoNombre: nombre, temporadaId },
+      });
+      setBajaSolicitada((prev) => new Set(prev).add(participacionId));
+      addToast({
+        type: 'success',
+        title: 'Solicitud de baja enviada',
+        message: `Se pidió sacar a ${nombre} de la temporada — requiere doble confirmación de un admin.`,
+      });
+    } catch (error: any) {
+      addToast({ type: 'error', title: 'Error', message: error.message });
+    }
+  };
 
   const cargarSolicitudes = useCallback(async () => {
     if (!temporadaId || !isOpen) return;
@@ -249,10 +266,10 @@ export default function GestionEquiposTemporadaModal({
                       </button>
                       <button
                         type="button"
-                        title="Eliminar equipo de la temporada"
-                        className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-600"
-                        onClick={() => { void onDeleteParticipacionTemporada(pt._id, temporadaId); }}
-                        disabled={!esAdmin}
+                        title={bajaSolicitada.has(pt._id) ? 'Solicitud de baja ya enviada' : 'Solicitar eliminación de la temporada (requiere doble confirmación)'}
+                        className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-600 disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-slate-400"
+                        onClick={() => handleSolicitarBaja(pt._id, nombre)}
+                        disabled={!esAdmin || bajaSolicitada.has(pt._id)}
                       >
                         <TrashIcon className="h-4 w-4" />
                       </button>

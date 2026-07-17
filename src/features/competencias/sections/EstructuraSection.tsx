@@ -152,7 +152,6 @@ type Props = {
   onCrearSolicitudParticipacionTemporada: (temporadaId: string, equipoId: string) => void | Promise<void>;
   onCrearParticipacionFase: (faseId: string, participacionTemporadaId: string, opts?: { grupo?: string; division?: string }) => void | Promise<void>;
   onUpdateParticipacionTemporada: (id: string, body: Partial<{ estado: string }>) => void | Promise<void>;
-  onDeleteParticipacionTemporada: (id: string, temporadaId: string) => void | Promise<void>;
 };
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -165,7 +164,7 @@ export default function EstructuraSection(props: Props) {
     onEditarFase, onEliminarFase,
     participacionesTemporadaPorId, participacionesFasePorId,
     onCrearSolicitudParticipacionTemporada, onCrearParticipacionFase,
-    onUpdateParticipacionTemporada, onDeleteParticipacionTemporada,
+    onUpdateParticipacionTemporada,
   } = props;
 
   const { addToast } = useToast();
@@ -846,7 +845,6 @@ export default function EstructuraSection(props: Props) {
         temporadaId={openGestionEquipos.temporadaId || ''}
         participaciones={openGestionEquipos.temporadaId ? (participacionesTemporadaPorId[openGestionEquipos.temporadaId] || []) : []}
         onUpdateParticipacionTemporada={onUpdateParticipacionTemporada}
-        onDeleteParticipacionTemporada={onDeleteParticipacionTemporada}
         onCrearSolicitudParticipacionTemporada={onCrearSolicitudParticipacionTemporada}
         onOpenJugadores={pt => setOpenJugadores({ open: true, pt })}
       />

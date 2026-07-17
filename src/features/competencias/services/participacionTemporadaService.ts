@@ -30,9 +30,6 @@ export async function updateParticipacionTemporada(id: string, body: Partial<{ e
   return authFetch<BackendParticipacionTemporada>(`/participacion-temporada/${id}`, { method: 'PUT', body });
 }
 
-export async function deleteParticipacionTemporada(id: string) {
-  return authFetch<{ message?: string }>(`/participacion-temporada/${id}`, { method: 'DELETE' });
-}
 
 export type EquipoDisponibleOpcion = { _id: string; nombre: string; escudo?: string; tipo?: string; pais?: string };
 
