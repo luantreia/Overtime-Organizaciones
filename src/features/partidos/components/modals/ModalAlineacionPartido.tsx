@@ -80,15 +80,27 @@ const getJugadoresElegibles = async (equipoId: string, partido: any): Promise<Ju
         
         if (miParticipacion) {
           const jugadoresTemp = await listJugadorTemporadaByParticipacion(miParticipacion._id);
-          return jugadoresTemp.map(jt => {
-            const je = jt.jugadorEquipo as any;
-            const j = je.jugador || {};
-            return {
-              id: j._id || j.id,
-              nombre: j.nombre || j.alias || 'Jugador',
-              numeroCamiseta: (jt as any).numeroCamiseta
-            };
-          });
+          // Algunos registros pueden tener jugadorEquipo huérfano (el contrato fue borrado pero
+          // la referencia quedó) — se descartan en vez de dejar que un solo registro roto tire
+          // todo el resultado al catch de más abajo.
+          return jugadoresTemp
+            .filter(jt => {
+              const je = jt.jugadorEquipo as any;
+              if (!je || !je.jugador) {
+                console.warn('JugadorTemporada con jugadorEquipo huérfano, se omite:', (jt as any)._id);
+                return false;
+              }
+              return true;
+            })
+            .map(jt => {
+              const je = jt.jugadorEquipo as any;
+              const j = je.jugador;
+              return {
+                id: j._id || j.id,
+                nombre: j.nombre || j.alias || 'Jugador',
+                numeroCamiseta: (jt as any).numeroCamiseta
+              };
+            });
         }
       }
     } catch (e) {
