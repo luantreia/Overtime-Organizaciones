@@ -40,7 +40,7 @@ export interface ISolicitudEdicion {
   motivoRechazo?: string;
   fechaAceptacion?: string;
   fechaRechazo?: string;
-  creadoPor: string;
+  creadoPor: string | { _id: string; nombre?: string; email?: string };
   aprobadoPor?: string;
   createdAt: string;
   updatedAt: string;
