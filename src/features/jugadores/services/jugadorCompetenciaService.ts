@@ -7,7 +7,6 @@ export type BackendJugadorCompetencia = {
   posicion?: string;
   dorsal?: number;
   titular?: boolean;
-  activo?: boolean;
 };
 
 export async function listJugadoresCompetencia(competenciaId: string): Promise<BackendJugadorCompetencia[]> {

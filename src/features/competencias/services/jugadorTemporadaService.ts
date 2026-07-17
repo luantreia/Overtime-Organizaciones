@@ -23,7 +23,12 @@ export async function updateJugadorTemporada(id: string, body: Partial<{ estado:
   return authFetch<BackendJugadorTemporada>(`/jugador-temporada/${id}`, { method: 'PUT', body });
 }
 
-export type JugadorEquipoOpcion = { _id: string; jugador: { _id: string; nombre?: string; alias?: string; foto?: string; nacionalidad?: string } };
+export type JugadorEquipoOpcion = {
+  _id: string;
+  jugador: { _id: string; nombre?: string; alias?: string; foto?: string; nacionalidad?: string };
+  estado?: 'aceptado' | 'baja';
+  hasta?: string;
+};
 
 export async function opcionesJugadorTemporada(equipoId: string, participacionTemporadaId: string, q?: string): Promise<JugadorEquipoOpcion[]> {
   const params = new URLSearchParams();

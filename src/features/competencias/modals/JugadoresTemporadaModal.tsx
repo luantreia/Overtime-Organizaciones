@@ -212,6 +212,11 @@ export default function JugadoresTemporadaModal({ isOpen, onClose, participacion
                         <span className={`truncate text-sm ${isSelected ? 'font-semibold text-brand-800' : 'text-slate-700'}`}>
                           {nombre}
                         </span>
+                        {opt.estado === 'baja' && (
+                          <span className="ml-auto flex-shrink-0 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-700">
+                            Baja{opt.hasta ? ` · hasta ${new Date(opt.hasta).toLocaleDateString()}` : ''}
+                          </span>
+                        )}
                       </label>
                     );
                   })}
