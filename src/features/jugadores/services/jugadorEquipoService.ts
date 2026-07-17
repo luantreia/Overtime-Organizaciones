@@ -11,18 +11,22 @@ export const getJugadoresEquipo = async (query: GetJugadoresQuery): Promise<Juga
   if (query.equipoId) params.set('equipo', query.equipoId);
   if (query.estado) params.set('estado', query.estado);
 
-  const backend = await authFetch<any[]>(`/jugadores?${params.toString()}`);
-  return backend.map((b) => ({
-    id: b._id ?? b.id,
-    nombre: b.nombre ?? b.fullName ?? b.alias ?? 'Jugador',
-    posicion: b.posicion ?? b.role ?? '—',
-    estado: (b.estado as EstadoJugador) ?? 'activo',
-    numeroCamiseta: b.numero ?? b.numeroCamiseta ?? undefined,
-    rolEnEquipo: b.rolEnEquipo ?? b.rol ?? undefined,
-    fechaInicio: b.fechaInicio ?? undefined,
-    fechaFin: b.fechaFin ?? undefined,
-    contratoId: b.contratoId ?? undefined,
-  }));
+  // Contratos JugadorEquipo del equipo (no /jugadores — esa ruta no filtra por equipo).
+  const backend = await authFetch<any[]>(`/jugador-equipo?${params.toString()}`);
+  return backend.map((b) => {
+    const j = b.jugador || {};
+    return {
+      id: j._id ?? j.id ?? '',
+      nombre: j.nombre ?? j.alias ?? 'Jugador',
+      posicion: '—',
+      estado: (b.estado as EstadoJugador) ?? 'activo',
+      numeroCamiseta: undefined,
+      rolEnEquipo: b.rol ?? undefined,
+      fechaInicio: b.desde ?? undefined,
+      fechaFin: b.hasta ?? undefined,
+      contratoId: b._id ?? b.id ?? undefined,
+    };
+  });
 };
 
 export const getSolicitudesJugadores = async (equipoId: string): Promise<SolicitudJugador[]> => {

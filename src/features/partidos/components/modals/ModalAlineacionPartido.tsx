@@ -96,10 +96,10 @@ const getJugadoresElegibles = async (equipoId: string, partido: any): Promise<Ju
     }
   }
   
-  // Fallback: jugadores con contrato activo
+  // Fallback: jugadores con contrato aceptado (JugadorEquipo.estado solo admite 'aceptado' | 'baja')
   const response = await getJugadoresEquipo({
     equipoId,
-    estado: 'activo'
+    estado: 'aceptado'
   });
 
   const jugadores = Array.isArray(response)
