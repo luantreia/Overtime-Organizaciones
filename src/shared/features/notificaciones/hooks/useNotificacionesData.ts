@@ -38,12 +38,9 @@ export const useNotificacionesData = ({
       
       const filters: Record<string, string> = {
         estado: 'pendiente',
+        scope,
       };
-      
-      if (scope === 'aprobables') {
-        filters.estado = 'pendiente';
-      }
-      
+
       if (allowedTipos && allowedTipos.length > 0) {
         // For now, we can't filter by multiple tipos in the API
         // The filtering will be done client-side

@@ -30,6 +30,7 @@ export const getSolicitudesEdicion = async (
   if (filtros.estado) params.set('estado', filtros.estado);
   if (filtros.creadoPor) params.set('creadoPor', filtros.creadoPor);
   if (filtros.entidad) params.set('entidad', filtros.entidad);
+  if (filtros.scope) params.set('scope', filtros.scope);
   if (filtros.page) params.set('page', filtros.page.toString());
   if (filtros.limit) params.set('limit', filtros.limit.toString());
 

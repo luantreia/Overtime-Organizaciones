@@ -103,6 +103,7 @@ export type BackendTemporadaConDatos = {
   competencia: string;
   nombre: string;
   descripcion?: string;
+  estado?: string;
   fechaInicio?: string;
   fechaFin?: string;
   participaciones: Array<{

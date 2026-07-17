@@ -101,8 +101,8 @@ export default function GestionEquiposTemporadaModal({
     try {
       setLoadingSolicitudes(true);
       const [aprobables, propias] = await Promise.all([
-        getSolicitudesEdicion({ tipo: 'participacion-temporada-crear', estado: 'pendiente', scope: 'aprobables' } as any),
-        getSolicitudesEdicion({ tipo: 'participacion-temporada-crear', estado: 'pendiente', scope: 'mine' } as any),
+        getSolicitudesEdicion({ tipo: 'participacion-temporada-crear', estado: 'pendiente', scope: 'aprobables' }),
+        getSolicitudesEdicion({ tipo: 'participacion-temporada-crear', estado: 'pendiente', scope: 'mine' }),
       ]);
       const porTemporada = (s: ISolicitudEdicion) => s.datosPropuestos?.temporadaId === temporadaId;
       setSolicitudesAprobables(aprobables.solicitudes.filter(porTemporada).map(s => ({ ...s, id: s._id })));

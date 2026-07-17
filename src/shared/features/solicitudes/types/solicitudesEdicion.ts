@@ -73,6 +73,7 @@ export interface ISolicitudFiltros {
   estado?: SolicitudEdicionEstado;
   creadoPor?: string;
   entidad?: string;
+  scope?: 'mine' | 'related' | 'aprobables';
   page?: number;
   limit?: number;
 }

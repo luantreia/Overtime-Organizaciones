@@ -171,6 +171,7 @@ export interface Partido {
   estado: EstadoPartido;
   escenario?: string;
   competencia?: Competencia;
+  faseId?: string;
   etapa?: 'octavos' | 'cuartos' | 'semifinal' | 'final' | 'tercer_puesto' | 'repechaje' | 'otro' | string;
   localNombre?: string;
   visitanteNombre?: string;

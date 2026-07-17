@@ -163,6 +163,7 @@ type BackendPartido = {
   fecha: string;
   ubicacion?: string;
   competencia?: BackendCompetencia | string;
+  fase?: { _id: string } | string;
   equipoLocal?: BackendEquipoRef | string;
   equipoVisitante?: BackendEquipoRef | string;
   marcadorLocal?: number;
@@ -278,6 +279,7 @@ const mapPartido = (partido: BackendPartido, contextoEquipoId?: string): Partido
     estado,
     escenario: partido.ubicacion,
     competencia,
+    faseId: typeof partido.fase === 'string' ? partido.fase : partido.fase?._id,
     etapa: partido.etapa,
     localNombre: local?.nombre,
     visitanteNombre: visitante?.nombre,
