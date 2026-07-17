@@ -142,14 +142,11 @@ export const ModalAlineacionPartido = ({
   const [equipoVisitanteId, setEquipoVisitanteId] = useState<string | undefined>(undefined);
   const [equipoLocalNombre, setEquipoLocalNombre] = useState<string>('Equipo Local');
   const [equipoVisitanteNombre, setEquipoVisitanteNombre] = useState<string>('Equipo Visitante');
-  const [alineacion, setAlineacion] = useState<JugadorPartido[]>([]);
   const [isRanked, setIsRanked] = useState<boolean>(false);
   const [rankedTeams, setRankedTeams] = useState<Array<{ color: 'rojo' | 'azul'; players: Array<{ id: string; nombre: string }> }>>([]);
   const [rankedPlayers, setRankedPlayers] = useState<Array<{ id: string; nombre: string; pre?: number; post?: number; delta?: number; color?: 'rojo' | 'azul' | null }>>([]);
   const [rolesPorJugador, setRolesPorJugador] = useState<Record<string, RolAlineacion>>({});
   const [jugadorPartidoPorJugador, setJugadorPartidoPorJugador] = useState<Record<string, string>>({});
-  const [nuevoJugadorLocalId, setNuevoJugadorLocalId] = useState<string>('');
-  const [nuevoJugadorVisitanteId, setNuevoJugadorVisitanteId] = useState<string>('');
 
   useEffect(() => {
     if (!isOpen) return;
@@ -205,7 +202,6 @@ export const ModalAlineacionPartido = ({
 
         if (!isActive) return;
 
-        setAlineacion(alineacionActual);
         setEquipoLocalId(localId);
         setEquipoVisitanteId(visitanteId);
         setEquipoLocalNombre(equipoLocalNombre);
@@ -263,10 +259,11 @@ export const ModalAlineacionPartido = ({
     }));
   };
 
-  const jugadoresTodos = useMemo(() => [...jugadoresLocal, ...jugadoresVisitante], [jugadoresLocal, jugadoresVisitante]);
-  const jugadoresConRol = useMemo(
-    () => jugadoresTodos.filter((j) => isRolAsignable(rolesPorJugador[j.id] as RolAlineacion)),
-    [jugadoresTodos, rolesPorJugador],
+  // Contado por jugadorId único en rolesPorJugador (no por las listas de elegibles concatenadas,
+  // que pueden repetir un mismo jugador si aparece como candidato de ambos equipos).
+  const jugadoresConRolCount = useMemo(
+    () => Object.values(rolesPorJugador).filter((rol) => isRolAsignable(rol)).length,
+    [rolesPorJugador],
   );
 
   const handleGuardar = async () => {
@@ -303,40 +300,22 @@ export const ModalAlineacionPartido = ({
     }
   };
 
-  const opcionesAgregarLocal = useMemo(() => {
-    const presentes = new Set(Object.keys(jugadorPartidoPorJugador));
-    return jugadoresLocal.filter((j) => !presentes.has(j.id));
-  }, [jugadoresLocal, jugadorPartidoPorJugador]);
-
-  const opcionesAgregarVisitante = useMemo(() => {
-    const presentes = new Set(Object.keys(jugadorPartidoPorJugador));
-    return jugadoresVisitante.filter((j) => !presentes.has(j.id));
-  }, [jugadoresVisitante, jugadorPartidoPorJugador]);
-
-  const handleAgregarJugador = async (equipo: 'local' | 'visitante') => {
-    try {
-      const targetEquipoId = equipo === 'local' ? equipoLocalId : equipoVisitanteId;
-      const jugadorId = equipo === 'local' ? nuevoJugadorLocalId : nuevoJugadorVisitanteId;
-      if (!jugadorId || !targetEquipoId) return;
-      const creado = await crearJugadorPartido({ partido: partidoId, jugador: jugadorId, equipo: targetEquipoId });
-      setJugadorPartidoPorJugador((prev) => ({ ...prev, [creado.jugador as unknown as string]: creado._id }));
-      setAlineacion((prev) => [...prev, (creado as unknown as JugadorPartido)]);
-      // asegurar que aparezca en la lista si no estaba
-      if (equipo === 'local') {
-        if (!jugadoresLocal.some((j) => j.id === (creado.jugador as unknown as string))) {
-          setJugadoresLocal((prev) => [...prev, { id: creado.jugador as unknown as string, nombre: 'Jugador' }]);
-        }
-        setNuevoJugadorLocalId('');
-      } else {
-        if (!jugadoresVisitante.some((j) => j.id === (creado.jugador as unknown as string))) {
-          setJugadoresVisitante((prev) => [...prev, { id: creado.jugador as unknown as string, nombre: 'Jugador' }]);
-        }
-        setNuevoJugadorVisitanteId('');
+  const handleTogglePresente = async (jugador: JugadorOption, targetEquipoId: string | undefined, presente: boolean) => {
+    if (presente) {
+      if (!targetEquipoId) return;
+      try {
+        const creado = await crearJugadorPartido({ partido: partidoId, jugador: jugador.id, equipo: targetEquipoId });
+        setJugadorPartidoPorJugador((prev) => ({ ...prev, [jugador.id]: creado._id }));
+        setRolesPorJugador((prev) => ({
+          ...prev,
+          [jugador.id]: isRolAsignable(prev[jugador.id]) ? prev[jugador.id] : 'jugador',
+        }));
+      } catch (err) {
+        console.error('Error al agregar jugador al partido:', err);
+        addToast({ type: 'error', title: 'Error', message: 'No pudimos agregar el jugador' });
       }
-      addToast({ type: 'success', title: 'Agregado', message: 'Jugador agregado al partido' });
-    } catch (err) {
-      console.error('Error al agregar jugador al partido:', err);
-      addToast({ type: 'error', title: 'Error', message: 'No pudimos agregar el jugador' });
+    } else {
+      await handleQuitarJugador(jugador.id);
     }
   };
 
@@ -351,8 +330,6 @@ export const ModalAlineacionPartido = ({
         return next;
       });
       setRolesPorJugador((prev) => ({ ...prev, [jugadorId]: 'ninguno' }));
-      // quitar de la lista actual sin recargar
-      setAlineacion((prev) => prev.filter((it) => ((it as any)._id ?? (it as any).id) !== jpId));
       addToast({ type: 'success', title: 'Quitado', message: 'Jugador removido del partido' });
     } catch (err) {
       console.error('Error al quitar jugador del partido:', err);
@@ -360,71 +337,56 @@ export const ModalAlineacionPartido = ({
     }
   };
 
+  const renderChecklist = (nombreEquipo: string, roster: JugadorOption[], targetEquipoId: string | undefined) => (
+    <div className="space-y-3">
+      <h3 className="text-sm font-semibold text-slate-800">{nombreEquipo}</h3>
+      {roster.length === 0 ? (
+        <p className="text-sm text-slate-500">No hay jugadores en la lista de buena fe de esta temporada.</p>
+      ) : (
+        <div className="divide-y divide-slate-100 rounded-xl border border-slate-200 bg-white">
+          {roster.map((j) => {
+            const presente = !!jugadorPartidoPorJugador[j.id];
+            const rol = rolesPorJugador[j.id];
+            return (
+              <label key={j.id} className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-slate-50">
+                <input
+                  type="checkbox"
+                  checked={presente}
+                  onChange={(e) => void handleTogglePresente(j, targetEquipoId, e.target.checked)}
+                  className="h-4 w-4 flex-shrink-0 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
+                />
+                <span className={`flex-1 min-w-0 truncate text-sm ${presente ? 'font-medium text-slate-900' : 'text-slate-500'}`}>
+                  {j.nombre}
+                </span>
+                {presente && (
+                  <select
+                    value={isRolAsignable(rol) ? rol : 'jugador'}
+                    onChange={(e) => handleChangeRol(j.id, e.target.value as RolAlineacion)}
+                    onClick={(e) => e.stopPropagation()}
+                    className="w-32 flex-shrink-0 rounded-lg border border-slate-300 px-2 py-1 text-xs focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+                  >
+                    <option value="jugador">Jugador</option>
+                    <option value="entrenador">Entrenador</option>
+                  </select>
+                )}
+              </label>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <ModalBase
       isOpen={isOpen}
       onClose={handleCerrar}
       title={isRanked ? 'Alineación (Ranked)' : 'Gestionar jugadores del partido'}
-      subtitle={isRanked ? 'Jugadores asignados por ranked con rating Δ' : 'Agregá, quitá o cambiá el rol de los jugadores'}
+      subtitle={isRanked ? 'Jugadores asignados por ranked con rating Δ' : 'Marcá quiénes están presentes y su rol'}
       size="lg"
       bodyClassName="p-0"
     >
       <div className="space-y-6 p-6">
-        {!isRanked && (
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="rounded-xl border border-slate-200 bg-white p-4">
-            <p className="mb-2 text-sm font-medium text-slate-800">Agregar al {equipoLocalNombre}</p>
-            <div className="flex flex-wrap items-end gap-2">
-              <div className="flex-1 min-w-[220px]">
-                <select
-                  value={nuevoJugadorLocalId}
-                  onChange={(e) => setNuevoJugadorLocalId(e.target.value)}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-                >
-                  <option value="">Seleccionar…</option>
-                  {opcionesAgregarLocal.map((op) => (
-                    <option key={op.id} value={op.id}>{op.nombre}</option>
-                  ))}
-                </select>
-              </div>
-              <button
-                type="button"
-                onClick={() => handleAgregarJugador('local')}
-                disabled={!nuevoJugadorLocalId || !equipoLocalId}
-                className="rounded-lg bg-brand-600 px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700 disabled:opacity-50"
-              >
-                Agregar
-              </button>
-            </div>
-          </div>
-
-          <div className="rounded-xl border border-slate-200 bg-white p-4">
-            <p className="mb-2 text-sm font-medium text-slate-800">Agregar al {equipoVisitanteNombre}</p>
-            <div className="flex flex-wrap items-end gap-2">
-              <div className="flex-1 min-w-[220px]">
-                <select
-                  value={nuevoJugadorVisitanteId}
-                  onChange={(e) => setNuevoJugadorVisitanteId(e.target.value)}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-                >
-                  <option value="">Seleccionar…</option>
-                  {opcionesAgregarVisitante.map((op) => (
-                    <option key={op.id} value={op.id}>{op.nombre}</option>
-                  ))}
-                </select>
-              </div>
-              <button
-                type="button"
-                onClick={() => handleAgregarJugador('visitante')}
-                disabled={!nuevoJugadorVisitanteId || !equipoVisitanteId}
-                className="rounded-lg bg-brand-600 px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700 disabled:opacity-50"
-              >
-                Agregar
-              </button>
-            </div>
-          </div>
-        </div>
-        )}
         {error ? (
           <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
             {error}
@@ -441,7 +403,7 @@ export const ModalAlineacionPartido = ({
           <>
             {!isRanked ? (
               <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-                <p>Seleccioná el rol para cada jugador. Podés agregar jugadores por equipo o quitarlos del partido.</p>
+                <p>Marcá quiénes están presentes en el partido. Podés cambiar el rol de cada uno.</p>
               </div>
             ) : (
               <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
@@ -450,93 +412,10 @@ export const ModalAlineacionPartido = ({
             )}
 
             {!isRanked ? (
-            <div className="grid gap-4 lg:grid-cols-2">
-              {/* Local */}
-              <div className="space-y-3">
-                <h3 className="text-sm font-semibold text-slate-800">{equipoLocalNombre}</h3>
-                {alineacion.filter((it) => (typeof it.equipo === 'string' ? it.equipo === equipoLocalId : (it.equipo as any)?._id === equipoLocalId)).length === 0 ? (
-                  <p className="text-sm text-slate-500">No hay jugadores asignados. Agregá jugadores del equipo.</p>
-                ) : null}
-                {alineacion
-                  .filter((it) => (typeof it.equipo === 'string' ? it.equipo === equipoLocalId : (it.equipo as any)?._id === equipoLocalId))
-                  .map((it) => {
-                    const jid = getJugadorId((it as any).jugador);
-                    const nombre = getJugadorNombre((it as any).jugador);
-                    return (
-                      <div key={(it as any)._id ?? jid} className="flex items-start justify-between rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
-                        <div className="min-w-0 w-1/2 pr-2">
-                          <div className="min-w-0">
-                            <p className="text-sm font-medium text-slate-900 whitespace-normal">{nombre}</p>
-                            {(it as any).numero ? <p className="text-xs text-slate-500">#{(it as any).numero}</p> : null}
-                          </div>
-                        </div>
-                        <div className="flex w-1/2 flex-wrap items-center justify-end gap-2">
-                          <select
-                            value={rolesPorJugador[jid] ?? ((it as any).rol as RolAlineacion) ?? 'ninguno'}
-                            onChange={(event) => handleChangeRol(jid, event.target.value as RolAlineacion)}
-                            className="w-32 sm:w-40 rounded-lg border border-slate-300 px-3 py-1.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
-                          >
-                            <option value="ninguno">Sin asignar</option>
-                            <option value="jugador">Jugador</option>
-                            <option value="entrenador">Entrenador</option>
-                          </select>
-                          <button
-                            type="button"
-                            onClick={() => handleQuitarJugador(jid)}
-                            className="rounded border border-rose-300 px-2 py-1 text-xs text-rose-700 hover:bg-rose-50"
-                            title="Quitar del partido"
-                          >
-                            Quitar
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
+              <div className="grid gap-4 lg:grid-cols-2">
+                {renderChecklist(equipoLocalNombre, jugadoresLocal, equipoLocalId)}
+                {renderChecklist(equipoVisitanteNombre, jugadoresVisitante, equipoVisitanteId)}
               </div>
-
-              {/* Visitante */}
-              <div className="space-y-3">
-                <h3 className="text-sm font-semibold text-slate-800">{equipoVisitanteNombre}</h3>
-                {alineacion.filter((it) => (typeof it.equipo === 'string' ? it.equipo === equipoVisitanteId : (it.equipo as any)?._id === equipoVisitanteId)).length === 0 ? (
-                  <p className="text-sm text-slate-500">No hay jugadores asignados. Agregá jugadores del equipo.</p>
-                ) : null}
-                {alineacion
-                  .filter((it) => (typeof it.equipo === 'string' ? it.equipo === equipoVisitanteId : (it.equipo as any)?._id === equipoVisitanteId))
-                  .map((it) => {
-                    const jid = getJugadorId((it as any).jugador);
-                    const nombre = getJugadorNombre((it as any).jugador);
-                    return (
-                      <div key={(it as any)._id ?? jid} className="flex items-start justify-between rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
-                        <div className="min-w-0 w-1/2 pr-2">
-                          <div className="min-w-0">
-                            <p className="text-sm font-medium text-slate-900 whitespace-normal">{nombre}</p>
-                            {(it as any).numero ? <p className="text-xs text-slate-500">#{(it as any).numero}</p> : null}
-                          </div>
-                        </div>
-                        <div className="flex w-1/2 flex-wrap items-center justify-end gap-2">
-                          <select
-                            value={rolesPorJugador[jid] ?? ((it as any).rol as RolAlineacion) ?? 'ninguno'}
-                            onChange={(event) => handleChangeRol(jid, event.target.value as RolAlineacion)}
-                            className="w-32 sm:w-40 rounded-lg border border-slate-300 px-3 py-1.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
-                          >
-                            <option value="ninguno">Sin asignar</option>
-                            <option value="jugador">Jugador</option>
-                            <option value="entrenador">Entrenador</option>
-                          </select>
-                          <button
-                            type="button"
-                            onClick={() => handleQuitarJugador(jid)}
-                            className="rounded border border-rose-300 px-2 py-1 text-xs text-rose-700 hover:bg-rose-50"
-                            title="Quitar del partido"
-                          >
-                            Quitar
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
-              </div>
-            </div>
             ) : (
               <div className="grid gap-4 lg:grid-cols-2">
                 {/* Rojo */}
@@ -599,7 +478,7 @@ export const ModalAlineacionPartido = ({
               <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 shadow-sm">
                 <p className="font-medium text-slate-900">Resumen</p>
                 <ul className="mt-2 space-y-1 text-sm">
-                  <li>Jugadores asignados: {jugadoresConRol.length}</li>
+                  <li>Jugadores asignados: {jugadoresConRolCount}</li>
                 </ul>
               </div>
             )}
