@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { authFetch } from '../../utils/authFetch';
+import { useToast } from '../Toast/ToastProvider';
 
 interface SearchResult {
   _id: string;
@@ -9,6 +10,7 @@ interface SearchResult {
 }
 
 export default function GlobalSearch() {
+  const { addToast } = useToast();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
@@ -64,8 +66,8 @@ export default function GlobalSearch() {
     setShowResults(false);
     setQuery('');
     // navigate(`/jugadores/${id}`); 
-    // Since we don't have the route yet, let's just alert.
-    alert(`Seleccionaste al jugador ${id}. La edición global se implementará pronto.`);
+    // Since we don't have the route yet, let's just notify.
+    addToast({ type: 'info', title: `Seleccionaste al jugador ${id}`, message: 'La edición global se implementará pronto.' });
   };
 
   return (

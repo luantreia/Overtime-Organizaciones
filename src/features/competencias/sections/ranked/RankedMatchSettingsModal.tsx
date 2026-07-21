@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '../../../../shared/components/ui';
+import { useToast } from '../../../../shared/components/Toast/ToastProvider';
 
 import { DEFAULT_MATCH_CONFIG } from './constants';
 
@@ -35,6 +36,7 @@ export const RankedMatchSettingsModal: React.FC<RankedMatchSettingsModalProps> =
   matchConfig,
   onUpdateConfig
 }) => {
+  const { addToast } = useToast();
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [localConfig, setLocalConfig] = useState({ ...DEFAULT_MATCH_CONFIG, ...matchConfig });
 
@@ -67,7 +69,7 @@ export const RankedMatchSettingsModal: React.FC<RankedMatchSettingsModalProps> =
     if (!matchId) return;
     const url = `${window.location.origin.replace('organizaciones', 'partido')}/control?matchId=${matchId}`;
     navigator.clipboard.writeText(url);
-    alert('Link de Mesa de Control copiado al portapapeles');
+    addToast({ type: 'success', title: 'Link de Mesa de Control copiado al portapapeles' });
   };
 
   const openMatchLink = () => {
