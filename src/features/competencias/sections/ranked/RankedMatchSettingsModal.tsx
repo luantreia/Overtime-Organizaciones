@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Button } from '../../../../shared/components/ui';
+import { Button, Toggle } from '../../../../shared/components/ui';
 import { useToast } from '../../../../shared/components/Toast/ToastProvider';
 
 import { DEFAULT_MATCH_CONFIG } from './constants';
@@ -164,27 +164,20 @@ export const RankedMatchSettingsModal: React.FC<RankedMatchSettingsModalProps> =
                        <span className="text-[11px] sm:text-xs font-bold text-slate-700">Muerte Súbita</span>
                        <span className="text-[9px] text-slate-400">Desempate al final.</span>
                     </div>
-                    <button 
-                      onClick={() => setLocalConfig({...localConfig, useSuddenDeath: !localConfig.useSuddenDeath})}
-                      className={`relative inline-flex h-5 w-10 items-center rounded-full transition-colors focus:outline-none ${localConfig.useSuddenDeath ? 'bg-amber-500' : 'bg-slate-300'}`}
-                    >
-                      <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${localConfig.useSuddenDeath ? 'translate-x-6' : 'translate-x-1'}`} />
-                    </button>
+                    <Toggle
+                      checked={localConfig.useSuddenDeath}
+                      onChange={(checked) => setLocalConfig({...localConfig, useSuddenDeath: checked})}
+                      activeColor="amber"
+                    />
                  </div>
               </div>
 
               <div className="space-y-2">
                 <label className="flex items-center gap-3 cursor-pointer group">
-                  <div className="relative">
-                    <input 
-                      type="checkbox"
-                      className="sr-only peer"
-                      checked={!!localConfig.autoPauseGlobal}
-                      onChange={(e) => setLocalConfig({...localConfig, autoPauseGlobal: e.target.checked})}
-                    />
-                    <div className="w-9 h-5 bg-slate-200 rounded-full peer peer-checked:bg-emerald-500 transition-colors shadow-inner" />
-                    <div className="absolute left-1 top-1 w-3 h-3 bg-white rounded-full peer-checked:translate-x-4 transition-transform shadow-sm" />
-                  </div>
+                  <Toggle
+                    checked={!!localConfig.autoPauseGlobal}
+                    onChange={(checked) => setLocalConfig({...localConfig, autoPauseGlobal: checked})}
+                  />
                   <span className="text-[11px] sm:text-xs font-bold text-slate-700 group-hover:text-slate-900 transition-colors">Pausa Global al fin de Set</span>
                 </label>
               </div>
@@ -197,12 +190,10 @@ export const RankedMatchSettingsModal: React.FC<RankedMatchSettingsModalProps> =
               <div className="grid grid-cols-1 gap-2">
                 <div className="flex justify-between items-center bg-slate-50 p-2 sm:p-3 rounded-xl border border-slate-100">
                   <span className="text-[11px] sm:text-xs font-bold text-slate-700">Conteo (10s)</span>
-                  <button 
-                    onClick={() => setLocalConfig({...localConfig, enableCountdown: !localConfig.enableCountdown})}
-                    className={`relative inline-flex h-5 w-10 items-center rounded-full transition-colors focus:outline-none ${localConfig.enableCountdown ? 'bg-emerald-500' : 'bg-slate-200'}`}
-                  >
-                    <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${localConfig.enableCountdown ? 'translate-x-6' : 'translate-x-1'}`} />
-                  </button>
+                  <Toggle
+                    checked={!!localConfig.enableCountdown}
+                    onChange={(checked) => setLocalConfig({...localConfig, enableCountdown: checked})}
+                  />
                 </div>
 
                 <div className="flex justify-between items-center bg-slate-50 p-2 sm:p-3 rounded-xl border border-slate-100">
@@ -218,32 +209,26 @@ export const RankedMatchSettingsModal: React.FC<RankedMatchSettingsModalProps> =
                       <option value="long">Largo</option>
                     </select>
                   </div>
-                  <button 
-                    onClick={() => setLocalConfig({...localConfig, enableWhistle: !localConfig.enableWhistle})}
-                    className={`relative inline-flex h-5 w-10 items-center rounded-full transition-colors focus:outline-none ${localConfig.enableWhistle ? 'bg-emerald-500' : 'bg-slate-200'}`}
-                  >
-                    <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${localConfig.enableWhistle ? 'translate-x-6' : 'translate-x-1'}`} />
-                  </button>
+                  <Toggle
+                    checked={!!localConfig.enableWhistle}
+                    onChange={(checked) => setLocalConfig({...localConfig, enableWhistle: checked})}
+                  />
                 </div>
 
                 <div className="flex justify-between items-center bg-slate-50 p-2 sm:p-3 rounded-xl border border-slate-100">
                   <span className="text-[11px] sm:text-xs font-bold text-slate-700">Aviso Inicio de Match</span>
-                  <button 
-                    onClick={() => setLocalConfig({...localConfig, enableMatchStartAlert: !localConfig.enableMatchStartAlert})}
-                    className={`relative inline-flex h-5 w-10 items-center rounded-full transition-colors focus:outline-none ${localConfig.enableMatchStartAlert ? 'bg-emerald-500' : 'bg-slate-200'}`}
-                  >
-                    <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${localConfig.enableMatchStartAlert ? 'translate-x-6' : 'translate-x-1'}`} />
-                  </button>
+                  <Toggle
+                    checked={!!localConfig.enableMatchStartAlert}
+                    onChange={(checked) => setLocalConfig({...localConfig, enableMatchStartAlert: checked})}
+                  />
                 </div>
 
                 <div className="flex justify-between items-center bg-slate-50 p-2 sm:p-3 rounded-xl border border-slate-100">
                   <span className="text-[11px] sm:text-xs font-bold text-slate-700">Aviso Último Minuto (60s)</span>
-                  <button 
-                    onClick={() => setLocalConfig({...localConfig, enableLastMinuteAlert: !localConfig.enableLastMinuteAlert})}
-                    className={`relative inline-flex h-5 w-10 items-center rounded-full transition-colors focus:outline-none ${localConfig.enableLastMinuteAlert ? 'bg-emerald-500' : 'bg-slate-200'}`}
-                  >
-                    <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${localConfig.enableLastMinuteAlert ? 'translate-x-6' : 'translate-x-1'}`} />
-                  </button>
+                  <Toggle
+                    checked={!!localConfig.enableLastMinuteAlert}
+                    onChange={(checked) => setLocalConfig({...localConfig, enableLastMinuteAlert: checked})}
+                  />
                 </div>
 
                 <div className="space-y-3 p-3 bg-slate-50 rounded-xl border border-slate-100">
