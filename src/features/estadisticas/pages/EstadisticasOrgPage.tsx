@@ -123,7 +123,11 @@ const EstadisticasOrgPage = () => {
 
       <section className="grid gap-4 md:grid-cols-2">
         <TopPartidosDiferencia partidos={partidosFiltrados} />
-        <TablaStandings partidos={partidosFiltrados} />
+        <TablaStandings
+          partidos={partidosFiltrados}
+          competenciaNombre={competencias.find((c) => c._id === competenciaId)?.nombre}
+          organizacionNombre={organizacionSeleccionada?.nombre}
+        />
       </section>
     </div>
   );

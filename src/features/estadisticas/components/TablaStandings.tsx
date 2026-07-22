@@ -1,5 +1,6 @@
-import type { FC } from 'react';
+import { useState, type FC } from 'react';
 import type { Partido } from '../../../types';
+import { ShareStandingsModal } from './ShareStandingsModal';
 
 type Row = {
   equipo: string;
@@ -49,10 +50,13 @@ function calcStandings(partidos: Partido[]): Row[] {
 type Props = {
   partidos: Partido[];
   title?: string;
+  competenciaNombre?: string;
+  organizacionNombre?: string;
 };
 
-export const TablaStandings: FC<Props> = ({ partidos, title = 'Tabla por equipos' }) => {
+export const TablaStandings: FC<Props> = ({ partidos, title = 'Tabla por equipos', competenciaNombre, organizacionNombre }) => {
   const rows = calcStandings(partidos);
+  const [isShareOpen, setIsShareOpen] = useState(false);
   if (rows.length === 0) {
     return (
       <div className="bg-white p-6 rounded-lg shadow text-center text-gray-500">
@@ -63,8 +67,17 @@ export const TablaStandings: FC<Props> = ({ partidos, title = 'Tabla por equipos
   }
   return (
     <div className="bg-white p-6 rounded-lg shadow">
-      <div className="text-center mb-4">
+      <div className="flex items-center justify-between mb-4">
         <h4 className="text-lg font-semibold">{title}</h4>
+        {competenciaNombre && (
+          <button
+            type="button"
+            onClick={() => setIsShareOpen(true)}
+            className="text-xs font-semibold text-brand-600 hover:text-brand-700"
+          >
+            Compartir tabla
+          </button>
+        )}
       </div>
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
@@ -100,6 +113,16 @@ export const TablaStandings: FC<Props> = ({ partidos, title = 'Tabla por equipos
           </tbody>
         </table>
       </div>
+
+      {competenciaNombre && (
+        <ShareStandingsModal
+          isOpen={isShareOpen}
+          onClose={() => setIsShareOpen(false)}
+          rows={rows}
+          competenciaNombre={competenciaNombre}
+          organizacionNombre={organizacionNombre}
+        />
+      )}
     </div>
   );
 };
