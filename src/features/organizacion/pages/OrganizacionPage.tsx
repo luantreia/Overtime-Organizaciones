@@ -263,13 +263,20 @@ const OrganizacionPage = () => {
               </div>
               <div>
                 <label className="mb-1 block text-xs font-medium text-slate-500 uppercase">URL del Logo</label>
-                <input 
+                <input
                   type="text"
                   className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none"
                   placeholder="URL de la imagen"
                   value={form.logoUrl}
                   onChange={(e) => setForm({...form, logoUrl: e.target.value})}
                 />
+                <p className="mt-1 text-xs text-slate-400">
+                  Subí la imagen a{' '}
+                  <a href="https://postimages.org/" target="_blank" rel="noopener noreferrer" className="underline">
+                    postimages.org
+                  </a>{' '}
+                  y pegá el link "Direct link". Usá una imagen cuadrada y de buena resolución para que se vea bien en las tarjetas compartibles.
+                </p>
               </div>
               <div>
                 <label className="mb-1 block text-xs font-medium text-slate-500 uppercase">Redes sociales</label>
