@@ -156,9 +156,26 @@ const DashboardOrgPage = () => {
             }
 
             if (vigentePorFecha || t.estado === 'en_curso') {
-              const faseIds = new Set((t.fases ?? []).map((f) => f._id));
+              const fasesDeTemporada = t.fases ?? [];
+              const faseIds = new Set(fasesDeTemporada.map((f) => f._id));
               const partidosDeTemporada = partidos.filter((p) => p.faseId && faseIds.has(p.faseId));
               const jugados = partidosDeTemporada.filter((p) => p.estado === 'finalizado').length;
+
+              const fasesProgreso = fasesDeTemporada
+                .slice()
+                .sort((a, b) => (a.orden ?? 0) - (b.orden ?? 0))
+                .map((f) => {
+                  const partidosDeFase = partidos.filter((p) => p.faseId === f._id);
+                  return {
+                    id: f._id,
+                    nombre: f.nombre || 'Fase',
+                    estado: f.estado,
+                    equipos: (f.participaciones ?? []).length,
+                    partidosJugados: partidosDeFase.filter((p) => p.estado === 'finalizado').length,
+                    partidosTotal: partidosDeFase.length,
+                  };
+                });
+
               progresoAcumulado.push({
                 id: t._id,
                 competenciaId: competencia._id,
@@ -167,10 +184,25 @@ const DashboardOrgPage = () => {
                 equipos: (t.participaciones ?? []).length,
                 partidosJugados: jugados,
                 partidosTotal: partidosDeTemporada.length,
+                fechaInicio: t.fechaInicio,
+                fechaFin: t.fechaFin,
+                fases: fasesProgreso,
               });
             }
           }
         }
+
+        // Priorizar las temporadas más atrasadas (tiempo transcurrido vs. partidos jugados)
+        const calcularAtraso = (t: ProgresoTemporada) => {
+          if (!t.fechaInicio || !t.fechaFin) return 0;
+          const inicio = new Date(t.fechaInicio).getTime();
+          const fin = new Date(t.fechaFin).getTime();
+          if (Number.isNaN(inicio) || Number.isNaN(fin) || fin <= inicio) return 0;
+          const elapsedPct = Math.min(100, Math.max(0, ((ahora.getTime() - inicio) / (fin - inicio)) * 100));
+          const completionPct = t.partidosTotal > 0 ? (t.partidosJugados / t.partidosTotal) * 100 : 0;
+          return elapsedPct - completionPct;
+        };
+        progresoAcumulado.sort((a, b) => calcularAtraso(b) - calcularAtraso(a));
 
         pendientes.sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime());
         proximos.sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime());

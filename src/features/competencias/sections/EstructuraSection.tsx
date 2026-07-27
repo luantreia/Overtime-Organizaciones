@@ -1,4 +1,5 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { UsersIcon } from '@heroicons/react/20/solid';
 import type { BackendTemporada, BackendFase, BackendParticipacionTemporada, BackendParticipacionFase } from '../services';
 import { finalizarFase } from '../services';
@@ -121,6 +122,7 @@ type Props = {
   esAdmin: boolean;
   loading: boolean;
   competenciaId: string;
+  competenciaNombre?: string;
   organizacionId?: string;
   onRefresh?: () => void | Promise<void>;
   onSubmitCrearTemporada: (payload: { nombre: string; fechaInicio: string; fechaFin?: string }) => void | Promise<void>;
@@ -158,7 +160,7 @@ type Props = {
 
 export default function EstructuraSection(props: Props) {
   const {
-    esAdmin, loading, competenciaId, organizacionId, onRefresh,
+    esAdmin, loading, competenciaId, competenciaNombre, organizacionId, onRefresh,
     onSubmitCrearTemporada, temporadas, fasesPorTemporada, onSubmitCrearFase,
     onEditarTemporada, onAsignarCampeon, onEliminarTemporada, onGenerarFixture,
     onEditarFase, onEliminarFase,
@@ -190,6 +192,19 @@ export default function EstructuraSection(props: Props) {
       setSelectedTemporadaId(null);
     }
   }, [sortedTemporadas, selectedTemporadaId]);
+
+  // ── Deep-link desde el dashboard: ?temporada=X&fase=Y&openGestion=1 selecciona
+  // la temporada y abre el modal de Gestión de Fase automáticamente, una sola vez.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const deepLinkHandled = useRef(false);
+
+  useEffect(() => {
+    if (deepLinkHandled.current) return;
+    const temporadaParam = searchParams.get('temporada');
+    if (temporadaParam && sortedTemporadas.some(st => st._id === temporadaParam)) {
+      setSelectedTemporadaId(temporadaParam);
+    }
+  }, [searchParams, sortedTemporadas]);
 
   const t = useMemo(
     () => sortedTemporadas.find(temp => temp._id === selectedTemporadaId) || sortedTemporadas[0],
@@ -248,6 +263,28 @@ export default function EstructuraSection(props: Props) {
   const [openJugadores, setOpenJugadores] = useState<{ open: boolean; pt?: BackendParticipacionTemporada }>({ open: false });
   const [openGestionEquipos, setOpenGestionEquipos] = useState<{ open: boolean; temporadaId?: string }>({ open: false });
   const [openGestionParticipantesFase, setOpenGestionParticipantesFase] = useState<{ open: boolean; fase?: BackendFase; temporadaId?: string }>({ open: false });
+
+  // Deep-link desde el dashboard: ?fase=Y&openGestion=1 abre el modal de Gestión de Fase automáticamente.
+  useEffect(() => {
+    if (deepLinkHandled.current) return;
+    const temporadaParam = searchParams.get('temporada');
+    const faseParam = searchParams.get('fase');
+    const openGestionParam = searchParams.get('openGestion');
+    if (!faseParam || openGestionParam !== '1') return;
+    const temporadaId = temporadaParam && sortedTemporadas.some(st => st._id === temporadaParam) ? temporadaParam : selectedTemporadaId;
+    if (!temporadaId) return;
+    const fasesDeTemporada = fasesPorTemporada[temporadaId] || [];
+    const fase = fasesDeTemporada.find(f => f._id === faseParam);
+    if (!fase) return;
+    deepLinkHandled.current = true;
+    setOpenGestionParticipantesFase({ open: true, fase, temporadaId });
+    setSearchParams((prev) => {
+      const params = new URLSearchParams(prev);
+      params.delete('fase');
+      params.delete('openGestion');
+      return params;
+    }, { replace: true });
+  }, [searchParams, sortedTemporadas, selectedTemporadaId, fasesPorTemporada, setSearchParams]);
 
   // ─────────────────────────────────────────────────────────────────────────
   return (
@@ -857,6 +894,9 @@ export default function EstructuraSection(props: Props) {
         onRefresh={onRefresh}
         fase={openGestionParticipantesFase.fase}
         temporadaId={openGestionParticipantesFase.temporadaId}
+        competenciaId={competenciaId}
+        competenciaNombre={competenciaNombre}
+        temporadaNombre={sortedTemporadas.find(st => st._id === openGestionParticipantesFase.temporadaId)?.nombre}
         todasLasFases={openGestionParticipantesFase.temporadaId ? (fasesPorTemporada[openGestionParticipantesFase.temporadaId] || []) : []}
         participantesFase={openGestionParticipantesFase.fase ? (participacionesFasePorId[openGestionParticipantesFase.fase._id] || []) : []}
         participantesTemporada={openGestionParticipantesFase.temporadaId ? (participacionesTemporadaPorId[openGestionParticipantesFase.temporadaId] || []) : []}

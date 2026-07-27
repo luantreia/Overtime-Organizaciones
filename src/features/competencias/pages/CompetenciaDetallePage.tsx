@@ -356,6 +356,7 @@ const CompetenciaDetallePage = () => {
           esAdmin={esAdmin}
           loading={loading}
           competenciaId={competenciaId}
+          competenciaNombre={nombre}
           organizacionId={organizacionId || undefined}
           onRefresh={loadAll}
           onSubmitCrearTemporada={crearTemporadaHandler}

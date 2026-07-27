@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import ConfirmModal from '../../../shared/components/ConfirmModal/ConfirmModal';
 import type { BackendFase, BackendParticipacionFase, BackendParticipacionTemporada } from '../services';
 import { recalcularFase } from '../services';
@@ -24,6 +25,9 @@ type Props = {
   esAdmin: boolean;
   fase?: BackendFase;
   temporadaId?: string;
+  competenciaId?: string;
+  competenciaNombre?: string;
+  temporadaNombre?: string;
   participantesFase: BackendParticipacionFase[];
   participantesTemporada: BackendParticipacionTemporada[];
   todasLasFases: BackendFase[];
@@ -40,6 +44,9 @@ export default function GestionParticipantesFaseModal({
   esAdmin,
   fase,
   temporadaId,
+  competenciaId,
+  competenciaNombre,
+  temporadaNombre,
   participantesFase,
   participantesTemporada,
   todasLasFases,
@@ -1535,7 +1542,27 @@ export default function GestionParticipantesFaseModal({
     <>
       <ConfirmModal
         isOpen={isOpen}
-        title={`Gestión de Fase: ${fase?.nombre || 'General'}`}
+        title={
+          <div className="flex flex-wrap items-center gap-1 text-sm font-semibold">
+            {competenciaId ? (
+              <Link to={`/competencias/${competenciaId}`} onClick={onClose} className="text-slate-500 hover:text-brand-600 hover:underline">
+                {competenciaNombre || 'Competencia'}
+              </Link>
+            ) : (
+              <span className="text-slate-500">{competenciaNombre || 'Competencia'}</span>
+            )}
+            <span className="text-slate-300">/</span>
+            {competenciaId && temporadaId ? (
+              <Link to={`/competencias/${competenciaId}?tab=estructura&temporada=${temporadaId}`} onClick={onClose} className="text-slate-500 hover:text-brand-600 hover:underline">
+                {temporadaNombre || 'Temporada'}
+              </Link>
+            ) : (
+              <span className="text-slate-500">{temporadaNombre || 'Temporada'}</span>
+            )}
+            <span className="text-slate-300">/</span>
+            <span className="text-slate-900">{fase?.nombre || 'Fase'}</span>
+          </div>
+        }
         message={contenido as any}
         confirmLabel="Cerrar"
         showCancel={false}
