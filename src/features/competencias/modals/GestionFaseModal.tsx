@@ -1587,6 +1587,7 @@ export default function GestionParticipantesFaseModal({
 
       <ModalGestionSets
         partidoId={partidoSetsId || ''}
+        modalidad={modalidadComp}
         isOpen={gestionSetsAbierto}
         onClose={async () => {
           setGestionSetsAbierto(false);

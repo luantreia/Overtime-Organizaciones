@@ -15,12 +15,21 @@ type ModalGestionSetsProps = {
   isOpen: boolean;
   onClose: () => void;
   onAbrirCaptura?: (numeroSet: number) => void;
+  modalidad?: string;
 };
 
 const estados = ['pendiente', 'en_juego', 'finalizado'] as const;
-const ganadores = ['local', 'visitante', 'pendiente'] as const;
+const ganadoresBase = ['local', 'visitante', 'pendiente'] as const;
+const etiquetasGanador: Record<string, string> = {
+  local: 'Local',
+  visitante: 'Visitante',
+  empate: 'Empate',
+  pendiente: 'Pendiente',
+};
 
-const ModalGestionSets = ({ partidoId, isOpen, onClose, onAbrirCaptura }: ModalGestionSetsProps) => {
+const ModalGestionSets = ({ partidoId, isOpen, onClose, onAbrirCaptura, modalidad }: ModalGestionSetsProps) => {
+  const esCloth = modalidad === 'Cloth';
+  const ganadores = esCloth ? (['local', 'visitante', 'empate', 'pendiente'] as const) : ganadoresBase;
   const { addToast } = useToast();
   const [sets, setSets] = useState<SetPartido[]>([]);
   const [loading, setLoading] = useState(false);
@@ -107,7 +116,10 @@ const ModalGestionSets = ({ partidoId, isOpen, onClose, onAbrirCaptura }: ModalG
     <ModalBase isOpen={isOpen} onClose={onClose} title="Gestionar sets" size="lg" bodyClassName="p-0">
       <div className="p-6 space-y-4">
         <div className="flex items-center justify-between">
-          <p className="text-sm text-slate-600">Crear, editar y eliminar sets del partido.</p>
+          <p className="text-sm text-slate-600">
+            Crear, editar y eliminar sets del partido.
+            {esCloth ? ' Modalidad Cloth: ganar set = +2 pts, empate = +1 pts c/u.' : ' Modalidad Foam: ganar set = +1 pt.'}
+          </p>
           <button type="button" onClick={crearSet} className="rounded-lg bg-brand-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-brand-700">Nuevo set</button>
         </div>
 
@@ -151,7 +163,7 @@ const ModalGestionSets = ({ partidoId, isOpen, onClose, onAbrirCaptura }: ModalG
                         disabled={savingId === s._id}
                         className="rounded border border-slate-300 px-2 py-1 text-sm"
                       >
-                        {ganadores.map(op => <option key={op} value={op}>{op}</option>)}
+                        {ganadores.map(op => <option key={op} value={op}>{etiquetasGanador[op] ?? op}</option>)}
                       </select>
                     </td>
                     <td className="px-3 py-2 text-right space-x-2">
