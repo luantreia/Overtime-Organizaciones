@@ -7,8 +7,8 @@ import { RankedAFKSection } from './RankedAFKSection';
 
 interface RankedFinalizeProps {
   score: { local: number; visitante: number };
-  sets: { winner: 'local' | 'visitante'; time: number }[];
-  addSet: (winner: 'local' | 'visitante') => void;
+  sets: { winner: 'local' | 'visitante' | 'empate'; time: number }[];
+  addSet: (winner: 'local' | 'visitante' | 'empate') => void;
   removeLastSet: () => void;
   adjustScore: (team: 'local' | 'visitante', delta: number) => void;
   onFinalize: (afkIds?: string[]) => void;
@@ -243,7 +243,7 @@ export const RankedFinalize: React.FC<RankedFinalizeProps> = ({
               <div 
                 key={idx}
                 className={`group relative w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center text-[9px] sm:text-[10px] font-bold text-white shadow-sm transition-transform hover:scale-110 ${
-                  set.winner === 'local' ? 'bg-red-500' : 'bg-blue-500'
+                  set.winner === 'local' ? 'bg-red-500' : set.winner === 'visitante' ? 'bg-blue-500' : 'bg-slate-400'
                 }`}
               >
                 {idx + 1}
@@ -293,6 +293,16 @@ export const RankedFinalize: React.FC<RankedFinalizeProps> = ({
           </div>
 
           <div className="flex flex-col items-center gap-2 px-1 sm:px-4">
+             {modalidad === 'Cloth' && (
+               <button
+                 onClick={() => addSet('empate')}
+                 disabled={!matchActive || busy}
+                 className="px-2 py-1 rounded-lg bg-slate-500 text-white text-[9px] sm:text-[10px] font-bold shadow-sm hover:bg-slate-600 active:scale-95 transition-all uppercase disabled:opacity-50"
+                 title="Empate de set (+1 c/u)"
+               >
+                 Empate
+               </button>
+             )}
              {matchActive && (isPaused || isWaitingForNextSet) && startTime ? (
                 <div className="flex flex-col items-center gap-0.5 animate-in zoom-in duration-300">
                   <button 

@@ -44,7 +44,7 @@ export function useRankedMatch({
   const [rojo, setRojo] = useState<string[]>([]);
   const [azul, setAzul] = useState<string[]>([]);
   const [score, setScore] = useState({ local: 0, visitante: 0 });
-  const [sets, setSets] = useState<{ _id?: string; winner: 'local' | 'visitante'; time: number }[]>([]);
+  const [sets, setSets] = useState<{ _id?: string; winner: 'local' | 'visitante' | 'empate'; time: number }[]>([]);
   
   // Timers State
   const [startTime, rawSetStartTime] = useState<number | null>(null); // Use this as the REFERENCE for MatchTimer legacy, but we'll use more precise ones:
@@ -534,9 +534,9 @@ export function useRankedMatch({
     }
   };
 
-  const addSet = async (winner: 'local' | 'visitante') => {
+  const addSet = async (winner: 'local' | 'visitante' | 'empate') => {
     if (!matchId) return;
-    
+
     // Calculate final time for this set before pausing
     const elapsed = getEffectiveElapsed();
     const lastSetTime = sets.length > 0 ? sets[sets.length - 1].time : 0;
@@ -547,14 +547,16 @@ export function useRankedMatch({
     if (matchConfig.autoPauseGlobal && !isPaused) {
        togglePause();
     }
-    
+
     // In Basic Mode, we only update local state
     if (isBasicMode) {
       setSets(prev => [...prev, { _id: `temp-${Date.now()}`, winner, time: elapsed }]);
-      setScore(prev => ({
-        ...prev,
-        [winner]: prev[winner] + 1
-      }));
+      if (winner !== 'empate') {
+        setScore(prev => ({
+          ...prev,
+          [winner]: prev[winner] + 1
+        }));
+      }
       return;
     }
 
@@ -573,16 +575,18 @@ export function useRankedMatch({
         }
         throw e;
       }
-      
+
       // 2. Finish it immediately
       await apiFinishSet(newSetDoc._id, winner, Math.floor(currentSetDurationMs / 1000));
 
       setSets(prev => [...prev, { _id: newSetDoc._id, winner, time: elapsed }]);
-      setScore(prev => ({
-        ...prev,
-        [winner]: prev[winner] + 1
-      }));
-      
+      if (winner !== 'empate') {
+        setScore(prev => ({
+          ...prev,
+          [winner]: prev[winner] + 1
+        }));
+      }
+
       // Optional: Sync again to be sure
       await syncWithServer(matchId, true);
     } catch (e: any) {
@@ -600,13 +604,14 @@ export function useRankedMatch({
   const removeLastSet = async () => {
     if (sets.length === 0) return;
     const last = sets[sets.length - 1];
-    
+    const decrementScore = (s: { local: number; visitante: number }) => {
+      if (last.winner === 'empate') return s;
+      return { ...s, [last.winner]: Math.max(0, s[last.winner] - 1) };
+    };
+
     if (isBasicMode) {
       setSets(prev => prev.slice(0, -1));
-      setScore(s => ({
-        ...s,
-        [last.winner]: Math.max(0, s[last.winner] - 1)
-      }));
+      setScore(decrementScore);
       return;
     }
 
@@ -615,10 +620,7 @@ export function useRankedMatch({
       try {
         await apiDeleteSet(last._id);
         setSets(prev => prev.slice(0, -1));
-        setScore(s => ({
-          ...s,
-          [last.winner]: Math.max(0, s[last.winner] - 1)
-        }));
+        setScore(decrementScore);
       } catch (e: any) {
         onError?.(e.message || 'Error al eliminar set de servidor');
       } finally {
@@ -627,10 +629,7 @@ export function useRankedMatch({
     } else {
       // Local fallback
       setSets(prev => prev.slice(0, -1));
-      setScore(s => ({
-        ...s,
-        [last.winner]: Math.max(0, s[last.winner] - 1)
-      }));
+      setScore(decrementScore);
     }
   };
 

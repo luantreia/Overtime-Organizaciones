@@ -70,7 +70,7 @@ export async function createSet(partidoId: string, numeroSet: number) {
   });
 }
 
-export async function finishSet(setId: string, winner: 'local' | 'visitante', durationSeconds: number) {
+export async function finishSet(setId: string, winner: 'local' | 'visitante' | 'empate', durationSeconds: number) {
   return authFetch<any>(`/api/set-partido/${setId}`, {
     method: 'PUT',
     body: { ganadorSet: winner, estadoSet: 'finalizado', timerSetValue: 0, timerSetRunning: false, lastSetDuration: durationSeconds }
