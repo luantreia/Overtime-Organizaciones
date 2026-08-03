@@ -353,6 +353,7 @@ export const ModalPartidoAdmin = ({ partidoId, token, onClose, onPartidoEliminad
       {gestionSetsAbierta && (
         <ModalGestionSets
           partidoId={partidoId}
+          modalidad={partido?.modalidad}
           isOpen={gestionSetsAbierta}
           onClose={() => setGestionSetsAbierta(false)}
           onAbrirCaptura={(numero) => {
