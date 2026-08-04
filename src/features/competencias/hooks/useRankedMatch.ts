@@ -548,15 +548,16 @@ export function useRankedMatch({
        togglePause();
     }
 
+    const pointsForWin = modalidad === 'Cloth' ? 2 : 1;
+    const applyScore = (prev: { local: number; visitante: number }) =>
+      winner === 'empate'
+        ? { local: prev.local + 1, visitante: prev.visitante + 1 }
+        : { ...prev, [winner]: prev[winner] + pointsForWin };
+
     // In Basic Mode, we only update local state
     if (isBasicMode) {
       setSets(prev => [...prev, { _id: `temp-${Date.now()}`, winner, time: elapsed }]);
-      if (winner !== 'empate') {
-        setScore(prev => ({
-          ...prev,
-          [winner]: prev[winner] + 1
-        }));
-      }
+      setScore(applyScore);
       return;
     }
 
@@ -580,12 +581,7 @@ export function useRankedMatch({
       await apiFinishSet(newSetDoc._id, winner, Math.floor(currentSetDurationMs / 1000));
 
       setSets(prev => [...prev, { _id: newSetDoc._id, winner, time: elapsed }]);
-      if (winner !== 'empate') {
-        setScore(prev => ({
-          ...prev,
-          [winner]: prev[winner] + 1
-        }));
-      }
+      setScore(applyScore);
 
       // Optional: Sync again to be sure
       await syncWithServer(matchId, true);
@@ -604,9 +600,12 @@ export function useRankedMatch({
   const removeLastSet = async () => {
     if (sets.length === 0) return;
     const last = sets[sets.length - 1];
+    const pointsForWin = modalidad === 'Cloth' ? 2 : 1;
     const decrementScore = (s: { local: number; visitante: number }) => {
-      if (last.winner === 'empate') return s;
-      return { ...s, [last.winner]: Math.max(0, s[last.winner] - 1) };
+      if (last.winner === 'empate') {
+        return { local: Math.max(0, s.local - 1), visitante: Math.max(0, s.visitante - 1) };
+      }
+      return { ...s, [last.winner]: Math.max(0, s[last.winner] - pointsForWin) };
     };
 
     if (isBasicMode) {
