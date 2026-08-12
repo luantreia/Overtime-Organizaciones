@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import {
   getLeaderboard,
   markMatchAsRanked,
@@ -14,8 +14,10 @@ import {
   cleanupGhostPlayers,
   getRooms,
   assignMatchToRoom,
+  updateMatchLocation,
   type BroadcastRoom
 } from '../../ranked/services/rankedService';
+import { SedeService, type Sede } from '../../sedes/services/sedeService';
 import { 
   crearJugadorCompetencia, 
   listJugadoresCompetencia, 
@@ -38,14 +40,31 @@ import { RankedAdminTools } from './ranked/RankedAdminTools';
 import { Button, Card } from '../../../shared/components/ui';
 import ConfirmModal from '../../../shared/components/ConfirmModal/ConfirmModal';
 
+// Rango Unicode de diacríticos combinables (U+0300-U+036F), construido por code point
+// para no depender de caracteres literales no-ASCII en el código fuente.
+const COMBINING_DIACRITICS = new RegExp(
+  `[${String.fromCharCode(0x0300)}-${String.fromCharCode(0x036f)}]`,
+  'g'
+);
+
+function slugify(text: string): string {
+  return text
+    .normalize('NFD').replace(COMBINING_DIACRITICS, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
 export default function CompetenciaRankedSection({
   competenciaId,
   modalidad,
   categoria,
+  organizacionId,
 }: {
   competenciaId: string;
   modalidad: 'Foam' | 'Cloth' | '';
   categoria: 'Masculino' | 'Femenino' | 'Mixto' | 'Libre' | '';
+  organizacionId?: string;
 }) {
   const [players, setPlayers] = useState<Array<{ _id: string; nombre: string; jcId?: string }>>([]);
   const [compPlayers, setCompPlayers] = useState<Array<{ _id: string; nombre: string; jcId?: string }>>([]);
@@ -86,6 +105,12 @@ export default function CompetenciaRankedSection({
   const [broadcastRoom, setBroadcastRoom] = useState<string>('cancha-1');
   const [rooms, setRooms] = useState<BroadcastRoom[]>([]);
   const PARTIDO_URL = process.env.REACT_APP_PARTIDO_URL || 'https://overtime-partido.vercel.app';
+
+  // Sede / cancha donde se está jugando
+  const [sedes, setSedes] = useState<Sede[]>([]);
+  const [selectedSedeId, setSelectedSedeId] = useState<string>('');
+  const [selectedCancha, setSelectedCancha] = useState<string>('');
+  const lastAutoRoomRef = useRef<string>('');
 
   // Temporadas
   const [temporadas, setTemporadas] = useState<BackendTemporada[]>([]);
@@ -261,10 +286,12 @@ export default function CompetenciaRankedSection({
     modalidad,
     categoria,
     temporadaId: selectedTemporada,
+    sedeId: selectedSedeId,
+    cancha: selectedCancha,
     syncMatchAttendance,
     removeMatchAttendance,
-    onSuccess: (msg) => { 
-      setSuccess(msg); 
+    onSuccess: (msg) => {
+      setSuccess(msg);
       fetchRecentMatches();
     },
     onError: (err) => { setError(err); },
@@ -323,6 +350,9 @@ export default function CompetenciaRankedSection({
         });
 
         const externalStartTime = partido.rankedMeta?.startTime ? new Date(partido.rankedMeta.startTime).getTime() : null;
+
+        setSelectedSedeId((partido.sede && typeof partido.sede === 'string' ? partido.sede : partido.sede?._id) || '');
+        setSelectedCancha(partido.cancha || '');
 
         // Load into state
         loadMatch(
@@ -410,6 +440,36 @@ export default function CompetenciaRankedSection({
     const interval = setInterval(() => getRooms().then(setRooms).catch(() => {}), 15000);
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    if (!organizacionId) return;
+    SedeService.getByOrganizacion(organizacionId).then(setSedes).catch(() => {});
+  }, [organizacionId]);
+
+  const selectedSede = sedes.find(s => s.id === selectedSedeId);
+
+  // Autocompleta la sala de broadcast a partir de sede+cancha, sin pisar si el usuario ya la editó a mano.
+  useEffect(() => {
+    if (!selectedSede || !selectedCancha) return;
+    const autoRoom = slugify(`${selectedSede.nombre}-${selectedCancha}`);
+    setBroadcastRoom(prev => (prev === '' || prev === lastAutoRoomRef.current ? autoRoom : prev));
+    lastAutoRoomRef.current = autoRoom;
+  }, [selectedSede, selectedCancha]);
+
+  const handleSedeChange = (sedeId: string) => {
+    setSelectedSedeId(sedeId);
+    setSelectedCancha('');
+    if (matchId) {
+      updateMatchLocation(matchId, sedeId || null, null).catch((e: any) => setError(e.message || 'Error actualizando sede'));
+    }
+  };
+
+  const handleCanchaChange = (cancha: string) => {
+    setSelectedCancha(cancha);
+    if (matchId) {
+      updateMatchLocation(matchId, selectedSedeId || null, cancha || null).catch((e: any) => setError(e.message || 'Error actualizando cancha'));
+    }
+  };
 
   const toggleSelect = (id: string) => {
     setSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
@@ -658,6 +718,40 @@ export default function CompetenciaRankedSection({
               ))}
             </select>
           </div>
+
+          {sedes.length > 0 && (
+            <div className="space-y-1">
+              <label className="text-[10px] uppercase tracking-wider font-bold text-slate-500">Sede</label>
+              <select
+                value={selectedSedeId}
+                onChange={(e) => handleSedeChange(e.target.value)}
+                className="h-9 w-full sm:w-40 rounded-md border border-slate-200 bg-white px-2 py-1 text-xs sm:text-sm outline-none focus:ring-2 focus:ring-brand-500 transition-shadow"
+                disabled={busy}
+              >
+                <option value="">Sin sede</option>
+                {sedes.map(s => (
+                  <option key={s.id} value={s.id}>{s.nombre}</option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {selectedSede && (selectedSede.canchas?.length ?? 0) > 0 && (
+            <div className="space-y-1">
+              <label className="text-[10px] uppercase tracking-wider font-bold text-slate-500">Cancha</label>
+              <select
+                value={selectedCancha}
+                onChange={(e) => handleCanchaChange(e.target.value)}
+                className="h-9 w-full sm:w-32 rounded-md border border-slate-200 bg-white px-2 py-1 text-xs sm:text-sm outline-none focus:ring-2 focus:ring-brand-500 transition-shadow"
+                disabled={busy}
+              >
+                <option value="">Sin cancha</option>
+                {selectedSede.canchas!.map(c => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+            </div>
+          )}
 
           <div className="space-y-1">
             <label className="text-[10px] uppercase tracking-wider font-bold text-slate-400" title="Online: sincroniza con el servidor. Offline: guarda solo localmente.">

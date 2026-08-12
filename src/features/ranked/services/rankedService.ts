@@ -5,10 +5,17 @@ const BASE = '/api/ranked';
 export type Modalidad = 'Foam' | 'Cloth';
 export type Categoria = 'Masculino' | 'Femenino' | 'Mixto' | 'Libre';
 
-export async function createRankedMatch(input: { modalidad: Modalidad; categoria: Categoria; fecha?: string; creadoPor?: string; competenciaId?: string; temporadaId?: string; }) {
+export async function createRankedMatch(input: { modalidad: Modalidad; categoria: Categoria; fecha?: string; creadoPor?: string; competenciaId?: string; temporadaId?: string; sede?: string; cancha?: string; }) {
   return authFetch<{ ok: boolean; partidoId: string }>(`${BASE}/match`, {
     method: 'POST',
     body: input,
+  });
+}
+
+export async function updateMatchLocation(partidoId: string, sede: string | null, cancha: string | null) {
+  return authFetch<{ ok: boolean; sede: any; cancha: string | null }>(`${BASE}/match/${partidoId}/location`, {
+    method: 'PUT',
+    body: { sede, cancha },
   });
 }
 

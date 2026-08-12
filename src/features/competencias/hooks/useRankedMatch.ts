@@ -21,6 +21,8 @@ interface UseRankedMatchProps {
   modalidad: Modalidad | '';
   categoria: Categoria | '';
   temporadaId?: string;
+  sedeId?: string;
+  cancha?: string;
   onSuccess?: (message: string) => void;
   onError?: (error: string) => void;
   onFinalized?: () => void;
@@ -33,6 +35,8 @@ export function useRankedMatch({
   modalidad,
   categoria,
   temporadaId,
+  sedeId,
+  cancha,
   onSuccess,
   onError,
   onFinalized,
@@ -258,7 +262,9 @@ export function useRankedMatch({
         categoria: categoria as Categoria,
         creadoPor: user?.id || 'org-ui',
         competenciaId,
-        temporadaId: temporadaId || undefined
+        temporadaId: temporadaId || undefined,
+        sede: sedeId || undefined,
+        cancha: cancha || undefined
       });
       setMatchId(r.partidoId);
       setRojo([]);

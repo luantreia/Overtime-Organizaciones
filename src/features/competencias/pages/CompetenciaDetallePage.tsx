@@ -395,7 +395,7 @@ const CompetenciaDetallePage = () => {
       ) : null}
 
       {tab === 'ranked' ? (
-        <CompetenciaRankedSection competenciaId={competenciaId} modalidad={modalidad} categoria={categoria} />
+        <CompetenciaRankedSection competenciaId={competenciaId} modalidad={modalidad} categoria={categoria} organizacionId={organizacionId || undefined} />
       ) : null}
 
       {confirmEliminarTemp ? (
