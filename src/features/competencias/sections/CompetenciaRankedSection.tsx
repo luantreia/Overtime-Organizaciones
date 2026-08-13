@@ -110,7 +110,8 @@ export default function CompetenciaRankedSection({
   const [sedes, setSedes] = useState<Sede[]>([]);
   const [selectedSedeId, setSelectedSedeId] = useState<string>('');
   const [selectedCancha, setSelectedCancha] = useState<string>('');
-  const lastAutoRoomRef = useRef<string>('');
+  // true en cuanto el operador toca el campo de sala a mano; a partir de ahí dejamos de autocompletarlo.
+  const roomEditedByUserRef = useRef(false);
 
   // Temporadas
   const [temporadas, setTemporadas] = useState<BackendTemporada[]>([]);
@@ -451,9 +452,8 @@ export default function CompetenciaRankedSection({
   // Autocompleta la sala de broadcast a partir de sede+cancha, sin pisar si el usuario ya la editó a mano.
   useEffect(() => {
     if (!selectedSede || !selectedCancha) return;
-    const autoRoom = slugify(`${selectedSede.nombre}-${selectedCancha}`);
-    setBroadcastRoom(prev => (prev === '' || prev === lastAutoRoomRef.current ? autoRoom : prev));
-    lastAutoRoomRef.current = autoRoom;
+    if (roomEditedByUserRef.current) return;
+    setBroadcastRoom(slugify(`${selectedSede.nombre}-${selectedCancha}`));
   }, [selectedSede, selectedCancha]);
 
   const handleSedeChange = (sedeId: string) => {
@@ -806,7 +806,7 @@ export default function CompetenciaRankedSection({
             <input
               list="rooms-datalist"
               value={broadcastRoom}
-              onChange={e => setBroadcastRoom(e.target.value)}
+              onChange={e => { roomEditedByUserRef.current = true; setBroadcastRoom(e.target.value); }}
               placeholder="nombre-sala"
               className="h-7 w-28 rounded border border-slate-200 px-2 text-xs outline-none focus:ring-1 focus:ring-brand-500"
             />
