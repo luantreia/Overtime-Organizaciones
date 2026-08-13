@@ -5,6 +5,8 @@ import { getJugadoresEquipo } from '../../../jugadores/services/jugadorEquipoSer
 import { getFaseById } from '../../../competencias/services/fasesService';
 import { listParticipacionesByTemporada } from '../../../competencias/services/participacionTemporadaService';
 import { listJugadorTemporadaByParticipacion } from '../../../competencias/services/jugadorTemporadaService';
+import { listParticipacionesByFase } from '../../../competencias/services/participacionFaseService';
+import { listByParticipacionFase } from '../../../competencias/services/jugadorFaseService';
 import type { Jugador, JugadorPartido } from '../../../../types';
 import { useToast } from '../../../../shared/components/Toast/ToastProvider';
 
@@ -79,6 +81,41 @@ const getJugadoresElegibles = async (equipoId: string, partido: any): Promise<Ju
         );
         
         if (miParticipacion) {
+          // Preferir el plantel curado para ESTA fase (JugadorFase) por sobre el plantel
+          // completo de la temporada — son casos reales distintos: un equipo puede tener 20
+          // jugadores en la temporada pero solo 12 habilitados para una fase puntual. Si la
+          // fase todavía no tiene ningún JugadorFase cargado (fases viejas, o una fase que el
+          // organizador no curó todavía), cae al comportamiento anterior para no dejar el
+          // selector vacío.
+          try {
+            const participacionesFase = await listParticipacionesByFase(faseId);
+            const miParticipacionFase = participacionesFase.find((pf) => {
+              const pt = pf.participacionTemporada as any;
+              const ptId = typeof pt === 'string' ? pt : pt?._id;
+              return ptId === miParticipacion._id;
+            });
+            if (miParticipacionFase) {
+              const jugadoresFase = await listByParticipacionFase(miParticipacionFase._id);
+              if (jugadoresFase.length > 0) {
+                const opciones: JugadorOption[] = [];
+                for (const jf of jugadoresFase) {
+                  const jt = jf.jugadorTemporada as any;
+                  const je = typeof jt === 'string' ? null : jt?.jugadorEquipo;
+                  const j = je?.jugador;
+                  if (!j) continue;
+                  opciones.push({
+                    id: j._id || j.id,
+                    nombre: j.nombre || j.alias || 'Jugador',
+                    numeroCamiseta: jt?.numeroCamiseta,
+                  });
+                }
+                return opciones;
+              }
+            }
+          } catch (e) {
+            console.warn('No se pudo resolver el plantel de la fase, uso el de la temporada', e);
+          }
+
           const jugadoresTemp = await listJugadorTemporadaByParticipacion(miParticipacion._id);
           // Algunos registros pueden tener jugadorEquipo huérfano (el contrato fue borrado pero
           // la referencia quedó) — se descartan en vez de dejar que un solo registro roto tire
