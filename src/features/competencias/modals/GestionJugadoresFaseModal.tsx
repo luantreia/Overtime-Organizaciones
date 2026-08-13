@@ -17,6 +17,7 @@ type Props = {
 
 type FilaJugador = {
   jugadorTemporadaId: string;
+  jugadorId: string;
   nombre: string;
   alias?: string;
   jugadorFaseId: string | null; // no-null = ya estaba habilitado antes de abrir el modal
@@ -62,13 +63,16 @@ export default function GestionJugadoresFaseModal({ isOpen, onClose, participaci
           const jtId = typeof h.jugadorTemporada === 'string' ? h.jugadorTemporada : h.jugadorTemporada?._id;
           if (jtId) jugadorFaseIdPorJT.set(jtId, h._id);
         }
-        const nuevasFilas: FilaJugador[] = plantelCompleto.map((op) => ({
-          jugadorTemporadaId: op._id,
-          nombre: op.jugador?.nombre || 'Jugador',
-          alias: op.jugador?.alias,
-          jugadorFaseId: jugadorFaseIdPorJT.get(op._id) || null,
-          checked: jugadorFaseIdPorJT.has(op._id),
-        }));
+        const nuevasFilas: FilaJugador[] = plantelCompleto
+          .filter((op) => op.jugador?._id)
+          .map((op) => ({
+            jugadorTemporadaId: op._id,
+            jugadorId: op.jugador!._id,
+            nombre: op.jugador?.nombre || 'Jugador',
+            alias: op.jugador?.alias,
+            jugadorFaseId: jugadorFaseIdPorJT.get(op._id) || null,
+            checked: jugadorFaseIdPorJT.has(op._id),
+          }));
         nuevasFilas.sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
         setFilas(nuevasFilas);
       })
@@ -111,7 +115,9 @@ export default function GestionJugadoresFaseModal({ isOpen, onClose, participaci
     const aQuitar = filas.filter((f) => !f.checked && f.jugadorFaseId);
 
     const resultados = await Promise.allSettled([
-      ...aAgregar.map((f) => crearJugadorFase({ jugadorTemporada: f.jugadorTemporadaId, participacionFase: pfId })),
+      ...aAgregar.map((f) =>
+        crearJugadorFase({ jugadorTemporada: f.jugadorTemporadaId, participacionFase: pfId, jugador: f.jugadorId })
+      ),
       ...aQuitar.map((f) => eliminarJugadorFase(f.jugadorFaseId as string)),
     ]);
 

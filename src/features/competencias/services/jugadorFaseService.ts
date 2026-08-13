@@ -4,7 +4,7 @@ export type BackendJugadorFase = {
   _id: string;
   jugadorTemporada: string | { _id: string; jugadorEquipo?: { jugador?: { _id: string; nombre?: string; alias?: string } } };
   participacionFase: string;
-  estado?: 'activo' | 'inactivo' | 'lesionado' | 'suspendido';
+  estado?: 'aceptado' | 'baja' | 'suspendido';
   rol?: string;
 };
 
@@ -32,8 +32,8 @@ export async function opcionesJugadorFase(
   return authFetch<OpcionJugadorFase[]>(`/jugador-fase/opciones?${params.toString()}`);
 }
 
-export async function crearJugadorFase(payload: { jugadorTemporada: string; participacionFase: string; estado?: string }) {
-  return authFetch<BackendJugadorFase>('/jugador-fase', { method: 'POST', body: { estado: 'activo', ...payload } });
+export async function crearJugadorFase(payload: { jugadorTemporada: string; participacionFase: string; jugador: string; estado?: string }) {
+  return authFetch<BackendJugadorFase>('/jugador-fase', { method: 'POST', body: { estado: 'aceptado', ...payload } });
 }
 
 export async function eliminarJugadorFase(id: string) {
