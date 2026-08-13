@@ -12,16 +12,18 @@ function equipoNombreFromPf(pf: BackendParticipacionFase): string {
   return (eq && (eq as any).nombre) || pf._id;
 }
 
-export default function FasePlayoffSection({ 
-  participantes, 
-  esAdmin, 
-  onUpdate, 
-  onDelete 
-}: { 
-  participantes: BackendParticipacionFase[]; 
-  esAdmin?: boolean; 
-  onUpdate?: (id: string, body: Partial<{ seed: number; posicion: number }>) => void | Promise<void>; 
-  onDelete?: (id: string) => void | Promise<void> 
+export default function FasePlayoffSection({
+  participantes,
+  esAdmin,
+  onUpdate,
+  onDelete,
+  onGestionarJugadores
+}: {
+  participantes: BackendParticipacionFase[];
+  esAdmin?: boolean;
+  onUpdate?: (id: string, body: Partial<{ seed: number; posicion: number }>) => void | Promise<void>;
+  onDelete?: (id: string) => void | Promise<void>;
+  onGestionarJugadores?: (pf: BackendParticipacionFase) => void;
 }) {
   const [confirmSeedMode, setConfirmSeedMode] = useState<'random' | 'performance' | null>(null);
 
@@ -175,8 +177,9 @@ export default function FasePlayoffSection({
                 ) : ((pf as any).posicion ?? '-')}
               </td>
               {esAdmin ? (
-                <td className="py-1 pr-2 text-right">
-                  <button type="button" className="rounded border border-rose-200 bg-rose-50 px-2 py-1 text-[11px] font-semibold text-rose-700 hover:bg-rose-100" onClick={()=> onDelete?.(pf._id)}>Eliminar</button>
+                <td className="py-1 pr-2 text-right whitespace-nowrap">
+                  <button type="button" className="rounded border border-brand-200 bg-brand-50 px-2 py-1 text-[11px] font-semibold text-brand-700 hover:bg-brand-100" onClick={()=> onGestionarJugadores?.(pf)}>Jugadores</button>
+                  <button type="button" className="ml-1.5 rounded border border-rose-200 bg-rose-50 px-2 py-1 text-[11px] font-semibold text-rose-700 hover:bg-rose-100" onClick={()=> onDelete?.(pf._id)}>Eliminar</button>
                 </td>
               ) : null}
             </tr>

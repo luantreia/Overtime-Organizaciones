@@ -17,6 +17,7 @@ import { getTemporadaById } from '../services/temporadasService';
 import { getCompetenciaById } from '../services/competenciasService';
 import { VisualBracket } from '../components/VisualBracket';
 import ConfigurarReglamentoModal from './ConfigurarReglamentoModal';
+import GestionJugadoresFaseModal from './GestionJugadoresFaseModal';
 import { useToken } from '../../../app/providers/AuthContext';
 
 type Props = {
@@ -68,6 +69,7 @@ export default function GestionParticipantesFaseModal({
   const [items, setItems] = useState<BackendParticipacionFase[]>(participantesFase || []);
   const [notice, setNotice] = useState<string>('');
   const [confirmDeleteParticipanteId, setConfirmDeleteParticipanteId] = useState<string | null>(null);
+  const [participacionFaseJugadores, setParticipacionFaseJugadores] = useState<BackendParticipacionFase | null>(null);
   const [confirmDeleteAllPartidos, setConfirmDeleteAllPartidos] = useState(false);
 
   const handleDeleteParticipante = (id: string) => {
@@ -674,6 +676,7 @@ export default function GestionParticipantesFaseModal({
                   onRefresh?.();
                 }}
                 onDelete={handleDeleteParticipante}
+                onGestionarJugadores={setParticipacionFaseJugadores}
               />
             ) : tipo === 'grupo' ? (
               <FaseGruposSection
@@ -686,6 +689,7 @@ export default function GestionParticipantesFaseModal({
                   onRefresh?.();
                 }}
                 onDelete={handleDeleteParticipante}
+                onGestionarJugadores={setParticipacionFaseJugadores}
               />
             ) : (tipo === 'playoff' || tipo === 'promocion') ? (
               <FasePlayoffSection
@@ -698,9 +702,11 @@ export default function GestionParticipantesFaseModal({
                   onRefresh?.();
                 }}
                 onDelete={handleDeleteParticipante}
+                onGestionarJugadores={setParticipacionFaseJugadores}
               />
             ) : (
-              <FaseGruposSection participantes={items} esAdmin={esAdmin} onUpdate={async (id: string, body: Partial<{ grupo: string }>) => { await updateParticipacionFase(id, body); setItems((prev)=> prev.map(p=> p._id===id ? ({...p, ...body} as any) : p)); setNotice('Cambios guardados'); setTimeout(()=> setNotice(''), 1200); onRefresh?.(); }} onDelete={handleDeleteParticipante} />
+              <FaseGruposSection participantes={items} esAdmin={esAdmin} onUpdate={async (id: string, body: Partial<{ grupo: string }>) => { await updateParticipacionFase(id, body); setItems((prev)=> prev.map(p=> p._id===id ? ({...p, ...body} as any) : p)); setNotice('Cambios guardados'); setTimeout(()=> setNotice(''), 1200); onRefresh?.(); }} onDelete={handleDeleteParticipante}
+                onGestionarJugadores={setParticipacionFaseJugadores} />
             )}
           </section>
         )}
@@ -1623,6 +1629,13 @@ export default function GestionParticipantesFaseModal({
             setPartidos(lista);
           }
         }}
+      />
+
+      <GestionJugadoresFaseModal
+        isOpen={!!participacionFaseJugadores}
+        participacionFase={participacionFaseJugadores}
+        onClose={() => setParticipacionFaseJugadores(null)}
+        onSaved={onRefresh}
       />
 
       <ConfirmModal

@@ -10,7 +10,7 @@ function equipoNombreFromPf(pf: BackendParticipacionFase): string {
   return (eq && (eq as any).nombre) || pf._id;
 }
 
-export default function FaseLigaSection({ participantes, esAdmin, onUpdate, onDelete }: { participantes: BackendParticipacionFase[]; esAdmin?: boolean; onUpdate?: (id: string, body: Partial<{ division: string }>) => void | Promise<void>; onDelete?: (id: string) => void | Promise<void> }) {
+export default function FaseLigaSection({ participantes, esAdmin, onUpdate, onDelete, onGestionarJugadores }: { participantes: BackendParticipacionFase[]; esAdmin?: boolean; onUpdate?: (id: string, body: Partial<{ division: string }>) => void | Promise<void>; onDelete?: (id: string) => void | Promise<void>; onGestionarJugadores?: (pf: BackendParticipacionFase) => void }) {
   const divisiones = Array.from(new Set<string>((participantes || []).map((p: any) => p?.division || '')));
 
   return (
@@ -71,8 +71,9 @@ export default function FaseLigaSection({ participantes, esAdmin, onUpdate, onDe
                   <td className="py-1 pr-2">{(pf as any).puntos ?? 0}</td>
                   <td className="py-1 pr-2">{(pf as any).diferenciaPuntos ?? 0}</td>
                   {esAdmin ? (
-                    <td className="py-1 pr-2 text-right">
-                      <button type="button" className="rounded border border-rose-200 bg-rose-50 px-2 py-1 text-[11px] font-semibold text-rose-700 hover:bg-rose-100" onClick={()=> onDelete?.(pf._id)}>Eliminar</button>
+                    <td className="py-1 pr-2 text-right whitespace-nowrap">
+                      <button type="button" className="rounded border border-brand-200 bg-brand-50 px-2 py-1 text-[11px] font-semibold text-brand-700 hover:bg-brand-100" onClick={()=> onGestionarJugadores?.(pf)}>Jugadores</button>
+                      <button type="button" className="ml-1.5 rounded border border-rose-200 bg-rose-50 px-2 py-1 text-[11px] font-semibold text-rose-700 hover:bg-rose-100" onClick={()=> onDelete?.(pf._id)}>Eliminar</button>
                     </td>
                   ) : null}
                 </tr>
