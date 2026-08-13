@@ -20,8 +20,11 @@ interface RankedAdminToolsProps {
   selectedTemporada: string;
   recentMatches: any[];
   onEditResult: (m: any) => void;
+  onDeleteMatch: (m: any) => void;
   hasMoreRecentMatches?: boolean;
   onLoadMoreRecentMatches?: () => void;
+  soloAbiertos: boolean;
+  setSoloAbiertos: (v: boolean) => void;
 }
 
 export const RankedAdminTools: React.FC<RankedAdminToolsProps> = ({
@@ -43,8 +46,11 @@ export const RankedAdminTools: React.FC<RankedAdminToolsProps> = ({
   selectedTemporada,
   recentMatches,
   onEditResult,
+  onDeleteMatch,
   hasMoreRecentMatches,
-  onLoadMoreRecentMatches
+  onLoadMoreRecentMatches,
+  soloAbiertos,
+  setSoloAbiertos
 }) => {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -82,9 +88,22 @@ export const RankedAdminTools: React.FC<RankedAdminToolsProps> = ({
           <span>Historial y Partidos Abiertos</span>
           <span className="text-[9px] sm:text-[10px] text-slate-400 font-normal uppercase">Mostrando {recentMatches.length}</span>
         </h3>
+        <label className="mb-3 flex items-center gap-2 cursor-pointer select-none">
+          <input
+            type="checkbox"
+            checked={soloAbiertos}
+            onChange={(e) => setSoloAbiertos(e.target.checked)}
+            className="h-3.5 w-3.5 rounded text-brand-600 focus:ring-brand-500 border-slate-300"
+          />
+          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">
+            Solo abiertos (sin terminar) — para encontrar los que quedaron perdidos
+          </span>
+        </label>
         <div className="space-y-2">
           {recentMatches.length === 0 ? (
-            <p className="text-xs text-slate-400 italic py-2 text-center">No hay partidos registrados en este scope</p>
+            <p className="text-xs text-slate-400 italic py-2 text-center">
+              {soloAbiertos ? 'No hay partidos abiertos en este scope' : 'No hay partidos registrados en este scope'}
+            </p>
           ) : (
             recentMatches.map((m) => {
               const isFinalizado = m.estado === 'finalizado';
@@ -146,15 +165,29 @@ export const RankedAdminTools: React.FC<RankedAdminToolsProps> = ({
                     </div>
                   )}
 
-                  <Button 
-                    size="sm" 
-                    variant={isFinalizado ? 'outline' : 'primary'} 
-                    className={`w-full h-8 text-[10px] font-bold uppercase tracking-wider ${isFinalizado ? 'border-brand-200 text-brand-600 hover:bg-brand-50' : ''}`}
-                    onClick={() => onEditResult(m)}
-                    disabled={busy}
-                  >
-                    {isFinalizado ? 'Reabrir y Corregir' : 'Continuar Partido'}
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant={isFinalizado ? 'outline' : 'primary'}
+                      className={`flex-1 h-8 text-[10px] font-bold uppercase tracking-wider ${isFinalizado ? 'border-brand-200 text-brand-600 hover:bg-brand-50' : ''}`}
+                      onClick={() => onEditResult(m)}
+                      disabled={busy}
+                    >
+                      {isFinalizado ? 'Reabrir y Corregir' : 'Continuar Partido'}
+                    </Button>
+                    {!isFinalizado && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-8 px-3 text-[10px] font-bold uppercase tracking-wider text-red-600 border-red-200 hover:bg-red-50"
+                        onClick={() => onDeleteMatch(m)}
+                        disabled={busy}
+                        title="Borrar este partido (ej. quedó abierto por error)"
+                      >
+                        Borrar
+                      </Button>
+                    )}
+                  </div>
                 </div>
               );
             })

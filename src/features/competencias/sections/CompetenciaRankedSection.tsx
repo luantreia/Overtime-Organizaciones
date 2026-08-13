@@ -15,6 +15,7 @@ import {
   getRooms,
   assignMatchToRoom,
   updateMatchLocation,
+  deleteRankedMatch,
   type BroadcastRoom
 } from '../../ranked/services/rankedService';
 import { SedeService, type Sede } from '../../sedes/services/sedeService';
@@ -98,6 +99,7 @@ export default function CompetenciaRankedSection({
   const [priorizarNoJugados, setPriorizarNoJugados] = useState<boolean>(true);
   const [recentMatches, setRecentMatches] = useState<any[]>([]);
   const [recentMatchesLimit, setRecentMatchesLimit] = useState<number>(5);
+  const [soloAbiertos, setSoloAbiertos] = useState<boolean>(false);
   const [recentMatchesTotal, setRecentMatchesTotal] = useState<number>(0);
   const [lbScope, setLbScope] = useState<'competition' | 'global'>('competition');
 
@@ -238,16 +240,17 @@ export default function CompetenciaRankedSection({
       });
 
       const ranked = unique
-        .filter((m: any) => 
-          m.isRanked && 
-          m.modalidad === modalidad && 
+        .filter((m: any) =>
+          m.isRanked &&
+          m.modalidad === modalidad &&
           m.categoria === categoria
         )
-        .sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime())
-      setRecentMatchesTotal(ranked.length);
-      setRecentMatches(ranked.slice(0, recentMatchesLimit));
+        .sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime());
+      const visibles = soloAbiertos ? ranked.filter((m: any) => m.estado !== 'finalizado') : ranked;
+      setRecentMatchesTotal(visibles.length);
+      setRecentMatches(visibles.slice(0, recentMatchesLimit));
     } catch {}
-  }, [competenciaId, modalidad, categoria, recentMatchesLimit, selectedTemporada]);
+  }, [competenciaId, modalidad, categoria, recentMatchesLimit, selectedTemporada, soloAbiertos]);
 
   const {
     matchId,
@@ -384,6 +387,30 @@ export default function CompetenciaRankedSection({
     } else {
       proceed();
     }
+  };
+
+  const handleDeleteMatch = (m: any) => {
+    const idParaBorrar = (m.id || m._id || '').toString();
+    if (!idParaBorrar) return;
+
+    showConfirm(
+      '¿Borrar este partido?',
+      `Se eliminará permanentemente el partido ${idParaBorrar.slice(-6).toUpperCase()} (quedó sin terminar). No se puede deshacer.`,
+      async () => {
+        try {
+          if (matchId && idParaBorrar === matchId) {
+            // Es el partido activo en pantalla: usar el flujo que ya limpia el estado local además de borrar en el servidor.
+            await onCancelMatch();
+          } else {
+            await deleteRankedMatch(idParaBorrar);
+          }
+          setSuccess('Partido eliminado');
+          fetchRecentMatches();
+        } catch (e: any) {
+          setError(e.message || 'Error al borrar el partido');
+        }
+      }
+    );
   };
 
   // Initial Data Fetching
@@ -1023,6 +1050,9 @@ export default function CompetenciaRankedSection({
                   selectedTemporada={selectedTemporada}
                   recentMatches={recentMatches}
                   onEditResult={handleEditResult}
+                  onDeleteMatch={handleDeleteMatch}
+                  soloAbiertos={soloAbiertos}
+                  setSoloAbiertos={setSoloAbiertos}
                   hasMoreRecentMatches={recentMatchesTotal > recentMatches.length}
                   onLoadMoreRecentMatches={() => setRecentMatchesLimit(prev => prev + 5)}
                 />
