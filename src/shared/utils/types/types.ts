@@ -50,6 +50,8 @@ export interface Organizacion {
   descripcion?: string;
   sitioWeb?: string;
   redesSociales?: RedesSociales;
+  /** Video de YouTube que Public usa de fondo en el header de la organización. */
+  videoFondoUrl?: string;
 }
 
 // ========================================

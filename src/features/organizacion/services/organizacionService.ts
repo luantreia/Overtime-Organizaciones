@@ -7,6 +7,7 @@ type BackendOrganizacion = {
   descripcion?: string;
   logo?: string;
   sitioWeb?: string;
+  videoFondoUrl?: string;
   redesSociales?: RedesSociales;
   activa?: boolean;
 };
@@ -17,6 +18,7 @@ const mapOrganizacion = (o: BackendOrganizacion): Organizacion => ({
   descripcion: o.descripcion,
   logoUrl: o.logo,
   sitioWeb: o.sitioWeb,
+  videoFondoUrl: o.videoFondoUrl,
   redesSociales: o.redesSociales,
 });
 
