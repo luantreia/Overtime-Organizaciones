@@ -312,8 +312,8 @@ const OrganizacionPage = () => {
                   )
                 )}
                 <p className="mt-1 text-xs text-slate-400">
-                  Se reproduce silenciado y en loop. En celulares mostramos solo la miniatura para no gastarle
-                  datos al que entra.
+                  Se reproduce silenciado, en loop y sin controles. Elegí un video con movimiento parejo:
+                  el nombre de la organización va escrito encima.
                 </p>
               </div>
               <div>
