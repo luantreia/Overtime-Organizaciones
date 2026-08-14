@@ -18,6 +18,7 @@ import { getCompetenciaById } from '../services/competenciasService';
 import { VisualBracket } from '../components/VisualBracket';
 import ConfigurarReglamentoModal from './ConfigurarReglamentoModal';
 import GestionJugadoresFaseModal from './GestionJugadoresFaseModal';
+import GestionPlanillerosModal from './GestionPlanillerosModal';
 import { useToken } from '../../../app/providers/AuthContext';
 
 type Props = {
@@ -123,6 +124,8 @@ export default function GestionParticipantesFaseModal({
   const token = useToken();
   const [alineacionModalAbierto, setAlineacionModalAbierto] = useState(false);
   const [partidoAlineacionId, setPartidoAlineacionId] = useState<string | null>(null);
+  const [planillerosPartido, setPlanillerosPartido] = useState<{ id: string; fecha?: string; nombre?: string } | null>(null);
+  const [planillerosFaseAbierto, setPlanillerosFaseAbierto] = useState(false);
   const [modalidadComp, setModalidadComp] = useState<string | undefined>(undefined);
   const [categoriaComp, setCategoriaComp] = useState<string | undefined>(undefined);
 
@@ -561,6 +564,13 @@ export default function GestionParticipantesFaseModal({
             >
               Convocados
             </button>
+            <button
+              className="rounded-lg bg-slate-50 px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-100 transition"
+              onClick={() => setPlanillerosPartido({ id: p.id, fecha: (p as any).fecha })}
+              title="Quién puede cargar la planilla de este partido"
+            >
+              Planilleros
+            </button>
           </>
         )}
       </div>
@@ -663,6 +673,14 @@ export default function GestionParticipantesFaseModal({
                   className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 shadow-sm transition-all"
                 >
                   🔄 Recalcular Tabla
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPlanillerosFaseAbierto(true)}
+                  title="Cuerpo estable de planilleros: habilitados en todos los partidos de esta fase"
+                  className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 shadow-sm transition-all"
+                >
+                  🧾 Planilleros de la fase
                 </button>
               </div>
             )}
@@ -1637,6 +1655,22 @@ export default function GestionParticipantesFaseModal({
         participacionFase={participacionFaseJugadores}
         onClose={() => setParticipacionFaseJugadores(null)}
         onSaved={onRefresh}
+      />
+
+      <GestionPlanillerosModal
+        isOpen={!!planillerosPartido && !!fase?._id}
+        partidoId={planillerosPartido?.id}
+        faseId={fase?._id}
+        fechaPartido={planillerosPartido?.fecha}
+        subtitulo={fase?.nombre}
+        onClose={() => setPlanillerosPartido(null)}
+      />
+
+      <GestionPlanillerosModal
+        isOpen={planillerosFaseAbierto && !!fase?._id}
+        faseId={fase?._id}
+        subtitulo={fase?.nombre ? `${fase.nombre} · habilitados en todos los partidos de la fase` : undefined}
+        onClose={() => setPlanillerosFaseAbierto(false)}
       />
 
       <ConfirmModal
