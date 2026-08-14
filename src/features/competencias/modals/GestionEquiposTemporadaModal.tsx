@@ -261,8 +261,9 @@ export default function GestionEquiposTemporadaModal({
                         className="rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-bold text-slate-600 transition hover:bg-slate-50 disabled:opacity-50"
                         onClick={() => onOpenJugadores(pt)}
                         disabled={!esAdmin}
+                        title="Lista de buena fe: jugadores inscriptos en esta temporada"
                       >
-                        Jugadores
+                        Buena fe
                       </button>
                       <button
                         type="button"
