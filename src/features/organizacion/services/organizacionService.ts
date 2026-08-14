@@ -33,6 +33,7 @@ export async function updateOrganizacion(id: string, payload: Partial<Organizaci
     descripcion: payload.descripcion,
     logo: payload.logoUrl,
     sitioWeb: payload.sitioWeb,
+    videoFondoUrl: payload.videoFondoUrl,
     redesSociales: payload.redesSociales,
   };
   const data = await authFetch<BackendOrganizacion>(`/organizaciones/${id}`, {

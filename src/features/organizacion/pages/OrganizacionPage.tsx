@@ -10,6 +10,7 @@ import {
 import { useToast } from '../../../shared/components/Toast/ToastProvider';
 import { useOrgPermissions } from '../hooks/useOrgPermissions';
 import GestionMiembros from '../components/GestionMiembros';
+import { extraerYoutubeId } from '../../../shared/utils/youtube';
 
 const OrganizacionPage = () => {
   const { organizacionSeleccionada, recargarOrganizaciones } = useOrganizacion();
@@ -24,6 +25,7 @@ const OrganizacionPage = () => {
     descripcion: '',
     sitioWeb: '',
     logoUrl: '',
+    videoFondoUrl: '',
     redesSociales: {
       instagram: '',
       facebook: '',
@@ -40,6 +42,7 @@ const OrganizacionPage = () => {
         descripcion: organizacionSeleccionada.descripcion || '',
         sitioWeb: organizacionSeleccionada.sitioWeb || '',
         logoUrl: organizacionSeleccionada.logoUrl || '',
+        videoFondoUrl: organizacionSeleccionada.videoFondoUrl || '',
         redesSociales: {
           instagram: organizacionSeleccionada.redesSociales?.instagram || '',
           facebook: organizacionSeleccionada.redesSociales?.facebook || '',
@@ -50,6 +53,8 @@ const OrganizacionPage = () => {
       });
     }
   }, [organizacionSeleccionada]);
+
+  const videoFondoId = extraerYoutubeId(form.videoFondoUrl);
 
   const handleSave = async () => {
     if (!organizacionSeleccionada) return;
@@ -149,6 +154,7 @@ const OrganizacionPage = () => {
                       descripcion: organizacionSeleccionada.descripcion || '',
                       sitioWeb: organizacionSeleccionada.sitioWeb || '',
                       logoUrl: organizacionSeleccionada.logoUrl || '',
+                      videoFondoUrl: organizacionSeleccionada.videoFondoUrl || '',
                       redesSociales: {
                         instagram: organizacionSeleccionada.redesSociales?.instagram || '',
                         facebook: organizacionSeleccionada.redesSociales?.facebook || '',
@@ -276,6 +282,38 @@ const OrganizacionPage = () => {
                     postimages.org
                   </a>{' '}
                   y pegá el link "Direct link". Usá una imagen cuadrada y de buena resolución para que se vea bien en las tarjetas compartibles.
+                </p>
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-medium text-slate-500 uppercase">Video de fondo (YouTube)</label>
+                <input
+                  type="text"
+                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none"
+                  placeholder="https://youtube.com/watch?v=..."
+                  value={form.videoFondoUrl}
+                  onChange={(e) => setForm({ ...form, videoFondoUrl: e.target.value })}
+                />
+                {form.videoFondoUrl.trim() !== '' && (
+                  videoFondoId ? (
+                    <div className="mt-2 flex items-center gap-3">
+                      <img
+                        src={`https://i.ytimg.com/vi/${videoFondoId}/mqdefault.jpg`}
+                        alt="Miniatura del video de fondo"
+                        className="h-12 w-20 shrink-0 rounded object-cover"
+                      />
+                      <p className="text-xs text-emerald-600">
+                        Video reconocido. Se va a ver de fondo en el header de tu organización en el portal público.
+                      </p>
+                    </div>
+                  ) : (
+                    <p className="mt-1 text-xs text-amber-600">
+                      No pudimos leer el ID de ese link. Pegá la URL completa del video de YouTube.
+                    </p>
+                  )
+                )}
+                <p className="mt-1 text-xs text-slate-400">
+                  Se reproduce silenciado y en loop. En celulares mostramos solo la miniatura para no gastarle
+                  datos al que entra.
                 </p>
               </div>
               <div>
