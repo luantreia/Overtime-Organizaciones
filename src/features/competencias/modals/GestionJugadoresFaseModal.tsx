@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import ModalBase from '../../../shared/components/ModalBase/ModalBase';
+import { SelectorJugadores, EmbudoJugadores, type FilaSelector } from '../../../shared/components/SelectorJugadores';
 import type { BackendParticipacionFase } from '../services';
 import {
   listByParticipacionFase,
@@ -77,7 +78,7 @@ export default function GestionJugadoresFaseModal({ isOpen, onClose, participaci
         setFilas(nuevasFilas);
       })
       .catch(() => {
-        if (!cancelado) setNotice('❌ No pudimos cargar el plantel de la temporada');
+        if (!cancelado) setNotice('❌ No pudimos cargar la lista de buena fe de la temporada');
       })
       .finally(() => {
         if (!cancelado) setCargando(false);
@@ -88,13 +89,22 @@ export default function GestionJugadoresFaseModal({ isOpen, onClose, participaci
     };
   }, [isOpen, ptId, pfId]);
 
-  const filasFiltradas = useMemo(() => {
-    const q = busqueda.trim().toLowerCase();
-    if (!q) return filas;
-    return filas.filter((f) => f.nombre.toLowerCase().includes(q) || f.alias?.toLowerCase().includes(q));
-  }, [filas, busqueda]);
+  const filasSelector: FilaSelector[] = useMemo(
+    () =>
+      filas.map((f) => ({
+        id: f.jugadorTemporadaId,
+        nombre: f.nombre,
+        alias: f.alias,
+        checked: f.checked,
+      })),
+    [filas]
+  );
 
   const cantidadHabilitados = useMemo(() => filas.filter((f) => f.checked).length, [filas]);
+  const hayCambios = useMemo(
+    () => filas.some((f) => f.checked !== !!f.jugadorFaseId),
+    [filas]
+  );
 
   const toggle = (jugadorTemporadaId: string) => {
     setFilas((prev) =>
@@ -127,7 +137,7 @@ export default function GestionJugadoresFaseModal({ isOpen, onClose, participaci
     if (errores > 0) {
       setNotice(`⚠️ Se guardó con ${errores} error${errores === 1 ? '' : 'es'} — revisá e intentá de nuevo.`);
     } else {
-      setNotice('✅ Plantel de la fase actualizado');
+      setNotice('✅ Habilitados de la fase actualizados');
       await onSaved?.();
       setTimeout(() => onClose(), 700);
     }
@@ -136,89 +146,59 @@ export default function GestionJugadoresFaseModal({ isOpen, onClose, participaci
   if (!isOpen || !participacionFase) return null;
 
   return (
-    <ModalBase isOpen={isOpen} onClose={onClose} title="Jugadores de la fase" subtitle={equipoNombre(participacionFase)} size="md">
-      <div className="p-1">
-        {notice && (
-          <div className="mb-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">{notice}</div>
-        )}
-
-        {cargando ? (
-          <p className="py-8 text-center text-sm text-slate-400">Cargando plantel de la temporada…</p>
-        ) : filas.length === 0 ? (
-          <p className="py-8 text-center text-sm text-slate-400">
-            Este equipo todavía no tiene jugadores cargados en la temporada.
-          </p>
-        ) : (
-          <>
-            <div className="mb-3 flex items-center justify-between gap-2">
-              <input
-                type="text"
-                placeholder="Buscar jugador…"
-                value={busqueda}
-                onChange={(e) => setBusqueda(e.target.value)}
-                className="flex-1 rounded-lg border border-slate-200 px-3 py-1.5 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
-              />
-              <span className="whitespace-nowrap text-xs font-semibold text-slate-500">
-                {cantidadHabilitados}/{filas.length} habilitados
-              </span>
-            </div>
-
-            <div className="mb-2 flex gap-2 text-xs">
-              <button
-                type="button"
-                onClick={() => marcarTodos(true)}
-                className="rounded-lg border border-slate-200 px-2.5 py-1 font-semibold text-slate-600 hover:bg-slate-50"
-              >
-                Marcar todos
-              </button>
-              <button
-                type="button"
-                onClick={() => marcarTodos(false)}
-                className="rounded-lg border border-slate-200 px-2.5 py-1 font-semibold text-slate-600 hover:bg-slate-50"
-              >
-                Desmarcar todos
-              </button>
-            </div>
-
-            <ul className="max-h-[45vh] space-y-1 overflow-y-auto pr-1">
-              {filasFiltradas.map((f) => (
-                <li key={f.jugadorTemporadaId}>
-                  <label className="flex cursor-pointer items-center gap-2.5 rounded-lg px-2 py-1.5 hover:bg-slate-50">
-                    <input
-                      type="checkbox"
-                      checked={f.checked}
-                      onChange={() => toggle(f.jugadorTemporadaId)}
-                      className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
-                    />
-                    <span className="text-sm text-slate-800">{f.nombre}</span>
-                    {f.alias && <span className="text-xs text-slate-400">({f.alias})</span>}
-                  </label>
-                </li>
-              ))}
-              {filasFiltradas.length === 0 && (
-                <li className="py-6 text-center text-sm text-slate-400">Sin resultados para "{busqueda}"</li>
-              )}
-            </ul>
-          </>
-        )}
-
-        <div className="mt-4 flex justify-end gap-2 border-t border-slate-100 pt-3">
+    <ModalBase
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Habilitados de la fase"
+      subtitle={equipoNombre(participacionFase)}
+      size="md"
+      bodyClassName="p-4 sm:p-5"
+      footer={
+        <div className="flex items-center justify-end gap-2">
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg bg-slate-100 px-4 py-1.5 text-sm font-semibold text-slate-600 hover:bg-slate-200"
+            className="rounded-lg bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-200"
           >
             Cancelar
           </button>
           <button
             type="button"
-            disabled={guardando || cargando || filas.length === 0}
+            disabled={guardando || cargando || !hayCambios}
             onClick={() => void handleGuardar()}
-            className="rounded-lg bg-brand-600 px-4 py-1.5 text-sm font-bold text-white hover:bg-brand-700 disabled:opacity-50"
+            className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-bold text-white hover:bg-brand-700 disabled:opacity-50"
           >
             {guardando ? 'Guardando…' : 'Guardar'}
           </button>
         </div>
+      }
+      footerClassName="px-4 pb-4 sm:px-5"
+    >
+      <div className="flex min-h-0 flex-col">
+        <EmbudoJugadores
+          className="mb-3"
+          pasos={[
+            { etiqueta: 'Lista de buena fe', valor: filas.length },
+            { etiqueta: 'Habilitados', valor: cantidadHabilitados, activo: true },
+          ]}
+        />
+
+        {notice && (
+          <div className="mb-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
+            {notice}
+          </div>
+        )}
+
+        <SelectorJugadores
+          filas={filasSelector}
+          onToggle={toggle}
+          onMarcarTodos={marcarTodos}
+          busqueda={busqueda}
+          onBusquedaChange={setBusqueda}
+          cargando={cargando}
+          etiquetaContador="habilitados para esta fase"
+          vacioMensaje="Este equipo todavía no tiene jugadores en la lista de buena fe de la temporada."
+        />
       </div>
     </ModalBase>
   );

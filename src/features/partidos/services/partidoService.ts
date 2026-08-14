@@ -97,6 +97,8 @@ export type JugadorPartidoCreatePayload = {
   partido: string;
   jugador: string;
   equipo: string;
+  jugadorTemporada?: string;
+  rol?: 'jugador' | 'entrenador';
   creadoPor?: string;
 };
 
@@ -421,10 +423,25 @@ export const actualizarPartido = async (
 export const getAlineacion = (partidoId: string) =>
   authFetch<JugadorPartido[]>(`/jugador-partido?partido=${partidoId}`);
 
+/**
+ * OJO: el backend no expone un PUT masivo por partido — `PUT /jugador-partido/:id` espera el id
+ * de un JugadorPartido, no el del partido, así que esto respondía 404 y los cambios de rol nunca
+ * se guardaban. Se reemplazó por altas/bajas/updates individuales desde ModalAlineacionPartido.
+ * @deprecated usar crearJugadorPartido / eliminarJugadorPartido / actualizarJugadorPartido.
+ */
 export const guardarAlineacion = (partidoId: string, payload: AlineacionPayload) =>
   authFetch<JugadorPartido[]>(`/jugador-partido/${partidoId}`, {
     method: 'PUT',
     body: payload,
+  });
+
+export const actualizarJugadorPartido = (
+  jugadorPartidoId: string,
+  body: Partial<{ rol: 'jugador' | 'entrenador'; estado: string }>,
+) =>
+  authFetch<JugadorPartidoResumen>(`/jugador-partido/${jugadorPartidoId}`, {
+    method: 'PUT',
+    body,
   });
 
 export const registrarAsistencia = (jugadorPartidoId: string, payload: AsistenciaPayload) =>

@@ -7,6 +7,7 @@ export type BackendJugadorTemporada = {
   participacionTemporada: string;
   estado?: 'aceptado' | 'baja' | 'suspendido';
   rol?: 'jugador' | 'entrenador';
+  numeroCamiseta?: number;
 };
 
 export async function listJugadorTemporadaByParticipacion(participacionTemporadaId: string): Promise<BackendJugadorTemporada[]> {
@@ -15,11 +16,11 @@ export async function listJugadorTemporadaByParticipacion(participacionTemporada
   return authFetch<BackendJugadorTemporada[]>(`/jugador-temporada?${params.toString()}`);
 }
 
-export async function createJugadorTemporada(payload: { jugadorEquipo: string; participacionTemporada: string; estado?: string; rol?: string }) {
+export async function createJugadorTemporada(payload: { jugadorEquipo: string; participacionTemporada: string; estado?: string; rol?: string; numeroCamiseta?: number }) {
   return authFetch<BackendJugadorTemporada>('/jugador-temporada', { method: 'POST', body: payload });
 }
 
-export async function updateJugadorTemporada(id: string, body: Partial<{ estado: string; rol: string }>) {
+export async function updateJugadorTemporada(id: string, body: Partial<{ estado: string; rol: string; numeroCamiseta: number | null }>) {
   return authFetch<BackendJugadorTemporada>(`/jugador-temporada/${id}`, { method: 'PUT', body });
 }
 

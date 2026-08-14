@@ -1,27 +1,23 @@
 import { useEffect, useMemo, useState } from 'react';
 import { TrashIcon, UserGroupIcon, UserPlusIcon } from '@heroicons/react/20/solid';
-import ConfirmModal from '../../../shared/components/ConfirmModal/ConfirmModal';
+import ModalBase from '../../../shared/components/ModalBase/ModalBase';
+import { SelectorJugadores, EmbudoJugadores, type FilaSelector } from '../../../shared/components/SelectorJugadores';
 import { useToast } from '../../../shared/components/Toast/ToastProvider';
 import type { BackendParticipacionTemporada } from '../services';
-import { listJugadorTemporadaByParticipacion, updateJugadorTemporada, type BackendJugadorTemporada, opcionesJugadorTemporada, type JugadorEquipoOpcion } from '../services/jugadorTemporadaService';
+import {
+  listJugadorTemporadaByParticipacion,
+  updateJugadorTemporada,
+  type BackendJugadorTemporada,
+  opcionesJugadorTemporada,
+  type JugadorEquipoOpcion,
+} from '../services/jugadorTemporadaService';
 import { crearSolicitudEdicion } from '../../../shared/features/solicitudes';
-
-// NOTE: Para agregar jugadores a la temporada, se pueden seleccionar múltiples jugadores
-// y crear solicitudes que deben ser aprobadas por los administradores
 
 type Props = {
   isOpen: boolean;
   onClose: () => void;
   participacion?: BackendParticipacionTemporada;
 };
-
-function Avatar({ nombre }: { nombre: string }) {
-  return (
-    <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-brand-100 text-xs font-bold text-brand-700">
-      {(nombre || '?').charAt(0).toUpperCase()}
-    </div>
-  );
-}
 
 function SectionHeader({ icon, children, count }: { icon: React.ReactNode; children: React.ReactNode; count?: number }) {
   return (
@@ -40,33 +36,26 @@ function SectionHeader({ icon, children, count }: { icon: React.ReactNode; child
 const estadoLabel: Record<string, string> = { aceptado: 'Aceptado', baja: 'Baja', suspendido: 'Suspendido' };
 const rolLabel: Record<string, string> = { jugador: 'Jugador', entrenador: 'Entrenador' };
 
+const nombreDe = (it: BackendJugadorTemporada) =>
+  typeof it.jugadorEquipo === 'string'
+    ? it.jugadorEquipo
+    : it.jugadorEquipo?.jugador?.nombre || it.jugadorEquipo?.jugador?.alias || 'Jugador sin nombre';
+
+const selectClass =
+  'rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs font-medium text-slate-600 focus:outline-none focus:ring-1 focus:ring-brand-500';
+
 export default function JugadoresTemporadaModal({ isOpen, onClose, participacion }: Props) {
   const [items, setItems] = useState<BackendJugadorTemporada[]>([]);
   const [loading, setLoading] = useState(false);
   const [opciones, setOpciones] = useState<JugadorEquipoOpcion[]>([]);
   const [opcionesLoading, setOpcionesLoading] = useState(false);
   const [seleccionados, setSeleccionados] = useState<Set<string>>(new Set());
+  const [busqueda, setBusqueda] = useState('');
   const [estado, setEstado] = useState<'aceptado' | 'baja' | 'suspendido'>('aceptado');
   const [rol, setRol] = useState<'jugador' | 'entrenador'>('jugador');
   const [bajaSolicitada, setBajaSolicitada] = useState<Set<string>>(new Set());
+  const [enviando, setEnviando] = useState(false);
   const { addToast } = useToast();
-
-  const handleSolicitarBaja = async (jugadorTemporadaId: string, nombre: string) => {
-    try {
-      await crearSolicitudEdicion({
-        tipo: 'jugador-temporada-eliminar',
-        datosPropuestos: { jugadorTemporadaId },
-      });
-      setBajaSolicitada((prev) => new Set(prev).add(jugadorTemporadaId));
-      addToast({
-        type: 'success',
-        title: 'Solicitud de baja enviada',
-        message: `Se pidió quitar a ${nombre} de la temporada — requiere doble confirmación de un admin.`,
-      });
-    } catch (error: any) {
-      addToast({ type: 'error', title: 'Error', message: error.message });
-    }
-  };
 
   const equipoId = useMemo(() => {
     const eq = participacion?.equipo as any;
@@ -75,9 +64,16 @@ export default function JugadoresTemporadaModal({ isOpen, onClose, participacion
     return eq._id || '';
   }, [participacion?.equipo]);
 
+  const equipoNombre = useMemo(() => {
+    const eq = participacion?.equipo as any;
+    if (!eq) return 'este equipo';
+    if (typeof eq === 'string') return eq;
+    return eq.nombre || 'este equipo';
+  }, [participacion?.equipo]);
+
   useEffect(() => {
     const run = async () => {
-      if (!participacion?._id) return;
+      if (!isOpen || !participacion?._id) return;
       setLoading(true);
       try {
         const list = await listJugadorTemporadaByParticipacion(participacion._id);
@@ -87,7 +83,7 @@ export default function JugadoresTemporadaModal({ isOpen, onClose, participacion
       }
     };
     void run();
-  }, [participacion?._id]);
+  }, [isOpen, participacion?._id]);
 
   useEffect(() => {
     const run = async () => {
@@ -103,175 +99,271 @@ export default function JugadoresTemporadaModal({ isOpen, onClose, participacion
     void run();
   }, [isOpen, equipoId, participacion?._id]);
 
+  useEffect(() => {
+    if (!isOpen) {
+      setSeleccionados(new Set());
+      setBusqueda('');
+    }
+  }, [isOpen]);
+
+  const handleSolicitarBaja = async (jugadorTemporadaId: string, nombre: string) => {
+    try {
+      await crearSolicitudEdicion({
+        tipo: 'jugador-temporada-eliminar',
+        datosPropuestos: { jugadorTemporadaId },
+      });
+      setBajaSolicitada((prev) => new Set(prev).add(jugadorTemporadaId));
+      addToast({
+        type: 'success',
+        title: 'Solicitud de baja enviada',
+        message: `Se pidió quitar a ${nombre} de la lista de buena fe — requiere doble confirmación de un admin.`,
+      });
+    } catch (error: any) {
+      addToast({ type: 'error', title: 'Error', message: error.message });
+    }
+  };
+
+  const patchItem = (id: string, cambios: Partial<BackendJugadorTemporada>) =>
+    setItems((prev) => prev.map((x) => (x._id === id ? { ...x, ...cambios } : x)));
+
+  const handleDorsal = async (it: BackendJugadorTemporada, valor: string) => {
+    const numero = valor === '' ? null : Number(valor);
+    if (numero !== null && (Number.isNaN(numero) || numero < 0 || numero > 99)) return;
+    const previo = it.numeroCamiseta;
+    patchItem(it._id, { numeroCamiseta: numero ?? undefined });
+    try {
+      await updateJugadorTemporada(it._id, { numeroCamiseta: numero });
+    } catch (error: any) {
+      patchItem(it._id, { numeroCamiseta: previo });
+      addToast({ type: 'error', title: 'No se pudo guardar el dorsal', message: error.message });
+    }
+  };
+
+  const filasOpciones: FilaSelector[] = useMemo(
+    () =>
+      opciones.map((opt) => ({
+        id: opt._id,
+        nombre: opt.jugador?.nombre || opt.jugador?.alias || 'Jugador sin nombre',
+        alias: opt.jugador?.alias,
+        checked: seleccionados.has(opt._id),
+        badge:
+          opt.estado === 'baja' ? (
+            <span className="flex-shrink-0 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-700">
+              Baja{opt.hasta ? ` · hasta ${new Date(opt.hasta).toLocaleDateString()}` : ''}
+            </span>
+          ) : undefined,
+      })),
+    [opciones, seleccionados]
+  );
+
+  const toggleOpcion = (id: string) =>
+    setSeleccionados((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+
+  const marcarTodos = (valor: boolean) =>
+    setSeleccionados(valor ? new Set(opciones.map((o) => o._id)) : new Set());
+
+  const handleSolicitar = async () => {
+    if (!participacion?._id || seleccionados.size === 0) return;
+    setEnviando(true);
+    try {
+      await Promise.all(
+        Array.from(seleccionados).map((jugadorEquipoId) =>
+          crearSolicitudEdicion({
+            tipo: 'jugador-temporada-crear',
+            datosPropuestos: { jugadorEquipoId, participacionTemporadaId: participacion._id, estado, rol },
+          })
+        )
+      );
+      addToast({
+        type: 'success',
+        title: `${seleccionados.size} solicitud${seleccionados.size > 1 ? 'es' : ''} enviada${seleccionados.size > 1 ? 's' : ''}`,
+        message: 'Quedan pendientes de aprobación de un admin.',
+      });
+      setSeleccionados(new Set());
+    } catch (error: any) {
+      addToast({ type: 'error', title: 'Error', message: error.message });
+    } finally {
+      setEnviando(false);
+    }
+  };
+
+  if (!isOpen || !participacion) return null;
+
+  const plantelTotal = items.length + opciones.length;
+
   return (
-    <ConfirmModal
+    <ModalBase
       isOpen={isOpen}
-      title="Jugadores de la temporada"
+      onClose={onClose}
+      title="Lista de buena fe"
+      subtitle={`${equipoNombre} · jugadores inscriptos en esta temporada`}
       size="lg"
-      message={
-        <div className="space-y-6">
-          <div className="space-y-3">
-            <SectionHeader icon={<UserGroupIcon className="h-4 w-4" />} count={items.length}>
-              Plantel
-            </SectionHeader>
-            {loading ? (
-              <p className="animate-pulse py-4 text-center text-xs text-slate-400">Cargando…</p>
-            ) : (
-              <ul className="divide-y divide-slate-100 border-t border-slate-100">
-                {items.map((it) => {
-                  const nombre = typeof it.jugadorEquipo === 'string'
-                    ? it.jugadorEquipo
-                    : (it.jugadorEquipo?.jugador?.nombre || it.jugadorEquipo?.jugador?.alias || 'Jugador sin nombre');
-                  return (
-                    <li key={it._id} className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between">
-                      <div className="flex min-w-0 items-center gap-3">
-                        <Avatar nombre={nombre} />
-                        <span className="truncate text-sm font-medium text-slate-800">{nombre}</span>
-                      </div>
-                      <div className="flex flex-shrink-0 items-center gap-2 pl-11 sm:pl-0">
-                        <select
-                          className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs font-medium text-slate-600 focus:outline-none focus:ring-1 focus:ring-brand-500"
-                          value={it.estado}
-                          onChange={async (e) => {
-                            const nuevo = e.target.value as any;
-                            await updateJugadorTemporada(it._id, { estado: nuevo });
-                            setItems((prev) => prev.map(x => x._id === it._id ? { ...x, estado: nuevo } : x));
-                          }}
-                        >
-                          {Object.entries(estadoLabel).map(([value, label]) => (
-                            <option key={value} value={value}>{label}</option>
-                          ))}
-                        </select>
-                        <select
-                          className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs font-medium text-slate-600 focus:outline-none focus:ring-1 focus:ring-brand-500"
-                          value={it.rol}
-                          onChange={async (e) => {
-                            const nuevo = e.target.value as any;
-                            await updateJugadorTemporada(it._id, { rol: nuevo });
-                            setItems((prev) => prev.map(x => x._id === it._id ? { ...x, rol: nuevo } : x));
-                          }}
-                        >
-                          {Object.entries(rolLabel).map(([value, label]) => (
-                            <option key={value} value={value}>{label}</option>
-                          ))}
-                        </select>
-                        <button
-                          type="button"
-                          title={bajaSolicitada.has(it._id) ? 'Solicitud de baja ya enviada' : 'Solicitar eliminación de la temporada (requiere doble confirmación)'}
-                          className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-600 disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-slate-400"
-                          onClick={() => handleSolicitarBaja(it._id, nombre)}
-                          disabled={bajaSolicitada.has(it._id)}
-                        >
-                          <TrashIcon className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </li>
-                  );
-                })}
-                {items.length === 0 && (
-                  <li className="mt-2 rounded-xl border border-dashed border-slate-200 bg-slate-50/50 py-8 text-center">
-                    <p className="text-xs font-medium text-slate-400">Sin jugadores en esta temporada</p>
+      bodyClassName="p-4 sm:p-5"
+      footer={
+        <div className="flex items-center justify-end px-4 pb-1 sm:px-5">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-lg bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-200"
+          >
+            Cerrar
+          </button>
+        </div>
+      }
+    >
+      <div className="space-y-6">
+        <EmbudoJugadores
+          pasos={[
+            { etiqueta: 'Plantel del club', valor: plantelTotal },
+            { etiqueta: 'Lista de buena fe', valor: items.length, activo: true },
+          ]}
+        />
+
+        {/* Inscriptos en la temporada */}
+        <div className="space-y-2">
+          <SectionHeader icon={<UserGroupIcon className="h-4 w-4" />} count={items.length}>
+            En la temporada
+          </SectionHeader>
+          {loading ? (
+            <div className="space-y-2 py-2">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="h-11 animate-pulse rounded-lg bg-slate-100" />
+              ))}
+            </div>
+          ) : items.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/50 py-8 text-center">
+              <p className="text-sm text-slate-400">Todavía no hay jugadores en la lista de buena fe</p>
+            </div>
+          ) : (
+            <ul className="divide-y divide-slate-100 border-t border-slate-100">
+              {items.map((it) => {
+                const nombre = nombreDe(it);
+                return (
+                  <li
+                    key={it._id}
+                    className="flex min-h-[44px] flex-wrap items-center gap-x-3 gap-y-2 py-2.5 sm:flex-nowrap"
+                  >
+                    <span className="min-w-0 flex-1 truncate text-sm font-medium text-slate-800">{nombre}</span>
+                    <div className="flex w-full items-center gap-2 sm:w-auto sm:flex-shrink-0">
+                      <label className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-slate-400">
+                        <span className="hidden sm:inline">N°</span>
+                        <input
+                          type="number"
+                          inputMode="numeric"
+                          min={0}
+                          max={99}
+                          placeholder="—"
+                          defaultValue={it.numeroCamiseta ?? ''}
+                          onBlur={(e) => void handleDorsal(it, e.target.value)}
+                          className="w-14 rounded-lg border border-slate-200 px-2 py-1.5 text-center text-xs font-bold text-slate-700 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                        />
+                      </label>
+                      <select
+                        className={selectClass}
+                        value={it.estado}
+                        onChange={async (e) => {
+                          const nuevo = e.target.value as any;
+                          await updateJugadorTemporada(it._id, { estado: nuevo });
+                          patchItem(it._id, { estado: nuevo });
+                        }}
+                      >
+                        {Object.entries(estadoLabel).map(([value, label]) => (
+                          <option key={value} value={value}>
+                            {label}
+                          </option>
+                        ))}
+                      </select>
+                      <select
+                        className={selectClass}
+                        value={it.rol}
+                        onChange={async (e) => {
+                          const nuevo = e.target.value as any;
+                          await updateJugadorTemporada(it._id, { rol: nuevo });
+                          patchItem(it._id, { rol: nuevo });
+                        }}
+                      >
+                        {Object.entries(rolLabel).map(([value, label]) => (
+                          <option key={value} value={value}>
+                            {label}
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        type="button"
+                        title={
+                          bajaSolicitada.has(it._id)
+                            ? 'Solicitud de baja ya enviada'
+                            : 'Solicitar baja de la lista de buena fe (requiere doble confirmación)'
+                        }
+                        className="ml-auto rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-600 disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-slate-400 sm:ml-0"
+                        onClick={() => handleSolicitarBaja(it._id, nombre)}
+                        disabled={bajaSolicitada.has(it._id)}
+                      >
+                        <TrashIcon className="h-4 w-4" />
+                      </button>
+                    </div>
                   </li>
-                )}
-              </ul>
-            )}
+                );
+              })}
+            </ul>
+          )}
+        </div>
+
+        {/* Sumar desde el plantel del club */}
+        <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-3 sm:p-4">
+          <SectionHeader icon={<UserPlusIcon className="h-4 w-4" />} count={seleccionados.size || undefined}>
+            Sumar del plantel del club
+          </SectionHeader>
+
+          <div className="mt-3">
+            <SelectorJugadores
+              filas={filasOpciones}
+              onToggle={toggleOpcion}
+              onMarcarTodos={marcarTodos}
+              busqueda={busqueda}
+              onBusquedaChange={setBusqueda}
+              cargando={opcionesLoading}
+              etiquetaContador="a solicitar"
+              vacioMensaje="Todo el plantel del club ya está en la lista de buena fe."
+            />
           </div>
 
-          <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4">
-            <SectionHeader icon={<UserPlusIcon className="h-4 w-4" />} count={seleccionados.size || undefined}>
-              Solicitar jugadores
-            </SectionHeader>
-
-            <div className="mt-3">
-              {opcionesLoading ? (
-                <p className="animate-pulse py-3 text-center text-xs text-slate-400">Cargando opciones…</p>
-              ) : opciones.length === 0 ? (
-                <p className="py-3 text-center text-xs text-slate-400">No hay jugadores disponibles</p>
-              ) : (
-                <div className="max-h-48 space-y-1 overflow-auto rounded-lg border border-slate-100 bg-white p-1.5">
-                  {opciones.map((opt) => {
-                    const nombre = opt.jugador?.nombre || opt.jugador?.alias || 'Jugador sin nombre';
-                    const isSelected = seleccionados.has(opt._id);
-                    return (
-                      <label
-                        key={opt._id}
-                        className={`flex cursor-pointer items-center gap-3 rounded-lg px-2 py-1.5 transition-colors ${isSelected ? 'bg-brand-50' : 'hover:bg-slate-50'}`}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={isSelected}
-                          onChange={(e) => {
-                            const newSeleccionados = new Set(seleccionados);
-                            if (e.target.checked) newSeleccionados.add(opt._id);
-                            else newSeleccionados.delete(opt._id);
-                            setSeleccionados(newSeleccionados);
-                          }}
-                          className="rounded border-slate-300 text-brand-600 focus:ring-brand-500"
-                        />
-                        <Avatar nombre={nombre} />
-                        <span className={`truncate text-sm ${isSelected ? 'font-semibold text-brand-800' : 'text-slate-700'}`}>
-                          {nombre}
-                        </span>
-                        {opt.estado === 'baja' && (
-                          <span className="ml-auto flex-shrink-0 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-700">
-                            Baja{opt.hasta ? ` · hasta ${new Date(opt.hasta).toLocaleDateString()}` : ''}
-                          </span>
-                        )}
-                      </label>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-
+          {opciones.length > 0 && (
             <div className="mt-3 grid gap-2 sm:grid-cols-3">
-              <select className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-brand-500" value={estado} onChange={(e) => setEstado(e.target.value as any)}>
+              <select className={`${selectClass} py-2`} value={estado} onChange={(e) => setEstado(e.target.value as any)}>
                 {Object.entries(estadoLabel).map(([value, label]) => (
-                  <option key={value} value={value}>{label}</option>
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
                 ))}
               </select>
-              <select className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-brand-500" value={rol} onChange={(e) => setRol(e.target.value as any)}>
+              <select className={`${selectClass} py-2`} value={rol} onChange={(e) => setRol(e.target.value as any)}>
                 {Object.entries(rolLabel).map(([value, label]) => (
-                  <option key={value} value={value}>{label}</option>
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
                 ))}
               </select>
               <button
+                type="button"
                 className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700 disabled:opacity-50"
-                onClick={async () => {
-                  if (!participacion?._id || seleccionados.size === 0) return;
-
-                  const solicitudes = Array.from(seleccionados).map(jugadorEquipoId =>
-                    crearSolicitudEdicion({
-                      tipo: 'jugador-temporada-crear',
-                      datosPropuestos: {
-                        jugadorEquipoId,
-                        participacionTemporadaId: participacion._id,
-                        estado,
-                        rol
-                      }
-                    })
-                  );
-
-                  await Promise.all(solicitudes);
-                  addToast({
-                    type: 'success',
-                    title: `${seleccionados.size} solicitud${seleccionados.size > 1 ? 'es' : ''} enviada${seleccionados.size > 1 ? 's' : ''} a administradores`
-                  });
-                  setSeleccionados(new Set());
-                }}
-                disabled={seleccionados.size === 0}
+                onClick={() => void handleSolicitar()}
+                disabled={seleccionados.size === 0 || enviando}
               >
-                Solicitar ({seleccionados.size})
+                {enviando ? 'Enviando…' : `Solicitar (${seleccionados.size})`}
               </button>
             </div>
-          </div>
-        </div> as any
-      }
-      confirmLabel="Cerrar"
-      showCancel={false}
-      variant="primary"
-      onConfirm={onClose}
-      onCancel={onClose}
-    />
+          )}
+          <p className="mt-2 text-[11px] text-slate-400">
+            Las altas quedan pendientes de aprobación. El dorsal se carga una vez aprobado, desde la lista de arriba.
+          </p>
+        </div>
+      </div>
+    </ModalBase>
   );
 }

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import  ModalBase  from '../../../../shared/components/ModalBase/ModalBase';
-import { getAlineacion, guardarAlineacion, crearJugadorPartido, eliminarJugadorPartido, getPartidoDetallado, getRankedMatchDetail } from '../../services/partidoService';
+import { SelectorJugadores, EmbudoJugadores, type FilaSelector } from '../../../../shared/components/SelectorJugadores';
+import { getAlineacion, crearJugadorPartido, eliminarJugadorPartido, actualizarJugadorPartido, getPartidoDetallado, getRankedMatchDetail } from '../../services/partidoService';
 import { getJugadoresEquipo } from '../../../jugadores/services/jugadorEquipoService';
 import { getFaseById } from '../../../competencias/services/fasesService';
 import { listParticipacionesByTemporada } from '../../../competencias/services/participacionTemporadaService';
@@ -10,12 +11,13 @@ import { listByParticipacionFase } from '../../../competencias/services/jugadorF
 import type { Jugador, JugadorPartido } from '../../../../types';
 import { useToast } from '../../../../shared/components/Toast/ToastProvider';
 
-type RolAlineacion = 'jugador' | 'entrenador' | 'ninguno';
+type RolPresente = 'jugador' | 'entrenador';
 
 type JugadorOption = {
   id: string;
   nombre: string;
   numeroCamiseta?: number;
+  jugadorTemporadaId?: string;
 };
 
 type ModalAlineacionPartidoProps = {
@@ -46,23 +48,12 @@ const mapJugadorOption = (jugador: Jugador): JugadorOption => ({
   numeroCamiseta: jugador.numeroCamiseta,
 });
 
-const buildInitialRoles = (alineacion: JugadorPartido[]): Record<string, RolAlineacion> => {
-  const roles: Record<string, RolAlineacion> = {};
-  const normalize = (r: unknown): RolAlineacion => (r === 'entrenador' ? 'entrenador' : r === 'jugador' ? 'jugador' : 'jugador');
-  alineacion.forEach((item) => {
-    const jid = getJugadorId((item as any).jugador);
-    if (jid) roles[jid] = normalize((item as any).rol);
-  });
-  return roles;
-};
-
-const isRolAsignable = (rol: RolAlineacion): rol is Exclude<RolAlineacion, 'ninguno'> =>
-  rol === 'jugador' || rol === 'entrenador';
+const normalizarRol = (r: unknown): RolPresente => (r === 'entrenador' ? 'entrenador' : 'jugador');
 
 // Helper para obtener jugadores elegibles (contrato activo o inscritos en temporada)
 const getJugadoresElegibles = async (equipoId: string, partido: any): Promise<JugadorOption[]> => {
   if (!equipoId) return [];
-  
+
   // Si el partido tiene fase, intentamos buscar jugadores inscritos en la temporada
   if (partido.fase) {
     try {
@@ -76,13 +67,13 @@ const getJugadoresElegibles = async (equipoId: string, partido: any): Promise<Ju
       const fase = await getFaseById(faseId);
       if (fase && fase.temporada) {
         const participaciones = await listParticipacionesByTemporada(fase.temporada);
-        const miParticipacion = participaciones.find(p => 
+        const miParticipacion = participaciones.find(p =>
           (typeof p.equipo === 'string' ? p.equipo : p.equipo._id) === equipoId
         );
-        
+
         if (miParticipacion) {
-          // Preferir el plantel curado para ESTA fase (JugadorFase) por sobre el plantel
-          // completo de la temporada — son casos reales distintos: un equipo puede tener 20
+          // Preferir el plantel curado para ESTA fase (JugadorFase) por sobre la lista de buena fe
+          // completa de la temporada — son casos reales distintos: un equipo puede tener 20
           // jugadores en la temporada pero solo 12 habilitados para una fase puntual. Si la
           // fase todavía no tiene ningún JugadorFase cargado (fases viejas, o una fase que el
           // organizador no curó todavía), cae al comportamiento anterior para no dejar el
@@ -107,6 +98,7 @@ const getJugadoresElegibles = async (equipoId: string, partido: any): Promise<Ju
                     id: j._id || j.id,
                     nombre: j.nombre || j.alias || 'Jugador',
                     numeroCamiseta: jt?.numeroCamiseta,
+                    jugadorTemporadaId: typeof jt === 'string' ? jt : jt?._id,
                   });
                 }
                 return opciones;
@@ -135,7 +127,8 @@ const getJugadoresElegibles = async (equipoId: string, partido: any): Promise<Ju
               return {
                 id: j._id || j.id,
                 nombre: j.nombre || j.alias || 'Jugador',
-                numeroCamiseta: (jt as any).numeroCamiseta
+                numeroCamiseta: (jt as any).numeroCamiseta,
+                jugadorTemporadaId: (jt as any)._id,
               };
             });
         }
@@ -144,7 +137,7 @@ const getJugadoresElegibles = async (equipoId: string, partido: any): Promise<Ju
       console.error("Error fetching competition players, falling back to active contracts", e);
     }
   }
-  
+
   // Fallback: jugadores con contrato aceptado (JugadorEquipo.estado solo admite 'aceptado' | 'baja')
   const response = await getJugadoresEquipo({
     equipoId,
@@ -182,8 +175,17 @@ export const ModalAlineacionPartido = ({
   const [isRanked, setIsRanked] = useState<boolean>(false);
   const [rankedTeams, setRankedTeams] = useState<Array<{ color: 'rojo' | 'azul'; players: Array<{ id: string; nombre: string }> }>>([]);
   const [rankedPlayers, setRankedPlayers] = useState<Array<{ id: string; nombre: string; pre?: number; post?: number; delta?: number; color?: 'rojo' | 'azul' | null }>>([]);
-  const [rolesPorJugador, setRolesPorJugador] = useState<Record<string, RolAlineacion>>({});
+
+  // Estado editable en memoria: nada se persiste hasta apretar "Guardar cambios".
+  const [presentes, setPresentes] = useState<Set<string>>(new Set());
+  const [roles, setRoles] = useState<Record<string, RolPresente>>({});
   const [jugadorPartidoPorJugador, setJugadorPartidoPorJugador] = useState<Record<string, string>>({});
+  const [originales, setOriginales] = useState<{ presentes: Set<string>; roles: Record<string, RolPresente> }>({
+    presentes: new Set(),
+    roles: {},
+  });
+  const [lado, setLado] = useState<'local' | 'visitante'>('local');
+  const [busqueda, setBusqueda] = useState('');
 
   useEffect(() => {
     if (!isOpen) return;
@@ -193,6 +195,8 @@ export const ModalAlineacionPartido = ({
       try {
         setLoading(true);
         setError(null);
+        setBusqueda('');
+        setLado('local');
 
         const partido = await getPartidoDetallado(partidoId);
         const localId = (typeof partido.equipoLocal === 'string') ? partido.equipoLocal : partido.equipoLocal?._id;
@@ -247,28 +251,34 @@ export const ModalAlineacionPartido = ({
         const opcionesLocal = jugadoresEquipoLocal;
         const opcionesVisitante = jugadoresEquipoVisitante;
 
-        const extrasLocal = alineacionActual
-          .filter((item) => (typeof item.equipo === 'string' ? item.equipo === localId : (item.equipo as any)?._id === localId))
-          .filter((item) => !opcionesLocal.some((op) => op.id === getJugadorId((item as any).jugador)))
-          .map((item) => ({ id: getJugadorId((item as any).jugador), nombre: getJugadorNombre((item as any).jugador) }));
-
-        const extrasVisitante = alineacionActual
-          .filter((item) => (typeof item.equipo === 'string' ? item.equipo === visitanteId : (item.equipo as any)?._id === visitanteId))
-          .filter((item) => !opcionesVisitante.some((op) => op.id === getJugadorId((item as any).jugador)))
-          .map((item) => ({ id: getJugadorId((item as any).jugador), nombre: getJugadorNombre((item as any).jugador) }));
+        // Alguien puede estar en la alineación sin figurar entre los habilitados de la fase
+        // (se cargó antes de curar la fase, o se lo quitó después): se muestra igual para que
+        // el organizador lo vea y pueda sacarlo, en vez de que desaparezca en silencio.
+        const extras = (targetEquipoId?: string, opciones: JugadorOption[] = []) =>
+          alineacionActual
+            .filter((item) => (typeof item.equipo === 'string' ? item.equipo === targetEquipoId : (item.equipo as any)?._id === targetEquipoId))
+            .filter((item) => !opciones.some((op) => op.id === getJugadorId((item as any).jugador)))
+            .map((item) => ({ id: getJugadorId((item as any).jugador), nombre: getJugadorNombre((item as any).jugador) }));
 
         if (!rankedFlag) {
-          setJugadoresLocal([...opcionesLocal, ...extrasLocal]);
-          setJugadoresVisitante([...opcionesVisitante, ...extrasVisitante]);
-          setRolesPorJugador(buildInitialRoles(alineacionActual));
-          setJugadorPartidoPorJugador(
-            alineacionActual.reduce<Record<string, string>>((acc, it) => {
-              const jpId = (it as any)._id ?? (it as any).id;
-              const jugadorId = getJugadorId((it as any).jugador);
-              if (jpId && jugadorId) acc[jugadorId] = jpId as string;
-              return acc;
-            }, {})
-          );
+          setJugadoresLocal([...opcionesLocal, ...extras(localId, opcionesLocal)]);
+          setJugadoresVisitante([...opcionesVisitante, ...extras(visitanteId, opcionesVisitante)]);
+
+          const presentesIniciales = new Set<string>();
+          const rolesIniciales: Record<string, RolPresente> = {};
+          const jpPorJugador: Record<string, string> = {};
+          for (const item of alineacionActual) {
+            const jugadorId = getJugadorId((item as any).jugador);
+            if (!jugadorId) continue;
+            presentesIniciales.add(jugadorId);
+            rolesIniciales[jugadorId] = normalizarRol((item as any).rol);
+            const jpId = (item as any)._id ?? (item as any).id;
+            if (jpId) jpPorJugador[jugadorId] = jpId as string;
+          }
+          setPresentes(new Set(presentesIniciales));
+          setRoles({ ...rolesIniciales });
+          setJugadorPartidoPorJugador(jpPorJugador);
+          setOriginales({ presentes: presentesIniciales, roles: rolesIniciales });
         }
       } catch (err) {
         if (!isActive) return;
@@ -289,39 +299,147 @@ export const ModalAlineacionPartido = ({
     };
   }, [equipoId, isOpen, partidoId, addToast]);
 
-  const handleChangeRol = (jugadorId: string, rol: RolAlineacion) => {
-    setRolesPorJugador((prev) => ({
-      ...prev,
-      [jugadorId]: rol,
-    }));
+  const candidatos = lado === 'local' ? jugadoresLocal : jugadoresVisitante;
+  const equipoActivoId = lado === 'local' ? equipoLocalId : equipoVisitanteId;
+
+  const contarPresentes = (opciones: JugadorOption[]) => opciones.filter((o) => presentes.has(o.id)).length;
+
+  const handleChangeRol = (jugadorId: string, rol: RolPresente) => {
+    setRoles((prev) => ({ ...prev, [jugadorId]: rol }));
   };
 
-  // Contado por jugadorId único en rolesPorJugador (no por las listas de elegibles concatenadas,
-  // que pueden repetir un mismo jugador si aparece como candidato de ambos equipos).
-  const jugadoresConRolCount = useMemo(
-    () => Object.values(rolesPorJugador).filter((rol) => isRolAsignable(rol)).length,
-    [rolesPorJugador],
+  const toggle = (jugadorId: string) => {
+    setPresentes((prev) => {
+      const next = new Set(prev);
+      if (next.has(jugadorId)) next.delete(jugadorId);
+      else {
+        next.add(jugadorId);
+        setRoles((r) => (r[jugadorId] ? r : { ...r, [jugadorId]: 'jugador' }));
+      }
+      return next;
+    });
+  };
+
+  const marcarTodos = (valor: boolean) => {
+    setPresentes((prev) => {
+      const next = new Set(prev);
+      for (const op of candidatos) {
+        if (valor) next.add(op.id);
+        else next.delete(op.id);
+      }
+      return next;
+    });
+    if (valor) {
+      setRoles((prev) => {
+        const next = { ...prev };
+        for (const op of candidatos) if (!next[op.id]) next[op.id] = 'jugador';
+        return next;
+      });
+    }
+  };
+
+  const filas: FilaSelector[] = useMemo(
+    () =>
+      candidatos.map((op) => {
+        const presente = presentes.has(op.id);
+        return {
+          id: op.id,
+          nombre: op.numeroCamiseta != null ? `${op.numeroCamiseta}. ${op.nombre}` : op.nombre,
+          checked: presente,
+          extra: presente ? (
+            <select
+              value={roles[op.id] ?? 'jugador'}
+              onChange={(e) => handleChangeRol(op.id, e.target.value as RolPresente)}
+              className="w-full rounded-lg border border-slate-300 px-2 py-1 text-xs focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 sm:w-32"
+            >
+              <option value="jugador">Jugador</option>
+              <option value="entrenador">Entrenador</option>
+            </select>
+          ) : undefined,
+        };
+      }),
+    [candidatos, presentes, roles]
   );
+
+  const cambios = useMemo(() => {
+    const aAgregar: string[] = [];
+    const aQuitar: string[] = [];
+    const aActualizar: string[] = [];
+    for (const id of Array.from(presentes)) {
+      if (!originales.presentes.has(id)) aAgregar.push(id);
+      else if ((roles[id] ?? 'jugador') !== (originales.roles[id] ?? 'jugador')) aActualizar.push(id);
+    }
+    for (const id of Array.from(originales.presentes)) {
+      if (!presentes.has(id)) aQuitar.push(id);
+    }
+    return { aAgregar, aQuitar, aActualizar };
+  }, [presentes, roles, originales]);
+
+  const hayCambios = cambios.aAgregar.length + cambios.aQuitar.length + cambios.aActualizar.length > 0;
 
   const handleGuardar = async () => {
     try {
       setSaving(true);
       setError(null);
 
-      const jugadoresPayload = Object.entries(rolesPorJugador).reduce(
-        (acc, [jugadorId, rol]) => {
-          if (isRolAsignable(rol)) {
-            acc.push({ jugadorId, rol });
-          }
-          return acc;
-        },
-        [] as { jugadorId: string; rol: Exclude<RolAlineacion, 'ninguno'> }[],
-      );
+      const equipoPorJugador: Record<string, string | undefined> = {};
+      for (const op of jugadoresLocal) equipoPorJugador[op.id] = equipoLocalId;
+      for (const op of jugadoresVisitante) equipoPorJugador[op.id] = equipoVisitanteId;
+      const jtPorJugador: Record<string, string | undefined> = {};
+      for (const op of [...jugadoresLocal, ...jugadoresVisitante]) jtPorJugador[op.id] = op.jugadorTemporadaId;
 
-      const alineacionGuardada = await guardarAlineacion(partidoId, { jugadores: jugadoresPayload });
+      const operaciones: Promise<unknown>[] = [
+        ...cambios.aAgregar.map((jugadorId) =>
+          crearJugadorPartido({
+            partido: partidoId,
+            jugador: jugadorId,
+            equipo: equipoPorJugador[jugadorId] as string,
+            jugadorTemporada: jtPorJugador[jugadorId],
+            rol: roles[jugadorId] ?? 'jugador',
+          })
+        ),
+        ...cambios.aQuitar
+          .map((jugadorId) => jugadorPartidoPorJugador[jugadorId])
+          .filter((jpId): jpId is string => !!jpId)
+          .map((jpId) => eliminarJugadorPartido(jpId)),
+        ...cambios.aActualizar
+          .filter((jugadorId) => !!jugadorPartidoPorJugador[jugadorId])
+          .map((jugadorId) =>
+            actualizarJugadorPartido(jugadorPartidoPorJugador[jugadorId], { rol: roles[jugadorId] ?? 'jugador' })
+          ),
+      ];
+
+      const resultados = await Promise.allSettled(operaciones);
+      const fallidas = resultados.filter((r) => r.status === 'rejected').length;
+
+      // Releemos para quedar sincronizados con lo que realmente quedó guardado, aunque alguna
+      // operación haya fallado.
+      const alineacionGuardada = await getAlineacion(partidoId);
+      const presentesNuevos = new Set<string>();
+      const rolesNuevos: Record<string, RolPresente> = {};
+      const jpPorJugador: Record<string, string> = {};
+      for (const item of alineacionGuardada) {
+        const jugadorId = getJugadorId((item as any).jugador);
+        if (!jugadorId) continue;
+        presentesNuevos.add(jugadorId);
+        rolesNuevos[jugadorId] = normalizarRol((item as any).rol);
+        const jpId = (item as any)._id ?? (item as any).id;
+        if (jpId) jpPorJugador[jugadorId] = jpId as string;
+      }
+      setPresentes(new Set(presentesNuevos));
+      setRoles({ ...rolesNuevos });
+      setJugadorPartidoPorJugador(jpPorJugador);
+      setOriginales({ presentes: presentesNuevos, roles: rolesNuevos });
+
       onSaved?.(alineacionGuardada);
-      addToast({ type: 'success', title: 'Alineación guardada', message: 'Los roles fueron actualizados' });
-      onClose();
+
+      if (fallidas > 0) {
+        setError(`${fallidas} cambio${fallidas === 1 ? '' : 's'} no se pudo guardar. Revisá y reintentá.`);
+        addToast({ type: 'error', title: 'Guardado parcial', message: `${fallidas} cambio(s) fallaron` });
+      } else {
+        addToast({ type: 'success', title: 'Alineación guardada', message: 'Los convocados fueron actualizados' });
+        onClose();
+      }
     } catch (err) {
       console.error('Error al guardar alineación:', err);
       setError('No pudimos guardar la alineación. Revisá los datos e intentá nuevamente.');
@@ -337,93 +455,71 @@ export const ModalAlineacionPartido = ({
     }
   };
 
-  const handleTogglePresente = async (jugador: JugadorOption, targetEquipoId: string | undefined, presente: boolean) => {
-    if (presente) {
-      if (!targetEquipoId) return;
-      try {
-        const creado = await crearJugadorPartido({ partido: partidoId, jugador: jugador.id, equipo: targetEquipoId });
-        setJugadorPartidoPorJugador((prev) => ({ ...prev, [jugador.id]: creado._id }));
-        setRolesPorJugador((prev) => ({
-          ...prev,
-          [jugador.id]: isRolAsignable(prev[jugador.id]) ? prev[jugador.id] : 'jugador',
-        }));
-      } catch (err) {
-        console.error('Error al agregar jugador al partido:', err);
-        addToast({ type: 'error', title: 'Error', message: 'No pudimos agregar el jugador' });
-      }
-    } else {
-      await handleQuitarJugador(jugador.id);
-    }
-  };
-
-  const handleQuitarJugador = async (jugadorId: string) => {
-    const jpId = jugadorPartidoPorJugador[jugadorId];
-    if (!jpId) return;
-    try {
-      await eliminarJugadorPartido(jpId);
-      setJugadorPartidoPorJugador((prev) => {
-        const next = { ...prev };
-        delete next[jugadorId];
-        return next;
-      });
-      setRolesPorJugador((prev) => ({ ...prev, [jugadorId]: 'ninguno' }));
-      addToast({ type: 'success', title: 'Quitado', message: 'Jugador removido del partido' });
-    } catch (err) {
-      console.error('Error al quitar jugador del partido:', err);
-      addToast({ type: 'error', title: 'Error', message: 'No pudimos quitar el jugador' });
-    }
-  };
-
-  const renderChecklist = (nombreEquipo: string, roster: JugadorOption[], targetEquipoId: string | undefined) => (
-    <div className="space-y-3">
-      <h3 className="text-sm font-semibold text-slate-800">{nombreEquipo}</h3>
-      {roster.length === 0 ? (
-        <p className="text-sm text-slate-500">No hay jugadores en la lista de buena fe de esta temporada.</p>
-      ) : (
-        <div className="divide-y divide-slate-100 rounded-xl border border-slate-200 bg-white">
-          {roster.map((j) => {
-            const presente = !!jugadorPartidoPorJugador[j.id];
-            const rol = rolesPorJugador[j.id];
-            return (
-              <label key={j.id} className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-slate-50">
-                <input
-                  type="checkbox"
-                  checked={presente}
-                  onChange={(e) => void handleTogglePresente(j, targetEquipoId, e.target.checked)}
-                  className="h-4 w-4 flex-shrink-0 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
-                />
-                <span className={`flex-1 min-w-0 truncate text-sm ${presente ? 'font-medium text-slate-900' : 'text-slate-500'}`}>
-                  {j.nombre}
-                </span>
-                {presente && (
-                  <select
-                    value={isRolAsignable(rol) ? rol : 'jugador'}
-                    onChange={(e) => handleChangeRol(j.id, e.target.value as RolAlineacion)}
-                    onClick={(e) => e.stopPropagation()}
-                    className="w-32 flex-shrink-0 rounded-lg border border-slate-300 px-2 py-1 text-xs focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
-                  >
-                    <option value="jugador">Jugador</option>
-                    <option value="entrenador">Entrenador</option>
-                  </select>
-                )}
-              </label>
-            );
-          })}
-        </div>
-      )}
-    </div>
+  const renderTabEquipo = (valor: 'local' | 'visitante', nombre: string, opciones: JugadorOption[]) => (
+    <button
+      key={valor}
+      type="button"
+      onClick={() => { setLado(valor); setBusqueda(''); }}
+      className={`flex-1 rounded-lg px-3 py-2 text-sm font-semibold transition ${
+        lado === valor ? 'bg-white text-brand-700 shadow-sm ring-1 ring-brand-200' : 'text-slate-500 hover:text-slate-700'
+      }`}
+    >
+      <span className="truncate">{nombre}</span>
+      <span className={`ml-1.5 text-xs font-black ${lado === valor ? 'text-brand-600' : 'text-slate-400'}`}>
+        {contarPresentes(opciones)}
+      </span>
+    </button>
   );
 
   return (
     <ModalBase
       isOpen={isOpen}
       onClose={handleCerrar}
-      title={isRanked ? 'Alineación (Ranked)' : 'Gestionar jugadores del partido'}
+      title={isRanked ? 'Alineación (Ranked)' : 'Convocados del partido'}
       subtitle={isRanked ? 'Jugadores asignados por ranked con rating Δ' : 'Marcá quiénes están presentes y su rol'}
       size="lg"
-      bodyClassName="p-0"
+      bodyClassName="p-4 sm:p-5"
+      footer={
+        !isRanked ? (
+          <div className="flex items-center justify-between gap-2 px-4 pb-1 sm:px-5">
+            <span className="text-xs text-slate-400">
+              {hayCambios
+                ? `${cambios.aAgregar.length} alta(s) · ${cambios.aQuitar.length} baja(s) · ${cambios.aActualizar.length} cambio(s)`
+                : 'Sin cambios'}
+            </span>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={handleCerrar}
+                disabled={saving}
+                className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition hover:border-slate-300 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={() => void handleGuardar()}
+                disabled={saving || loading || !hayCambios}
+                className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700 disabled:cursor-not-allowed disabled:bg-brand-300"
+              >
+                {saving ? 'Guardando…' : 'Guardar cambios'}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="flex justify-end px-4 pb-1 sm:px-5">
+            <button
+              type="button"
+              onClick={handleCerrar}
+              className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition hover:border-slate-300 hover:text-slate-900"
+            >
+              Cerrar
+            </button>
+          </div>
+        )
+      }
     >
-      <div className="space-y-6 p-6">
+      <div className="space-y-4">
         {error ? (
           <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
             {error}
@@ -432,116 +528,69 @@ export const ModalAlineacionPartido = ({
 
         {loading ? (
           <div className="space-y-3">
-            {Array.from({ length: 3 }).map((_, index) => (
-              <div key={index} className="h-12 animate-pulse rounded-lg bg-slate-200" />
+            {Array.from({ length: 4 }).map((_, index) => (
+              <div key={index} className="h-11 animate-pulse rounded-lg bg-slate-200" />
             ))}
           </div>
-        ) : (
+        ) : !isRanked ? (
           <>
-            {!isRanked ? (
-              <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-                <p>Marcá quiénes están presentes en el partido. Podés cambiar el rol de cada uno.</p>
-              </div>
-            ) : (
-              <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-                <p>Vista de alineación ranked. Muestra Rojo/Azul y cambios de rating.</p>
-              </div>
-            )}
+            <div className="flex gap-1 rounded-xl bg-slate-100 p-1">
+              {renderTabEquipo('local', equipoLocalNombre, jugadoresLocal)}
+              {renderTabEquipo('visitante', equipoVisitanteNombre, jugadoresVisitante)}
+            </div>
 
-            {!isRanked ? (
-              <div className="grid gap-4 lg:grid-cols-2">
-                {renderChecklist(equipoLocalNombre, jugadoresLocal, equipoLocalId)}
-                {renderChecklist(equipoVisitanteNombre, jugadoresVisitante, equipoVisitanteId)}
-              </div>
-            ) : (
-              <div className="grid gap-4 lg:grid-cols-2">
-                {/* Rojo */}
-                <div className="space-y-3">
-                  <h3 className="text-sm font-semibold text-slate-800">Rojo</h3>
-                  {rankedTeams.find(t => t.color === 'rojo')?.players.length ? null : (
-                    <p className="text-sm text-slate-500">Sin jugadores asignados.</p>
-                  )}
-                  {rankedTeams.find(t => t.color === 'rojo')?.players.map(p => {
-                    const snap = rankedPlayers.find(rp => rp.id === p.id);
-                    return (
-                      <div key={p.id} className="flex items-start justify-between rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
-                        <div className="min-w-0 w-1/2 pr-2">
-                          <p className="text-sm font-medium text-slate-900 whitespace-normal">{p.nombre}</p>
-                        </div>
-                        <div className="flex w-1/2 flex-wrap items-center justify-end gap-2">
-                          {snap ? (
-                            <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ${snap.delta && snap.delta > 0 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : snap.delta && snap.delta < 0 ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-slate-50 text-slate-700 border border-slate-200'}`}>
-                              {snap.pre ?? '—'} → {snap.post ?? '—'} ({(snap.delta ?? 0) >= 0 ? '+' : ''}{snap.delta ?? 0})
-                            </span>
-                          ) : (
-                            <span className="text-xs text-slate-500">Sin datos de rating</span>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+            <EmbudoJugadores
+              pasos={[
+                { etiqueta: 'Habilitados en la fase', valor: candidatos.length },
+                { etiqueta: 'Convocados', valor: contarPresentes(candidatos), activo: true },
+              ]}
+            />
 
-                {/* Azul */}
-                <div className="space-y-3">
-                  <h3 className="text-sm font-semibold text-slate-800">Azul</h3>
-                  {rankedTeams.find(t => t.color === 'azul')?.players.length ? null : (
-                    <p className="text-sm text-slate-500">Sin jugadores asignados.</p>
-                  )}
-                  {rankedTeams.find(t => t.color === 'azul')?.players.map(p => {
-                    const snap = rankedPlayers.find(rp => rp.id === p.id);
-                    return (
-                      <div key={p.id} className="flex items-start justify-between rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
-                        <div className="min-w-0 w-1/2 pr-2">
-                          <p className="text-sm font-medium text-slate-900 whitespace-normal">{p.nombre}</p>
-                        </div>
-                        <div className="flex w-1/2 flex-wrap items-center justify-end gap-2">
-                          {snap ? (
-                            <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ${snap.delta && snap.delta > 0 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : snap.delta && snap.delta < 0 ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-slate-50 text-slate-700 border border-slate-200'}`}>
-                              {snap.pre ?? '—'} → {snap.post ?? '—'} ({(snap.delta ?? 0) >= 0 ? '+' : ''}{snap.delta ?? 0})
-                            </span>
-                          ) : (
-                            <span className="text-xs text-slate-500">Sin datos de rating</span>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {!isRanked && (
-              <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 shadow-sm">
-                <p className="font-medium text-slate-900">Resumen</p>
-                <ul className="mt-2 space-y-1 text-sm">
-                  <li>Jugadores asignados: {jugadoresConRolCount}</li>
-                </ul>
-              </div>
-            )}
+            <SelectorJugadores
+              filas={filas}
+              onToggle={toggle}
+              onMarcarTodos={marcarTodos}
+              busqueda={busqueda}
+              onBusquedaChange={setBusqueda}
+              etiquetaContador="convocados"
+              vacioMensaje={
+                equipoActivoId
+                  ? 'Este equipo no tiene jugadores habilitados en esta fase. Cargalos desde Fase → Jugadores.'
+                  : 'El partido todavía no tiene este equipo asignado.'
+              }
+            />
           </>
+        ) : (
+          <div className="grid gap-4 lg:grid-cols-2">
+            {(['rojo', 'azul'] as const).map((color) => (
+              <div key={color} className="space-y-3">
+                <h3 className="text-sm font-semibold capitalize text-slate-800">{color}</h3>
+                {rankedTeams.find(t => t.color === color)?.players.length ? null : (
+                  <p className="text-sm text-slate-500">Sin jugadores asignados.</p>
+                )}
+                {rankedTeams.find(t => t.color === color)?.players.map(p => {
+                  const snap = rankedPlayers.find(rp => rp.id === p.id);
+                  return (
+                    <div key={p.id} className="flex items-start justify-between rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+                      <div className="min-w-0 w-1/2 pr-2">
+                        <p className="text-sm font-medium text-slate-900 whitespace-normal">{p.nombre}</p>
+                      </div>
+                      <div className="flex w-1/2 flex-wrap items-center justify-end gap-2">
+                        {snap ? (
+                          <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ${snap.delta && snap.delta > 0 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : snap.delta && snap.delta < 0 ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-slate-50 text-slate-700 border border-slate-200'}`}>
+                            {snap.pre ?? '—'} → {snap.post ?? '—'} ({(snap.delta ?? 0) >= 0 ? '+' : ''}{snap.delta ?? 0})
+                          </span>
+                        ) : (
+                          <span className="text-xs text-slate-500">Sin datos de rating</span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
+          </div>
         )}
-
-        <div className="flex justify-end gap-2">
-          <button
-            type="button"
-            onClick={handleCerrar}
-            disabled={saving}
-            className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition hover:border-slate-300 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            Cancelar
-          </button>
-          {!isRanked && (
-            <button
-              type="button"
-              onClick={handleGuardar}
-              disabled={saving || loading}
-              className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700 disabled:cursor-not-allowed disabled:bg-brand-300"
-            >
-              {saving ? 'Guardando…' : 'Guardar cambios'}
-            </button>
-          )}
-        </div>
       </div>
     </ModalBase>
   );
