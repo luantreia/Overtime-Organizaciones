@@ -22,9 +22,11 @@ export const agregarMiembroOrganizacion = async (
   organizacionId: string, 
   data: CreateOrgMemberData
 ): Promise<OrgMember> => {
+  // authFetch ya serializa el body: pasarle un string acá lo dejaba doble-codificado
+  // (`"{\"rol\":\"staff\"}"`) y el backend respondía 400 "is not valid JSON".
   return authFetch(`/organizaciones/${organizacionId}/miembros`, {
     method: 'POST',
-    body: JSON.stringify(data),
+    body: { ...data },
   });
 };
 
@@ -36,7 +38,7 @@ export const actualizarMiembroOrganizacion = async (
 ): Promise<OrgMember> => {
   return authFetch(`/organizaciones/${organizacionId}/miembros/${miembroId}`, {
     method: 'PUT',
-    body: JSON.stringify(data),
+    body: { ...data },
   });
 };
 
@@ -57,12 +59,18 @@ export const buscarUsuarioPorEmail = async (email: string): Promise<{
   email: string;
 } | null> => {
   try {
-    const response = await authFetch(`/usuarios?email=${encodeURIComponent(email)}`);
-    return response as {
-      _id: string;
-      nombre: string;
-      email: string;
-    } | null;
+    // GET /usuarios?email= devuelve { id, nombre, email, rol } — con `id`, no `_id`. El
+    // componente leía `_id` y mandaba usuarioId undefined, así que el alta nunca llegaba
+    // con usuario. Normalizamos acá para no depender de la forma exacta del endpoint.
+    const response = await authFetch<{ id?: string; _id?: string; nombre?: string; email?: string } | null>(
+      `/usuarios?email=${encodeURIComponent(email)}`
+    );
+    if (!response) return null;
+
+    const id = response._id ?? response.id;
+    if (!id) return null;
+
+    return { _id: id, nombre: response.nombre ?? '', email: response.email ?? email };
   } catch (error) {
     console.error('Error buscando usuario por email:', error);
     return null;
