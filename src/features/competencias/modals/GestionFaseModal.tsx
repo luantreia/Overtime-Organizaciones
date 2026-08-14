@@ -557,8 +557,9 @@ export default function GestionParticipantesFaseModal({
             <button
               className="rounded-lg bg-slate-50 px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-100 transition"
               onClick={() => { setPartidoAlineacionId(p.id); setAlineacionModalAbierto(true); }}
+              title="Jugadores convocados a este partido"
             >
-              Plantilla
+              Convocados
             </button>
           </>
         )}
