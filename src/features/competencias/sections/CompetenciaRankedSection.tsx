@@ -26,9 +26,10 @@ import {
 } from '../../jugadores/services/jugadorCompetenciaService';
 import { getPartidosPorCompetencia, getPartidosPorTemporada } from '../../partidos/services/partidoService';
 import { listTemporadasByCompetencia, type BackendTemporada } from '../services';
+import { listCompetenciasByOrganizacion, type BackendCompetencia } from '../services/competenciasService';
 
 // Hooks
-import { useAttendance } from '../hooks/useAttendance';
+import { useAttendance, readPresentesForCompetencia } from '../hooks/useAttendance';
 import { useRankedMatch } from '../hooks/useRankedMatch';
 
 // Components
@@ -118,6 +119,9 @@ export default function CompetenciaRankedSection({
   // Temporadas
   const [temporadas, setTemporadas] = useState<BackendTemporada[]>([]);
   const [selectedTemporada, setSelectedTemporada] = useState<string>('');
+
+  // Otras competencias ranked de la misma organización, para copiar presentes entre ellas
+  const [otrasCompetenciasRanked, setOtrasCompetenciasRanked] = useState<BackendCompetencia[]>([]);
 
   // Modals for confirmation
   const [confirmConfig, setConfirmConfig] = useState<{
@@ -473,6 +477,23 @@ export default function CompetenciaRankedSection({
     if (!organizacionId) return;
     SedeService.getByOrganizacion(organizacionId).then(setSedes).catch(() => {});
   }, [organizacionId]);
+
+  useEffect(() => {
+    if (!organizacionId) return;
+    listCompetenciasByOrganizacion(organizacionId)
+      .then((comps) => setOtrasCompetenciasRanked(comps.filter((c) => c.rankedEnabled && c._id !== competenciaId)))
+      .catch(() => {});
+  }, [organizacionId, competenciaId]);
+
+  const handleCopyPresentesDesde = (otraCompetenciaId: string) => {
+    const otrosPresentes = readPresentesForCompetencia(otraCompetenciaId);
+    if (otrosPresentes.length === 0) {
+      setError('Esa competencia no tiene presentes marcados hoy');
+      return;
+    }
+    addManyPresentes(otrosPresentes);
+    setSuccess(`Se copiaron ${otrosPresentes.length} presentes`);
+  };
 
   const selectedSede = sedes.find(s => s.id === selectedSedeId);
 
@@ -909,6 +930,8 @@ export default function CompetenciaRankedSection({
               onChooseForNext={onChooseForNextMatch}
               onMarkAllPresent={() => markAllPresent(compPlayers.map(p => p._id))}
               onClearPresentes={clearPresentes}
+              otrasCompetencias={otrasCompetenciasRanked}
+              onCopyPresentesDesde={handleCopyPresentesDesde}
               onClearSelected={() => setSelected([])}
               onResetPJHoy={() => showConfirm('Reset PJ', '¿Reiniciar contadores de partidos jugados hoy?', resetPlayedCounts)}
               priorizarNoJugados={priorizarNoJugados}

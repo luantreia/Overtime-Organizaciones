@@ -13,6 +13,13 @@ interface Player {
   nombre: string;
 }
 
+interface OtraCompetencia {
+  _id: string;
+  nombre?: string;
+  modalidad?: string;
+  categoria?: string;
+}
+
 interface RankedPlayerSelectorProps {
   players: Player[];
   compPlayers: any[];
@@ -38,6 +45,8 @@ interface RankedPlayerSelectorProps {
   onChooseForNext: () => void;
   onMarkAllPresent: () => void;
   onClearPresentes: () => void;
+  otrasCompetencias?: OtraCompetencia[];
+  onCopyPresentesDesde?: (competenciaId: string) => void;
   onClearSelected: () => void;
   onResetPJHoy: () => void;
   priorizarNoJugados: boolean;
@@ -67,6 +76,8 @@ export const RankedPlayerSelector: React.FC<RankedPlayerSelectorProps> = ({
   onChooseForNext,
   onMarkAllPresent,
   onClearPresentes,
+  otrasCompetencias = [],
+  onCopyPresentesDesde,
   onClearSelected,
   onResetPJHoy,
   priorizarNoJugados,
@@ -344,6 +355,26 @@ export const RankedPlayerSelector: React.FC<RankedPlayerSelectorProps> = ({
             <button type="button" className="text-[9px] text-slate-500 hover:text-brand-600" onClick={onClearPresentes}>Limpiar presentes</button>
             <button type="button" className="text-[9px] text-slate-500 hover:text-brand-600" onClick={onClearSelected} disabled={selected.length === 0}>Deseleccionar ({selected.length})</button>
           </div>
+          {onCopyPresentesDesde && otrasCompetencias.length > 0 && (
+            <div className="flex justify-center">
+              <select
+                value=""
+                onChange={(e) => {
+                  if (e.target.value) onCopyPresentesDesde(e.target.value);
+                  e.target.value = '';
+                }}
+                className="w-full sm:w-auto rounded border border-slate-200 bg-slate-50 px-2 py-1 text-[9px] font-medium text-slate-500 outline-none focus:ring-1 focus:ring-brand-500"
+                title="Trae los presentes marcados hoy en otra competencia y los suma a esta lista"
+              >
+                <option value="">📋 Copiar presentes de...</option>
+                {otrasCompetencias.map((c) => (
+                  <option key={c._id} value={c._id}>
+                    {[c.modalidad, c.categoria].filter(Boolean).join(' ') || c.nombre || c._id}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           <div className="pt-1 border-t border-slate-100 flex justify-center">
             <button type="button" className="text-[9px] text-red-500 hover:text-red-700 font-bold underline underline-offset-2" onClick={onResetPJHoy}>⚠ Reset PJ diario</button>
           </div>

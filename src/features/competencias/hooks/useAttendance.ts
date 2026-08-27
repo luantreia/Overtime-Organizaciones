@@ -1,15 +1,34 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 
+function todayIso(): string {
+  const today = new Date();
+  return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+}
+
+function sessionKeyFor(competenciaId: string): string {
+  return `rankedSessionV2:${competenciaId}:${todayIso()}`;
+}
+
+// Lee los presentes de HOY para cualquier competencia, sin necesidad de montar su hook.
+// Sirve para copiar la asistencia entre competencias que se juegan en simultáneo.
+export function readPresentesForCompetencia(competenciaId: string): string[] {
+  if (!competenciaId) return [];
+  try {
+    const raw = localStorage.getItem(sessionKeyFor(competenciaId));
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed.presentes) ? parsed.presentes : [];
+  } catch {
+    return [];
+  }
+}
+
 export function useAttendance(competenciaId: string) {
   const [presentes, setPresentes] = useState<string[]>([]);
   const [matchParticipations, setMatchParticipations] = useState<Record<string, string[]>>({});
   const [matchTimeline, setMatchTimeline] = useState<string[]>([]); // Orden de finalización de partidos
 
-  const sessionKey = useMemo(() => {
-    const today = new Date();
-    const iso = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-    return `rankedSessionV2:${competenciaId}:${iso}`;
-  }, [competenciaId]);
+  const sessionKey = useMemo(() => sessionKeyFor(competenciaId), [competenciaId]);
 
   // Derived playedCounts for backward compatibility and UI
   const playedCounts = useMemo(() => {
