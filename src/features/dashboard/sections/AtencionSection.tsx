@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import type { Partido } from '../../../types';
+import type { ISolicitudEdicion } from '../../../shared/features/solicitudes/types/solicitudesEdicion';
 
 export interface HuecoDato {
   id: string;
@@ -10,6 +11,7 @@ export interface HuecoDato {
 interface AtencionSectionProps {
   loading: boolean;
   partidosPendientes: Partido[];
+  solicitudesPendientes: ISolicitudEdicion[];
   solicitudesPendientesCount: number;
   huecos: HuecoDato[];
 }
@@ -19,6 +21,25 @@ const partidoTexto = (p: Partido) => {
   const visitante = p.equipoVisitante?.nombre ?? p.visitanteNombre ?? 'Visitante';
   return `${local} vs ${visitante} — ${p.fecha}${p.hora ? ` ${p.hora}` : ''}`;
 };
+
+// Labels cortas para el feed del dashboard. La lista completa y las acciones
+// de aprobar/rechazar (con motivo obligatorio y doble confirmación) viven en
+// /notificaciones — acá solo se previsualiza, no se duplica esa lógica.
+const SOLICITUD_LABELS: Record<string, string> = {
+  'jugador-equipo-crear': 'Nuevo contrato de jugador',
+  'jugador-equipo-editar': 'Editar contrato de jugador',
+  'jugador-equipo-eliminar': 'Eliminar contrato de jugador',
+  'participacion-temporada-crear': 'Inscribir equipo',
+  'participacion-temporada-actualizar': 'Actualizar inscripción',
+  'participacion-temporada-eliminar': 'Eliminar inscripción',
+  'jugador-temporada-crear': 'Agregar a lista de buena fe',
+  'jugador-temporada-actualizar': 'Editar en lista de buena fe',
+  'jugador-temporada-eliminar': 'Quitar de lista de buena fe',
+  resultadoPartido: 'Resultado de partido',
+  editarPartidoCompetencia: 'Editar partido',
+};
+
+const solicitudTexto = (s: ISolicitudEdicion) => SOLICITUD_LABELS[s.tipo] ?? s.tipo;
 
 const Tile = ({
   titulo,
@@ -47,7 +68,7 @@ const Tile = ({
   );
 };
 
-const AtencionSection = ({ loading, partidosPendientes, solicitudesPendientesCount, huecos }: AtencionSectionProps) => {
+const AtencionSection = ({ loading, partidosPendientes, solicitudesPendientes, solicitudesPendientesCount, huecos }: AtencionSectionProps) => {
   const totalPendiente = partidosPendientes.length + solicitudesPendientesCount + huecos.length;
 
   if (loading) {
@@ -91,20 +112,38 @@ const AtencionSection = ({ loading, partidosPendientes, solicitudesPendientesCou
         </p>
       ) : (
         <ul className="divide-y divide-slate-100 rounded-2xl border border-slate-200 bg-white">
-          {partidosPendientes.slice(0, 6).map((p) => (
-            <li key={p.id}>
-              <Link to={`/partidos/${p.id}`} className="flex items-center justify-between gap-3 px-4 py-3 text-sm transition hover:bg-slate-50">
-                <span className="text-slate-700">{partidoTexto(p)}</span>
+          {partidosPendientes.slice(0, 4).map((p) => (
+            <li key={`partido-${p.id}`}>
+              <Link to={`/partidos/${p.id}`} className="flex items-center gap-3 px-4 py-3 text-sm transition hover:bg-slate-50">
+                <span className="shrink-0 text-base" aria-hidden>🕐</span>
+                <span className="flex-1 text-slate-700">{partidoTexto(p)}</span>
                 <span className="flex-shrink-0 rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-rose-700">
                   Sin finalizar
                 </span>
               </Link>
             </li>
           ))}
-          {huecos.slice(0, 6).map((h) => (
-            <li key={h.id}>
-              <Link to={h.href} className="flex items-center justify-between gap-3 px-4 py-3 text-sm transition hover:bg-slate-50">
-                <span className="text-slate-700">{h.texto}</span>
+          {solicitudesPendientes.slice(0, 4).map((s) => (
+            <li key={`solicitud-${s._id}`}>
+              <Link to="/notificaciones" className="flex items-center gap-3 px-4 py-3 text-sm transition hover:bg-slate-50">
+                <span className="shrink-0 text-base" aria-hidden>📝</span>
+                <span className="flex-1 text-slate-700">
+                  {solicitudTexto(s)}
+                  {s.requiereDobleConfirmacion && (
+                    <span className="ml-1.5 text-[10px] font-bold uppercase tracking-wide text-amber-600">· doble confirmación</span>
+                  )}
+                </span>
+                <span className="flex-shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-700">
+                  Revisar
+                </span>
+              </Link>
+            </li>
+          ))}
+          {huecos.slice(0, 4).map((h) => (
+            <li key={`hueco-${h.id}`}>
+              <Link to={h.href} className="flex items-center gap-3 px-4 py-3 text-sm transition hover:bg-slate-50">
+                <span className="shrink-0 text-base" aria-hidden>🕳️</span>
+                <span className="flex-1 text-slate-700">{h.texto}</span>
                 <span className="flex-shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-700">
                   Revisar
                 </span>

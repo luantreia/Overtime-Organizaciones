@@ -4,6 +4,7 @@ import { useOrganizacion } from '../../../app/providers/OrganizacionContext';
 import { listCompetenciasByOrganizacion, getCompetenciaDetalle, type BackendCompetencia } from '../../competencias/services/competenciasService';
 import { getPartidosPorCompetencia } from '../../partidos/services/partidoService';
 import { getSolicitudesEdicion } from '../../../shared/features/solicitudes/services/solicitudesEdicionService';
+import type { ISolicitudEdicion } from '../../../shared/features/solicitudes/types/solicitudesEdicion';
 import type { Partido } from '../../../types';
 import AtencionSection, { type HuecoDato } from '../sections/AtencionSection';
 import ProximosPartidosSection from '../sections/ProximosPartidosSection';
@@ -19,6 +20,7 @@ const DashboardOrgPage = () => {
   const [partidosProximos, setPartidosProximos] = useState<Partido[]>([]);
   const [huecos, setHuecos] = useState<HuecoDato[]>([]);
   const [progresoTemporadas, setProgresoTemporadas] = useState<ProgresoTemporada[]>([]);
+  const [solicitudesPendientes, setSolicitudesPendientes] = useState<ISolicitudEdicion[]>([]);
   const [solicitudesPendientesCount, setSolicitudesPendientesCount] = useState(0);
   const [loadingSolicitudes, setLoadingSolicitudes] = useState(false);
 
@@ -48,6 +50,7 @@ const DashboardOrgPage = () => {
   // Solicitudes pendientes de aprobar (independiente de las competencias, ver plan: no se filtra por org)
   useEffect(() => {
     if (!organizacionSeleccionada?.id) {
+      setSolicitudesPendientes([]);
       setSolicitudesPendientesCount(0);
       return;
     }
@@ -56,9 +59,15 @@ const DashboardOrgPage = () => {
       try {
         setLoadingSolicitudes(true);
         const resp = await getSolicitudesEdicion({ scope: 'aprobables', estado: 'pendiente' });
-        if (!cancelado) setSolicitudesPendientesCount(resp.total ?? resp.solicitudes.length);
+        if (!cancelado) {
+          setSolicitudesPendientes(resp.solicitudes);
+          setSolicitudesPendientesCount(resp.total ?? resp.solicitudes.length);
+        }
       } catch {
-        if (!cancelado) setSolicitudesPendientesCount(0);
+        if (!cancelado) {
+          setSolicitudesPendientes([]);
+          setSolicitudesPendientesCount(0);
+        }
       } finally {
         if (!cancelado) setLoadingSolicitudes(false);
       }
@@ -248,6 +257,7 @@ const DashboardOrgPage = () => {
       <AtencionSection
         loading={loadingResumen || loadingSolicitudes}
         partidosPendientes={partidosPendientes}
+        solicitudesPendientes={solicitudesPendientes}
         solicitudesPendientesCount={solicitudesPendientesCount}
         huecos={huecos}
       />
@@ -256,32 +266,20 @@ const DashboardOrgPage = () => {
 
       <ProgresoTemporadasSection loading={loadingResumen} temporadas={progresoTemporadas} />
 
-      <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <a href="/competencias" className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white p-6 shadow-card transition hover:border-brand-300 hover:bg-brand-50">
-          <span className="text-2xl">🏆</span>
-          <span className="font-semibold text-slate-900">Competencias</span>
-        </a>
-        <a href="/partidos" className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white p-6 shadow-card transition hover:border-brand-300 hover:bg-brand-50">
-          <span className="text-2xl">📅</span>
-          <span className="font-semibold text-slate-900">Partidos</span>
-        </a>
-        <a href="/estadisticas" className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white p-6 shadow-card transition hover:border-brand-300 hover:bg-brand-50">
-          <span className="text-2xl">📊</span>
-          <span className="font-semibold text-slate-900">Estadísticas</span>
-        </a>
-        <a href="/notificaciones" className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white p-6 shadow-card transition hover:border-brand-300 hover:bg-brand-50">
-          <span className="text-2xl">🔔</span>
-          <span className="font-semibold text-slate-900">Notificaciones</span>
-        </a>
-      </section>
-
       <section className="space-y-4">
-        <h2 className="text-lg font-semibold text-slate-900">Todas mis competencias</h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-slate-900">Mis competencias</h2>
+          <Link to="/competencias" className="text-sm font-semibold text-brand-600 hover:text-brand-700">
+            Ver todas →
+          </Link>
+        </div>
         {loadingCompetencias ? (
           <p className="text-sm text-slate-500">Cargando…</p>
+        ) : competencias.length === 0 ? (
+          <p className="rounded-2xl border border-dashed border-slate-200 px-4 py-6 text-sm text-slate-500">Sin competencias</p>
         ) : (
           <div className="grid gap-4 md:grid-cols-2">
-            {competencias.map((c) => (
+            {competencias.slice(0, 4).map((c) => (
               <Link
                 key={c._id}
                 to={`/competencias/${c._id}`}
@@ -300,10 +298,12 @@ const DashboardOrgPage = () => {
                 </div>
               </Link>
             ))}
-            {competencias.length === 0 ? (
-              <p className="rounded-2xl border border-dashed border-slate-200 px-4 py-6 text-sm text-slate-500">Sin competencias</p>
-            ) : null}
           </div>
+        )}
+        {competencias.length > 4 && (
+          <p className="text-sm text-slate-500">
+            Y {competencias.length - 4} más — <Link to="/competencias" className="font-semibold text-brand-600 hover:text-brand-700">buscalas en Competencias</Link>.
+          </p>
         )}
       </section>
     </div>

@@ -20,7 +20,7 @@ const OrganizationSelector = () => {
 
   if (loading) {
     return (
-      <div className="h-10 w-48 animate-pulse rounded-lg bg-slate-200" aria-label="Cargando organizaciones" />
+      <div className="h-10 w-40 sm:w-48 animate-pulse rounded-lg bg-slate-200" aria-label="Cargando organizaciones" />
     );
   }
 
@@ -30,7 +30,7 @@ const OrganizationSelector = () => {
 
   return (
     <Listbox value={organizacionSeleccionada?.id ?? ''} onChange={seleccionarOrganizacion}>
-      <div className="relative mt-1 w-56">
+      <div className="relative mt-1 w-40 sm:w-56">
         <Listbox.Button className="relative w-full cursor-pointer rounded-lg border border-slate-200 bg-white py-2 pl-3 pr-10 text-left text-sm font-medium text-slate-700 shadow-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20">
           <span className="block truncate">
             {organizacionSeleccionada?.nombre ?? 'Seleccionar organización'}

@@ -4,6 +4,7 @@ import LoginPage from './features/auth/pages/LoginPage';
 import ProtectedRoute from './app/routes/ProtectedRoute';
 import OrganizacionPage from './features/organizacion/pages/OrganizacionPage';
 import Navbar from './app/layout/Navbar';
+import MobileTabBar from './app/layout/MobileTabBar';
 import DashboardOrgPage from './features/dashboard/pages/DashboardOrgPage';
 import PartidosPage from './features/partidos/pages/PartidosPage';
 import EstadisticasOrgPage from './features/estadisticas/pages/EstadisticasOrgPage';
@@ -16,7 +17,7 @@ const App = () => {
     <div className="flex min-h-screen flex-col bg-slate-50">
       <Navbar />
 
-      <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-6 py-8">
+      <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-6 py-8 pb-24 xl:pb-8">
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route
@@ -87,12 +88,14 @@ const App = () => {
         </Routes>
       </main>
 
-      <footer className="border-t border-slate-200 bg-white/60 py-4">
+      <footer className="hidden border-t border-slate-200 bg-white/60 py-4 xl:block">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 text-xs text-slate-500">
           <span>© {new Date().getFullYear()} Overtime Dodgeball</span>
           <span>Gestión diaria para Organizadores y Staff</span>
         </div>
       </footer>
+
+      <MobileTabBar />
     </div>
   );
 };

@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../providers/AuthContext';
 import OrganizationSelector from '../../features/organizacion/components/OrganizationSelector';
@@ -15,7 +14,6 @@ const links = [
 
 export default function Navbar() {
   const { isAuthenticated } = useAuth();
-  const [open, setOpen] = useState(false);
 
   const navLinkClass = ({ isActive }: { isActive: boolean }) =>
     `block rounded-lg px-3 py-2 transition-colors ${isActive ? 'bg-brand-100 text-brand-700' : 'hover:bg-slate-100'}`;
@@ -35,13 +33,13 @@ export default function Navbar() {
 
         <nav className="hidden flex-1 items-center justify-center gap-1 text-sm font-medium text-slate-600 xl:flex">
           {links.map((l) => (
-            <NavLink key={l.to} to={l.to} className={navLinkClass} onClick={() => setOpen(false)}>
+            <NavLink key={l.to} to={l.to} className={navLinkClass}>
               {l.label}
             </NavLink>
           ))}
         </nav>
 
-        <div className="hidden items-center gap-3 xl:flex flex-1 justify-end">
+        <div className="flex items-center gap-3 flex-1 justify-end xl:flex-none">
           <OrganizationSelector />
           {!isAuthenticated && (
             <NavLink to="/login" className="rounded-lg px-3 py-2 text-sm font-semibold text-brand-600 transition hover:text-brand-700">
@@ -49,35 +47,7 @@ export default function Navbar() {
             </NavLink>
           )}
         </div>
-
-        <button
-          className="inline-flex items-center rounded-md border border-slate-300 p-2 text-slate-700 hover:bg-slate-50 xl:hidden"
-          onClick={() => setOpen((v) => !v)}
-          aria-label="Abrir menú"
-        >
-          <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M3 5h14a1 1 0 100-2H3a1 1 0 000 2zm14 4H3a1 1 0 000 2h14a1 1 0 100-2zm0 6H3a1 1 0 000 2h14a1 1 0 100-2z" clipRule="evenodd"/></svg>
-        </button>
       </div>
-
-      {open && (
-        <div className="border-t border-slate-200 bg-white px-4 py-3 xl:hidden">
-          <div className="flex flex-col gap-2">
-            {links.map((l) => (
-              <NavLink key={l.to} to={l.to} className={navLinkClass} onClick={() => setOpen(false)}>
-                {l.label}
-              </NavLink>
-            ))}
-            <div className="mt-2 flex items-center justify-between gap-3">
-              <OrganizationSelector />
-              {!isAuthenticated && (
-                <NavLink to="/login" className="rounded-lg px-3 py-2 text-sm font-semibold text-brand-600 transition hover:text-brand-700" onClick={() => setOpen(false)}>
-                  Iniciar sesión
-                </NavLink>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
     </header>
   );
 }
