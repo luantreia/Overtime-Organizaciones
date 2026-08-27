@@ -91,6 +91,7 @@ export const RankedPlayerSelector: React.FC<RankedPlayerSelectorProps> = ({
   matchTimelineLength = 0
 }) => {
   const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
   const filtered = players.filter(p => !filter || p.nombre.toLowerCase().includes(filter.toLowerCase()));
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -189,12 +190,12 @@ export const RankedPlayerSelector: React.FC<RankedPlayerSelectorProps> = ({
                         
                         <div className="flex items-center gap-1 shrink-0">
                           {/* Botón de Presencia - Badge Dinámico */}
-                          <button 
+                          <button
                             type="button"
                             onClick={() => togglePresente(p._id, !isPresent)}
-                            className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] font-black uppercase transition-all border ${
-                              isPresent 
-                                ? 'bg-emerald-50 text-emerald-700 border-emerald-200 shadow-sm' 
+                            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[10px] font-black uppercase transition-all border min-h-[30px] ${
+                              isPresent
+                                ? 'bg-emerald-50 text-emerald-700 border-emerald-200 shadow-sm'
                                 : 'bg-slate-50 text-slate-400 border-slate-200'
                             }`}
                           >
@@ -203,10 +204,10 @@ export const RankedPlayerSelector: React.FC<RankedPlayerSelectorProps> = ({
                             }`} />
                             {isPresent ? 'Presente' : 'Ausente'}
                           </button>
-                          
+
                           <Menu as="div" className="relative inline-block text-left">
-                            <Menu.Button className="flex items-center rounded-full p-0.5 text-slate-300 hover:text-brand-600 transition-colors">
-                              <EllipsisVerticalIcon className="h-4 w-4" />
+                            <Menu.Button className="flex items-center justify-center h-8 w-8 rounded-full text-slate-300 hover:text-brand-600 hover:bg-slate-100 transition-colors">
+                              <EllipsisVerticalIcon className="h-5 w-5" />
                             </Menu.Button>
                             <Transition
                               as={Fragment}
@@ -299,26 +300,26 @@ export const RankedPlayerSelector: React.FC<RankedPlayerSelectorProps> = ({
               variant="outline"
               disabled={busy || !matchActive || selected.length < 2}
               onClick={onAutoAssign}
-              className="text-[10px] py-1 h-auto"
+              className="text-xs py-2 h-auto"
             >
               Auto-asignación balanceada
             </Button>
           </div>
           <div className="grid grid-cols-2 gap-2">
-            <Button 
-              size="sm" 
-              variant="outline" 
-              className="text-red-600 border-red-200 hover:bg-red-50 text-[10px] h-auto py-1.5"
-              disabled={busy || selected.length === 0} 
+            <Button
+              size="sm"
+              variant="outline"
+              className="text-red-600 border-red-200 hover:bg-red-50 text-xs h-auto py-2.5"
+              disabled={busy || selected.length === 0}
               onClick={onAddToRojo}
             >
               Añadir a Rojo
             </Button>
-            <Button 
-              size="sm" 
-              variant="outline" 
-              className="text-blue-600 border-blue-200 hover:bg-blue-50 text-[10px] h-auto py-1.5"
-              disabled={busy || selected.length === 0} 
+            <Button
+              size="sm"
+              variant="outline"
+              className="text-blue-600 border-blue-200 hover:bg-blue-50 text-xs h-auto py-2.5"
+              disabled={busy || selected.length === 0}
               onClick={onAddToAzul}
             >
               Añadir a Azul
@@ -336,48 +337,57 @@ export const RankedPlayerSelector: React.FC<RankedPlayerSelectorProps> = ({
         />
 
         <div className="space-y-2 pt-2 border-t">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <label className="flex items-center gap-2 text-[10px] font-medium text-slate-600 cursor-pointer justify-center">
-              <input 
-                type="checkbox" 
-                checked={priorizarNoJugados} 
-                onChange={(e) => setPriorizarNoJugados(e.target.checked)} 
-                className="rounded text-brand-600 shrink-0"
-              />
-              <span>Priorizar descanso</span>
-            </label>
-            <Button size="sm" variant="outline" className="text-[9px] h-7 px-2 w-full sm:w-auto" onClick={onChooseForNext}>
-              Elegir próximos
-            </Button>
-          </div>
-          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
-            <button type="button" className="text-[9px] text-slate-500 hover:text-brand-600" onClick={onMarkAllPresent}>Todos presentes</button>
-            <button type="button" className="text-[9px] text-slate-500 hover:text-brand-600" onClick={onClearPresentes}>Limpiar presentes</button>
-            <button type="button" className="text-[9px] text-slate-500 hover:text-brand-600" onClick={onClearSelected} disabled={selected.length === 0}>Deseleccionar ({selected.length})</button>
-          </div>
+          <Button size="sm" variant="outline" className="text-xs h-9 w-full" onClick={onChooseForNext}>
+            Elegir próximos
+          </Button>
+
           {onCopyPresentesDesde && otrasCompetencias.length > 0 && (
-            <div className="flex justify-center">
-              <select
-                value=""
-                onChange={(e) => {
-                  if (e.target.value) onCopyPresentesDesde(e.target.value);
-                  e.target.value = '';
-                }}
-                className="w-full sm:w-auto rounded border border-slate-200 bg-slate-50 px-2 py-1 text-[9px] font-medium text-slate-500 outline-none focus:ring-1 focus:ring-brand-500"
-                title="Trae los presentes marcados hoy en otra competencia y los suma a esta lista"
-              >
-                <option value="">📋 Copiar presentes de...</option>
-                {otrasCompetencias.map((c) => (
-                  <option key={c._id} value={c._id}>
-                    {[c.modalidad, c.categoria].filter(Boolean).join(' ') || c.nombre || c._id}
-                  </option>
-                ))}
-              </select>
+            <select
+              value=""
+              onChange={(e) => {
+                if (e.target.value) onCopyPresentesDesde(e.target.value);
+                e.target.value = '';
+              }}
+              className="w-full rounded border border-slate-200 bg-slate-50 px-2 py-2 text-[10px] font-medium text-slate-500 outline-none focus:ring-1 focus:ring-brand-500"
+              title="Trae los presentes marcados hoy en otra competencia y los suma a esta lista"
+            >
+              <option value="">📋 Copiar presentes de...</option>
+              {otrasCompetencias.map((c) => (
+                <option key={c._id} value={c._id}>
+                  {[c.modalidad, c.categoria].filter(Boolean).join(' ') || c.nombre || c._id}
+                </option>
+              ))}
+            </select>
+          )}
+
+          <button
+            type="button"
+            onClick={() => setMoreOpen((v) => !v)}
+            className="flex w-full items-center justify-between rounded-md border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors"
+          >
+            <span>⋯ Más opciones</span>
+            <span className={`transition-transform ${moreOpen ? 'rotate-180' : ''}`}>▾</span>
+          </button>
+
+          {moreOpen && (
+            <div className="flex flex-col gap-1 rounded-md border border-slate-200 bg-white p-1.5">
+              <label className="flex items-center gap-2 px-2 py-2 text-xs font-medium text-slate-600 cursor-pointer rounded hover:bg-slate-50">
+                <input
+                  type="checkbox"
+                  checked={priorizarNoJugados}
+                  onChange={(e) => setPriorizarNoJugados(e.target.checked)}
+                  className="rounded text-brand-600 h-4 w-4 shrink-0"
+                />
+                <span>Priorizar descanso</span>
+              </label>
+              <div className="my-0.5 border-t border-slate-100" />
+              <button type="button" className="text-left px-2 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50 rounded" onClick={() => { onMarkAllPresent(); setMoreOpen(false); }}>Todos presentes</button>
+              <button type="button" className="text-left px-2 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50 rounded" onClick={() => { onClearPresentes(); setMoreOpen(false); }}>Limpiar presentes</button>
+              <button type="button" className="text-left px-2 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50 rounded disabled:opacity-40" onClick={() => { onClearSelected(); setMoreOpen(false); }} disabled={selected.length === 0}>Deseleccionar ({selected.length})</button>
+              <div className="my-0.5 border-t border-slate-100" />
+              <button type="button" className="text-left px-2 py-2 text-xs font-bold text-red-600 hover:bg-red-50 rounded" onClick={() => { onResetPJHoy(); setMoreOpen(false); }}>⚠ Reset PJ diario</button>
             </div>
           )}
-          <div className="pt-1 border-t border-slate-100 flex justify-center">
-            <button type="button" className="text-[9px] text-red-500 hover:text-red-700 font-bold underline underline-offset-2" onClick={onResetPJHoy}>⚠ Reset PJ diario</button>
-          </div>
         </div>
       </div>
     </div>

@@ -19,10 +19,10 @@ import {
   type BroadcastRoom
 } from '../../ranked/services/rankedService';
 import { SedeService, type Sede } from '../../sedes/services/sedeService';
-import { 
-  crearJugadorCompetencia, 
-  listJugadoresCompetencia, 
-  eliminarJugadorCompetencia 
+import {
+  crearJugadorCompetencia,
+  listJugadoresCompetencia,
+  eliminarJugadorCompetencia
 } from '../../jugadores/services/jugadorCompetenciaService';
 import { getPartidosPorCompetencia, getPartidosPorTemporada } from '../../partidos/services/partidoService';
 import { listTemporadasByCompetencia, type BackendTemporada } from '../services';
@@ -35,11 +35,12 @@ import { useRankedMatch } from '../hooks/useRankedMatch';
 // Components
 import { RankedPlayerSelector } from './ranked/RankedPlayerSelector';
 import { TeamBuilder } from './ranked/TeamBuilder';
-import { RankedFinalize } from './ranked/RankedFinalize';
+import { RankedScoreboard } from './ranked/RankedScoreboard';
+import { RankedLeaderboard } from './ranked/RankedLeaderboard';
 import { RankedAdminTools } from './ranked/RankedAdminTools';
 
 // Shared UI
-import { Button, Card } from '../../../shared/components/ui';
+import { Button } from '../../../shared/components/ui';
 import ConfirmModal from '../../../shared/components/ConfirmModal/ConfirmModal';
 
 // Rango Unicode de diacríticos combinables (U+0300-U+036F), construido por code point
@@ -56,6 +57,8 @@ function slugify(text: string): string {
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
 }
+
+type RankedTab = 'presentes' | 'equipos' | 'ranking' | 'mas';
 
 export default function CompetenciaRankedSection({
   competenciaId,
@@ -77,7 +80,16 @@ export default function CompetenciaRankedSection({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [loadingMatch, setLoadingMatch] = useState<boolean>(false);
-  const [showAdminPanel, setShowAdminPanel] = useState<boolean>(false);
+
+  // Navegación mobile-first: una sola pestaña de contenido a la vez,
+  // debajo de un marcador que se queda fijo mientras hay partido en curso.
+  const [activeTab, setActiveTab] = useState<RankedTab>('presentes');
+  const [configOpen, setConfigOpen] = useState(false);
+  const [matchBarOpen, setMatchBarOpen] = useState(false);
+  const [afkPlayers, setAfkPlayers] = useState<string[]>([]);
+  const toggleAFK = (id: string) => {
+    setAfkPlayers(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  };
 
   // Auto-dismiss notifications
   useEffect(() => {
@@ -93,7 +105,7 @@ export default function CompetenciaRankedSection({
       return () => clearTimeout(timer);
     }
   }, [error]);
-  
+
   const [convertId, setConvertId] = useState<string>('');
   const [revertId, setRevertId] = useState<string>('');
   const [showAll, setShowAll] = useState<boolean>(false);
@@ -151,18 +163,18 @@ export default function CompetenciaRankedSection({
   };
 
   // Custom Hooks
-  const { 
-    presentes, 
-    togglePresente, 
+  const {
+    presentes,
+    togglePresente,
     addManyPresentes,
-    playedCounts, 
+    playedCounts,
     lastMatchPlayedIndex,
     matchTimelineLength,
     syncMatchAttendance,
     removeMatchAttendance,
-    resetPlayedCounts, 
-    clearPresentes, 
-    markAllPresent 
+    resetPlayedCounts,
+    clearPresentes,
+    markAllPresent
   } = useAttendance(competenciaId);
 
   // Sistema de puntuación de prioridad para ordenamiento
@@ -186,7 +198,7 @@ export default function CompetenciaRankedSection({
     }
 
     // 2. Penalización por partidos jugados hoy (Priorizar a los que menos jugaron)
-    // Esto es mucho más fuerte (-1000) que el bonus histórico (+5), por lo que 
+    // Esto es mucho más fuerte (-1000) que el bonus histórico (+5), por lo que
     // una vez que todos están presentes, la rotación diaria es la que manda.
     const count = playedCounts[playerId] || 0;
     score -= (count * 1000);
@@ -194,7 +206,7 @@ export default function CompetenciaRankedSection({
     // 3. Bonus por descanso (Recency Bias)
     const lastIndex = lastMatchPlayedIndex[playerId] || 0;
     const restDuration = lastIndex > 0 ? (matchTimelineLength - lastIndex) : 99; // 99 si no ha jugado nunca
-    
+
     // Si acaba de jugar (restDuration 0), pierde mucha prioridad.
     // Si lleva 2 o más sin jugar, sube drásticamente.
     score += (restDuration * 100);
@@ -216,12 +228,12 @@ export default function CompetenciaRankedSection({
 
   const fetchLeaderboard = useCallback(async () => {
     try {
-      const lb = await getLeaderboard({ 
-        modalidad: modalidad as string, 
-        categoria: categoria as string, 
-        competition: competenciaId, 
+      const lb = await getLeaderboard({
+        modalidad: modalidad as string,
+        categoria: categoria as string,
+        competition: competenciaId,
         season: lbScope === 'competition' ? (selectedTemporada || undefined) : undefined,
-        limit: 500 
+        limit: 500
       });
       setBoard(lb.items);
     } catch {}
@@ -309,11 +321,17 @@ export default function CompetenciaRankedSection({
     }
   });
 
+  // El estado de AFK vive acá (no en el marcador) para que tanto la pestaña
+  // Equipos (donde se marca) como el botón Finalizar (que lo consume) lo compartan.
+  useEffect(() => {
+    setAfkPlayers([]);
+  }, [matchId]);
+
   const handleEditResult = async (m: any) => {
     if (loadingMatch) return;
     const matchId = m.id || m._id;
     const isFinalizado = m.estado === 'finalizado' || m.estado === 'final';
-    
+
     // Immediate feedback: Scroll to top and show loading
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
@@ -324,22 +342,22 @@ export default function CompetenciaRankedSection({
         // We can run the fetch and revert in parallel if it's finalized
         // to save time, as fetch doesn't depend on the outcome of revert
         const fetchPromise = getLeaderboardMatch(matchId);
-        
+
         if (isFinalizado) {
           await revertMatch(matchId);
         }
-        
+
         const { partido, sets: serverSets, teams } = await fetchPromise;
-        
+
         if (!partido) throw new Error('No se encontró el partido');
 
         // Robust player extraction checking multiple possible locations
-        const rawL = partido.rojoPlayers || 
-                    teams?.find((t: any) => t.color === 'rojo')?.players || 
+        const rawL = partido.rojoPlayers ||
+                    teams?.find((t: any) => t.color === 'rojo')?.players ||
                     partido.matchTeams?.find((t: any) => t.color === 'rojo')?.players || [];
-                    
-        const rawV = partido.azulPlayers || 
-                    teams?.find((t: any) => t.color === 'azul')?.players || 
+
+        const rawV = partido.azulPlayers ||
+                    teams?.find((t: any) => t.color === 'azul')?.players ||
                     partido.matchTeams?.find((t: any) => t.color === 'azul')?.players || [];
 
         // Normalize to strings (IDs) to prevent React Error #31 and split() errors
@@ -364,12 +382,12 @@ export default function CompetenciaRankedSection({
 
         // Load into state
         loadMatch(
-          matchId, 
-          eqL, 
-          eqV, 
-          { local: partido.marcadorLocal || 0, visitante: partido.marcadorVisitante || 0 }, 
-          setsData, 
-          addManyPresentes, 
+          matchId,
+          eqL,
+          eqV,
+          { local: partido.marcadorLocal || 0, visitante: partido.marcadorVisitante || 0 },
+          setsData,
+          addManyPresentes,
           externalStartTime || undefined
         );
 
@@ -436,7 +454,7 @@ export default function CompetenciaRankedSection({
             return { _id: (j?._id ?? j) as string, nombre, jcId: jc._id };
           })
           .filter((p) => p._id);
-        
+
         const seen = new Set<string>();
         const unique = mapped.filter((p) => (seen.has(p._id) ? false : (seen.add(p._id), true)));
         setCompPlayers(unique);
@@ -654,15 +672,15 @@ export default function CompetenciaRankedSection({
     }
   };
 
-  const onQuickAddPlayer = async (datos: { 
-    nombre: string; 
-    alias?: string; 
-    genero?: string; 
+  const onQuickAddPlayer = async (datos: {
+    nombre: string;
+    alias?: string;
+    genero?: string;
     fechaNacimiento?: string;
   }) => {
     try {
       const newPlayer = await crearJugador(datos);
-      
+
       const playerId = newPlayer._id;
 
       // 2. Vincular a competencia
@@ -671,13 +689,13 @@ export default function CompetenciaRankedSection({
       // 3. Actualizar listas locales
       const nombre = [newPlayer.nombre, newPlayer.apellido].filter(Boolean).join(' ') || newPlayer.alias || newPlayer.nombre;
       const mappedNew = { _id: playerId, nombre };
-      
+
       setAllPlayers(prev => [mappedNew, ...prev]);
       setCompPlayers(prev => [{ ...mappedNew, jcId: 'temp-' + Date.now() }, ...prev]); // Actualizamos la lista de competencia
 
       // 4. Marcarlo como presente automáticamente
       togglePresente(playerId, true);
-      
+
       setSuccess(`Jugador ${nombre} creado y agregado`);
     } catch (e: any) {
       setError(e.message || 'Error en Quick Add');
@@ -685,8 +703,15 @@ export default function CompetenciaRankedSection({
     }
   };
 
+  const TABS: { id: RankedTab; label: string }[] = [
+    { id: 'presentes', label: 'Presentes' },
+    { id: 'equipos', label: 'Equipos' },
+    { id: 'ranking', label: 'Ranking' },
+    { id: 'mas', label: 'Más' },
+  ];
+
   return (
-    <div className="space-y-6 pb-20 relative">
+    <div className="relative pb-16">
       {/* Loading Match Overlay */}
       {loadingMatch && (
         <div className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-900/40 backdrop-blur-[2px]">
@@ -738,354 +763,358 @@ export default function CompetenciaRankedSection({
         </div>
       )}
 
-      {/* Header Config */}
-      <Card className="p-3 sm:p-4 border-slate-100 shadow-sm">
-        <div className="flex flex-col sm:flex-row sm:items-end gap-3">
-          <div className="flex gap-4">
-            <div className="flex flex-col gap-0.5">
-              <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Modalidad</span>
-              <span className="text-sm font-black text-slate-800">{modalidad || '—'}</span>
-            </div>
-            <div className="flex flex-col gap-0.5">
-              <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Categoría</span>
-              <span className="text-sm font-black text-slate-800">{categoria || '—'}</span>
-            </div>
-          </div>
-          
-          <div className="space-y-1">
-            <label className="text-[10px] uppercase tracking-wider font-bold text-slate-500">Temporada</label>
-            <select 
-              value={selectedTemporada} 
-              onChange={(e) => setSelectedTemporada(e.target.value)}
-              className="h-9 w-full sm:w-40 rounded-md border border-slate-200 bg-white px-2 py-1 text-xs sm:text-sm outline-none focus:ring-2 focus:ring-brand-500 transition-shadow disabled:bg-slate-50 disabled:text-slate-400"
-              disabled={busy || !!matchId}
+      {/* Shell fijo: config compacta + estado del partido + marcador + pestañas */}
+      <div className="sticky top-0 z-30 bg-white border-b border-slate-200 shadow-sm">
+        <div className="flex items-center justify-between gap-2 px-3 py-2 sm:px-4">
+          <button
+            type="button"
+            onClick={() => setConfigOpen((v) => !v)}
+            className="flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-200 transition-colors"
+          >
+            🏐 {modalidad || '—'} · {categoria || '—'}
+            <span className={`text-[9px] transition-transform ${configOpen ? 'rotate-180' : ''}`}>▾</span>
+          </button>
+
+          {matchId ? (
+            <button
+              type="button"
+              onClick={() => setMatchBarOpen((v) => !v)}
+              className="flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200 px-3 py-2 text-[10px] font-black uppercase text-emerald-700"
             >
-              <option value="">Sin temporada (Global)</option>
-              {temporadas.map(t => (
-                <option key={t._id} value={t._id}>{t.nombre}</option>
-              ))}
-            </select>
-          </div>
-
-          {sedes.length > 0 && (
-            <div className="space-y-1">
-              <label className="text-[10px] uppercase tracking-wider font-bold text-slate-500">Sede</label>
-              <select
-                value={selectedSedeId}
-                onChange={(e) => handleSedeChange(e.target.value)}
-                className="h-9 w-full sm:w-40 rounded-md border border-slate-200 bg-white px-2 py-1 text-xs sm:text-sm outline-none focus:ring-2 focus:ring-brand-500 transition-shadow"
-                disabled={busy}
-              >
-                <option value="">Sin sede</option>
-                {sedes.map(s => (
-                  <option key={s.id} value={s.id}>{s.nombre}</option>
-                ))}
-              </select>
-            </div>
-          )}
-
-          {selectedSede && (selectedSede.canchas?.length ?? 0) > 0 && (
-            <div className="space-y-1">
-              <label className="text-[10px] uppercase tracking-wider font-bold text-slate-500">Cancha</label>
-              <select
-                value={selectedCancha}
-                onChange={(e) => handleCanchaChange(e.target.value)}
-                className="h-9 w-full sm:w-32 rounded-md border border-slate-200 bg-white px-2 py-1 text-xs sm:text-sm outline-none focus:ring-2 focus:ring-brand-500 transition-shadow"
-                disabled={busy}
-              >
-                <option value="">Sin cancha</option>
-                {selectedSede.canchas!.map(c => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-              </select>
-            </div>
-          )}
-
-          <div className="space-y-1">
-            <label className="text-[10px] uppercase tracking-wider font-bold text-slate-400" title="Online: sincroniza con el servidor. Offline: guarda solo localmente.">
-              Modo
-            </label>
-            <div className="flex items-center h-9 bg-slate-50 border border-slate-200 rounded-md p-1 gap-1">
-              <button
-                onClick={() => setIsBasicMode(false)}
-                className={`flex-1 px-2 py-1 rounded text-[10px] font-bold transition-all ${!isBasicMode ? 'bg-white shadow-sm text-brand-600' : 'text-slate-400'}`}
-                title="Sincroniza equipos y sets con el servidor en tiempo real"
-              >
-                Online
-              </button>
-              <button
-                onClick={() => setIsBasicMode(true)}
-                className={`flex-1 px-2 py-1 rounded text-[10px] font-bold transition-all ${isBasicMode ? 'bg-white shadow-sm text-brand-600' : 'text-slate-400'}`}
-                title="Guarda el estado solo en este dispositivo"
-              >
-                Offline
-              </button>
-            </div>
-          </div>
-
-          <div className="flex-1 flex items-end">
-            {!matchId ? (
-              <Button
-                variant="primary"
-                onClick={onCreateMatch}
-                disabled={busy || !modalidad || !categoria}
-                className="w-full sm:w-auto px-6 whitespace-nowrap"
-              >
-                Nuevo Partido Ranked
-              </Button>
-            ) : (
-              <div className="flex flex-wrap gap-2 items-center bg-brand-50 rounded-lg p-1.5 pr-3 border border-brand-100 w-full sm:w-auto">
-                 <span className="bg-brand-500 text-white text-[9px] sm:text-[10px] font-bold px-2 py-1 rounded ml-1 animate-pulse uppercase">EN CURSO</span>
-                 <span className="text-[9px] sm:text-[10px] text-brand-700 font-medium">ID: {matchId.slice(-6).toUpperCase()}</span>
-                 <div className="hidden sm:block h-4 w-[1px] bg-brand-200 mx-1" />
-                 <div className="flex gap-3 ml-auto sm:ml-0">
-                   <button onClick={abandonMatch} className="text-[9px] sm:text-[10px] text-slate-500 hover:text-slate-700 font-bold uppercase tracking-tight">Abandonar</button>
-                   <button onClick={() => showConfirm('¿Eliminar Partido?', 'Se perderá el progreso de este partido.', onCancelMatch)} className="text-[9px] sm:text-[10px] text-red-500 hover:text-red-700 font-bold uppercase tracking-tight">Eliminar</button>
-                 </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Broadcast row */}
-        <div className="mt-3 pt-3 border-t border-slate-100 flex flex-wrap items-center gap-2">
-          <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400 shrink-0">Broadcast</span>
-          <div className="flex items-center gap-1">
-            <input
-              list="rooms-datalist"
-              value={broadcastRoom}
-              onChange={e => { roomEditedByUserRef.current = true; setBroadcastRoom(e.target.value); }}
-              placeholder="nombre-sala"
-              className="h-7 w-28 rounded border border-slate-200 px-2 text-xs outline-none focus:ring-1 focus:ring-brand-500"
-            />
-            <datalist id="rooms-datalist">
-              {rooms.map(r => <option key={r.roomId} value={r.roomId} />)}
-              <option value="cancha-1" />
-              <option value="cancha-2" />
-              <option value="cancha-3" />
-            </datalist>
-            {matchId && (
-              <button
-                type="button"
-                onClick={async () => {
-                  if (!broadcastRoom.trim()) return;
-                  try {
-                    await assignMatchToRoom(broadcastRoom.trim(), matchId);
-                    setSuccess(`Partido asignado a "${broadcastRoom}"`);
-                    getRooms().then(setRooms).catch(() => {});
-                  } catch (e: any) {
-                    setError(e.message || 'Error asignando sala');
-                  }
-                }}
-                disabled={busy || !broadcastRoom.trim()}
-                className="h-7 px-2 rounded bg-brand-600 text-white text-[10px] font-bold hover:bg-brand-700 disabled:opacity-50 whitespace-nowrap"
-              >
-                Asignar
-              </button>
-            )}
-          </div>
-          <div className="flex items-center gap-1.5 ml-auto">
-            <a
-              href={`${PARTIDO_URL}/overlay?room=${encodeURIComponent(broadcastRoom || 'cancha-1')}&transparent=true`}
-              target="_blank"
-              rel="noreferrer"
-              className="flex items-center gap-1 h-7 px-2.5 rounded border border-slate-200 text-[10px] font-bold text-slate-600 hover:bg-slate-50 hover:border-slate-300 transition-colors whitespace-nowrap"
-              title="Abrir overlay OBS (fondo transparente)"
-            >
-              🖥 Overlay
-            </a>
-            <a
-              href={`${PARTIDO_URL}/broadcast?room=${encodeURIComponent(broadcastRoom || 'cancha-1')}`}
-              target="_blank"
-              rel="noreferrer"
-              className="flex items-center gap-1 h-7 px-2.5 rounded border border-slate-200 text-[10px] font-bold text-slate-600 hover:bg-slate-50 hover:border-slate-300 transition-colors whitespace-nowrap"
-              title="Abrir consola de broadcast"
-            >
-              📺 Broadcast
-            </a>
-          </div>
-        </div>
-      </Card>
-
-      {/* Main Workflow Grid */}
-      <div className="grid gap-6 grid-cols-1 xl:grid-cols-12">
-        <div className="xl:col-span-4">
-           <RankedPlayerSelector
-              players={sortedPlayers}
-              compPlayers={compPlayers}
-              filter={filter}
-              setFilter={setFilter}
-              selected={selected}
-              toggleSelect={toggleSelect}
-              presentes={presentes}
-              lastMatchPlayedIndex={lastMatchPlayedIndex}
-              matchTimelineLength={matchTimelineLength}
-              togglePresente={togglePresente}
-              playedCounts={playedCounts}
-              showAll={showAll}
-              setShowAll={setShowAll}
-              onAgregarJugador={onAgregarJugadorCompetencia}
-              onEliminarJugador={onEliminarJugador}
-              onQuickAddPlayer={onQuickAddPlayer}
-              onChooseForNext={onChooseForNextMatch}
-              onMarkAllPresent={() => markAllPresent(compPlayers.map(p => p._id))}
-              onClearPresentes={clearPresentes}
-              otrasCompetencias={otrasCompetenciasRanked}
-              onCopyPresentesDesde={handleCopyPresentesDesde}
-              onClearSelected={() => setSelected([])}
-              onResetPJHoy={() => showConfirm('Reset PJ', '¿Reiniciar contadores de partidos jugados hoy?', resetPlayedCounts)}
-              priorizarNoJugados={priorizarNoJugados}
-              setPriorizarNoJugados={setPriorizarNoJugados}
-              busy={busy}
-              onAutoAssign={() => {
-                const pool = selected.length > 0 ? selected : presentes;
-                onAutoAssign(pool, playedCounts);
-              }}
-              onAddToRojo={() => setRojo(prev => [...new Set([...prev, ...selected])])}
-              onAddToAzul={() => setAzul(prev => [...new Set([...prev, ...selected])])}
-              matchActive={!!matchId}
-           />
-        </div>
-
-        <div className="xl:col-span-8 space-y-6">
-          <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
-            <div>
-              <TeamBuilder 
-                rojo={rojo}
-                azul={azul}
-                nameById={nameById}
-                onRemoveFromRojo={(id) => setRojo(prev => prev.filter(x => x !== id))}
-                onRemoveFromAzul={(id) => setAzul(prev => prev.filter(x => x !== id))}
-                onSaveAssignment={onSaveAssignment}
-                busy={busy}
-                matchActive={!!matchId}
-              />
-            </div>
-
-            <RankedFinalize 
-              score={score}
-              sets={sets}
-              addSet={addSet}
-              removeLastSet={removeLastSet}
-              adjustScore={adjustScore}
-              onFinalize={(afkIds) => showConfirm('¿Finalizar Partido?', 'Los puntos se aplicarán permanentemente.', () => onFinalizeMatch(afkIds))}
-              busy={busy}
-              matchActive={!!matchId}
-              board={board}
-              lbScope={lbScope}
-              setLbScope={setLbScope}
-              startTime={startTime}
-              accumulatedTime={accumulatedTime}
-              isPaused={isPaused}
-              getEffectiveElapsed={getEffectiveElapsed}
-              togglePause={togglePause}
-              startNextSet={startNextSet}
-              setStartTime={(val: number | null) => setStartTime(val)}
-              currentSetStartTime={currentSetStartTime}
-              isWaitingForNextSet={isWaitingForNextSet}
-              startTimer={startTimer}
-              onRefreshLeaderboard={fetchLeaderboard}
-              competenciaId={competenciaId}
-              modalidad={modalidad as string}
-              categoria={categoria as string}
-              seasonId={selectedTemporada}
-              seasonName={temporadas.find(t => t._id === selectedTemporada)?.nombre}
-              rojoIds={rojo}
-              azulIds={azul}
-              nameById={nameById}
-              matchId={matchId}
-              matchConfig={matchConfig}
-              isBasicMode={isBasicMode}
-              onUpdateConfig={onUpdateConfig}
-              simpleMode={false}
-            />
-          </div>
-
-          {!showAdminPanel ? (
-            <div className="flex justify-center pt-4">
-              <button
-                onClick={() => setShowAdminPanel(true)}
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-white text-slate-500 hover:text-slate-700 hover:bg-slate-50 font-medium text-[10px] uppercase tracking-wider transition-all border border-slate-200"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
-                </svg>
-                Admin Avanzado
-              </button>
-            </div>
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              En curso
+              <span className={`text-[9px] transition-transform ${matchBarOpen ? 'rotate-180' : ''}`}>▾</span>
+            </button>
           ) : (
-            <div className="pt-6 border-t border-slate-200 animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-sm font-black text-slate-400 uppercase tracking-widest">Panel de Administración Avanzada</h2>
-                <button 
-                  onClick={() => setShowAdminPanel(false)}
-                  className="text-[10px] font-bold text-slate-500 hover:text-slate-800 underline uppercase"
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={onCreateMatch}
+              disabled={busy || !modalidad || !categoria}
+              className="text-xs whitespace-nowrap"
+            >
+              + Nuevo Partido
+            </Button>
+          )}
+        </div>
+
+        {configOpen && (
+          <div className="border-t border-slate-100 bg-slate-50/70 px-3 py-3 sm:px-4">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+              <div className="space-y-1">
+                <label className="text-[10px] uppercase tracking-wider font-bold text-slate-500">Temporada</label>
+                <select
+                  value={selectedTemporada}
+                  onChange={(e) => setSelectedTemporada(e.target.value)}
+                  className="h-10 w-full rounded-md border border-slate-200 bg-white px-2 text-xs outline-none focus:ring-2 focus:ring-brand-500 transition-shadow disabled:bg-slate-50 disabled:text-slate-400"
+                  disabled={busy || !!matchId}
                 >
-                  Ocultar Panel
-                </button>
+                  <option value="">Sin temporada</option>
+                  {temporadas.map(t => (
+                    <option key={t._id} value={t._id}>{t.nombre}</option>
+                  ))}
+                </select>
               </div>
-              
-              <div className="grid gap-8 grid-cols-1">
-                <RankedAdminTools 
-                  convertId={convertId}
-                  setConvertId={setConvertId}
-                  onMarkAsRanked={handleMarkAsRanked}
-                  revertId={revertId}
-                  setRevertId={setRevertId}
-                  onRevertMatch={handleRevertMatch}
-                  onResetScopeRankings={handleResetScope}
-                  onResetAllRankings={handleResetAll}
-                  onRecalculateScopeRankings={handleRecalculateScopeRankings}
-                  onRecalculateGlobalRankings={async () => {
-                    try {
-                      await recalculateGlobalRankings();
-                      setSuccess('ELO Global recalculado');
-                    } catch(e: any) { setError(e.message); }
-                  }}
-                  onSyncWins={async () => {
-                    try {
-                      const res = await syncAllWins();
-                      setSuccess(`Winrates sincronizados (${res.updatedCount} jugadores)`);
-                      fetchLeaderboard();
-                    } catch(e: any) { setError(e.message); }
-                  }}
-                  onCleanupGhosts={async () => {
-                    showConfirm(
-                      '¿Limpiar Fantasmas?',
-                      'Se eliminarán del ranking todos los jugadores con 0 partidos en este scope.',
-                      async () => {
-                        try {
-                          const res = await cleanupGhostPlayers({
-                            competition: competenciaId,
-                            season: selectedTemporada || undefined,
-                            modalidad,
-                            categoria
-                          });
-                          setSuccess(`Se eliminaron ${res.deletedCount} registros vacíos.`);
-                          fetchLeaderboard();
-                        } catch(e: any) { setError(e.message); }
-                      }
-                    );
-                  }}
-                  busy={busy || loadingMatch}
-                  modalidad={modalidad}
-                  categoria={categoria}
-                  selectedTemporada={selectedTemporada}
-                  recentMatches={recentMatches}
-                  onEditResult={handleEditResult}
-                  onDeleteMatch={handleDeleteMatch}
-                  soloAbiertos={soloAbiertos}
-                  setSoloAbiertos={setSoloAbiertos}
-                  hasMoreRecentMatches={recentMatchesTotal > recentMatches.length}
-                  onLoadMoreRecentMatches={() => setRecentMatchesLimit(prev => prev + 5)}
-                />
+
+              {sedes.length > 0 && (
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase tracking-wider font-bold text-slate-500">Sede</label>
+                  <select
+                    value={selectedSedeId}
+                    onChange={(e) => handleSedeChange(e.target.value)}
+                    className="h-10 w-full rounded-md border border-slate-200 bg-white px-2 text-xs outline-none focus:ring-2 focus:ring-brand-500 transition-shadow"
+                    disabled={busy}
+                  >
+                    <option value="">Sin sede</option>
+                    {sedes.map(s => (
+                      <option key={s.id} value={s.id}>{s.nombre}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {selectedSede && (selectedSede.canchas?.length ?? 0) > 0 && (
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase tracking-wider font-bold text-slate-500">Cancha</label>
+                  <select
+                    value={selectedCancha}
+                    onChange={(e) => handleCanchaChange(e.target.value)}
+                    className="h-10 w-full rounded-md border border-slate-200 bg-white px-2 text-xs outline-none focus:ring-2 focus:ring-brand-500 transition-shadow"
+                    disabled={busy}
+                  >
+                    <option value="">Sin cancha</option>
+                    {selectedSede.canchas!.map(c => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              <div className="space-y-1">
+                <label className="text-[10px] uppercase tracking-wider font-bold text-slate-500" title="Online: sincroniza con el servidor. Offline: guarda solo localmente.">
+                  Modo
+                </label>
+                <div className="flex items-center h-10 bg-white border border-slate-200 rounded-md p-1 gap-1">
+                  <button
+                    onClick={() => setIsBasicMode(false)}
+                    className={`flex-1 rounded text-[11px] font-bold transition-all ${!isBasicMode ? 'bg-slate-100 text-brand-600' : 'text-slate-400'}`}
+                    title="Sincroniza equipos y sets con el servidor en tiempo real"
+                  >
+                    Online
+                  </button>
+                  <button
+                    onClick={() => setIsBasicMode(true)}
+                    className={`flex-1 rounded text-[11px] font-bold transition-all ${isBasicMode ? 'bg-slate-100 text-brand-600' : 'text-slate-400'}`}
+                    title="Guarda el estado solo en este dispositivo"
+                  >
+                    Offline
+                  </button>
+                </div>
               </div>
             </div>
-          )}
+          </div>
+        )}
+
+        {matchId && matchBarOpen && (
+          <div className="border-t border-slate-100 bg-slate-50/70 px-3 py-2 sm:px-4 flex items-center justify-between">
+            <span className="font-mono text-[10px] text-slate-400 bg-slate-100 rounded px-1.5 py-0.5">ID: {matchId.slice(-6).toUpperCase()}</span>
+            <div className="flex gap-4">
+              <button onClick={abandonMatch} className="text-[11px] text-slate-500 hover:text-slate-700 font-bold uppercase tracking-tight underline underline-offset-2">Abandonar</button>
+              <button onClick={() => showConfirm('¿Eliminar Partido?', 'Se perderá el progreso de este partido.', onCancelMatch)} className="text-[11px] text-red-500 hover:text-red-700 font-bold uppercase tracking-tight underline underline-offset-2">Eliminar</button>
+            </div>
+          </div>
+        )}
+
+        <RankedScoreboard
+          score={score}
+          sets={sets}
+          addSet={addSet}
+          removeLastSet={removeLastSet}
+          adjustScore={adjustScore}
+          onFinalize={() => showConfirm('¿Finalizar Partido?', 'Los puntos se aplicarán permanentemente.', () => onFinalizeMatch(afkPlayers))}
+          busy={busy}
+          matchActive={!!matchId}
+          startTime={startTime}
+          accumulatedTime={accumulatedTime}
+          isPaused={isPaused}
+          getEffectiveElapsed={getEffectiveElapsed}
+          togglePause={togglePause}
+          startNextSet={startNextSet}
+          setStartTime={(val: number | null) => setStartTime(val)}
+          currentSetStartTime={currentSetStartTime}
+          isWaitingForNextSet={isWaitingForNextSet}
+          startTimer={startTimer}
+          modalidad={modalidad as string}
+          matchId={matchId}
+          matchConfig={matchConfig}
+          isBasicMode={isBasicMode}
+          onUpdateConfig={onUpdateConfig}
+        />
+
+        <div className="flex gap-1 px-2 py-1.5 bg-slate-100/70 border-t border-slate-200">
+          {TABS.map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex-1 rounded-md py-2 text-[11px] font-bold uppercase tracking-tight transition-colors ${
+                activeTab === tab.id ? 'bg-white text-brand-600 shadow-sm' : 'text-slate-500'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
       </div>
 
-      <ConfirmModal 
+      {/* Contenido de la pestaña activa */}
+      <div className="p-3 sm:p-4">
+        {activeTab === 'presentes' && (
+          <RankedPlayerSelector
+            players={sortedPlayers}
+            compPlayers={compPlayers}
+            filter={filter}
+            setFilter={setFilter}
+            selected={selected}
+            toggleSelect={toggleSelect}
+            presentes={presentes}
+            lastMatchPlayedIndex={lastMatchPlayedIndex}
+            matchTimelineLength={matchTimelineLength}
+            togglePresente={togglePresente}
+            playedCounts={playedCounts}
+            showAll={showAll}
+            setShowAll={setShowAll}
+            onAgregarJugador={onAgregarJugadorCompetencia}
+            onEliminarJugador={onEliminarJugador}
+            onQuickAddPlayer={onQuickAddPlayer}
+            onChooseForNext={onChooseForNextMatch}
+            onMarkAllPresent={() => showConfirm('¿Marcar a todos presentes?', 'Se va a marcar como presentes a todos los jugadores de la competencia.', () => markAllPresent(compPlayers.map(p => p._id)))}
+            onClearPresentes={() => showConfirm('¿Limpiar los presentes?', 'Vas a tener que volver a marcar la asistencia de todos desde cero.', clearPresentes)}
+            otrasCompetencias={otrasCompetenciasRanked}
+            onCopyPresentesDesde={handleCopyPresentesDesde}
+            onClearSelected={() => showConfirm('¿Deseleccionar jugadores?', `Se van a deseleccionar los ${selected.length} jugadores tildados ahora.`, () => setSelected([]))}
+            onResetPJHoy={() => showConfirm('¿Reiniciar PJ de hoy?', 'Se ponen en cero los partidos jugados de todos los jugadores en la sesión de hoy. No afecta el ranking.', resetPlayedCounts)}
+            priorizarNoJugados={priorizarNoJugados}
+            setPriorizarNoJugados={setPriorizarNoJugados}
+            busy={busy}
+            onAutoAssign={() => {
+              const pool = selected.length > 0 ? selected : presentes;
+              onAutoAssign(pool, playedCounts);
+            }}
+            onAddToRojo={() => setRojo(prev => [...new Set([...prev, ...selected])])}
+            onAddToAzul={() => setAzul(prev => [...new Set([...prev, ...selected])])}
+            matchActive={!!matchId}
+          />
+        )}
+
+        {activeTab === 'equipos' && (
+          <TeamBuilder
+            rojo={rojo}
+            azul={azul}
+            nameById={nameById}
+            onRemoveFromRojo={(id) => setRojo(prev => prev.filter(x => x !== id))}
+            onRemoveFromAzul={(id) => setAzul(prev => prev.filter(x => x !== id))}
+            onSaveAssignment={onSaveAssignment}
+            busy={busy}
+            matchActive={!!matchId}
+            afkPlayers={afkPlayers}
+            onToggleAFK={toggleAFK}
+          />
+        )}
+
+        {activeTab === 'ranking' && (
+          <RankedLeaderboard
+            board={board}
+            lbScope={lbScope}
+            setLbScope={setLbScope}
+            onRefreshLeaderboard={fetchLeaderboard}
+            busy={busy}
+            competenciaId={competenciaId}
+            modalidad={modalidad as string}
+            categoria={categoria as string}
+            seasonId={selectedTemporada}
+            seasonName={temporadas.find(t => t._id === selectedTemporada)?.nombre}
+          />
+        )}
+
+        {activeTab === 'mas' && (
+          <div className="space-y-4">
+            <div className="rounded-lg border border-slate-200 bg-white p-3 sm:p-4">
+              <h3 className="mb-3 text-[11px] font-black text-slate-500 uppercase tracking-widest">Transmisión</h3>
+              <div className="flex flex-wrap items-center gap-2">
+                <input
+                  list="rooms-datalist"
+                  value={broadcastRoom}
+                  onChange={e => { roomEditedByUserRef.current = true; setBroadcastRoom(e.target.value); }}
+                  placeholder="nombre-sala"
+                  className="h-10 flex-1 min-w-[140px] rounded border border-slate-200 px-2 text-xs outline-none focus:ring-1 focus:ring-brand-500"
+                />
+                <datalist id="rooms-datalist">
+                  {rooms.map(r => <option key={r.roomId} value={r.roomId} />)}
+                  <option value="cancha-1" />
+                  <option value="cancha-2" />
+                  <option value="cancha-3" />
+                </datalist>
+                {matchId && (
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      if (!broadcastRoom.trim()) return;
+                      try {
+                        await assignMatchToRoom(broadcastRoom.trim(), matchId);
+                        setSuccess(`Partido asignado a "${broadcastRoom}"`);
+                        getRooms().then(setRooms).catch(() => {});
+                      } catch (e: any) {
+                        setError(e.message || 'Error asignando sala');
+                      }
+                    }}
+                    disabled={busy || !broadcastRoom.trim()}
+                    className="h-10 px-3 rounded bg-brand-600 text-white text-xs font-bold hover:bg-brand-700 disabled:opacity-50 whitespace-nowrap"
+                  >
+                    Asignar
+                  </button>
+                )}
+              </div>
+              <div className="flex items-center gap-2 mt-2">
+                <a
+                  href={`${PARTIDO_URL}/overlay?room=${encodeURIComponent(broadcastRoom || 'cancha-1')}&transparent=true`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex-1 text-center flex items-center justify-center gap-1 h-10 px-2.5 rounded border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 hover:border-slate-300 transition-colors whitespace-nowrap"
+                  title="Abrir overlay OBS (fondo transparente)"
+                >
+                  🖥 Overlay
+                </a>
+                <a
+                  href={`${PARTIDO_URL}/broadcast?room=${encodeURIComponent(broadcastRoom || 'cancha-1')}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex-1 text-center flex items-center justify-center gap-1 h-10 px-2.5 rounded border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 hover:border-slate-300 transition-colors whitespace-nowrap"
+                  title="Abrir consola de broadcast"
+                >
+                  📺 Broadcast
+                </a>
+              </div>
+            </div>
+
+            <RankedAdminTools
+              convertId={convertId}
+              setConvertId={setConvertId}
+              onMarkAsRanked={handleMarkAsRanked}
+              revertId={revertId}
+              setRevertId={setRevertId}
+              onRevertMatch={handleRevertMatch}
+              onResetScopeRankings={handleResetScope}
+              onResetAllRankings={handleResetAll}
+              onRecalculateScopeRankings={handleRecalculateScopeRankings}
+              onRecalculateGlobalRankings={async () => {
+                try {
+                  await recalculateGlobalRankings();
+                  setSuccess('ELO Global recalculado');
+                } catch(e: any) { setError(e.message); }
+              }}
+              onSyncWins={async () => {
+                try {
+                  const res = await syncAllWins();
+                  setSuccess(`Winrates sincronizados (${res.updatedCount} jugadores)`);
+                  fetchLeaderboard();
+                } catch(e: any) { setError(e.message); }
+              }}
+              onCleanupGhosts={async () => {
+                showConfirm(
+                  '¿Limpiar Fantasmas?',
+                  'Se eliminarán del ranking todos los jugadores con 0 partidos en este scope.',
+                  async () => {
+                    try {
+                      const res = await cleanupGhostPlayers({
+                        competition: competenciaId,
+                        season: selectedTemporada || undefined,
+                        modalidad,
+                        categoria
+                      });
+                      setSuccess(`Se eliminaron ${res.deletedCount} registros vacíos.`);
+                      fetchLeaderboard();
+                    } catch(e: any) { setError(e.message); }
+                  }
+                );
+              }}
+              busy={busy || loadingMatch}
+              modalidad={modalidad}
+              categoria={categoria}
+              selectedTemporada={selectedTemporada}
+              recentMatches={recentMatches}
+              onEditResult={handleEditResult}
+              onDeleteMatch={handleDeleteMatch}
+              soloAbiertos={soloAbiertos}
+              setSoloAbiertos={setSoloAbiertos}
+              hasMoreRecentMatches={recentMatchesTotal > recentMatches.length}
+              onLoadMoreRecentMatches={() => setRecentMatchesLimit(prev => prev + 5)}
+            />
+          </div>
+        )}
+      </div>
+
+      <ConfirmModal
         isOpen={confirmConfig.isOpen}
         title={confirmConfig.title}
         message={confirmConfig.description}
@@ -1095,4 +1124,3 @@ export default function CompetenciaRankedSection({
     </div>
   );
 }
-

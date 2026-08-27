@@ -10,6 +10,8 @@ interface TeamBuilderProps {
   onSaveAssignment: () => void;
   busy: boolean;
   matchActive: boolean;
+  afkPlayers?: string[];
+  onToggleAFK?: (id: string) => void;
 }
 
 export const TeamBuilder: React.FC<TeamBuilderProps> = ({
@@ -20,7 +22,9 @@ export const TeamBuilder: React.FC<TeamBuilderProps> = ({
   onRemoveFromAzul,
   onSaveAssignment,
   busy,
-  matchActive
+  matchActive,
+  afkPlayers = [],
+  onToggleAFK
 }) => {
   return (
     <div className="rounded-lg border border-slate-200 bg-white p-3 sm:p-4 h-fit">
@@ -29,6 +33,11 @@ export const TeamBuilder: React.FC<TeamBuilderProps> = ({
           <span className="flex h-5 w-5 items-center justify-center rounded-full bg-brand-600 text-[9px] font-black text-white">2</span>
           Armar Equipos
         </h2>
+        {matchActive && onToggleAFK && (rojo.length > 0 || azul.length > 0) && (
+          <p className="-mt-3 text-[10px] text-slate-400 italic">
+            Tocá <strong className="not-italic text-slate-500">AFK</strong> para reportar abandono en el punto — aplica doble penalización al finalizar.
+          </p>
+        )}
         <div>
           <h3 className="mb-2 text-sm font-bold text-red-600 flex items-center justify-between">
             <span className="flex items-center gap-1.5">
@@ -42,27 +51,44 @@ export const TeamBuilder: React.FC<TeamBuilderProps> = ({
               <p className="text-[9px] text-red-300 text-center py-4 italic">Seleccioná jugadores de la lista</p>
             ) : (
               <ul className="space-y-1">
-                {rojo.map((id) => (
-                  <li key={typeof id === 'string' ? id : ((id as any)?._id || Math.random().toString())} className="group flex items-center justify-between rounded bg-white px-2 py-1 sm:py-1.5 text-xs shadow-sm ring-1 ring-red-100">
-                    <span className="font-medium truncate pr-2">
+                {rojo.map((id) => {
+                  const isAfk = afkPlayers.includes(id);
+                  return (
+                  <li key={typeof id === 'string' ? id : ((id as any)?._id || Math.random().toString())} className="group flex items-center justify-between gap-2 rounded bg-white px-2 py-1.5 text-xs shadow-sm ring-1 ring-red-100">
+                    <span className={`font-medium truncate pr-2 ${isAfk ? 'text-red-500 line-through' : ''}`}>
                        {(() => {
                          const name = nameById(id);
                          if (typeof name !== 'string') return (name as any)?.nombre || 'Jugador';
                          return name;
                        })()}
                     </span>
-                    <button
-                      type="button"
-                      className="h-6 w-6 flex items-center justify-center rounded text-red-300 hover:text-red-600 hover:bg-red-50 transition-colors shrink-0"
-                      onClick={() => onRemoveFromRojo(id)}
-                      title="Quitar"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
-                        <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
-                      </svg>
-                    </button>
+                    <div className="flex items-center gap-1 shrink-0">
+                      {matchActive && onToggleAFK && (
+                        <button
+                          type="button"
+                          className={`px-2 h-7 flex items-center justify-center rounded-full text-[9px] font-black uppercase transition-colors border ${
+                            isAfk ? 'bg-red-500 border-red-600 text-white' : 'bg-white border-slate-200 text-slate-400 hover:border-red-200 hover:text-red-500'
+                          }`}
+                          onClick={() => onToggleAFK(id)}
+                          title="Reportar AFK / abandono (doble penalización)"
+                        >
+                          AFK
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        className="h-7 w-7 flex items-center justify-center rounded text-red-300 hover:text-red-600 hover:bg-red-50 transition-colors"
+                        onClick={() => onRemoveFromRojo(id)}
+                        title="Quitar"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
+                          <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
+                        </svg>
+                      </button>
+                    </div>
                   </li>
-                ))}
+                  );
+                })}
               </ul>
             )}
           </div>
@@ -81,27 +107,44 @@ export const TeamBuilder: React.FC<TeamBuilderProps> = ({
               <p className="text-[9px] text-blue-300 text-center py-4 italic">Seleccioná jugadores de la lista</p>
             ) : (
               <ul className="space-y-1">
-                {azul.map((id) => (
-                  <li key={typeof id === 'string' ? id : ((id as any)?._id || Math.random().toString())} className="group flex items-center justify-between rounded bg-white px-2 py-1 sm:py-1.5 text-xs shadow-sm ring-1 ring-blue-100">
-                    <span className="font-medium truncate pr-2">
+                {azul.map((id) => {
+                  const isAfk = afkPlayers.includes(id);
+                  return (
+                  <li key={typeof id === 'string' ? id : ((id as any)?._id || Math.random().toString())} className="group flex items-center justify-between gap-2 rounded bg-white px-2 py-1.5 text-xs shadow-sm ring-1 ring-blue-100">
+                    <span className={`font-medium truncate pr-2 ${isAfk ? 'text-red-500 line-through' : ''}`}>
                        {(() => {
                          const name = nameById(id);
                          if (typeof name !== 'string') return (name as any)?.nombre || 'Jugador';
                          return name;
                        })()}
                     </span>
-                    <button
-                      type="button"
-                      className="h-6 w-6 flex items-center justify-center rounded text-blue-300 hover:text-blue-600 hover:bg-blue-50 transition-colors shrink-0"
-                      onClick={() => onRemoveFromAzul(id)}
-                      title="Quitar"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
-                        <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
-                      </svg>
-                    </button>
+                    <div className="flex items-center gap-1 shrink-0">
+                      {matchActive && onToggleAFK && (
+                        <button
+                          type="button"
+                          className={`px-2 h-7 flex items-center justify-center rounded-full text-[9px] font-black uppercase transition-colors border ${
+                            isAfk ? 'bg-red-500 border-red-600 text-white' : 'bg-white border-slate-200 text-slate-400 hover:border-red-200 hover:text-red-500'
+                          }`}
+                          onClick={() => onToggleAFK(id)}
+                          title="Reportar AFK / abandono (doble penalización)"
+                        >
+                          AFK
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        className="h-7 w-7 flex items-center justify-center rounded text-blue-300 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                        onClick={() => onRemoveFromAzul(id)}
+                        title="Quitar"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
+                          <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
+                        </svg>
+                      </button>
+                    </div>
                   </li>
-                ))}
+                  );
+                })}
               </ul>
             )}
           </div>
