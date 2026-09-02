@@ -141,31 +141,49 @@ export default function JugadoresTemporadaModal({ isOpen, onClose, participacion
 
   const filasOpciones: FilaSelector[] = useMemo(
     () =>
-      opciones.map((opt) => ({
-        id: opt._id,
-        nombre: opt.jugador?.nombre || opt.jugador?.alias || 'Jugador sin nombre',
-        alias: opt.jugador?.alias,
-        checked: seleccionados.has(opt._id),
-        badge:
-          opt.estado === 'baja' ? (
+      opciones.map((opt) => {
+        // `elegible === false` solo llega cuando la competencia es Masculino o Femenino
+        // y el género del jugador es el opuesto. Se muestra deshabilitado en vez de
+        // ocultarse: si desaparece de la lista, quien la carga no puede distinguir un
+        // problema de categoría de uno de contrato o de un alta que falta.
+        const noElegible = opt.elegible === false;
+
+        return {
+          id: opt._id,
+          nombre: opt.jugador?.nombre || opt.jugador?.alias || 'Jugador sin nombre',
+          alias: opt.jugador?.alias,
+          checked: seleccionados.has(opt._id),
+          disabled: noElegible,
+          badge: noElegible ? (
+            <span className="flex-shrink-0 rounded-full border border-rose-200 bg-rose-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-rose-700">
+              Fuera de categoría{opt.categoriaCompetencia ? ` · ${opt.categoriaCompetencia}` : ''}
+            </span>
+          ) : opt.estado === 'baja' ? (
             <span className="flex-shrink-0 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-700">
               Baja{opt.hasta ? ` · hasta ${new Date(opt.hasta).toLocaleDateString()}` : ''}
             </span>
           ) : undefined,
-      })),
+        };
+      }),
     [opciones, seleccionados]
   );
 
-  const toggleOpcion = (id: string) =>
+  const toggleOpcion = (id: string) => {
+    if (opciones.find((o) => o._id === id)?.elegible === false) return;
     setSeleccionados((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
       else next.add(id);
       return next;
     });
+  };
 
   const marcarTodos = (valor: boolean) =>
-    setSeleccionados(valor ? new Set(opciones.map((o) => o._id)) : new Set());
+    setSeleccionados(
+      valor
+        ? new Set(opciones.filter((o) => o.elegible !== false).map((o) => o._id))
+        : new Set()
+    );
 
   const handleSolicitar = async () => {
     if (!participacion?._id || seleccionados.size === 0) return;

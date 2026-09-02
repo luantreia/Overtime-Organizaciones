@@ -26,9 +26,25 @@ export async function updateJugadorTemporada(id: string, body: Partial<{ estado:
 
 export type JugadorEquipoOpcion = {
   _id: string;
-  jugador: { _id: string; nombre?: string; alias?: string; foto?: string; nacionalidad?: string };
+  jugador: {
+    _id: string;
+    nombre?: string;
+    alias?: string;
+    foto?: string;
+    nacionalidad?: string;
+    genero?: 'masculino' | 'femenino' | 'otro';
+  };
   estado?: 'aceptado' | 'baja';
   hasta?: string;
+  /** 'Masculino' | 'Femenino' | 'Mixto' | 'Libre' — de la competencia de la temporada. */
+  categoriaCompetencia?: string | null;
+  /**
+   * false solo cuando la competencia es Masculino o Femenino y el género del jugador
+   * es el opuesto. Los jugadores con genero 'otro' —que es el default del schema— y
+   * los que no lo tienen cargado siempre vienen elegibles.
+   */
+  elegible?: boolean;
+  motivoNoElegible?: string | null;
 };
 
 export async function opcionesJugadorTemporada(equipoId: string, participacionTemporadaId: string, q?: string): Promise<JugadorEquipoOpcion[]> {
