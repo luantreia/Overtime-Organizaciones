@@ -56,7 +56,7 @@ export const NotificacionesPanel: React.FC<NotificacionesPanelProps> = ({
     if (tipo.startsWith('participacion-temporada-') || tipo === 'contratoEquipoCompetencia') return 'Inscripciones';
     if (tipo.startsWith('jugador-temporada-')) return 'Lista de buena fe';
     if (tipo.startsWith('resultado') || tipo.startsWith('editarPartido')) return 'Partidos';
-    if (tipo.startsWith('estadisticas')) return 'Estadísticas';
+    if (tipo.startsWith('estadisticas') || tipo === 'planilla-equipo-oficializacion') return 'Estadísticas';
     return 'Otros';
   }, []);
 
@@ -89,6 +89,8 @@ export const NotificacionesPanel: React.FC<NotificacionesPanelProps> = ({
       'estadisticasJugadorPartido': 'Stats jugador partido',
       'estadisticasEquipoPartido': 'Stats equipo partido',
       'estadisticasEquipoSet': 'Stats equipo set',
+      'estadisticasJugadorSet-lote': 'Publicar stats de un set',
+      'planilla-equipo-oficializacion': 'Planilla de equipo',
     };
     return labels[tipo] ?? tipo;
   }, []);

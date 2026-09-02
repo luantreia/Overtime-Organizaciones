@@ -8,6 +8,11 @@ export type SolicitudEdicionTipo =
   | 'estadisticasJugadorSet'
   | 'estadisticas-set-propuesta'
   | 'estadisticas-partido-propuesta'
+  // Publicación agrupada por set: reemplaza a la solicitud por fila de
+  // 'estadisticasJugadorSet', que dejaba una entrada por jugador en la bandeja.
+  | 'estadisticasJugadorSet-lote'
+  // Un equipo pide que su planilla propia pase a ser dato oficial de la competencia.
+  | 'planilla-equipo-oficializacion'
   | 'estadisticasEquipoPartido'
   | 'estadisticasEquipoSet'
   //pagina jugador

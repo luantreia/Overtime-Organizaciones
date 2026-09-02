@@ -3,6 +3,7 @@
 import React from 'react';
 import type { NotificacionesRowProps } from '../types/notificacionesTypes';
 import { AprobarButton } from './AprobarButton';
+import PlanillaOficializacionDetalle from './PlanillaOficializacionDetalle';
 
 // Maps raw datosPropuestos keys to Spanish labels
 const FIELD_LABELS: Record<string, string> = {
@@ -267,11 +268,24 @@ export const NotificacionesRow: React.FC<NotificacionesRowProps> = ({
                 </div>
               </div>
 
-              {/* Datos propuestos — legibles */}
-              <div>
-                <p className="mb-2 text-[10px] font-bold uppercase tracking-wide text-slate-400">Datos propuestos</p>
-                {renderDatos(solicitud.datosPropuestos || {})}
-              </div>
+              {/* Datos propuestos — legibles.
+                  La oficialización de una planilla no lleva los números en
+                  datosPropuestos (viven en la planilla, que todavía no tocó nada
+                  oficial), así que el volcado genérico no diría nada útil: va el
+                  visor comparativo en su lugar. */}
+              {solicitud.tipo === 'planilla-equipo-oficializacion' && solicitud.entidad ? (
+                <div>
+                  <p className="mb-2 text-[10px] font-bold uppercase tracking-wide text-slate-400">
+                    Planilla del equipo vs. registro oficial
+                  </p>
+                  <PlanillaOficializacionDetalle planillaId={String(solicitud.entidad)} />
+                </div>
+              ) : (
+                <div>
+                  <p className="mb-2 text-[10px] font-bold uppercase tracking-wide text-slate-400">Datos propuestos</p>
+                  {renderDatos(solicitud.datosPropuestos || {})}
+                </div>
+              )}
 
               {/* Motivo de rechazo */}
               {solicitud.estado === 'rechazado' && solicitud.motivoRechazo && (

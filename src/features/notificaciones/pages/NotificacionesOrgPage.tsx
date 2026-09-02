@@ -16,6 +16,12 @@ export default function NotificacionesOrgPage() {
         'jugador-temporada-crear',
         'jugador-temporada-actualizar',
         'jugador-temporada-eliminar',
+        // Estadísticas cargadas por los equipos. La oficialización de una planilla
+        // trae números al registro de la competencia, así que tiene que pasar por
+        // acá; el lote agrupa por set lo que antes llegaba como una solicitud por
+        // jugador.
+        'estadisticasJugadorSet-lote',
+        'planilla-equipo-oficializacion',
       ]}
       entityType="organizacion"
       scope="aprobables"
