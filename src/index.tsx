@@ -7,6 +7,10 @@ import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from './app/providers/AuthContext';
 import { ToastProvider } from './shared/components/Toast/ToastProvider';
 import { OrganizacionProvider } from './app/providers/OrganizacionContext';
+import { iniciarObservabilidad } from './shared/observabilidad/sentry';
+
+// Antes del primer render: si el SDK arranca despues, los errores de montaje se pierden.
+iniciarObservabilidad();
 
 const container = document.getElementById('root');
 

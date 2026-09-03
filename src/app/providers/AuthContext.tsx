@@ -9,6 +9,7 @@ import {
 } from 'react';
 import { login as loginRequest, getProfile } from '../../features/auth/services/authService';
 import type { Usuario } from '../../types';
+import { identificarUsuario } from '../../shared/observabilidad/sentry';
 
 type AuthContextValue = {
   user: Usuario | null;
@@ -111,6 +112,16 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const refreshProfile = useCallback(async () => {
     await handleProfileLoad();
   }, [handleProfileLoad]);
+
+
+  /**
+   * Un efecto que sigue al estado, en vez de avisarle a Sentry en cada lugar donde `user`
+   * cambia. Una sola fuente no se puede desincronizar: si mañana aparece otra transición,
+   * esta queda cubierta.
+   */
+  useEffect(() => {
+    identificarUsuario(user ? { id: user.id, rol: (user as { rol?: string }).rol } : null);
+  }, [user]);
 
   const value = useMemo(
     () => ({
