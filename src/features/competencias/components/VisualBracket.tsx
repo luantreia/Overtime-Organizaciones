@@ -8,6 +8,23 @@ interface VisualBracketProps {
   onAutoCreate?: (stage: string) => void;
 }
 
+/** Una línea de equipo dentro de un cruce: nombre + marcador, resaltada si ganó, con corona. */
+const LineaEquipo: React.FC<{ nombre: string; marcador: number | undefined; gano: boolean }> = ({ nombre, marcador, gano }) => (
+  <div className={`flex items-center justify-between gap-2 px-2.5 py-1.5 text-[12px] ${gano ? 'bg-emerald-50 font-bold text-slate-900' : 'text-slate-600'}`}>
+    <span className="flex min-w-0 items-center gap-1.5">
+      {gano && <span className="text-[11px]" aria-hidden>👑</span>}
+      <span className="truncate">{nombre}</span>
+    </span>
+    <span
+      className={`shrink-0 rounded px-1.5 py-0.5 text-[11.5px] font-extrabold [font-variant-numeric:tabular-nums] ${
+        gano ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-500'
+      }`}
+    >
+      {marcador ?? '–'}
+    </span>
+  </div>
+);
+
 export const VisualBracket: React.FC<VisualBracketProps> = ({ matches, onMatchClick, onAutoCreate }) => {
   const rondas = derivarRondas(matches);
   const tercerPuesto = extraerTercerPuesto(matches);
@@ -57,91 +74,58 @@ export const VisualBracket: React.FC<VisualBracketProps> = ({ matches, onMatchCl
   }
 
   return (
-    <div className="w-full overflow-x-auto pb-8 custom-scrollbar pt-4">
-      <div className="flex min-w-max gap-12 px-8 items-stretch">
-        {columnas.map((columna, sIdx) => (
-          <div key={columna.etapa} className="flex flex-col gap-8 w-72">
-            <div className="relative">
-              <div className="text-center py-2.5 px-4 bg-white border-2 border-slate-900 rounded-xl shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] mb-4">
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-900">
-                  {columna.label}
-                </span>
-              </div>
-            </div>
+    <div className="w-full overflow-x-auto pb-2">
+      <div className="flex min-w-max gap-6">
+        {columnas.map((columna) => (
+          <div key={columna.etapa} className="flex min-w-[184px] flex-1 flex-col">
+            <h5 className="mb-3 rounded-md bg-slate-100 py-1.5 text-center text-[9.5px] font-extrabold uppercase tracking-wide text-slate-500">
+              {columna.label}
+            </h5>
 
-            <div className="flex flex-col justify-around flex-1 gap-12">
+            <div className="flex flex-1 flex-col justify-around gap-3">
               {columna.matches.length > 0 ? columna.matches.map((m) => {
                 const localGana = m.estado === 'finalizado' && (m.marcadorLocal ?? 0) > (m.marcadorVisitante ?? 0);
                 const visitaGana = m.estado === 'finalizado' && (m.marcadorVisitante ?? 0) > (m.marcadorLocal ?? 0);
 
                 return (
-                  <div key={m.id} className="relative group">
-                    <div
-                      onClick={() => onMatchClick?.(m.id)}
-                      className={`relative z-10 bg-white border-2 rounded-2xl p-3 transition-all cursor-pointer overflow-hidden
-                        ${m.estado === 'en_juego'
-                          ? 'border-red-500 shadow-lg shadow-red-100'
-                          : 'border-slate-200 hover:border-brand-500 hover:-translate-y-1 hover:shadow-xl hover:shadow-brand-100/20 active:scale-[0.98]'}`}
-                    >
-                      <div className="absolute top-0 right-0 flex">
-                         {m.estado === 'en_juego' && <span className="bg-red-500 text-[8px] text-white font-black px-2 py-0.5 uppercase tracking-tighter animate-pulse rounded-bl-lg">En Vivo</span>}
-                         {m.estado === 'finalizado' && <span className="bg-green-500 text-[8px] text-white font-black px-2 py-0.5 uppercase tracking-tighter rounded-bl-lg">Final</span>}
+                  <div
+                    key={m.id}
+                    onClick={() => onMatchClick?.(m.id)}
+                    className={`relative overflow-hidden rounded-lg border bg-white shadow-sm transition-all cursor-pointer
+                      ${m.estado === 'en_juego'
+                        ? 'border-red-400 shadow-red-100'
+                        : 'border-slate-200 hover:border-brand-400 hover:shadow-md'}`}
+                  >
+                    {(m.estado === 'en_juego' || m.estado === 'finalizado') && (
+                      <div className="absolute right-0 top-0 z-10">
+                        {m.estado === 'en_juego' && (
+                          <span className="rounded-bl-md bg-red-500 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-tighter text-white animate-pulse">En Vivo</span>
+                        )}
+                        {m.estado === 'finalizado' && (
+                          <span className="rounded-bl-md bg-emerald-500 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-tighter text-white">Final</span>
+                        )}
                       </div>
-
-                      <div className="flex flex-col gap-1.5 mt-1">
-                        <div className={`flex items-center justify-between gap-3 p-2 rounded-lg transition-colors ${localGana ? 'bg-green-50' : 'bg-slate-50'}`}>
-                          <div className="flex items-center gap-2 flex-1 min-w-0">
-                             {localGana && <span className="text-xs">👑</span>}
-                             <span className={`text-xs truncate transition-all ${localGana ? 'font-black text-green-900' : 'font-bold text-slate-700'}`}>
-                               {m.localNombre || (m.visitanteNombre ? 'BYE' : 'TBD')}
-                             </span>
-                          </div>
-                          <span className={`text-[11px] font-black tabular-nums ${localGana ? 'text-green-600' : 'text-slate-400'}`}>
-                            {m.marcadorLocal ?? '-'}
-                          </span>
-                        </div>
-
-                        <div className={`flex items-center justify-between gap-3 p-2 rounded-lg transition-colors ${visitaGana ? 'bg-green-50' : 'bg-slate-50'}`}>
-                          <div className="flex items-center gap-2 flex-1 min-w-0">
-                             {visitaGana && <span className="text-xs">👑</span>}
-                             <span className={`text-xs truncate transition-all ${visitaGana ? 'font-black text-green-900' : 'font-bold text-slate-700'}`}>
-                               {m.visitanteNombre || (m.localNombre ? 'BYE' : 'TBD')}
-                             </span>
-                          </div>
-                          <span className={`text-[11px] font-black tabular-nums ${visitaGana ? 'text-green-600' : 'text-slate-400'}`}>
-                            {m.marcadorVisitante ?? '-'}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="mt-2 flex justify-between items-center px-1">
-                         <span className="text-[8px] font-black text-slate-300 uppercase italic">ID: {m.id.slice(-4)}</span>
-                         <span className="text-[9px] font-bold text-slate-500">{new Date(m.fecha).toLocaleDateString()}</span>
-                      </div>
-                    </div>
-
-                    {sIdx < columnas.length - 1 && (
-                      <div className={`absolute top-1/2 -right-12 w-12 h-[2px] z-0
-                        ${(localGana || visitaGana) ? 'bg-green-400' : 'bg-slate-200'}`}
-                      />
                     )}
+                    <div className="divide-y divide-slate-100">
+                      <LineaEquipo nombre={m.localNombre || (m.visitanteNombre ? 'BYE' : 'TBD')} marcador={m.marcadorLocal} gano={localGana} />
+                      <LineaEquipo nombre={m.visitanteNombre || (m.localNombre ? 'BYE' : 'TBD')} marcador={m.marcadorVisitante} gano={visitaGana} />
+                    </div>
+                    <div className="flex items-center justify-between border-t border-slate-100 bg-slate-50/60 px-2.5 py-1">
+                      <span className="text-[8px] font-black uppercase italic text-slate-300">ID: {m.id.slice(-4)}</span>
+                      <span className="text-[9px] font-bold text-slate-400">{new Date(m.fecha).toLocaleDateString()}</span>
+                    </div>
                   </div>
                 );
               }) : onAutoCreate ? (
                 <button
                   onClick={() => onAutoCreate(columna.etapa)}
-                  className="group bg-slate-50/50 border-2 border-dashed border-slate-200 rounded-2xl p-6 flex flex-col items-center justify-center opacity-60 hover:opacity-100 hover:border-brand-400 hover:bg-white transition-all cursor-pointer"
+                  className="group flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-slate-200 bg-slate-50/50 p-5 opacity-60 transition-all hover:border-brand-400 hover:bg-white hover:opacity-100"
                 >
-                  <span className="text-[10px] font-black text-slate-400 group-hover:text-brand-600 uppercase transition-colors">+ Crear {columna.label}</span>
-                  {sIdx > 0 && (
-                    <div className="mt-2 text-[9px] font-bold text-slate-300 italic text-center">
-                      Ganadores de<br/>{columnas[sIdx - 1]?.label}
-                    </div>
-                  )}
+                  <span className="text-[10px] font-black uppercase text-slate-400 transition-colors group-hover:text-brand-600">+ Crear {columna.label}</span>
                 </button>
               ) : (
-                <div className="bg-slate-50/30 border-2 border-dashed border-slate-100 rounded-2xl p-6 flex flex-col items-center justify-center opacity-40">
-                  <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest text-center">
+                <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-slate-100 bg-slate-50/30 p-5 opacity-40">
+                  <span className="text-center text-[10px] font-black uppercase tracking-widest text-slate-300">
                      {columna.label}<br/>
                      <span className="text-[8px] italic font-bold lowercase opacity-70">Pendiente de resultados</span>
                   </span>
@@ -154,24 +138,26 @@ export const VisualBracket: React.FC<VisualBracketProps> = ({ matches, onMatchCl
         {/* El tercer puesto va aparte: es un partido en paralelo a la final, no la ronda que
             sigue después. Antes esta pantalla no lo mostraba en absoluto. */}
         {tercerPuesto && (
-          <div className="flex flex-col gap-8 w-72">
-            <div className="text-center py-2.5 px-4 bg-white border-2 border-amber-500 rounded-xl shadow-[4px_4px_0px_0px_rgba(217,119,6,1)] mb-4">
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-700">3er Puesto</span>
-            </div>
-            <div className="flex flex-col justify-around flex-1 gap-12">
+          <div className="flex min-w-[184px] flex-1 flex-col">
+            <h5 className="mb-3 rounded-md bg-amber-100 py-1.5 text-center text-[9.5px] font-extrabold uppercase tracking-wide text-amber-700">
+              3er Puesto
+            </h5>
+            <div className="flex flex-1 flex-col justify-around gap-3">
               <div
                 onClick={() => onMatchClick?.(tercerPuesto.id)}
-                className="relative z-10 bg-white border-2 border-slate-200 rounded-2xl p-3 transition-all cursor-pointer hover:border-amber-400 hover:-translate-y-1 hover:shadow-xl"
+                className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm transition-all cursor-pointer hover:border-amber-400 hover:shadow-md"
               >
-                <div className="flex flex-col gap-1.5 mt-1">
-                  <div className="flex items-center justify-between gap-3 p-2 rounded-lg bg-slate-50">
-                    <span className="text-xs font-bold text-slate-700 truncate">{tercerPuesto.localNombre || 'TBD'}</span>
-                    <span className="text-[11px] font-black tabular-nums text-slate-400">{tercerPuesto.marcadorLocal ?? '-'}</span>
-                  </div>
-                  <div className="flex items-center justify-between gap-3 p-2 rounded-lg bg-slate-50">
-                    <span className="text-xs font-bold text-slate-700 truncate">{tercerPuesto.visitanteNombre || 'TBD'}</span>
-                    <span className="text-[11px] font-black tabular-nums text-slate-400">{tercerPuesto.marcadorVisitante ?? '-'}</span>
-                  </div>
+                <div className="divide-y divide-slate-100">
+                  <LineaEquipo
+                    nombre={tercerPuesto.localNombre || 'TBD'}
+                    marcador={tercerPuesto.marcadorLocal}
+                    gano={tercerPuesto.estado === 'finalizado' && (tercerPuesto.marcadorLocal ?? 0) > (tercerPuesto.marcadorVisitante ?? 0)}
+                  />
+                  <LineaEquipo
+                    nombre={tercerPuesto.visitanteNombre || 'TBD'}
+                    marcador={tercerPuesto.marcadorVisitante}
+                    gano={tercerPuesto.estado === 'finalizado' && (tercerPuesto.marcadorVisitante ?? 0) > (tercerPuesto.marcadorLocal ?? 0)}
+                  />
                 </div>
               </div>
             </div>

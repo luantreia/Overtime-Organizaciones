@@ -85,6 +85,8 @@ function mapParticipacionesFase(participaciones: BackendParticipacionFase[]) {
     partidosEmpatados: p.partidosEmpatados || 0,
     diferenciaPuntos: p.diferenciaPuntos || 0,
     posicion: p.posicion,
+    clasificado: p.clasificado,
+    eliminado: p.eliminado,
   }));
 }
 
