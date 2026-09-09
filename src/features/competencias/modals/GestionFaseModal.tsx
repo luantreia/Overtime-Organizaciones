@@ -964,15 +964,30 @@ export default function GestionParticipantesFaseModal({
                         </button>
                       </div>
                     </div>
+                  ) : tipo === 'promocion' ? (
+                    // El generador de fixtures del backend (`generarFixturePorTipo`) no tiene un
+                    // caso para 'promocion' — sólo grupo/liga/playoff — y tira
+                    // "Tipo de fase no soportado: promocion". El botón de acá abajo lo mostraba
+                    // igual (reutilizando el texto y el flujo de playoff) y el organizador se
+                    // llevaba ese error sin entender por qué: no hay una manera automática de
+                    // armar el cruce todavía, hay que cargarlo a mano.
+                    <div className="rounded-xl border border-dashed border-slate-300 bg-white/60 p-4 text-center">
+                      <p className="text-xs font-semibold text-slate-600">
+                        Las fases de promoción no tienen generación automática de encuentros.
+                      </p>
+                      <p className="mt-1 text-[11px] text-slate-500">
+                        Cargá el cruce a mano desde <span className="font-medium">Gestión de partidos → Crear partido amistoso</span>.
+                      </p>
+                    </div>
                   ) : (
-                    <button 
-                      type="button" 
-                      className="w-full rounded-xl bg-brand-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-brand-200 hover:bg-brand-700 transition flex items-center justify-center gap-2" 
-                      onClick={async () => { 
-                        if (fase?._id) { 
+                    <button
+                      type="button"
+                      className="w-full rounded-xl bg-brand-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-brand-200 hover:bg-brand-700 transition flex items-center justify-center gap-2"
+                      onClick={async () => {
+                        if (fase?._id) {
                           try {
                             setNotice('Generando encuentros...');
-                            await onGenerarLlave?.(fase._id); 
+                            await onGenerarLlave?.(fase._id);
                             await refrescarPartidos();
                             if (onRefresh) onRefresh();
                             setNotice('✨ Fixture generado con éxito');
@@ -980,16 +995,18 @@ export default function GestionParticipantesFaseModal({
                           } catch (err: any) {
                             setNotice(`❌ ${err.message || 'Error al generar'}`);
                           }
-                        } 
+                        }
                       }}
                     >
-                      ⚡ {tipo === 'playoff' || tipo === 'promocion' ? 'Generar Llave de Playoffs' : 'Generar Fixture Automático'}
+                      ⚡ {tipo === 'playoff' ? 'Generar Llave de Playoffs' : 'Generar Fixture Automático'}
                     </button>
                   )}
                 </div>
                 <p className="mt-3 text-[10px] text-brand-600/70 font-medium italic">
-                  {partidos.length > 0 
-                    ? '* El calendario ya está configurado. Debes reiniciarlo si deseas cambiar el formato o los participantes.' 
+                  {partidos.length > 0
+                    ? '* El calendario ya está configurado. Debes reiniciarlo si deseas cambiar el formato o los participantes.'
+                    : tipo === 'promocion'
+                    ? '* El cruce de promoción se carga como partido amistoso, no se genera solo.'
                     : '* Esta acción creará los partidos base según los participantes actuales de la fase.'
                   }
                 </p>
