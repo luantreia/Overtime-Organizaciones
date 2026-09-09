@@ -35,6 +35,7 @@ export const ETAPA_LABELS: Record<string, string> = {
   cuartos: 'Cuartos de Final',
   semifinal: 'Semifinales',
   final: 'Final',
+  tercer_puesto: '3er Puesto',
   repechaje: 'Repechaje',
   otro: 'Otra etapa',
 };

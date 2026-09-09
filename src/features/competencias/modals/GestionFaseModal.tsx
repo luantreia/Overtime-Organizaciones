@@ -16,6 +16,8 @@ import ModalCapturaSetEstadisticas from '../../partidos/components/modals/ModalC
 import { getTemporadaById } from '../services/temporadasService';
 import { getCompetenciaById } from '../services/competenciasService';
 import { VisualBracket } from '../components/VisualBracket';
+import { sugerirEtapas, type SugerenciaEtapa } from '../components/sugerirEtapas';
+import { ETAPA_LABELS } from '../components/derivarRondas';
 import ConfigurarReglamentoModal from './ConfigurarReglamentoModal';
 import GestionJugadoresFaseModal from './GestionJugadoresFaseModal';
 import GestionPlanillerosModal from './GestionPlanillerosModal';
@@ -163,6 +165,65 @@ export default function GestionParticipantesFaseModal({
       next.set(id, { ...entry, ...patch });
       return next;
     });
+  };
+
+  // Edición rápida de etapa y fecha: la razón de que exista es que "Info → Editar" abre el
+  // formulario completo del partido para cambiar un solo campo. Se edita ahí mismo, en el
+  // encabezado de la tarjeta, sin abrir nada.
+  type EtapaFechaEntry = { etapa: string; fecha: string; hora: string; saving: boolean };
+  const [etapaFechaEdits, setEtapaFechaEdits] = useState<Map<string, EtapaFechaEntry>>(new Map());
+
+  const openEtapaFechaEdit = (p: Partido) => {
+    setEtapaFechaEdits((prev) => {
+      const next = new Map(prev);
+      // Si hay una sugerencia y el organizador todavía no la vio, arranca precargada con esa
+      // sugerencia en vez del valor actual — así corregir es aceptar, no volver a tipear.
+      const sugerencia = sugerenciasEtapa.get(p.id);
+      const etapaInicial = sugerencia?.difiere ? sugerencia.etapaSugerida : (p.etapa || 'otro');
+      next.set(p.id, { etapa: etapaInicial, fecha: p.fecha?.slice(0, 10) || '', hora: p.hora || '', saving: false });
+      return next;
+    });
+  };
+
+  const closeEtapaFechaEdit = (id: string) => {
+    setEtapaFechaEdits((prev) => {
+      const next = new Map(prev);
+      next.delete(id);
+      return next;
+    });
+  };
+
+  const patchEtapaFechaEdit = (id: string, patch: Partial<EtapaFechaEntry>) => {
+    setEtapaFechaEdits((prev) => {
+      const entry = prev.get(id);
+      if (!entry) return prev;
+      const next = new Map(prev);
+      next.set(id, { ...entry, ...patch });
+      return next;
+    });
+  };
+
+  const handleSaveEtapaFecha = async (partidoId: string) => {
+    const entry = etapaFechaEdits.get(partidoId);
+    if (!entry) return;
+    patchEtapaFechaEdit(partidoId, { saving: true });
+    try {
+      await actualizarPartido(partidoId, {
+        etapa: entry.etapa,
+        fecha: entry.fecha,
+        hora: entry.hora || undefined,
+      });
+      closeEtapaFechaEdit(partidoId);
+      setNotice('✅ Etapa y fecha actualizadas');
+      setTimeout(() => setNotice(''), 2500);
+      await refrescarPartidos();
+      onRefresh?.();
+    } catch (error) {
+      console.error('Error actualizando etapa/fecha:', error);
+      patchEtapaFechaEdit(partidoId, { saving: false });
+      setNotice('❌ Error al guardar');
+      setTimeout(() => setNotice(''), 3000);
+    }
   };
 
   // Paginación de partidos
@@ -320,6 +381,34 @@ export default function GestionParticipantesFaseModal({
 
   const tipo = (fase as any)?.tipo as string | undefined;
 
+  /**
+   * Sugerencias de etapa: reconstruye la ronda real de cada partido a partir de quién le ganó a
+   * quién y cuándo, y la compara contra lo cargado. Sólo tiene sentido en fases de eliminación
+   * (playoff/promoción) — en liga o grupo no hay "rondas" que reconstruir. `ModalCrearPartidoAmistoso`,
+   * que es como se cargan estos cruces a mano, no tiene ningún selector de etapa, así que en la
+   * práctica casi todo llega como `otro` y esto es lo que ayuda a corregirlo sin adivinar partido
+   * por partido.
+   */
+  const sugerenciasEtapa = useMemo<Map<string, SugerenciaEtapa>>(() => {
+    if (tipo !== 'playoff' && tipo !== 'promocion') return new Map();
+    const finalizados = partidos.filter(
+      (p) => p.estado === 'finalizado' && p.equipoLocal?.id && p.equipoVisitante?.id && p.fecha,
+    );
+    if (finalizados.length < 2) return new Map();
+    const sugerencias = sugerirEtapas(
+      finalizados.map((p) => ({
+        id: p.id,
+        fecha: p.fecha,
+        equipoLocalId: p.equipoLocal!.id,
+        equipoVisitanteId: p.equipoVisitante!.id,
+        marcadorLocal: p.marcadorLocal ?? 0,
+        marcadorVisitante: p.marcadorVisitante ?? 0,
+        etapaActual: p.etapa ?? null,
+      })),
+    );
+    return new Map(sugerencias.map((s) => [s.partidoId, s]));
+  }, [partidos, tipo]);
+
   const partidosOrdenados = useMemo(() => {
     return [...partidos].sort((a, b) => {
       // Prioridad 1: Posición en el bracket (importante para playoffs)
@@ -417,20 +506,102 @@ export default function GestionParticipantesFaseModal({
     const entry = quickEdits.get(p.id);
     const isEditing = !!entry;
     const esProgramado = p.estado === 'programado';
+    const entryEF = etapaFechaEdits.get(p.id);
+    const isEditingEF = !!entryEF;
+    const sugerencia = sugerenciasEtapa.get(p.id);
+    const puedeEditarEtapaFecha = esAdmin && (tipo === 'playoff' || tipo === 'promocion' || !!p.etapa);
     return (
     <li key={p.id} className={`group relative flex flex-col rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:shadow-md ${borderByEstado(p.estado)}`}>
       {/* Header */}
       <div className="mb-3 flex items-center justify-between">
-        <div className="flex flex-col">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-            {p.etapa ? p.etapa.replace('_', ' ') : (p.grupo ? `Grupo ${p.grupo}` : (p.division ? `División ${p.division}` : 'Partido'))}
-          </span>
-          <span className="text-xs font-medium text-slate-500">
-            {new Date(p.fecha).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' })} {p.hora ? `· ${p.hora}` : ''}
-          </span>
-        </div>
+        {isEditingEF && entryEF ? (
+          <div className="flex flex-wrap items-end gap-2">
+            <label className="flex flex-col gap-0.5">
+              <span className="text-[9px] font-bold uppercase tracking-wide text-slate-400">Etapa</span>
+              <select
+                className="rounded-lg border border-brand-300 bg-white px-2 py-1 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+                value={entryEF.etapa}
+                onChange={(e) => patchEtapaFechaEdit(p.id, { etapa: e.target.value })}
+                autoFocus
+              >
+                {['treintaidosavos', 'dieciseisavos', 'octavos', 'cuartos', 'semifinal', 'final', 'tercer_puesto', 'repechaje', 'otro'].map((op) => (
+                  <option key={op} value={op}>{ETAPA_LABELS[op] || op}</option>
+                ))}
+              </select>
+            </label>
+            <label className="flex flex-col gap-0.5">
+              <span className="text-[9px] font-bold uppercase tracking-wide text-slate-400">Fecha</span>
+              <input
+                type="date"
+                className="rounded-lg border border-brand-300 bg-white px-2 py-1 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+                value={entryEF.fecha}
+                onChange={(e) => patchEtapaFechaEdit(p.id, { fecha: e.target.value })}
+              />
+            </label>
+            <label className="flex flex-col gap-0.5">
+              <span className="text-[9px] font-bold uppercase tracking-wide text-slate-400">Hora</span>
+              <input
+                type="time"
+                className="rounded-lg border border-brand-300 bg-white px-2 py-1 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+                value={entryEF.hora}
+                onChange={(e) => patchEtapaFechaEdit(p.id, { hora: e.target.value })}
+              />
+            </label>
+            <button
+              type="button"
+              className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-emerald-700 transition shadow-sm disabled:opacity-60"
+              disabled={entryEF.saving}
+              onClick={() => void handleSaveEtapaFecha(p.id)}
+            >
+              {entryEF.saving ? 'Guardando…' : 'Guardar'}
+            </button>
+            <button
+              type="button"
+              className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-200 transition"
+              disabled={entryEF.saving}
+              onClick={() => closeEtapaFechaEdit(p.id)}
+            >
+              Cancelar
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            disabled={!puedeEditarEtapaFecha}
+            onClick={() => puedeEditarEtapaFecha && openEtapaFechaEdit(p)}
+            className={`flex flex-col items-start rounded-lg px-1 -mx-1 text-left transition-colors ${puedeEditarEtapaFecha ? 'hover:bg-slate-50 cursor-pointer' : 'cursor-default'}`}
+            title={puedeEditarEtapaFecha ? 'Editar etapa y fecha' : undefined}
+          >
+            <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              {p.etapa ? p.etapa.replace('_', ' ') : (p.grupo ? `Grupo ${p.grupo}` : (p.division ? `División ${p.division}` : 'Partido'))}
+              {puedeEditarEtapaFecha && (
+                <svg viewBox="0 0 16 16" fill="currentColor" className="h-2.5 w-2.5 text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <path d="M11.013 1.427a1.75 1.75 0 012.474 2.474l-8.5 8.5a1.75 1.75 0 01-.734.44l-3.001.9a.25.25 0 01-.31-.31l.9-3a1.75 1.75 0 01.439-.733l8.5-8.5z" />
+                </svg>
+              )}
+            </span>
+            <span className="text-xs font-medium text-slate-500">
+              {new Date(p.fecha).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' })} {p.hora ? `· ${p.hora}` : ''}
+            </span>
+            {sugerencia?.difiere && (
+              <span
+                className={`mt-0.5 rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide ${
+                  sugerencia.confiable ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-500'
+                }`}
+                title={
+                  sugerencia.confiable
+                    ? 'Reconstruido a partir de quién le ganó a quién en esta fase.'
+                    : 'Reconstruido con menos certeza: ningún rival de este partido vuelve a jugar más adelante, así que no hay señal decisiva.'
+                }
+              >
+                Sugerido: {ETAPA_LABELS[sugerencia.etapaSugerida] || sugerencia.etapaSugerida}
+                {!sugerencia.confiable && ' ?'}
+              </span>
+            )}
+          </button>
+        )}
         <div className="flex items-center gap-2">
-          {esAdmin && !isEditing && (
+          {esAdmin && !isEditing && !isEditingEF && (
             <button
               onClick={() => setEliminarConfirmId(p.id)}
               className="opacity-0 group-hover:opacity-100 transition-opacity rounded p-1 text-slate-300 hover:text-rose-500"
