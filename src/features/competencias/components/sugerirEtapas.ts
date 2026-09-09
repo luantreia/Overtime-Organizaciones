@@ -85,17 +85,17 @@ function calcularOlas(partidos: PartidoParaSugerencia[]): PartidoInterno[] {
   const rondaGanadaPrincipal = new Map<string, number>();
   const eliminadoPrincipal = new Set<string>();
   const resultado: PartidoInterno[] = [];
-  // Equipos cuya ronda actual viene de una resolución incierta (el desempate por reaparición
-  // futura no alcanzó). Si el PRÓXIMO partido de ese equipo se apoya en ese número para ubicarse,
-  // hereda la incertidumbre — la sugerencia para ese partido tampoco es un hecho, aunque su
-  // propio desempate haya sido, en aislamiento, inequívoco.
-  const rondaIncierta = new Set<string>();
+  // Partidos cuya ETIQUETA quedó indecisa por el desempate de reaparición futura (dos partidos
+  // del mismo equipo, misma fecha, ningún rival vuelve a jugar). Se guardan para marcar como
+  // "no confiable" también al otro partido del par una vez que se resuelve — la incertidumbre
+  // es sobre CUÁL DE LOS DOS lleva cada nombre, no sobre cuántas veces ganó el equipo en total,
+  // así que no se propaga a los partidos siguientes: el conteo de rondas de ese equipo hacia
+  // adelante es correcto de cualquier manera en que se hayan repartido las dos etiquetas.
+  const parIncierto = new Set<string>();
 
-  const resolverUno = (p: PartidoParaSugerencia, confiableEnAislamiento: boolean) => {
+  const resolverUno = (p: PartidoParaSugerencia, confiable: boolean) => {
     const rA = rondaGanadaPrincipal.get(p.equipoLocalId) ?? 0;
     const rB = rondaGanadaPrincipal.get(p.equipoVisitanteId) ?? 0;
-    const heredaIncertidumbre = rondaIncierta.has(p.equipoLocalId) || rondaIncierta.has(p.equipoVisitanteId);
-    const confiable = confiableEnAislamiento && !heredaIncertidumbre;
     const esConsolacion = eliminadoPrincipal.has(p.equipoLocalId) || eliminadoPrincipal.has(p.equipoVisitanteId);
     const ola = Math.max(rA, rB) + 1;
     const gano = p.marcadorLocal > p.marcadorVisitante;
@@ -103,10 +103,6 @@ function calcularOlas(partidos: PartidoParaSugerencia[]): PartidoInterno[] {
     const perdedor = gano ? p.equipoVisitanteId : p.equipoLocalId;
     rondaGanadaPrincipal.set(ganador, Math.max(rondaGanadaPrincipal.get(ganador) ?? 0, ola));
     rondaGanadaPrincipal.set(perdedor, Math.max(rondaGanadaPrincipal.get(perdedor) ?? 0, ola));
-    if (!confiable) {
-      rondaIncierta.add(ganador);
-      rondaIncierta.add(perdedor);
-    }
     if (!esConsolacion) eliminadoPrincipal.add(perdedor);
     resultado.push({ ...p, ola, esConsolacion, confiable });
   };
@@ -128,7 +124,7 @@ function calcularOlas(partidos: PartidoParaSugerencia[]): PartidoInterno[] {
         (depende ? siguientes : resolublesAhora).push(p);
       }
       if (resolublesAhora.length > 0) {
-        for (const p of resolublesAhora) resolverUno(p, true);
+        for (const p of resolublesAhora) resolverUno(p, !parIncierto.has(p.id));
         pendientes = siguientes;
         continue;
       }
@@ -146,11 +142,22 @@ function calcularOlas(partidos: PartidoParaSugerencia[]): PartidoInterno[] {
       if (!elegido) {
         // Ninguna de las dos señales alcanza: ninguno de los dos equipos vuelve a jugar. No
         // hay forma de saber cuál partido fue antes con los datos que hay — se resuelve en el
-        // orden en que llegaron y se marca como no confiable.
+        // orden en que llegaron y se marca como no confiable. El OTRO partido pendiente que
+        // comparte equipo con éste queda igual de indeciso: si no sabíamos cuál de los dos era
+        // el de antes, tampoco sabemos cuál es el de después.
         elegido = pendientes[0];
         confiable = false;
+        for (const otro of pendientes) {
+          if (otro.id === elegido.id) continue;
+          const compartenEquipo =
+            otro.equipoLocalId === elegido.equipoLocalId ||
+            otro.equipoVisitanteId === elegido.equipoLocalId ||
+            otro.equipoLocalId === elegido.equipoVisitanteId ||
+            otro.equipoVisitanteId === elegido.equipoVisitanteId;
+          if (compartenEquipo) parIncierto.add(otro.id);
+        }
       }
-      resolverUno(elegido, confiable);
+      resolverUno(elegido, confiable && !parIncierto.has(elegido.id));
       pendientes = pendientes.filter((p) => p.id !== elegido!.id);
     }
   }
