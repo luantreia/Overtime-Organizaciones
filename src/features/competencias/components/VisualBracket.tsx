@@ -14,6 +14,10 @@ interface VisualBracketProps {
   matches: Partido[];
   onMatchClick?: (matchId: string) => void;
   onAutoCreate?: (stage: string) => void;
+  /** Intercambia la posición de dos partidos de la MISMA ronda (arrastrar uno sobre otro). Sin
+   * esto el orden de una ronda creada a mano queda fijo por fecha/hora, que no necesariamente
+   * refleja de qué mitad del cuadro salió cada equipo. */
+  onReorder?: (partidoIdArrastrado: string, partidoIdDestino: string) => void;
 }
 
 /** Una línea de equipo dentro de un cruce: nombre + marcador, resaltada si ganó, con corona. */
@@ -33,7 +37,8 @@ const LineaEquipo: React.FC<{ nombre: string; marcador: number | undefined; gano
   </div>
 );
 
-export const VisualBracket: React.FC<VisualBracketProps> = ({ matches, onMatchClick, onAutoCreate }) => {
+export const VisualBracket: React.FC<VisualBracketProps> = ({ matches, onMatchClick, onAutoCreate, onReorder }) => {
+  const [arrastrando, setArrastrando] = React.useState<string | null>(null);
   const matchesConIds = useMemo(() => conIds(matches), [matches]);
   const rondas = useMemo(() => derivarRondas(matchesConIds), [matchesConIds]);
   const tercerPuesto = extraerTercerPuesto(matchesConIds);
@@ -123,10 +128,29 @@ export const VisualBracket: React.FC<VisualBracketProps> = ({ matches, onMatchCl
                     key={m.id}
                     ref={registrarTarjeta(m.id)}
                     onClick={() => onMatchClick?.(m.id)}
+                    draggable={!!onReorder}
+                    onDragStart={(e) => {
+                      if (!onReorder) return;
+                      e.dataTransfer.effectAllowed = 'move';
+                      setArrastrando(m.id);
+                    }}
+                    onDragEnd={() => setArrastrando(null)}
+                    onDragOver={(e) => {
+                      if (!onReorder || !arrastrando || arrastrando === m.id) return;
+                      e.preventDefault();
+                    }}
+                    onDrop={(e) => {
+                      if (!onReorder || !arrastrando) return;
+                      e.preventDefault();
+                      onReorder(arrastrando, m.id);
+                      setArrastrando(null);
+                    }}
                     className={`relative z-10 overflow-hidden rounded-lg border bg-white shadow-sm transition-all cursor-pointer
+                      ${arrastrando === m.id ? 'opacity-40' : ''}
                       ${m.estado === 'en_juego'
                         ? 'border-red-400 shadow-red-100'
-                        : 'border-slate-200 hover:border-brand-400 hover:shadow-md'}`}
+                        : 'border-slate-200 hover:border-brand-400 hover:shadow-md'}
+                      ${onReorder ? 'cursor-grab active:cursor-grabbing' : ''}`}
                   >
                     {(m.estado === 'en_juego' || m.estado === 'finalizado') && (
                       <div className="absolute right-0 top-0 z-10">

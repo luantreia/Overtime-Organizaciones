@@ -18,6 +18,10 @@ export const crearPartidoCompetencia = async (payload: {
   modalidad?: string;
   categoria?: string;
   etapa?: string;
+  /** Posición dentro de la ronda (0, 1, 2...) para que el cuadro se ordene por estructura real
+   * del bracket y no por fecha de carga. Sin esto, cada ronda creada a mano cae en el fallback
+   * de fecha/hora de `derivarRondas.ordenarDentroDeRonda`. */
+  posicionBracket?: number;
 }): Promise<Partido> => {
   const partido = await authFetch<BackendPartido>('/partidos', {
     method: 'POST',
@@ -31,6 +35,7 @@ export const crearPartidoCompetencia = async (payload: {
       modalidad: payload.modalidad,
       categoria: payload.categoria,
       etapa: payload.etapa,
+      posicionBracket: payload.posicionBracket,
       estado: 'programado',
     },
   });
@@ -51,6 +56,7 @@ type PartidoUpdatePayload = {
   categoria?: string;
   competencia?: string | BackendCompetencia;
   etapa?: string;
+  posicionBracket?: number;
 };
 
 type PartidoCreatePayload = {

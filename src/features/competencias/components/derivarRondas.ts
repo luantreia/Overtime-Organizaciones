@@ -23,7 +23,7 @@
  * partido en paralelo a ella, y así lo tiene que tratar quien consuma este resultado.
  */
 
-const ORDEN_SECUENCIAL = [
+export const ORDEN_SECUENCIAL = [
   'treintaidosavos',
   'dieciseisavos',
   'octavos',

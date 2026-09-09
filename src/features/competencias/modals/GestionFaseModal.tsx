@@ -17,7 +17,7 @@ import { getTemporadaById } from '../services/temporadasService';
 import { getCompetenciaById } from '../services/competenciasService';
 import { VisualBracket } from '../components/VisualBracket';
 import { sugerirEtapas, type SugerenciaEtapa } from '../components/sugerirEtapas';
-import { ETAPA_LABELS } from '../components/derivarRondas';
+import { ETAPA_LABELS, ORDEN_SECUENCIAL } from '../components/derivarRondas';
 import ConfigurarReglamentoModal from './ConfigurarReglamentoModal';
 import GestionJugadoresFaseModal from './GestionJugadoresFaseModal';
 import GestionPlanillerosModal from './GestionPlanillerosModal';
@@ -249,6 +249,19 @@ export default function GestionParticipantesFaseModal({
     }
   };
 
+  /**
+   * Cuántos partidos ya existen en una etapa — usado como el próximo `posicionBracket` al crear
+   * un cruce a mano (0-indexed: el primero que se crea en esa ronda queda en la posición 0).
+   *
+   * Por qué así y no "seed real": si el organizador no tiene claro el reglamento de seeding de
+   * la liga y arma los cruces a criterio, no hay ranking del que derivar una posición "correcta".
+   * Lo único que hace falta es que la ronda quede en el orden en que se fue armando — eso alcanza
+   * para que `derivarRondas.ordenarDentroDeRonda` deje de caer al fallback de fecha/hora (que es
+   * frágil: dos partidos el mismo día se desempatan por id, no por la rama del cuadro).
+   */
+  const contarPartidosEnEtapa = (etapa: string) =>
+    partidos.filter((p) => (p.etapa || '').toLowerCase() === etapa.toLowerCase()).length;
+
   const abrirCapturaSet = async (partidoId: string, numeroSet?: number) => {
     setNumeroSetEnCaptura(numeroSet ?? null);
     setGestionSetsAbierto(false);
@@ -423,6 +436,45 @@ export default function GestionParticipantesFaseModal({
     });
   }, [partidos]);
 
+  /**
+   * Reordena dos partidos de la misma ronda intercambiando su `posicionBracket` — lo que dispara
+   * el drag & drop del cuadro visual. Si la ronda todavía no tiene posiciones asignadas (partidos
+   * viejos, o creados antes de este cambio, todos con el default 0 del schema), se normaliza toda
+   * la ronda primero con el orden que ya se está viendo (por fecha/hora) para no perder ese orden,
+   * y recién ahí se aplica el swap de los dos que se arrastraron.
+   */
+  const handleReordenarBracket = async (idArrastrado: string, idDestino: string) => {
+    if (idArrastrado === idDestino) return;
+    const a = partidos.find((p) => p.id === idArrastrado);
+    const b = partidos.find((p) => p.id === idDestino);
+    if (!a || !b) return;
+    const etapa = (a.etapa || '').toLowerCase();
+    if ((b.etapa || '').toLowerCase() !== etapa) return; // sólo tiene sentido dentro de la misma ronda
+
+    const columna = partidosOrdenados.filter((p) => (p.etapa || '').toLowerCase() === etapa);
+    const todasAsignadas = new Set(columna.map((p) => p.posicionBracket)).size === columna.length;
+
+    const actualizaciones = new Map<string, number>();
+    if (!todasAsignadas) {
+      columna.forEach((p, idx) => actualizaciones.set(p.id, idx));
+    }
+    const posA = actualizaciones.get(idArrastrado) ?? a.posicionBracket ?? 0;
+    const posB = actualizaciones.get(idDestino) ?? b.posicionBracket ?? 0;
+    actualizaciones.set(idArrastrado, posB);
+    actualizaciones.set(idDestino, posA);
+
+    try {
+      await Promise.all(
+        [...actualizaciones.entries()].map(([id, posicionBracket]) => actualizarPartido(id, { posicionBracket })),
+      );
+      await refrescarPartidos();
+    } catch (e) {
+      console.error('Error reordenando el cuadro:', e);
+      setNotice('❌ Error al reordenar el cuadro');
+      setTimeout(() => setNotice(''), 3000);
+    }
+  };
+
   const statsCompletado = useMemo(() => {
     if (partidos.length === 0) return 0;
     const finalizados = partidos.filter(p => p.estado === 'finalizado').length;
@@ -455,7 +507,10 @@ export default function GestionParticipantesFaseModal({
     return partidosFiltrados.slice(inicio, fin);
   }, [partidosFiltrados, paginaActual, partidosPorPagina]);
 
-  const ordenEtapas = ['octavos', 'cuartos', 'semifinal', 'final', 'tercer_puesto', 'repechaje', 'otro'];
+  // Misma secuencia real que usa `derivarRondas` para el cuadro visual — antes esta lista vivía
+  // duplicada acá con sólo 4 etapas, y un cuadro de 16+ equipos (treintaidosavos/dieciseisavos)
+  // se ordenaba mal en esta vista de lista.
+  const ordenEtapas = [...ORDEN_SECUENCIAL, 'tercer_puesto', 'repechaje', 'otro'];
   const porEtapa = useMemo(() => {
     const map: Record<string, Partido[]> = {};
     for (const p of partidosPaginados) {
@@ -957,19 +1012,21 @@ export default function GestionParticipantesFaseModal({
                       <span className="p-1 px-2 bg-slate-900 text-white rounded text-[9px]">DIAGRAMA</span>
                       Cuadro de Competencia
                     </h5>
-                    <VisualBracket 
-                      matches={partidos} 
+                    <VisualBracket
+                      matches={partidos}
                       onMatchClick={(id) => { setPartidoInfoId(id); setInfoModalAbierto(true); }}
+                      onReorder={esAdmin ? handleReordenarBracket : undefined}
                       onAutoCreate={esAdmin ? (stage) => {
                         setModoVisual(true);
                         setNuevaEtapa(stage);
                         setActiveTab('configuracion');
                         
-                        // Generar sugerencias basadas en la rama de la llave
-                        const ST_ORDER = ['octavos', 'cuartos', 'semifinal', 'final'];
-                        const idx = ST_ORDER.indexOf(stage);
+                        // Generar sugerencias basadas en la rama de la llave. Reusa la misma
+                        // secuencia real que `derivarRondas` (antes era una lista propia de sólo
+                        // 4 etapas que no reconocía treintaidosavos/dieciseisavos).
+                        const idx = (ORDEN_SECUENCIAL as readonly string[]).indexOf(stage);
                         if (idx > 0) {
-                          const prevStage = ST_ORDER[idx - 1];
+                          const prevStage = ORDEN_SECUENCIAL[idx - 1];
                           const prevMatches = [...partidos]
                             .filter(p => p.etapa?.toLowerCase() === prevStage)
                             // Ordenamos por posición en el bracket para mantener la coherencia de las ramas
@@ -1488,7 +1545,7 @@ export default function GestionParticipantesFaseModal({
                           onClick={async () => {
                             if (!fase?._id) return;
                             setNotice('Creando partido...');
-                            await crearPartidoCompetencia({ equipoLocalId: nuevoLocal, equipoVisitanteId: nuevoVisitante, fecha: nuevaFecha, hora: nuevaHora || undefined, faseId: fase._id, etapa: nuevaEtapa || undefined, modalidad: modalidadComp, categoria: categoriaComp });
+                            await crearPartidoCompetencia({ equipoLocalId: nuevoLocal, equipoVisitanteId: nuevoVisitante, fecha: nuevaFecha, hora: nuevaHora || undefined, faseId: fase._id, etapa: nuevaEtapa || undefined, modalidad: modalidadComp, categoria: categoriaComp, posicionBracket: nuevaEtapa ? contarPartidosEnEtapa(nuevaEtapa) : undefined });
                             setNuevoLocal(''); setNuevoVisitante('');
                             const lista = await getPartidosPorFase(fase._id);
                             setPartidos(lista);
@@ -1537,16 +1594,29 @@ export default function GestionParticipantesFaseModal({
                             if (!fase?._id) return;
                             setNotice(`Creando ${partidosEnCola.length} partidos en simultáneo...`);
                             try {
+                              // Contador propio del lote: si dos cruces encolados son de la misma
+                              // etapa, `contarPartidosEnEtapa` (basado en `partidos`) les daría a
+                              // los dos la misma posición porque el estado no se actualiza hasta
+                              // que termina el loop entero.
+                              const conteoPorEtapa = new Map<string, number>();
+                              for (const p of partidos) {
+                                const key = (p.etapa || '').toLowerCase();
+                                conteoPorEtapa.set(key, (conteoPorEtapa.get(key) || 0) + 1);
+                              }
                               for (const p of partidosEnCola) {
-                                await crearPartidoCompetencia({ 
-                                  equipoLocalId: p.localId, 
-                                  equipoVisitanteId: p.visitanteId, 
-                                  fecha: p.fecha, 
-                                  hora: p.hora || undefined, 
-                                  faseId: fase._id, 
-                                  etapa: p.etapa || undefined, 
-                                  modalidad: modalidadComp, 
-                                  categoria: categoriaComp 
+                                const key = (p.etapa || '').toLowerCase();
+                                const posicionBracket = p.etapa ? (conteoPorEtapa.get(key) || 0) : undefined;
+                                if (p.etapa) conteoPorEtapa.set(key, (conteoPorEtapa.get(key) || 0) + 1);
+                                await crearPartidoCompetencia({
+                                  equipoLocalId: p.localId,
+                                  equipoVisitanteId: p.visitanteId,
+                                  fecha: p.fecha,
+                                  hora: p.hora || undefined,
+                                  faseId: fase._id,
+                                  etapa: p.etapa || undefined,
+                                  modalidad: modalidadComp,
+                                  categoria: categoriaComp,
+                                  posicionBracket,
                                 });
                               }
                               setPartidosEnCola([]);
@@ -1615,7 +1685,7 @@ export default function GestionParticipantesFaseModal({
                   disabled={!nuevoLocal || !nuevoVisitante || !nuevaFecha}
                   onClick={async ()=>{
                     if (!fase?._id) return;
-                    await crearPartidoCompetencia({ equipoLocalId: nuevoLocal, equipoVisitanteId: nuevoVisitante, fecha: nuevaFecha, hora: nuevaHora || undefined, faseId: fase._id, etapa: nuevaEtapa || undefined, modalidad: modalidadComp, categoria: categoriaComp });
+                    await crearPartidoCompetencia({ equipoLocalId: nuevoLocal, equipoVisitanteId: nuevoVisitante, fecha: nuevaFecha, hora: nuevaHora || undefined, faseId: fase._id, etapa: nuevaEtapa || undefined, modalidad: modalidadComp, categoria: categoriaComp, posicionBracket: nuevaEtapa ? contarPartidosEnEtapa(nuevaEtapa) : undefined });
                     setNuevoLocal(''); setNuevoVisitante(''); setNuevaFecha(''); setNuevaHora(''); setNuevaEtapa('');
                     const lista = await getPartidosPorFase(fase._id);
                     setPartidos(lista);
