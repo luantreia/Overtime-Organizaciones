@@ -68,6 +68,10 @@ export interface PartidoDeLlave {
   posicionBracket?: number;
   fecha?: string;
   hora?: string;
+  /** Opcionales: sin esto `construirEnlaces` no tiene cómo saber qué equipo jugó cada lado, y
+   * simplemente no traza líneas — no rompe nada, sólo se queda sin conectar los partidos. */
+  equipoLocalId?: string;
+  equipoVisitanteId?: string;
 }
 
 export interface RondaLlave<P extends PartidoDeLlave> {
@@ -140,4 +144,42 @@ export function etapasSecuencialesAMostrar(etapasConDatos: ReadonlySet<string>):
   const primeraConDatos = ORDEN_SECUENCIAL.findIndex((e) => etapasConDatos.has(e));
   if (primeraConDatos === -1) return ['final'];
   return ORDEN_SECUENCIAL.slice(primeraConDatos);
+}
+
+export interface EnlacePartido {
+  /** id del partido de la ronda anterior de donde salió el equipo local, si se pudo rastrear. */
+  padreLocalId?: string;
+  /** ídem para el equipo visitante. */
+  padreVisitanteId?: string;
+}
+
+/**
+ * Para cada partido, de qué partido de la ronda INMEDIATA ANTERIOR salió cada uno de sus dos
+ * equipos — la conexión real que hace que una llave se vea como árbol y no como columnas
+ * sueltas. Se calcula rastreando el mismo equipo (por id) hacia atrás una ronda; si un equipo
+ * no jugó en la ronda anterior (entró con bye, o el dato de esa ronda no está cargado), ese lado
+ * simplemente no tiene línea — no es un error, es una entrada directa a esa ronda.
+ *
+ * No hace falta saber quién ganó: el equipo que aparece en la ronda siguiente ya es, por
+ * definición, el que avanzó.
+ */
+export function construirEnlaces<P extends PartidoDeLlave>(rondas: RondaLlave<P>[]): Map<string, EnlacePartido> {
+  const enlaces = new Map<string, EnlacePartido>();
+  for (let i = 1; i < rondas.length; i++) {
+    const rondaAnterior = rondas[i - 1].partidos;
+    for (const p of rondas[i].partidos) {
+      const buscarPadre = (equipoId: string | undefined): string | undefined => {
+        if (!equipoId) return undefined;
+        const padre = rondaAnterior.find(
+          (q) => q.equipoLocalId === equipoId || q.equipoVisitanteId === equipoId,
+        );
+        return padre?.id;
+      };
+      enlaces.set(p.id, {
+        padreLocalId: buscarPadre(p.equipoLocalId),
+        padreVisitanteId: buscarPadre(p.equipoVisitanteId),
+      });
+    }
+  }
+  return enlaces;
 }
