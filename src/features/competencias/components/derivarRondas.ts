@@ -7,11 +7,17 @@
  * un torneo de más de 16 equipos— se descartaba entera y la llave arrancaba en cuartos con
  * equipos que parecían salidos de la nada.
  *
- * La regla para ordenar: en una llave de eliminación directa, una ronda anterior siempre tiene
- * la misma cantidad de partidos o más que la siguiente (octavos ≥ cuartos ≥ semifinal ≥ final).
- * Ese conteo es una señal más confiable que el nombre de la etapa, así que es el criterio
- * principal; el orden conocido de etapas sólo desempata cuando dos rondas tienen la misma
- * cantidad de partidos.
+ * La regla para ordenar: SI TODAS las etapas presentes son nombres reales conocidos, el nombre
+ * manda — es el caso de una fase bien etiquetada, y ahí el nombre es más confiable que
+ * cualquier heurística. El conteo de partidos por ronda NO es un sustituto válido en ese caso:
+ * se probó con un playoff real donde algunos equipos entran con bye directo a cuartos (16vos y
+ * octavos con 1 partido cada uno, alimentando a un cuartos de 4 partidos) y ordenar por conteo
+ * ponía "Cuartos" antes que "16vos", exactamente al revés.
+ *
+ * El conteo sólo entra en juego cuando hay AL MENOS UNA etapa sin reconocer (`'otro'`, o algo
+ * fuera del enum) — ahí sí, ninguna etiqueta amerita confianza y "una ronda anterior tiene
+ * igual o más partidos que la siguiente" vuelve a ser la mejor señal disponible. Es el caso de
+ * una fase cargada a mano donde el organizador nunca tocó el selector de etapa.
  *
  * `tercer_puesto` se excluye de la secuencia: no es "la ronda después de la final", es un
  * partido en paralelo a ella, y así lo tiene que tratar quien consuma este resultado.
@@ -50,6 +56,10 @@ const indiceSecuencial = (etapa: string): number => {
   const i = ORDEN_SECUENCIAL.indexOf(etapa as EtapaConocida);
   return i === -1 ? Number.MAX_SAFE_INTEGER : i;
 };
+
+/** 'otro' es el único valor que de verdad no dice nada — todo lo demás (incluido 'repechaje',
+ * que no está en la secuencia fija pero es una etapa real) merece confiarse. */
+const esEtapaReconocida = (etapa: string): boolean => etapa === 'repechaje' || ORDEN_SECUENCIAL.includes(etapa as EtapaConocida);
 
 /** Forma mínima que necesita cualquier `Partido` para poder agruparse y ordenarse acá. */
 export interface PartidoDeLlave {
@@ -91,7 +101,15 @@ export function derivarRondas<P extends PartidoDeLlave>(partidos: P[]): RondaLla
   }
 
   const entradas = [...grupos.entries()];
+  const hayEtapaSinReconocer = entradas.some(([etapa]) => !esEtapaReconocida(etapa));
+
   entradas.sort(([etapaA, partidosA], [etapaB, partidosB]) => {
+    if (!hayEtapaSinReconocer) {
+      // Todas las etapas presentes son nombres reales: confiar en el nombre, no en el conteo.
+      return indiceSecuencial(etapaA) - indiceSecuencial(etapaB);
+    }
+    // Hay al menos un 'otro': ninguna etiqueta amerita confianza acá, así que se cae al
+    // conteo de partidos como mejor señal disponible.
     if (partidosB.length !== partidosA.length) return partidosB.length - partidosA.length;
     return indiceSecuencial(etapaA) - indiceSecuencial(etapaB);
   });
