@@ -1,6 +1,14 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import type { Partido } from '../../../types';
-import { derivarRondas, extraerTercerPuesto, etapasSecuencialesAMostrar, ETAPA_LABELS, type EtapaConocida } from './derivarRondas';
+import { derivarRondas, extraerTercerPuesto, etapasSecuencialesAMostrar, construirEnlaces, ETAPA_LABELS, type EtapaConocida } from './derivarRondas';
+import { useConectoresLlave } from './useConectoresLlave';
+
+/** `derivarRondas`/`construirEnlaces` necesitan el id de cada equipo en un campo plano
+ * (`equipoLocalId`), no anidado (`equipoLocal.id`) — así el mismo código sirve para cualquier
+ * forma de Partido entre apps. Se arma acá, una sola vez, sin tocar el tipo real de Partido. */
+type PartidoConIds = Partido & { equipoLocalId?: string; equipoVisitanteId?: string };
+const conIds = (matches: Partido[]): PartidoConIds[] =>
+  matches.map((m) => ({ ...m, equipoLocalId: m.equipoLocal?.id, equipoVisitanteId: m.equipoVisitante?.id }));
 
 interface VisualBracketProps {
   matches: Partido[];
@@ -26,8 +34,14 @@ const LineaEquipo: React.FC<{ nombre: string; marcador: number | undefined; gano
 );
 
 export const VisualBracket: React.FC<VisualBracketProps> = ({ matches, onMatchClick, onAutoCreate }) => {
-  const rondas = derivarRondas(matches);
-  const tercerPuesto = extraerTercerPuesto(matches);
+  const matchesConIds = useMemo(() => conIds(matches), [matches]);
+  const rondas = useMemo(() => derivarRondas(matchesConIds), [matchesConIds]);
+  const tercerPuesto = extraerTercerPuesto(matchesConIds);
+  // De qué partido de la ronda anterior salió cada equipo — lo que conecta la llave como árbol
+  // en vez de columnas sueltas. Ver el comentario de `useConectoresLlave` sobre por qué esto se
+  // MIDE después de pintar en vez de calcularse a mano.
+  const enlaces = useMemo(() => construirEnlaces(rondas), [rondas]);
+  const { containerRef, registrarTarjeta, conectores } = useConectoresLlave(enlaces);
 
   const etapasConDatos = new Set(rondas.map((r) => r.etapa));
   const secuenciales = etapasSecuencialesAMostrar(etapasConDatos);
@@ -35,7 +49,7 @@ export const VisualBracket: React.FC<VisualBracketProps> = ({ matches, onMatchCl
   // Combina las rondas con partidos reales (en su orden derivado, que puede incluir repechaje
   // u otras etapas fuera de la secuencia estándar) con los placeholders de las etapas
   // siguientes que todavía no tienen partidos, para que el organizador pueda crearlos.
-  type Columna = { etapa: string; label: string; matches: Partido[] };
+  type Columna = { etapa: string; label: string; matches: PartidoConIds[] };
   const columnas: Columna[] = [];
   const yaIncluidas = new Set<string>();
 
@@ -75,7 +89,24 @@ export const VisualBracket: React.FC<VisualBracketProps> = ({ matches, onMatchCl
 
   return (
     <div className="w-full overflow-x-auto pb-2">
-      <div className="flex min-w-max gap-6">
+      <div ref={containerRef} className="relative flex min-w-max gap-6">
+        {/* Las líneas de la llave: un partido conectado con el que le dio cada uno de sus dos
+            equipos. Sin esto son columnas sueltas; con esto se lee como un árbol que termina en
+            la final, que es la idea real de una llave "prehecha" que se va completando. */}
+        <svg className="pointer-events-none absolute inset-0 h-full w-full overflow-visible" aria-hidden>
+          {conectores.map((c) => {
+            const xMedio = c.x1 + (c.x2 - c.x1) / 2;
+            return (
+              <path
+                key={c.id}
+                d={`M ${c.x1} ${c.y1} C ${xMedio} ${c.y1}, ${xMedio} ${c.y2}, ${c.x2} ${c.y2}`}
+                fill="none"
+                stroke="#cbd5e1"
+                strokeWidth={2}
+              />
+            );
+          })}
+        </svg>
         {columnas.map((columna) => (
           <div key={columna.etapa} className="flex min-w-[184px] flex-1 flex-col">
             <h5 className="mb-3 rounded-md bg-slate-100 py-1.5 text-center text-[9.5px] font-extrabold uppercase tracking-wide text-slate-500">
@@ -90,8 +121,9 @@ export const VisualBracket: React.FC<VisualBracketProps> = ({ matches, onMatchCl
                 return (
                   <div
                     key={m.id}
+                    ref={registrarTarjeta(m.id)}
                     onClick={() => onMatchClick?.(m.id)}
-                    className={`relative overflow-hidden rounded-lg border bg-white shadow-sm transition-all cursor-pointer
+                    className={`relative z-10 overflow-hidden rounded-lg border bg-white shadow-sm transition-all cursor-pointer
                       ${m.estado === 'en_juego'
                         ? 'border-red-400 shadow-red-100'
                         : 'border-slate-200 hover:border-brand-400 hover:shadow-md'}`}
