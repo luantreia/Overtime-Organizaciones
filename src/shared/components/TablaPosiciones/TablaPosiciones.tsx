@@ -162,7 +162,13 @@ export const TablaPosiciones: React.FC<TablaPosicionesProps> = ({ faseId, partic
       if (lista) lista.push(fila);
       else mapa.set(clave, [fila]);
     }
-    return [...mapa.entries()].map(([clave, lista]) => [clave, ordenarFilas(lista)] as const);
+    // Un Map conserva el orden de INSERCIÓN, que acá es "como vino de la API" — no alfabético.
+    // Sin este sort, la Zona B podía aparecer antes que la Zona A simplemente porque el backend
+    // devolvió esas filas primero, cambiando de lugar en cada fetch según el orden interno de
+    // Mongo, no según algo que el usuario reconozca.
+    return [...mapa.entries()]
+      .sort(([a], [b]) => a.localeCompare(b, 'es', { numeric: true }))
+      .map(([clave, lista]) => [clave, ordenarFilas(lista)] as const);
   }, [filas]);
 
   if (loading) {
@@ -213,16 +219,26 @@ export const TablaPosiciones: React.FC<TablaPosicionesProps> = ({ faseId, partic
               </b>
             </div>
             <div className="overflow-x-auto">
-              <table className="min-w-full border-collapse bg-white [font-variant-numeric:tabular-nums]">
+              {/*
+                `table-fixed` + un ancho explícito por columna: sin esto, cada zona es una
+                <table> independiente y el layout automático de HTML calcula el ancho de cada
+                columna a partir de SU PROPIO contenido más ancho. Con nombres de equipo de
+                largo distinto entre zonas (p. ej. "Linces de Alm. Brown" en una zona, "Hydra" en
+                otra), las columnas de PJ/PG/PP/Dif/Pts terminaban en una posición horizontal
+                distinta en cada tabla — dos zonas de la misma fase, con columnas que no
+                alineaban entre sí. Anchos fijos e iguales en las siete columnas garantizan que
+                todas las zonas de una fase se vean con la misma proporción.
+              */}
+              <table className="w-full table-fixed border-collapse bg-white [font-variant-numeric:tabular-nums]">
                 <thead>
                   <tr>
                     <th className="w-8 py-1.5 px-2 text-left text-[9.5px] font-extrabold uppercase tracking-wide text-slate-500">#</th>
                     <th className="py-1.5 px-2 text-left text-[9.5px] font-extrabold uppercase tracking-wide text-slate-500">Equipo</th>
-                    <th className="py-1.5 px-2 text-center text-[9.5px] font-extrabold uppercase tracking-wide text-slate-500">PJ</th>
-                    <th className="py-1.5 px-2 text-center text-[9.5px] font-extrabold uppercase tracking-wide text-slate-500 hidden sm:table-cell">PG</th>
-                    <th className="py-1.5 px-2 text-center text-[9.5px] font-extrabold uppercase tracking-wide text-slate-500 hidden sm:table-cell">PP</th>
-                    <th className="py-1.5 px-2 text-center text-[9.5px] font-extrabold uppercase tracking-wide text-slate-500 hidden md:table-cell">Dif</th>
-                    <th className="py-1.5 px-2 text-center text-[9.5px] font-extrabold uppercase tracking-wide text-slate-500">Pts</th>
+                    <th className="w-11 py-1.5 px-1 text-center text-[9.5px] font-extrabold uppercase tracking-wide text-slate-500">PJ</th>
+                    <th className="w-11 py-1.5 px-1 text-center text-[9.5px] font-extrabold uppercase tracking-wide text-slate-500 hidden sm:table-cell">PG</th>
+                    <th className="w-11 py-1.5 px-1 text-center text-[9.5px] font-extrabold uppercase tracking-wide text-slate-500 hidden sm:table-cell">PP</th>
+                    <th className="w-14 py-1.5 px-1 text-center text-[9.5px] font-extrabold uppercase tracking-wide text-slate-500 hidden md:table-cell">Dif</th>
+                    <th className="w-14 py-1.5 px-1 text-center text-[9.5px] font-extrabold uppercase tracking-wide text-slate-500">Pts</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -244,7 +260,11 @@ export const TablaPosiciones: React.FC<TablaPosicionesProps> = ({ faseId, partic
                         <td className="py-1.5 px-2 text-[12.5px] font-semibold text-slate-900">
                           <div className="flex min-w-0 items-center gap-1.5">
                             <Escudo nombre={p.nombre} semilla={p.equipoId ?? p.id} src={p.escudo} />
-                            <span className="truncate max-w-[140px]">{p.nombre}</span>
+                            {/* Sin max-w fijo: con table-fixed el ancho real de esta celda ya
+                                es consistente entre zonas, así que trunca al espacio que le
+                                queda de verdad (flex-1 + min-w-0, no un límite arbitrario que
+                                podía sobrar o quedarse corto según la columna). */}
+                            <span className="min-w-0 flex-1 truncate">{p.nombre}</span>
                           </div>
                         </td>
                         <td className="py-1.5 px-2 text-center text-[12.5px] text-slate-600">{p.partidosJugados}</td>
