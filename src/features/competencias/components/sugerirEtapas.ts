@@ -85,10 +85,17 @@ function calcularOlas(partidos: PartidoParaSugerencia[]): PartidoInterno[] {
   const rondaGanadaPrincipal = new Map<string, number>();
   const eliminadoPrincipal = new Set<string>();
   const resultado: PartidoInterno[] = [];
+  // Equipos cuya ronda actual viene de una resolución incierta (el desempate por reaparición
+  // futura no alcanzó). Si el PRÓXIMO partido de ese equipo se apoya en ese número para ubicarse,
+  // hereda la incertidumbre — la sugerencia para ese partido tampoco es un hecho, aunque su
+  // propio desempate haya sido, en aislamiento, inequívoco.
+  const rondaIncierta = new Set<string>();
 
-  const resolverUno = (p: PartidoParaSugerencia, confiable: boolean) => {
+  const resolverUno = (p: PartidoParaSugerencia, confiableEnAislamiento: boolean) => {
     const rA = rondaGanadaPrincipal.get(p.equipoLocalId) ?? 0;
     const rB = rondaGanadaPrincipal.get(p.equipoVisitanteId) ?? 0;
+    const heredaIncertidumbre = rondaIncierta.has(p.equipoLocalId) || rondaIncierta.has(p.equipoVisitanteId);
+    const confiable = confiableEnAislamiento && !heredaIncertidumbre;
     const esConsolacion = eliminadoPrincipal.has(p.equipoLocalId) || eliminadoPrincipal.has(p.equipoVisitanteId);
     const ola = Math.max(rA, rB) + 1;
     const gano = p.marcadorLocal > p.marcadorVisitante;
@@ -96,6 +103,10 @@ function calcularOlas(partidos: PartidoParaSugerencia[]): PartidoInterno[] {
     const perdedor = gano ? p.equipoVisitanteId : p.equipoLocalId;
     rondaGanadaPrincipal.set(ganador, Math.max(rondaGanadaPrincipal.get(ganador) ?? 0, ola));
     rondaGanadaPrincipal.set(perdedor, Math.max(rondaGanadaPrincipal.get(perdedor) ?? 0, ola));
+    if (!confiable) {
+      rondaIncierta.add(ganador);
+      rondaIncierta.add(perdedor);
+    }
     if (!esConsolacion) eliminadoPrincipal.add(perdedor);
     resultado.push({ ...p, ola, esConsolacion, confiable });
   };
