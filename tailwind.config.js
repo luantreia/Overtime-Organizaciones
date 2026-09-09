@@ -1,11 +1,17 @@
 const formsPlugin = require('@tailwindcss/forms');
 const typographyPlugin = require('@tailwindcss/typography');
+const overtimeKit = require('overtime-kit/tailwind-preset');
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
+  presets: [overtimeKit],
   content: [
     './src/**/*.{js,jsx,ts,tsx}',
     './public/index.html',
+    // El `content` del preset no se hereda: Tailwind reemplaza esta clave, no la fusiona. Sin
+    // expandirlo acá, las clases que sólo existen dentro del kit no se generan y sus
+    // componentes salen sin estilo, sin ningún error que lo avise.
+    ...overtimeKit.content,
   ],
   theme: {
     extend: {

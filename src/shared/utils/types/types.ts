@@ -153,7 +153,7 @@ export interface EquipoCompetencia {
 // TIPOS DE PARTIDOS
 // ========================================
 
-export type EstadoPartido = 'programado' | 'en_juego' | 'finalizado' | 'cancelado' | 'proximamente';
+export type EstadoPartido = 'programado' | 'en_juego' | 'finalizado' | 'cancelado';
 
 export interface SetPartido {
   _id: string;

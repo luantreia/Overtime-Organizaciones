@@ -54,31 +54,51 @@ type Props = {
   organizacionNombre?: string;
 };
 
-export const TablaStandings: FC<Props> = ({ partidos, title = 'Tabla por equipos', competenciaNombre, organizacionNombre }) => {
+/**
+ * Agregado de rendimiento sobre el conjunto de partidos que quedó seleccionado por los filtros
+ * de la pantalla de estadísticas.
+ *
+ * NO es la tabla de posiciones oficial y no puede serlo: acá el filtro es por competencia y por
+ * `etapa`, que puede abarcar varias temporadas y varias fases a la vez, así que no hay una fase
+ * a la que pedirle `/fases/:id/tabla`. Por eso los puntos se cuentan con un 3/1/0 genérico y no
+ * con `fase.configuracion.puntuacion`, y por eso el orden no aplica los criterios de desempate
+ * de ninguna fase.
+ *
+ * Antes esto se titulaba «Tabla por equipos» y mostraba una columna «Pts» sin ninguna aclaración,
+ * que es lo que la hacía leerse como la tabla oficial de la competencia. La tabla oficial vive en
+ * la estructura de la competencia (`TablaPosiciones`, que consume el endpoint y respeta el
+ * reglamento); ésta es una herramienta de análisis y se presenta como tal.
+ */
+export const TablaStandings: FC<Props> = ({ partidos, title = 'Rendimiento por equipo', competenciaNombre, organizacionNombre }) => {
   const rows = calcStandings(partidos);
   const [isShareOpen, setIsShareOpen] = useState(false);
   if (rows.length === 0) {
     return (
       <div className="bg-white p-6 rounded-lg shadow text-center text-gray-500">
         <h4 className="text-lg font-semibold mb-2">{title}</h4>
-        <p>No hay partidos finalizados para calcular la tabla.</p>
+        <p>No hay partidos finalizados en el filtro actual.</p>
       </div>
     );
   }
   return (
     <div className="bg-white p-6 rounded-lg shadow">
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-start justify-between gap-4 mb-1">
         <h4 className="text-lg font-semibold">{title}</h4>
         {competenciaNombre && (
           <button
             type="button"
             onClick={() => setIsShareOpen(true)}
-            className="text-xs font-semibold text-brand-600 hover:text-brand-700"
+            className="shrink-0 text-xs font-semibold text-brand-600 hover:text-brand-700"
           >
             Compartir tabla
           </button>
         )}
       </div>
+      <p className="mb-4 text-xs leading-snug text-slate-500">
+        Sobre los partidos finalizados del filtro actual. Los puntos se cuentan con un 3/1/0 genérico,
+        no con el reglamento de cada fase: para la tabla oficial, con sus criterios de desempate, mirá
+        la fase en la estructura de la competencia.
+      </p>
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
@@ -91,7 +111,12 @@ export const TablaStandings: FC<Props> = ({ partidos, title = 'Tabla por equipos
               <th className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase">GF</th>
               <th className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase">GC</th>
               <th className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase">Dif</th>
-              <th className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase">Pts</th>
+              <th
+                className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase"
+                title="Conteo genérico 3/1/0, no el reglamento de la fase"
+              >
+                Pts
+              </th>
               <th className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase">Efect.</th>
             </tr>
           </thead>

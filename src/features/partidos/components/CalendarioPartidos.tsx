@@ -12,7 +12,6 @@ const ESTADO_STYLE: Record<string, { chip: string; dot: string; label: string }>
   en_juego:     { chip: 'bg-amber-50 text-amber-800 hover:bg-amber-100', dot: 'bg-amber-400',   label: 'En juego' },
   finalizado:   { chip: 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100', dot: 'bg-emerald-400', label: 'Finalizado' },
   cancelado:    { chip: 'bg-slate-100 text-slate-400',                   dot: 'bg-slate-300',   label: 'Cancelado' },
-  proximamente: { chip: 'bg-purple-50 text-purple-800 hover:bg-purple-100', dot: 'bg-purple-400', label: 'Próximamente' },
 };
 
 type Props = {
@@ -157,9 +156,7 @@ export default function CalendarioPartidos({ partidos, onSeleccionar }: Props) {
 
       {/* Leyenda */}
       <div className="flex flex-wrap items-center gap-3 border-t border-slate-100 px-5 py-2.5">
-        {Object.entries(ESTADO_STYLE)
-          .filter(([k]) => k !== 'proximamente')
-          .map(([k, s]) => (
+        {Object.entries(ESTADO_STYLE).map(([k, s]) => (
             <span key={k} className="flex items-center gap-1.5 text-[11px] text-slate-500">
               <span className={`h-2 w-2 rounded-full ${s.dot}`} />
               {s.label}
