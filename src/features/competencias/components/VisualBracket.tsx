@@ -118,7 +118,36 @@ export const VisualBracket: React.FC<VisualBracketProps> = ({ matches, onMatchCl
               {columna.label}
             </h5>
 
-            <div className="flex flex-1 flex-col justify-around gap-3">
+            <div
+              className="flex flex-1 flex-col justify-around gap-3"
+              // El drop se maneja acá, en la COLUMNA, no en cada tarjeta: con `justify-around` las
+              // dos tarjetas de una ronda con pocos partidos quedan separadas por huecos grandes
+              // (la columna estira su alto para igualar a las rondas siguientes), y un usuario real
+              // suelta el mouse ahí casi tan seguido como sobre la tarjeta exacta. Soltar en el
+              // hueco no tenía ningún `onDrop` escuchando y el navegador cancelaba el drag sin
+              // avisar nada — "lo puedo agarrar pero al soltarlo no pasa nada". Acá se calcula la
+              // tarjeta más cercana al punto donde se soltó, sea cual sea el pixel exacto.
+              onDragOver={(e) => {
+                if (!onReorder || !arrastrando) return;
+                e.preventDefault();
+              }}
+              onDrop={(e) => {
+                if (!onReorder || !arrastrando) return;
+                e.preventDefault();
+                const tarjetas = Array.from(e.currentTarget.querySelectorAll<HTMLElement>('[data-partido-id]'));
+                let masCercana: { id: string; distancia: number } | null = null;
+                for (const el of tarjetas) {
+                  const rect = el.getBoundingClientRect();
+                  const centroY = rect.top + rect.height / 2;
+                  const distancia = Math.abs(e.clientY - centroY);
+                  const id = el.dataset.partidoId!;
+                  if (id === arrastrando) continue;
+                  if (!masCercana || distancia < masCercana.distancia) masCercana = { id, distancia };
+                }
+                if (masCercana) onReorder(arrastrando, masCercana.id);
+                setArrastrando(null);
+              }}
+            >
               {columna.matches.length > 0 ? columna.matches.map((m) => {
                 const localGana = m.estado === 'finalizado' && (m.marcadorLocal ?? 0) > (m.marcadorVisitante ?? 0);
                 const visitaGana = m.estado === 'finalizado' && (m.marcadorVisitante ?? 0) > (m.marcadorLocal ?? 0);
@@ -127,6 +156,7 @@ export const VisualBracket: React.FC<VisualBracketProps> = ({ matches, onMatchCl
                   <div
                     key={m.id}
                     ref={registrarTarjeta(m.id)}
+                    data-partido-id={m.id}
                     onClick={() => onMatchClick?.(m.id)}
                     draggable={!!onReorder}
                     onDragStart={(e) => {
@@ -135,16 +165,6 @@ export const VisualBracket: React.FC<VisualBracketProps> = ({ matches, onMatchCl
                       setArrastrando(m.id);
                     }}
                     onDragEnd={() => setArrastrando(null)}
-                    onDragOver={(e) => {
-                      if (!onReorder || !arrastrando || arrastrando === m.id) return;
-                      e.preventDefault();
-                    }}
-                    onDrop={(e) => {
-                      if (!onReorder || !arrastrando) return;
-                      e.preventDefault();
-                      onReorder(arrastrando, m.id);
-                      setArrastrando(null);
-                    }}
                     className={`relative z-10 overflow-hidden rounded-lg border bg-white shadow-sm transition-all cursor-pointer
                       ${arrastrando === m.id ? 'opacity-40' : ''}
                       ${m.estado === 'en_juego'
