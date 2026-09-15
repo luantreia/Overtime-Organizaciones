@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Overlay } from 'overtime-kit';
 import { BackendFase } from '../services';
 
 interface ReglamentoConfig {
@@ -135,35 +136,52 @@ export default function ConfigurarReglamentoModal({ isOpen, onClose, fase, todas
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm">
-      <div className="w-full max-w-2xl rounded-2xl bg-white p-8 shadow-2xl animate-in zoom-in-95 duration-200">
-        <div className="mb-6 flex items-center justify-between border-b pb-4">
-          <div>
-            <h2 className="text-2xl font-black text-slate-900">REGLAMENTO DE FASE</h2>
-            <div className="flex items-center gap-2">
-              <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded border ${
-                isTableType ? 'bg-blue-50 border-blue-200 text-blue-600' : 'bg-purple-50 border-purple-200 text-purple-600'
-              }`}>
-                {fase.tipo}
-              </span>
-              <p className="text-sm font-bold text-slate-400 italic">{fase.nombre}</p>
-            </div>
-          </div>
-          <button onClick={onClose} className="rounded-full p-2 hover:bg-slate-100 transition-colors">✕</button>
+    <Overlay
+      isOpen={isOpen}
+      onClose={onClose}
+      size="lg"
+      title={<span className="text-2xl font-black text-slate-900 normal-case">REGLAMENTO DE FASE</span>}
+      subtitle={
+        <span className="flex items-center gap-2">
+          <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded border ${
+            isTableType ? 'bg-blue-50 border-blue-200 text-blue-600' : 'bg-purple-50 border-purple-200 text-purple-600'
+          }`}>
+            {fase.tipo}
+          </span>
+          <span className="text-sm font-bold text-slate-400 italic">{fase.nombre}</span>
+        </span>
+      }
+      footer={
+        <div className="flex justify-end gap-4">
+          <button
+            disabled={saving}
+            onClick={onClose}
+            className="px-6 py-2.5 text-sm font-black text-slate-400 uppercase tracking-widest hover:text-slate-600 transition-colors disabled:opacity-50"
+          >
+            Cancelar
+          </button>
+          <button
+            disabled={saving}
+            onClick={handleSave}
+            className="rounded-xl bg-brand-600 px-8 py-2.5 text-sm font-black text-white shadow-[4px_4px_0px_0px_rgba(30,58,138,1)] uppercase tracking-widest hover:-translate-y-1 hover:shadow-[6px_6px_0px_0px_rgba(30,58,138,1)] active:translate-y-0 active:shadow-none transition-all disabled:opacity-50 disabled:translate-y-0 disabled:shadow-none"
+          >
+            {saving ? 'Guardando...' : 'Guardar Reglamento'}
+          </button>
         </div>
-
-        {error && (
-          <div className="mb-6 p-4 bg-rose-50 border-2 border-rose-100 rounded-xl flex items-start gap-3 animate-in fade-in slide-in-from-top-2">
-            <span className="text-xl">⚠️</span>
-            <div>
-              <p className="text-xs font-black text-rose-600 uppercase tracking-widest">Error de validación</p>
-              <p className="text-[11px] font-bold text-rose-500 leading-tight">{error}</p>
-            </div>
+      }
+    >
+      {error && (
+        <div className="mb-6 p-4 bg-rose-50 border-2 border-rose-100 rounded-xl flex items-start gap-3 animate-in fade-in slide-in-from-top-2">
+          <span className="text-xl">⚠️</span>
+          <div>
+            <p className="text-xs font-black text-rose-600 uppercase tracking-widest">Error de validación</p>
+            <p className="text-[11px] font-bold text-rose-500 leading-tight">{error}</p>
           </div>
-        )}
+        </div>
+      )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-h-[60vh] overflow-y-auto px-1 custom-scrollbar">
-          {isTableType && (
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {isTableType && (
             <>
               {/* SECCIÓN PUNTUACIÓN */}
               <div className="space-y-4">
@@ -443,24 +461,6 @@ export default function ConfigurarReglamentoModal({ isOpen, onClose, fase, todas
             </div>
           )}
         </div>
-
-        <div className="mt-8 flex justify-end gap-4 border-t pt-6">
-          <button 
-            disabled={saving}
-            onClick={onClose} 
-            className="px-6 py-2.5 text-sm font-black text-slate-400 uppercase tracking-widest hover:text-slate-600 transition-colors disabled:opacity-50"
-          >
-            Cancelar
-          </button>
-          <button 
-            disabled={saving}
-            onClick={handleSave}
-            className="rounded-xl bg-brand-600 px-8 py-2.5 text-sm font-black text-white shadow-[4px_4px_0px_0px_rgba(30,58,138,1)] uppercase tracking-widest hover:-translate-y-1 hover:shadow-[6px_6px_0px_0px_rgba(30,58,138,1)] active:translate-y-0 active:shadow-none transition-all disabled:opacity-50 disabled:translate-y-0 disabled:shadow-none"
-          >
-            {saving ? 'Guardando...' : 'Guardar Reglamento'}
-          </button>
-        </div>
-      </div>
-    </div>
+    </Overlay>
   );
 }
