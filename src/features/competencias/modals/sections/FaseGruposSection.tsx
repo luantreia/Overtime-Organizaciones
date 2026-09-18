@@ -12,6 +12,7 @@ function equipoNombreFromPf(pf: BackendParticipacionFase): string {
 
 export default function FaseGruposSection({ participantes, esAdmin, onUpdate, onDelete, onGestionarJugadores }: { participantes: BackendParticipacionFase[]; esAdmin?: boolean; onUpdate?: (id: string, body: Partial<{ grupo: string }>) => void | Promise<void>; onDelete?: (id: string) => void | Promise<void>; onGestionarJugadores?: (pf: BackendParticipacionFase) => void }) {
   const grupos = Array.from(new Set<string>((participantes || []).map((p: any) => p?.grupo || '')));
+  const allGroups = grupos.filter(Boolean);
 
   return (
     <div className="space-y-3">
@@ -20,13 +21,17 @@ export default function FaseGruposSection({ participantes, esAdmin, onUpdate, on
         <HelpBadge label="Ayuda grupos">
           <ul className="list-disc pl-4">
             <li>Las tablas están ordenadas por <strong>Puntos</strong> y luego <strong>Diferencia</strong>.</li>
-            <li>Puede mover equipos entre <strong>Grupos</strong> desde el selector de cada fila.</li>
+            <li>Puede mover equipos entre <strong>Grupos</strong> escribiendo el nombre en el campo de cada fila (p. ej. "A", "B"). Si el grupo todavía no existe, alcanza con escribirlo — se crea al asignar el primer equipo.</li>
             <li>Use <strong>Eliminar</strong> para quitar la participación de la fase (no borra el equipo).</li>
           </ul>
         </HelpBadge>
       </div>
+      {allGroups.length > 0 && (
+        <datalist id="grupos-fase-existentes">
+          {allGroups.map((gg) => (<option key={gg} value={gg} />))}
+        </datalist>
+      )}
       {(grupos.length ? grupos : ['']).map((g) => {
-        const allGroups = grupos.filter(Boolean);
         const rows = (participantes || [])
           .filter((pf: any) => (pf?.grupo || '') === g)
           .sort((a: any, b: any) => {
@@ -58,10 +63,18 @@ export default function FaseGruposSection({ participantes, esAdmin, onUpdate, on
                   <td className="py-1 pr-2">{equipoNombreFromPf(pf)}</td>
                   <td className="py-1 pr-2">
                     {esAdmin ? (
-                      <select className="rounded border border-slate-200 bg-white px-2 py-1" defaultValue={pf?.grupo || ''} onChange={(e)=>{ onUpdate?.(pf._id, { grupo: e.target.value || undefined }); }}>
-                        <option value="">—</option>
-                        {allGroups.map((gg) => (<option key={gg} value={gg}>{gg}</option>))}
-                      </select>
+                      <input
+                        type="text"
+                        list="grupos-fase-existentes"
+                        className="w-16 rounded border border-slate-200 bg-white px-2 py-1"
+                        defaultValue={pf?.grupo || ''}
+                        placeholder="Ej: A"
+                        onBlur={(e) => {
+                          const value = e.target.value.trim();
+                          if (value !== (pf?.grupo || '')) onUpdate?.(pf._id, { grupo: value || undefined });
+                        }}
+                        onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                      />
                     ) : (pf?.grupo || '—')}
                   </td>
                   <td className="py-1 pr-2">{(pf as any).partidosJugados ?? 0}</td>
