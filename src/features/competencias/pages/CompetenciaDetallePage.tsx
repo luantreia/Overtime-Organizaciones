@@ -59,7 +59,7 @@ const CompetenciaDetallePage = () => {
   // confirm dialogs
   const [confirmEliminarTemp, setConfirmEliminarTemp] = useState<BackendTemporada | null>(null);
   const [confirmEliminarFase, setConfirmEliminarFase] = useState<{ fase: BackendFase; temporadaId: string } | null>(null);
-  const [renameFase, setRenameFase] = useState<{ fase: BackendFase; temporadaId: string; value: string } | null>(null);
+  const [renameFase, setRenameFase] = useState<{ fase: BackendFase; temporadaId: string; value: string; tipo: NonNullable<BackendFase['tipo']> | '' } | null>(null);
   const [confirmEliminarComp, setConfirmEliminarComp] = useState(false);
 
   const { addToast } = useToast();
@@ -178,16 +178,18 @@ const CompetenciaDetallePage = () => {
       }
       return;
     }
-    setRenameFase({ fase, temporadaId, value: fase.nombre || 'Fase' });
+    setRenameFase({ fase, temporadaId, value: fase.nombre || 'Fase', tipo: fase.tipo || '' });
   };
 
-  const handleConfirmRenameFase = async () => {
+  const handleConfirmEditarFase = async () => {
     if (!renameFase) return;
-    const { fase, temporadaId, value } = renameFase;
+    const { fase, temporadaId, value, tipo } = renameFase;
     setRenameFase(null);
     const nuevo = value.trim() || fase.nombre;
     if (!nuevo) return;
-    await actualizarFase(fase._id, { nombre: nuevo });
+    const payload: Partial<BackendFase> = { nombre: nuevo };
+    if (tipo && tipo !== fase.tipo) payload.tipo = tipo;
+    await actualizarFase(fase._id, payload);
     const fases = await listFasesByTemporada(temporadaId);
     setFasesPorTemporada((prev) => ({ ...prev, [temporadaId]: fases }));
   };
@@ -434,22 +436,42 @@ const CompetenciaDetallePage = () => {
       ) : null}
 
       {renameFase ? (
-        <ModalBase isOpen onClose={() => setRenameFase(null)} title="Renombrar fase" size="sm">
+        <ModalBase isOpen onClose={() => setRenameFase(null)} title="Editar fase" size="sm">
           <div className="p-4 space-y-4">
             <label className="block text-sm text-slate-600">
-              Nuevo nombre de la fase
+              Nombre de la fase
               <input
                 type="text"
                 autoFocus
                 value={renameFase.value}
                 onChange={(e) => setRenameFase({ ...renameFase, value: e.target.value })}
-                onKeyDown={(e) => { if (e.key === 'Enter') handleConfirmRenameFase(); }}
+                onKeyDown={(e) => { if (e.key === 'Enter') handleConfirmEditarFase(); }}
                 className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
               />
             </label>
+            <label className="block text-sm text-slate-600">
+              Tipo
+              <select
+                value={renameFase.tipo}
+                onChange={(e) => setRenameFase({ ...renameFase, tipo: e.target.value as BackendFase['tipo'] | '' })}
+                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              >
+                <option value="">—</option>
+                <option value="grupo">Grupo</option>
+                <option value="liga">Liga</option>
+                <option value="playoff">Playoff</option>
+                <option value="promocion">Promoción</option>
+                <option value="otro">Otro</option>
+              </select>
+            </label>
+            {renameFase.tipo && renameFase.tipo !== renameFase.fase.tipo && (
+              <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                Cambiar el tipo no migra las asignaciones existentes: "Grupo" usa el campo <strong>grupo</strong> de cada equipo y "Liga" usa <strong>división</strong>. Si esta fase ya tenía equipos agrupados con el tipo anterior, puede que tengas que reasignarlos.
+              </p>
+            )}
             <div className="flex justify-end gap-3">
               <button type="button" onClick={() => setRenameFase(null)} className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:border-slate-300">Cancelar</button>
-              <button type="button" onClick={handleConfirmRenameFase} className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">Guardar</button>
+              <button type="button" onClick={handleConfirmEditarFase} className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">Guardar</button>
             </div>
           </div>
         </ModalBase>

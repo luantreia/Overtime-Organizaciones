@@ -12,6 +12,7 @@ function equipoNombreFromPf(pf: BackendParticipacionFase): string {
 
 export default function FaseLigaSection({ participantes, esAdmin, onUpdate, onDelete, onGestionarJugadores }: { participantes: BackendParticipacionFase[]; esAdmin?: boolean; onUpdate?: (id: string, body: Partial<{ division: string }>) => void | Promise<void>; onDelete?: (id: string) => void | Promise<void>; onGestionarJugadores?: (pf: BackendParticipacionFase) => void }) {
   const divisiones = Array.from(new Set<string>((participantes || []).map((p: any) => p?.division || '')));
+  const allDivs = divisiones.filter(Boolean);
 
   return (
     <div className="space-y-3">
@@ -20,13 +21,17 @@ export default function FaseLigaSection({ participantes, esAdmin, onUpdate, onDe
         <HelpBadge label="Ayuda liga">
           <ul className="list-disc pl-4">
             <li>Las tablas están ordenadas por <strong>Puntos</strong> y luego <strong>Diferencia</strong>.</li>
-            <li>Puede mover equipos entre <strong>Divisiones</strong> desde el selector de cada fila.</li>
+            <li>Puede mover equipos entre <strong>Divisiones</strong> escribiendo el nombre en el campo de cada fila (p. ej. "A", "B"). Si la división todavía no existe, alcanza con escribirla — se crea al asignar el primer equipo.</li>
             <li>Use <strong>Eliminar</strong> para quitar la participación de la fase (no borra el equipo).</li>
           </ul>
         </HelpBadge>
       </div>
+      {allDivs.length > 0 && (
+        <datalist id="divisiones-fase-existentes">
+          {allDivs.map((d) => (<option key={d} value={d} />))}
+        </datalist>
+      )}
       {(divisiones.length ? divisiones : ['']).map((div) => {
-        const allDivs = divisiones.filter(Boolean);
         const rows = (participantes || [])
           .filter((pf: any) => (pf?.division || '') === div)
           .sort((a: any, b: any) => {
@@ -58,10 +63,18 @@ export default function FaseLigaSection({ participantes, esAdmin, onUpdate, onDe
                   <td className="py-1 pr-2">{equipoNombreFromPf(pf)}</td>
                   <td className="py-1 pr-2">
                     {esAdmin ? (
-                      <select className="rounded border border-slate-200 bg-white px-2 py-1" defaultValue={pf?.division || ''} onChange={(e)=>{ onUpdate?.(pf._id, { division: e.target.value || undefined }); }}>
-                        <option value="">—</option>
-                        {allDivs.map((d) => (<option key={d} value={d}>{d}</option>))}
-                      </select>
+                      <input
+                        type="text"
+                        list="divisiones-fase-existentes"
+                        className="w-16 rounded border border-slate-200 bg-white px-2 py-1"
+                        defaultValue={pf?.division || ''}
+                        placeholder="Ej: A"
+                        onBlur={(e) => {
+                          const value = e.target.value.trim();
+                          if (value !== (pf?.division || '')) onUpdate?.(pf._id, { division: value || undefined });
+                        }}
+                        onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                      />
                     ) : (pf?.division || '—')}
                   </td>
                   <td className="py-1 pr-2">{(pf as any).partidosJugados ?? 0}</td>
