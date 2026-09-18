@@ -57,6 +57,7 @@ type PartidoUpdatePayload = {
   competencia?: string | BackendCompetencia;
   etapa?: string;
   posicionBracket?: number;
+  videoUrl?: string;
 };
 
 type PartidoCreatePayload = {

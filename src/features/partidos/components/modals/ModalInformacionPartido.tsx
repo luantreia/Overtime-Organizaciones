@@ -10,6 +10,7 @@ import {
 import type { Competencia } from '../../../../types';
 import { getParticipaciones as getCompetencias } from '../../../competencias/services/equipoCompetenciaService';
 import { useToast } from '../../../../shared/components/Toast/ToastProvider';
+import { extraerYoutubeId } from '../../../../shared/utils/youtube';
 
 interface ModalInformacionPartidoProps {
   partidoId: string | null;
@@ -36,6 +37,7 @@ const ModalInformacionPartido = ({ partidoId, isOpen, onClose }: ModalInformacio
     etapa?: string;
     grupo?: string;
     division?: string;
+    videoUrl?: string;
   } | null>(null);
   const [competencias, setCompetencias] = useState<Competencia[]>([]);
 
@@ -71,6 +73,7 @@ const ModalInformacionPartido = ({ partidoId, isOpen, onClose }: ModalInformacio
         etapa: (detalle as any).etapa || '',
         grupo: (detalle as any).grupo || '',
         division: (detalle as any).division || '',
+        videoUrl: (detalle as any).videoUrl || '',
       });
     } catch (err) {
       console.error('Error al cargar información del partido:', err);
@@ -106,6 +109,10 @@ const ModalInformacionPartido = ({ partidoId, isOpen, onClose }: ModalInformacio
 
   const handleGuardar = async () => {
     if (!partidoId || !datosEdicion) return;
+    if (datosEdicion.videoUrl && !extraerYoutubeId(datosEdicion.videoUrl)) {
+      addToast({ type: 'error', title: 'Link inválido', message: 'El link de video no parece ser un link de YouTube válido.' });
+      return;
+    }
     try {
       const { fecha, ...rest } = datosEdicion;
       const payload = {
@@ -285,6 +292,18 @@ const ModalInformacionPartido = ({ partidoId, isOpen, onClose }: ModalInformacio
                         value={datosEdicion.ubicacion}
                         onChange={(e) =>
                           setDatosEdicion((prev) => (prev ? { ...prev, ubicacion: e.target.value } : prev))
+                        }
+                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                      />
+                    </div>
+                    <div className="col-span-full">
+                      <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1 ml-1">Video de YouTube (en vivo o final)</label>
+                      <input
+                        type="text"
+                        placeholder="https://youtube.com/watch?v=..."
+                        value={datosEdicion.videoUrl || ''}
+                        onChange={(e) =>
+                          setDatosEdicion((prev) => (prev ? { ...prev, videoUrl: e.target.value } : prev))
                         }
                         className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
                       />
