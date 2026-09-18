@@ -37,6 +37,7 @@ const SOLICITUD_LABELS: Record<string, string> = {
   'jugador-temporada-eliminar': 'Quitar de lista de buena fe',
   resultadoPartido: 'Resultado de partido',
   editarPartidoCompetencia: 'Editar partido',
+  editarPartidoVideo: 'Video del partido',
 };
 
 const solicitudTexto = (s: ISolicitudEdicion) => SOLICITUD_LABELS[s.tipo] ?? s.tipo;
