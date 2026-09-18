@@ -649,6 +649,16 @@ const ModalInformacionPartido = ({ partidoId, isOpen, onClose }: ModalInformacio
                       División: {(partido as any).division}
                     </span>
                   )}
+                  {(partido as any).videoUrl && extraerYoutubeId((partido as any).videoUrl) && (
+                    <a
+                      href={(partido as any).videoUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-50 border border-red-100 text-[11px] font-bold text-red-700 hover:bg-red-100"
+                    >
+                      Ver video
+                    </a>
+                  )}
                 </div>
               </div>
             )}
