@@ -18,6 +18,7 @@ import { getCompetenciaById } from '../services/competenciasService';
 import { VisualBracket } from '../components/VisualBracket';
 import { sugerirEtapas, type SugerenciaEtapa } from '../components/sugerirEtapas';
 import { ETAPA_LABELS, ORDEN_SECUENCIAL } from '../components/derivarRondas';
+import { extraerYoutubeId } from '../../../shared/utils/youtube';
 import ConfigurarReglamentoModal from './ConfigurarReglamentoModal';
 import GestionJugadoresFaseModal from './GestionJugadoresFaseModal';
 import GestionPlanillerosModal from './GestionPlanillerosModal';
@@ -142,13 +143,19 @@ export default function GestionParticipantesFaseModal({
   const [sugerencias, setSugerencias] = useState<any[]>([]);
 
   // Quick Edit States — one entry per partido, supports simultaneous edits
-  type QuickEntry = { local: number; visitante: number; finalizar: boolean; saving: boolean };
+  type QuickEntry = { local: number; visitante: number; finalizar: boolean; saving: boolean; videoUrl: string };
   const [quickEdits, setQuickEdits] = useState<Map<string, QuickEntry>>(new Map());
 
   const openQuickEdit = (p: Partido) => {
     setQuickEdits(prev => {
       const next = new Map(prev);
-      next.set(p.id, { local: p.marcadorLocal ?? 0, visitante: p.marcadorVisitante ?? 0, finalizar: p.estado !== 'en_juego', saving: false });
+      next.set(p.id, {
+        local: p.marcadorLocal ?? 0,
+        visitante: p.marcadorVisitante ?? 0,
+        finalizar: p.estado !== 'en_juego',
+        saving: false,
+        videoUrl: p.videoUrl ?? '',
+      });
       return next;
     });
   };
@@ -308,6 +315,11 @@ export default function GestionParticipantesFaseModal({
   const handleSaveQuickScore = async (partidoId: string) => {
     const entry = quickEdits.get(partidoId);
     if (!entry) return;
+    if (entry.videoUrl && !extraerYoutubeId(entry.videoUrl)) {
+      setNotice('❌ El link de video no parece ser un link de YouTube válido');
+      setTimeout(() => setNotice(''), 3000);
+      return;
+    }
     patchQuickEdit(partidoId, { saving: true });
     try {
       await actualizarPartido(partidoId, {
@@ -315,6 +327,7 @@ export default function GestionParticipantesFaseModal({
         marcadorVisitante: entry.visitante,
         marcadorModificadoManualmente: true,
         estado: entry.finalizar ? 'finalizado' : 'en_juego',
+        videoUrl: entry.videoUrl,
       });
       closeQuickEdit(partidoId);
       setNotice(entry.finalizar ? '✅ Resultado guardado' : '✅ Marcador actualizado');
@@ -709,6 +722,15 @@ export default function GestionParticipantesFaseModal({
                 <span className={`h-1.5 w-1.5 rounded-full ${entry.finalizar ? 'bg-emerald-500' : 'bg-amber-400'}`} />
                 {entry.finalizar ? 'Finalizar partido' : 'Solo actualizar'}
               </button>
+              {/* Video URL rápido */}
+              <input
+                type="text"
+                placeholder="Link de YouTube (opcional)"
+                className="w-40 rounded-lg border border-slate-200 px-2 py-1 text-[10px] font-medium text-slate-700 focus:ring-2 focus:ring-brand-500/40 outline-none"
+                value={entry.videoUrl}
+                onChange={e => patchQuickEdit(p.id, { videoUrl: e.target.value })}
+                onKeyDown={e => { if (e.key === 'Enter') void handleSaveQuickScore(p.id); if (e.key === 'Escape') closeQuickEdit(p.id); }}
+              />
             </div>
           ) : esProgramado ? (
             esAdmin ? (

@@ -203,6 +203,7 @@ export interface Partido {
   ratingDeltas?: Array<{ player: string; delta: number }>;
   modalidad?: string;
   categoria?: string;
+  videoUrl?: string;
 }
 
 export interface JugadorPartido {

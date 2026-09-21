@@ -306,6 +306,7 @@ const mapPartido = (partido: BackendPartido, contextoEquipoId?: string): Partido
     sets: (partido as any).sets,
     modalidad: (partido as any).modalidad,
     categoria: (partido as any).categoria,
+    videoUrl: (partido as any).videoUrl,
   };
 
   const tieneMarcador = (partido.marcadorLocal !== undefined && partido.marcadorLocal !== null)
