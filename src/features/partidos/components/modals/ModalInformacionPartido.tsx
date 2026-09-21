@@ -17,14 +17,18 @@ interface ModalInformacionPartidoProps {
   partidoId: string | null;
   isOpen: boolean;
   onClose: () => void;
+  /** Si se pasa, habilita "Eliminar partido" en el modal. Ausente = sin permiso para eliminar. */
+  onEliminar?: (partidoId: string) => Promise<void> | void;
 }
 
-const ModalInformacionPartido = ({ partidoId, isOpen, onClose }: ModalInformacionPartidoProps) => {
+const ModalInformacionPartido = ({ partidoId, isOpen, onClose, onEliminar }: ModalInformacionPartidoProps) => {
   const { addToast } = useToast();
   const [partido, setPartido] = useState<PartidoDetallado | null>(null);
   const [loading, setLoading] = useState(false);
   const [modoEdicion, setModoEdicion] = useState(false);
   const [confirmarEdicionFinalizado, setConfirmarEdicionFinalizado] = useState(false);
+  const [confirmarEliminar, setConfirmarEliminar] = useState(false);
+  const [eliminando, setEliminando] = useState(false);
   const [datosEdicion, setDatosEdicion] = useState<{
     fecha: string;
     ubicacion: string;
@@ -153,6 +157,19 @@ const ModalInformacionPartido = ({ partidoId, isOpen, onClose }: ModalInformacio
     }
   };
 
+  const handleEliminar = async () => {
+    if (!partidoId || !onEliminar || eliminando) return;
+    setEliminando(true);
+    try {
+      await onEliminar(partidoId);
+      setConfirmarEliminar(false);
+    } catch (err) {
+      console.error('Error al eliminar partido:', err);
+      addToast({ type: 'error', title: 'Error', message: 'No pudimos eliminar el partido' });
+      setEliminando(false);
+    }
+  };
+
   return (
     <ModalBase
       isOpen={isOpen}
@@ -210,6 +227,16 @@ const ModalInformacionPartido = ({ partidoId, isOpen, onClose }: ModalInformacio
                         className="inline-flex items-center px-3 py-1.5 bg-red-600 text-white text-xs font-bold rounded-lg hover:bg-red-700 transition-colors shadow-sm"
                       >
                         Gestionar Marcador
+                      </button>
+                    )}
+                    {onEliminar && (
+                      <button
+                        type="button"
+                        onClick={() => setConfirmarEliminar(true)}
+                        title="Eliminar partido"
+                        className="inline-flex items-center p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                      >
+                        <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4"><path d="M6 2a1 1 0 00-1 1H3.5a.5.5 0 000 1h9a.5.5 0 000-1H11a1 1 0 00-1-1H6zM3 5.5a.5.5 0 01.5-.5h9a.5.5 0 01.5.5v7A1.5 1.5 0 0111.5 14h-7A1.5 1.5 0 013 12.5v-7z"/></svg>
                       </button>
                     )}
                   </>
@@ -684,6 +711,16 @@ const ModalInformacionPartido = ({ partidoId, isOpen, onClose }: ModalInformacio
         setModoEdicion(true);
       }}
       onCancel={() => setConfirmarEdicionFinalizado(false)}
+    />
+    <ConfirmModal
+      isOpen={confirmarEliminar}
+      title="Eliminar partido"
+      message="Esta acción no se puede deshacer. Se eliminará el partido y su información de sets, convocados y estadísticas asociadas."
+      confirmLabel={eliminando ? 'Eliminando…' : 'Sí, eliminar'}
+      cancelLabel="Cancelar"
+      variant="danger"
+      onConfirm={handleEliminar}
+      onCancel={() => setConfirmarEliminar(false)}
     />
   </ModalBase>
   );

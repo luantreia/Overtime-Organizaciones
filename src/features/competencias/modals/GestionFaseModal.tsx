@@ -242,31 +242,78 @@ export default function GestionParticipantesFaseModal({
   // Edición rápida de etapa y fecha: la razón de que exista es que "Info → Editar" abre el
   // formulario completo del partido para cambiar un solo campo. Se edita ahí mismo, en el
   // encabezado de la tarjeta, sin abrir nada.
-  type EtapaFechaEntry = { etapa: string; fecha: string; hora: string; saving: boolean };
-  const [etapaFechaEdits, setEtapaFechaEdits] = useState<Map<string, EtapaFechaEntry>>(new Map());
+  // Etapa y fecha/hora se editan y guardan por separado — cada una con su propio botón,
+  // para que un misclick en una no arrastre un guardado accidental de la otra.
+  type EtapaEntry = { etapa: string; saving: boolean };
+  const [etapaEdits, setEtapaEdits] = useState<Map<string, EtapaEntry>>(new Map());
 
-  const openEtapaFechaEdit = (p: Partido) => {
-    setEtapaFechaEdits((prev) => {
+  const openEtapaEdit = (p: Partido) => {
+    setEtapaEdits((prev) => {
       const next = new Map(prev);
       // Si hay una sugerencia y el organizador todavía no la vio, arranca precargada con esa
       // sugerencia en vez del valor actual — así corregir es aceptar, no volver a tipear.
       const sugerencia = sugerenciasEtapa.get(p.id);
       const etapaInicial = sugerencia?.difiere ? sugerencia.etapaSugerida : (p.etapa || 'otro');
-      next.set(p.id, { etapa: etapaInicial, fecha: p.fecha?.slice(0, 10) || '', hora: p.hora || '', saving: false });
+      next.set(p.id, { etapa: etapaInicial, saving: false });
       return next;
     });
   };
 
-  const closeEtapaFechaEdit = (id: string) => {
-    setEtapaFechaEdits((prev) => {
+  const closeEtapaEdit = (id: string) => {
+    setEtapaEdits((prev) => { const next = new Map(prev); next.delete(id); return next; });
+  };
+
+  const patchEtapaEdit = (id: string, etapa: string) => {
+    setEtapaEdits((prev) => {
+      const entry = prev.get(id);
+      if (!entry) return prev;
       const next = new Map(prev);
-      next.delete(id);
+      next.set(id, { ...entry, etapa });
       return next;
     });
   };
 
-  const patchEtapaFechaEdit = (id: string, patch: Partial<EtapaFechaEntry>) => {
-    setEtapaFechaEdits((prev) => {
+  const handleSaveEtapa = async (partidoId: string) => {
+    const entry = etapaEdits.get(partidoId);
+    if (!entry) return;
+    setEtapaEdits((prev) => { const next = new Map(prev); next.set(partidoId, { ...entry, saving: true }); return next; });
+    try {
+      await actualizarPartido(partidoId, { etapa: entry.etapa });
+      closeEtapaEdit(partidoId);
+      setNotice('✅ Etapa actualizada');
+      setTimeout(() => setNotice(''), 2500);
+      await refrescarPartidos();
+      onRefresh?.();
+    } catch (error) {
+      console.error('Error actualizando etapa:', error);
+      setEtapaEdits((prev) => {
+        const next = new Map(prev);
+        const current = next.get(partidoId);
+        if (current) next.set(partidoId, { ...current, saving: false });
+        return next;
+      });
+      setNotice('❌ Error al guardar la etapa');
+      setTimeout(() => setNotice(''), 3000);
+    }
+  };
+
+  type FechaEntry = { fecha: string; hora: string; saving: boolean };
+  const [fechaEdits, setFechaEdits] = useState<Map<string, FechaEntry>>(new Map());
+
+  const openFechaEdit = (p: Partido) => {
+    setFechaEdits((prev) => {
+      const next = new Map(prev);
+      next.set(p.id, { fecha: p.fecha?.slice(0, 10) || '', hora: p.hora || '', saving: false });
+      return next;
+    });
+  };
+
+  const closeFechaEdit = (id: string) => {
+    setFechaEdits((prev) => { const next = new Map(prev); next.delete(id); return next; });
+  };
+
+  const patchFechaEdit = (id: string, patch: Partial<Omit<FechaEntry, 'saving'>>) => {
+    setFechaEdits((prev) => {
       const entry = prev.get(id);
       if (!entry) return prev;
       const next = new Map(prev);
@@ -275,25 +322,26 @@ export default function GestionParticipantesFaseModal({
     });
   };
 
-  const handleSaveEtapaFecha = async (partidoId: string) => {
-    const entry = etapaFechaEdits.get(partidoId);
+  const handleSaveFecha = async (partidoId: string) => {
+    const entry = fechaEdits.get(partidoId);
     if (!entry) return;
-    patchEtapaFechaEdit(partidoId, { saving: true });
+    setFechaEdits((prev) => { const next = new Map(prev); next.set(partidoId, { ...entry, saving: true }); return next; });
     try {
-      await actualizarPartido(partidoId, {
-        etapa: entry.etapa,
-        fecha: entry.fecha,
-        hora: entry.hora || undefined,
-      });
-      closeEtapaFechaEdit(partidoId);
-      setNotice('✅ Etapa y fecha actualizadas');
+      await actualizarPartido(partidoId, { fecha: entry.fecha, hora: entry.hora || undefined });
+      closeFechaEdit(partidoId);
+      setNotice('✅ Fecha actualizada');
       setTimeout(() => setNotice(''), 2500);
       await refrescarPartidos();
       onRefresh?.();
     } catch (error) {
-      console.error('Error actualizando etapa/fecha:', error);
-      patchEtapaFechaEdit(partidoId, { saving: false });
-      setNotice('❌ Error al guardar');
+      console.error('Error actualizando fecha:', error);
+      setFechaEdits((prev) => {
+        const next = new Map(prev);
+        const current = next.get(partidoId);
+        if (current) next.set(partidoId, { ...current, saving: false });
+        return next;
+      });
+      setNotice('❌ Error al guardar la fecha');
       setTimeout(() => setNotice(''), 3000);
     }
   };
@@ -301,9 +349,6 @@ export default function GestionParticipantesFaseModal({
   // Paginación de partidos
   const [pagePartidos, setPagePartidos] = useState(1);
   const partidosPorPagina = 12;
-
-  // Eliminar partidos
-  const [eliminarConfirmId, setEliminarConfirmId] = useState<string | null>(null);
 
   useEffect(() => {
     if (activeTab !== 'configuracion') {
@@ -366,7 +411,6 @@ export default function GestionParticipantesFaseModal({
       }
       
       await refrescarPartidos();
-      setEliminarConfirmId(null);
       setNotice('✅ Partido eliminado exitosamente');
       setTimeout(() => setNotice(''), 2000);
       onRefresh?.();
@@ -635,83 +679,126 @@ export default function GestionParticipantesFaseModal({
     const videoEntry = videoEdits.get(p.id);
     const isEditingVideo = !!videoEntry;
     const esProgramado = p.estado === 'programado';
-    const entryEF = etapaFechaEdits.get(p.id);
-    const isEditingEF = !!entryEF;
+    const entryEtapa = etapaEdits.get(p.id);
+    const isEditingEtapa = !!entryEtapa;
+    const entryFecha = fechaEdits.get(p.id);
+    const isEditingFecha = !!entryFecha;
     const sugerencia = sugerenciasEtapa.get(p.id);
-    const puedeEditarEtapaFecha = esAdmin && (tipo === 'playoff' || tipo === 'promocion' || !!p.etapa);
+    const puedeEditarEtapa = esAdmin && (tipo === 'playoff' || tipo === 'promocion' || !!p.etapa);
+    const puedeEditarFecha = esAdmin;
     return (
     <li key={p.id} className={`group relative flex flex-col rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:shadow-md ${borderByEstado(p.estado)}`}>
       {/* Header */}
       <div className="mb-3 flex items-center justify-between">
-        {isEditingEF && entryEF ? (
+        {isEditingEtapa || isEditingFecha ? (
           <div className="flex flex-wrap items-end gap-2">
-            <label className="flex flex-col gap-0.5">
-              <span className="text-[9px] font-bold uppercase tracking-wide text-slate-400">Etapa</span>
-              <select
-                className="rounded-lg border border-brand-300 bg-white px-2 py-1 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
-                value={entryEF.etapa}
-                onChange={(e) => patchEtapaFechaEdit(p.id, { etapa: e.target.value })}
-                autoFocus
-              >
-                {['treintaidosavos', 'dieciseisavos', 'octavos', 'cuartos', 'semifinal', 'final', 'tercer_puesto', 'repechaje', 'otro'].map((op) => (
-                  <option key={op} value={op}>{ETAPA_LABELS[op] || op}</option>
-                ))}
-              </select>
-            </label>
-            <label className="flex flex-col gap-0.5">
-              <span className="text-[9px] font-bold uppercase tracking-wide text-slate-400">Fecha</span>
-              <input
-                type="date"
-                className="rounded-lg border border-brand-300 bg-white px-2 py-1 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
-                value={entryEF.fecha}
-                onChange={(e) => patchEtapaFechaEdit(p.id, { fecha: e.target.value })}
-              />
-            </label>
-            <label className="flex flex-col gap-0.5">
-              <span className="text-[9px] font-bold uppercase tracking-wide text-slate-400">Hora</span>
-              <input
-                type="time"
-                className="rounded-lg border border-brand-300 bg-white px-2 py-1 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
-                value={entryEF.hora}
-                onChange={(e) => patchEtapaFechaEdit(p.id, { hora: e.target.value })}
-              />
-            </label>
-            <button
-              type="button"
-              className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-emerald-700 transition shadow-sm disabled:opacity-60"
-              disabled={entryEF.saving}
-              onClick={() => void handleSaveEtapaFecha(p.id)}
-            >
-              {entryEF.saving ? 'Guardando…' : 'Guardar'}
-            </button>
-            <button
-              type="button"
-              className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-200 transition"
-              disabled={entryEF.saving}
-              onClick={() => closeEtapaFechaEdit(p.id)}
-            >
-              Cancelar
-            </button>
+            {isEditingEtapa && entryEtapa && (
+              <>
+                <label className="flex flex-col gap-0.5">
+                  <span className="text-[9px] font-bold uppercase tracking-wide text-slate-400">Etapa</span>
+                  <select
+                    className="rounded-lg border border-brand-300 bg-white px-2 py-1 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+                    value={entryEtapa.etapa}
+                    onChange={(e) => patchEtapaEdit(p.id, e.target.value)}
+                    autoFocus
+                  >
+                    {['treintaidosavos', 'dieciseisavos', 'octavos', 'cuartos', 'semifinal', 'final', 'tercer_puesto', 'repechaje', 'otro'].map((op) => (
+                      <option key={op} value={op}>{ETAPA_LABELS[op] || op}</option>
+                    ))}
+                  </select>
+                </label>
+                <button
+                  type="button"
+                  className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-emerald-700 transition shadow-sm disabled:opacity-60"
+                  disabled={entryEtapa.saving}
+                  onClick={() => void handleSaveEtapa(p.id)}
+                >
+                  {entryEtapa.saving ? 'Guardando…' : 'Guardar etapa'}
+                </button>
+                <button
+                  type="button"
+                  className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-200 transition"
+                  disabled={entryEtapa.saving}
+                  onClick={() => closeEtapaEdit(p.id)}
+                >
+                  Cancelar
+                </button>
+              </>
+            )}
+            {isEditingFecha && entryFecha && (
+              <>
+                <label className="flex flex-col gap-0.5">
+                  <span className="text-[9px] font-bold uppercase tracking-wide text-slate-400">Fecha</span>
+                  <input
+                    type="date"
+                    className="rounded-lg border border-brand-300 bg-white px-2 py-1 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+                    value={entryFecha.fecha}
+                    onChange={(e) => patchFechaEdit(p.id, { fecha: e.target.value })}
+                    autoFocus
+                  />
+                </label>
+                <label className="flex flex-col gap-0.5">
+                  <span className="text-[9px] font-bold uppercase tracking-wide text-slate-400">Hora</span>
+                  <input
+                    type="time"
+                    className="rounded-lg border border-brand-300 bg-white px-2 py-1 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+                    value={entryFecha.hora}
+                    onChange={(e) => patchFechaEdit(p.id, { hora: e.target.value })}
+                  />
+                </label>
+                <button
+                  type="button"
+                  className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-emerald-700 transition shadow-sm disabled:opacity-60"
+                  disabled={entryFecha.saving}
+                  onClick={() => void handleSaveFecha(p.id)}
+                >
+                  {entryFecha.saving ? 'Guardando…' : 'Guardar fecha'}
+                </button>
+                <button
+                  type="button"
+                  className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-200 transition"
+                  disabled={entryFecha.saving}
+                  onClick={() => closeFechaEdit(p.id)}
+                >
+                  Cancelar
+                </button>
+              </>
+            )}
           </div>
         ) : (
-          <button
-            type="button"
-            disabled={!puedeEditarEtapaFecha}
-            onClick={() => puedeEditarEtapaFecha && openEtapaFechaEdit(p)}
-            className={`flex flex-col items-start rounded-lg px-1 -mx-1 text-left transition-colors ${puedeEditarEtapaFecha ? 'hover:bg-slate-50 cursor-pointer' : 'cursor-default'}`}
-            title={puedeEditarEtapaFecha ? 'Editar etapa y fecha' : undefined}
-          >
-            <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">
-              {p.etapa ? p.etapa.replace('_', ' ') : (p.grupo ? `Grupo ${p.grupo}` : (p.division ? `División ${p.division}` : 'Partido'))}
-              {puedeEditarEtapaFecha && (
+          <div className="flex flex-col items-start gap-0.5">
+            <button
+              type="button"
+              disabled={!puedeEditarEtapa}
+              onClick={() => puedeEditarEtapa && openEtapaEdit(p)}
+              className={`flex items-center gap-1.5 rounded-lg px-1 -mx-1 text-left transition-colors ${puedeEditarEtapa ? 'hover:bg-slate-50 cursor-pointer' : 'cursor-default'}`}
+              title={puedeEditarEtapa ? 'Editar etapa' : undefined}
+            >
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                {p.etapa ? p.etapa.replace('_', ' ') : (p.grupo ? `Grupo ${p.grupo}` : (p.division ? `División ${p.division}` : 'Partido'))}
+              </span>
+              {puedeEditarEtapa && (
                 <svg viewBox="0 0 16 16" fill="currentColor" className="h-2.5 w-2.5 text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity">
                   <path d="M11.013 1.427a1.75 1.75 0 012.474 2.474l-8.5 8.5a1.75 1.75 0 01-.734.44l-3.001.9a.25.25 0 01-.31-.31l.9-3a1.75 1.75 0 01.439-.733l8.5-8.5z" />
                 </svg>
               )}
-            </span>
-            <span className="text-xs font-medium text-slate-500">
-              {new Date(p.fecha).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' })} {p.hora ? `· ${p.hora}` : ''}
-            </span>
+            </button>
+            <button
+              type="button"
+              disabled={!puedeEditarFecha}
+              onClick={() => puedeEditarFecha && openFechaEdit(p)}
+              className={`flex items-center gap-1.5 rounded-lg px-1 -mx-1 text-left transition-colors ${puedeEditarFecha ? 'hover:bg-slate-50 cursor-pointer' : 'cursor-default'}`}
+              title={puedeEditarFecha ? 'Editar fecha y hora' : undefined}
+            >
+              <span className="text-xs font-medium text-slate-500">
+                {new Date(p.fecha).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' })} {p.hora ? `· ${p.hora}` : ''}
+              </span>
+              {puedeEditarFecha && (
+                <svg viewBox="0 0 16 16" fill="currentColor" className="h-2.5 w-2.5 text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <path d="M11.013 1.427a1.75 1.75 0 012.474 2.474l-8.5 8.5a1.75 1.75 0 01-.734.44l-3.001.9a.25.25 0 01-.31-.31l.9-3a1.75 1.75 0 01.439-.733l8.5-8.5z" />
+                </svg>
+              )}
+            </button>
             {sugerencia?.difiere && (
               <span
                 className={`mt-0.5 rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide ${
@@ -727,18 +814,9 @@ export default function GestionParticipantesFaseModal({
                 {!sugerencia.confiable && ' ?'}
               </span>
             )}
-          </button>
+          </div>
         )}
         <div className="flex items-center gap-2">
-          {esAdmin && !isEditing && !isEditingEF && (
-            <button
-              onClick={() => setEliminarConfirmId(p.id)}
-              className="opacity-0 group-hover:opacity-100 transition-opacity rounded p-1 text-slate-300 hover:text-rose-500"
-              title="Eliminar"
-            >
-              <svg viewBox="0 0 16 16" fill="currentColor" className="h-3.5 w-3.5"><path d="M6 2a1 1 0 00-1 1H3.5a.5.5 0 000 1h9a.5.5 0 000-1H11a1 1 0 00-1-1H6zM3 5.5a.5.5 0 01.5-.5h9a.5.5 0 01.5.5v7A1.5 1.5 0 0111.5 14h-7A1.5 1.5 0 013 12.5v-7z"/></svg>
-            </button>
-          )}
           {renderStatusBadge(p.estado)}
         </div>
       </div>
@@ -929,19 +1007,6 @@ export default function GestionParticipantesFaseModal({
           >
             Cancelar
           </button>
-        </div>
-      )}
-
-      {/* Confirm delete overlay */}
-      {eliminarConfirmId === p.id && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-xl z-50 backdrop-blur-sm">
-          <div className="bg-white rounded-xl p-4 shadow-xl max-w-[200px] text-center">
-            <p className="text-sm font-bold text-slate-900 mb-4">¿Eliminar este partido?</p>
-            <div className="flex gap-2">
-              <button onClick={() => void handleEliminarPartido(p.id)} className="flex-1 bg-rose-600 text-white px-3 py-2 rounded-lg text-xs font-bold hover:bg-rose-700 transition">Eliminar</button>
-              <button onClick={() => setEliminarConfirmId(null)} className="flex-1 bg-slate-100 text-slate-700 px-3 py-2 rounded-lg text-xs font-bold hover:bg-slate-200 transition">Cancelar</button>
-            </div>
-          </div>
         </div>
       )}
     </li>
@@ -1997,6 +2062,11 @@ export default function GestionParticipantesFaseModal({
             setPartidos(lista);
           }
         }}
+        onEliminar={esAdmin ? async (id) => {
+          await handleEliminarPartido(id);
+          setInfoModalAbierto(false);
+          setPartidoInfoId(null);
+        } : undefined}
       />
 
       <ModalGestionSets
