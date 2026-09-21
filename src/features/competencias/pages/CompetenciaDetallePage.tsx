@@ -453,7 +453,7 @@ const CompetenciaDetallePage = () => {
               Tipo
               <select
                 value={renameFase.tipo}
-                onChange={(e) => setRenameFase({ ...renameFase, tipo: e.target.value as BackendFase['tipo'] | '' })}
+                onChange={(e) => setRenameFase({ ...renameFase, tipo: e.target.value as NonNullable<BackendFase['tipo']> | '' })}
                 className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
               >
                 <option value="">—</option>
