@@ -11,6 +11,7 @@ import type { Competencia } from '../../../../types';
 import { getParticipaciones as getCompetencias } from '../../../competencias/services/equipoCompetenciaService';
 import { useToast } from '../../../../shared/components/Toast/ToastProvider';
 import { extraerYoutubeId } from '../../../../shared/utils/youtube';
+import ConfirmModal from '../../../../shared/components/ConfirmModal/ConfirmModal';
 
 interface ModalInformacionPartidoProps {
   partidoId: string | null;
@@ -23,6 +24,7 @@ const ModalInformacionPartido = ({ partidoId, isOpen, onClose }: ModalInformacio
   const [partido, setPartido] = useState<PartidoDetallado | null>(null);
   const [loading, setLoading] = useState(false);
   const [modoEdicion, setModoEdicion] = useState(false);
+  const [confirmarEdicionFinalizado, setConfirmarEdicionFinalizado] = useState(false);
   const [datosEdicion, setDatosEdicion] = useState<{
     fecha: string;
     ubicacion: string;
@@ -194,7 +196,9 @@ const ModalInformacionPartido = ({ partidoId, isOpen, onClose }: ModalInformacio
                   <>
                     <button
                       type="button"
-                      onClick={() => setModoEdicion(true)}
+                      onClick={() =>
+                        partido.estado === 'finalizado' ? setConfirmarEdicionFinalizado(true) : setModoEdicion(true)
+                      }
                       className="inline-flex items-center px-3 py-1.5 bg-white border border-slate-200 text-slate-700 text-xs font-bold rounded-lg hover:bg-slate-50 transition-colors shadow-sm"
                     >
                       <svg className="w-3.5 h-3.5 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
@@ -668,6 +672,19 @@ const ModalInformacionPartido = ({ partidoId, isOpen, onClose }: ModalInformacio
         <p className="text-sm text-slate-500">Seleccioná un partido para ver su información.</p>
       )}
     </div>
+    <ConfirmModal
+      isOpen={confirmarEdicionFinalizado}
+      title="Partido finalizado"
+      message="Este partido ya está finalizado y tiene resultado cargado. Editarlo puede afectar tablas de posiciones, estadísticas y ratings ya calculados. ¿Seguro que querés modificarlo?"
+      confirmLabel="Sí, editar de todos modos"
+      cancelLabel="Cancelar"
+      variant="danger"
+      onConfirm={() => {
+        setConfirmarEdicionFinalizado(false);
+        setModoEdicion(true);
+      }}
+      onCancel={() => setConfirmarEdicionFinalizado(false)}
+    />
   </ModalBase>
   );
 };

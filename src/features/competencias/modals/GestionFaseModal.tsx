@@ -19,6 +19,13 @@ import { VisualBracket } from '../components/VisualBracket';
 import { sugerirEtapas, type SugerenciaEtapa } from '../components/sugerirEtapas';
 import { ETAPA_LABELS, ORDEN_SECUENCIAL } from '../components/derivarRondas';
 import { extraerYoutubeId } from '../../../shared/utils/youtube';
+import {
+  InformationCircleIcon,
+  ListBulletIcon,
+  UserGroupIcon,
+  ClipboardDocumentListIcon,
+  VideoCameraIcon,
+} from '@heroicons/react/20/solid';
 import ConfigurarReglamentoModal from './ConfigurarReglamentoModal';
 import GestionJugadoresFaseModal from './GestionJugadoresFaseModal';
 import GestionPlanillerosModal from './GestionPlanillerosModal';
@@ -143,7 +150,7 @@ export default function GestionParticipantesFaseModal({
   const [sugerencias, setSugerencias] = useState<any[]>([]);
 
   // Quick Edit States — one entry per partido, supports simultaneous edits
-  type QuickEntry = { local: number; visitante: number; finalizar: boolean; saving: boolean; videoUrl: string };
+  type QuickEntry = { local: number; visitante: number; finalizar: boolean; saving: boolean };
   const [quickEdits, setQuickEdits] = useState<Map<string, QuickEntry>>(new Map());
 
   const openQuickEdit = (p: Partido) => {
@@ -154,10 +161,68 @@ export default function GestionParticipantesFaseModal({
         visitante: p.marcadorVisitante ?? 0,
         finalizar: p.estado !== 'en_juego',
         saving: false,
-        videoUrl: p.videoUrl ?? '',
       });
       return next;
     });
+  };
+
+  // Edición rápida del link de video — independiente del marcador
+  type VideoEntry = { value: string; saving: boolean };
+  const [videoEdits, setVideoEdits] = useState<Map<string, VideoEntry>>(new Map());
+
+  const openVideoEdit = (p: Partido) => {
+    setVideoEdits(prev => {
+      const next = new Map(prev);
+      next.set(p.id, { value: p.videoUrl ?? '', saving: false });
+      return next;
+    });
+  };
+
+  const closeVideoEdit = (id: string) => {
+    setVideoEdits(prev => { const next = new Map(prev); next.delete(id); return next; });
+  };
+
+  const patchVideoEdit = (id: string, value: string) => {
+    setVideoEdits(prev => {
+      const entry = prev.get(id);
+      if (!entry) return prev;
+      const next = new Map(prev);
+      next.set(id, { ...entry, value });
+      return next;
+    });
+  };
+
+  const handleSaveVideo = async (partidoId: string) => {
+    const entry = videoEdits.get(partidoId);
+    if (!entry) return;
+    if (entry.value && !extraerYoutubeId(entry.value)) {
+      setNotice('❌ El link de video no parece ser un link de YouTube válido');
+      setTimeout(() => setNotice(''), 3000);
+      return;
+    }
+    setVideoEdits(prev => {
+      const next = new Map(prev);
+      next.set(partidoId, { ...entry, saving: true });
+      return next;
+    });
+    try {
+      await actualizarPartido(partidoId, { videoUrl: entry.value });
+      closeVideoEdit(partidoId);
+      setNotice('✅ Video guardado');
+      setTimeout(() => setNotice(''), 2500);
+      await refrescarPartidos();
+      onRefresh?.();
+    } catch (error) {
+      console.error('Error guardando video:', error);
+      setVideoEdits(prev => {
+        const next = new Map(prev);
+        const current = next.get(partidoId);
+        if (current) next.set(partidoId, { ...current, saving: false });
+        return next;
+      });
+      setNotice('❌ Error al guardar el video');
+      setTimeout(() => setNotice(''), 3000);
+    }
   };
 
   const closeQuickEdit = (id: string) => {
@@ -315,11 +380,6 @@ export default function GestionParticipantesFaseModal({
   const handleSaveQuickScore = async (partidoId: string) => {
     const entry = quickEdits.get(partidoId);
     if (!entry) return;
-    if (entry.videoUrl && !extraerYoutubeId(entry.videoUrl)) {
-      setNotice('❌ El link de video no parece ser un link de YouTube válido');
-      setTimeout(() => setNotice(''), 3000);
-      return;
-    }
     patchQuickEdit(partidoId, { saving: true });
     try {
       await actualizarPartido(partidoId, {
@@ -327,7 +387,6 @@ export default function GestionParticipantesFaseModal({
         marcadorVisitante: entry.visitante,
         marcadorModificadoManualmente: true,
         estado: entry.finalizar ? 'finalizado' : 'en_juego',
-        videoUrl: entry.videoUrl,
       });
       closeQuickEdit(partidoId);
       setNotice(entry.finalizar ? '✅ Resultado guardado' : '✅ Marcador actualizado');
@@ -573,6 +632,8 @@ export default function GestionParticipantesFaseModal({
   const renderMatchCard = (p: Partido) => {
     const entry = quickEdits.get(p.id);
     const isEditing = !!entry;
+    const videoEntry = videoEdits.get(p.id);
+    const isEditingVideo = !!videoEntry;
     const esProgramado = p.estado === 'programado';
     const entryEF = etapaFechaEdits.get(p.id);
     const isEditingEF = !!entryEF;
@@ -722,15 +783,6 @@ export default function GestionParticipantesFaseModal({
                 <span className={`h-1.5 w-1.5 rounded-full ${entry.finalizar ? 'bg-emerald-500' : 'bg-amber-400'}`} />
                 {entry.finalizar ? 'Finalizar partido' : 'Solo actualizar'}
               </button>
-              {/* Video URL rápido */}
-              <input
-                type="text"
-                placeholder="Link de YouTube (opcional)"
-                className="w-40 rounded-lg border border-slate-200 px-2 py-1 text-[10px] font-medium text-slate-700 focus:ring-2 focus:ring-brand-500/40 outline-none"
-                value={entry.videoUrl}
-                onChange={e => patchQuickEdit(p.id, { videoUrl: e.target.value })}
-                onKeyDown={e => { if (e.key === 'Enter') void handleSaveQuickScore(p.id); if (e.key === 'Escape') closeQuickEdit(p.id); }}
-              />
             </div>
           ) : esProgramado ? (
             esAdmin ? (
@@ -745,6 +797,20 @@ export default function GestionParticipantesFaseModal({
             ) : (
               <span className="text-xl font-black text-slate-300 px-2">VS</span>
             )
+          ) : p.estado === 'finalizado' ? (
+            <button
+              type="button"
+              onClick={() => {
+                setNotice('🔒 Partido finalizado: para modificar el resultado abrí "Info" → Editar.');
+                setTimeout(() => setNotice(''), 3500);
+              }}
+              title='Partido finalizado: para modificar el resultado abrí "Info" → Editar'
+              className="flex items-center gap-2 bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-700 opacity-80 cursor-not-allowed"
+            >
+              <span className="text-xl font-black text-white tabular-nums leading-none">{p.marcadorLocal ?? 0}</span>
+              <span className="h-3.5 w-px bg-slate-600" />
+              <span className="text-xl font-black text-white tabular-nums leading-none">{p.marcadorVisitante ?? 0}</span>
+            </button>
           ) : (
             <button
               type="button"
@@ -792,36 +858,79 @@ export default function GestionParticipantesFaseModal({
               </button>
             )}
             <button
-              className="rounded-lg bg-slate-50 px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-100 transition"
+              className="rounded-lg bg-slate-50 p-2 text-slate-600 hover:bg-slate-100 hover:text-brand-600 transition"
               onClick={() => { setPartidoInfoId(p.id); setInfoModalAbierto(true); }}
+              title="Info del partido"
             >
-              Info
+              <InformationCircleIcon className="h-4 w-4" />
             </button>
             {!esProgramado && (
               <button
-                className="rounded-lg bg-slate-50 px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-100 transition border border-slate-200"
+                className="rounded-lg bg-slate-50 p-2 text-slate-600 hover:bg-slate-100 hover:text-brand-600 transition border border-slate-200"
                 onClick={() => { setPartidoSetsId(p.id); setGestionSetsAbierto(true); }}
+                title="Sets del partido"
               >
-                Sets
+                <ListBulletIcon className="h-4 w-4" />
               </button>
             )}
             <button
-              className="rounded-lg bg-slate-50 px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-100 transition"
+              className="rounded-lg bg-slate-50 p-2 text-slate-600 hover:bg-slate-100 hover:text-brand-600 transition"
               onClick={() => { setPartidoAlineacionId(p.id); setAlineacionModalAbierto(true); }}
               title="Jugadores convocados a este partido"
             >
-              Convocados
+              <UserGroupIcon className="h-4 w-4" />
             </button>
             <button
-              className="rounded-lg bg-slate-50 px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-100 transition"
+              className="rounded-lg bg-slate-50 p-2 text-slate-600 hover:bg-slate-100 hover:text-brand-600 transition"
               onClick={() => setPlanillerosPartido({ id: p.id, fecha: (p as any).fecha })}
               title="Quién puede cargar la planilla de este partido"
             >
-              Planilleros
+              <ClipboardDocumentListIcon className="h-4 w-4" />
             </button>
+            {esAdmin && (
+              <button
+                className={`rounded-lg p-2 transition ${
+                  p.videoUrl ? 'bg-red-50 text-red-600 hover:bg-red-100' : 'bg-slate-50 text-slate-600 hover:bg-slate-100 hover:text-brand-600'
+                }`}
+                onClick={() => openVideoEdit(p)}
+                title={p.videoUrl ? 'Editar link de video' : 'Cargar link de video'}
+              >
+                <VideoCameraIcon className="h-4 w-4" />
+              </button>
+            )}
           </>
         )}
       </div>
+
+      {/* Edición rápida de video (independiente del resultado) */}
+      {isEditingVideo && videoEntry && (
+        <div className="mt-2 flex items-center gap-2 pt-2 border-t border-slate-100">
+          <VideoCameraIcon className="h-4 w-4 shrink-0 text-slate-400" />
+          <input
+            type="text"
+            autoFocus
+            placeholder="https://youtube.com/watch?v=..."
+            className="flex-1 min-w-0 rounded-lg border border-slate-200 px-2 py-1.5 text-xs font-medium text-slate-700 focus:ring-2 focus:ring-brand-500/40 outline-none"
+            value={videoEntry.value}
+            onChange={e => patchVideoEdit(p.id, e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') void handleSaveVideo(p.id); if (e.key === 'Escape') closeVideoEdit(p.id); }}
+          />
+          <button
+            className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-emerald-700 transition shadow-sm disabled:opacity-60 shrink-0"
+            disabled={videoEntry.saving}
+            onClick={() => void handleSaveVideo(p.id)}
+          >
+            {videoEntry.saving ? '…' : 'Guardar'}
+          </button>
+          <button
+            className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-200 transition shrink-0"
+            disabled={videoEntry.saving}
+            onClick={() => closeVideoEdit(p.id)}
+          >
+            Cancelar
+          </button>
+        </div>
+      )}
 
       {/* Confirm delete overlay */}
       {eliminarConfirmId === p.id && (
