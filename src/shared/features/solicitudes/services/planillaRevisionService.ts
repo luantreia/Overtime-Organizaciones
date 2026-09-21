@@ -17,6 +17,12 @@ export interface PlanillaJugadorRef {
 export interface PlanillaPresente {
   _id: string;
   jugador: PlanillaJugadorRef | string;
+  /**
+   * De qué plantel sale — local o visitante del partido, no necesariamente el equipo
+   * dueño de la planilla (que ahora puede capturar también al rival, o scoutear un
+   * partido ajeno). Un presente viejo sin este campo es del equipo dueño.
+   */
+  equipo?: string | { _id: string; nombre?: string };
   jugadorPartido: string | null;
   numero?: number;
   rol: 'jugador' | 'entrenador';
@@ -70,9 +76,12 @@ export interface EstadisticaOficial {
 
 export interface RevisionPlanilla {
   planilla: PlanillaCompleta;
+  /** Nombres de local y visitante del partido — para mostrar de qué equipo es cada presente. */
+  equiposDelPartido: Array<{ _id: string; nombre?: string }>;
   oficial: {
     sets: Array<{ _id: string; numeroSet: number; ganadorSet: string }>;
-    convocatoria: JugadorPartidoOficial[];
+    /** Convocatoria oficial de CADA equipo del partido, no sólo el dueño de la planilla — clave por equipoId. */
+    convocatoriaPorEquipo: Record<string, JugadorPartidoOficial[]>;
     estadisticas: EstadisticaOficial[];
   };
 }

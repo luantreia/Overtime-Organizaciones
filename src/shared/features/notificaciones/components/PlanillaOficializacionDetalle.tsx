@@ -65,14 +65,26 @@ const PlanillaOficializacionDetalle: React.FC<Props> = ({ planillaId }) => {
 
   if (!revision) return null;
 
-  const { planilla, oficial } = revision;
+  const { planilla, oficial, equiposDelPartido } = revision;
   const dePlanilla = totalesPlanilla(planilla);
   const deOficial = totalesOficiales(revision);
 
   const setsNuevos = planilla.sets.filter((s) => !s.setPartido).length;
   const presentesNuevos = planilla.presentes.filter((p) => !p.jugadorPartido).length;
+  const equipoDueñoId = typeof planilla.equipo === 'object' ? planilla.equipo._id : planilla.equipo;
   const equipoNombre =
     typeof planilla.equipo === 'object' ? planilla.equipo.nombre ?? 'el equipo' : 'el equipo';
+
+  const nombrePorEquipoId = new Map((equiposDelPartido ?? []).map((eq) => [eq._id, eq.nombre ?? 'Equipo']));
+  const idEquipoDePresente = (p: (typeof planilla.presentes)[number]): string | undefined =>
+    typeof p.equipo === 'object' ? p.equipo?._id : p.equipo;
+  // Presentes de un equipo que no es el dueño de la planilla: es lo que aparece cuando el equipo
+  // cargó también al rival, o cuando la planilla es de scouting y ninguno de los dos es "suyo".
+  const hayPresentesDeOtroEquipo = planilla.presentes.some((p) => {
+    const idEq = idEquipoDePresente(p);
+    return idEq && idEq !== equipoDueñoId;
+  });
+  const equipoDueñoJuega = !equiposDelPartido?.length || equiposDelPartido.some((eq) => eq._id === equipoDueñoId);
 
   return (
     <div className="space-y-3">
@@ -80,6 +92,17 @@ const PlanillaOficializacionDetalle: React.FC<Props> = ({ planillaId }) => {
         <p>
           <span className="font-semibold">{equipoNombre}</span> cargó esta planilla por su cuenta.
           Nada de esto está todavía en el registro oficial.
+          {!equipoDueñoJuega && (
+            <span className="mt-1 block text-xs text-slate-500">
+              {equipoNombre} no jugó este partido — es una planilla de scouting sobre un partido
+              ajeno.
+            </span>
+          )}
+          {hayPresentesDeOtroEquipo && equipoDueñoJuega && (
+            <span className="mt-1 block text-xs text-slate-500">
+              Incluye jugadores del otro equipo, cargados por {equipoNombre}.
+            </span>
+          )}
         </p>
         <p className="mt-1 text-xs text-slate-500">
           Modo {planilla.modo === 'sets' ? 'set a set' : 'totales del partido'} ·{' '}
@@ -118,6 +141,7 @@ const PlanillaOficializacionDetalle: React.FC<Props> = ({ planillaId }) => {
           <thead>
             <tr className="border-b border-slate-200 text-left text-[10px] font-bold uppercase tracking-wide text-slate-400">
               <th className="pb-2 pr-3">Jugador</th>
+              {hayPresentesDeOtroEquipo && <th className="pb-2 pr-3">Equipo</th>}
               {CAMPOS.map((campo) => (
                 <th key={campo} className="pb-2 pr-3 text-right">
                   {campo}
@@ -146,6 +170,11 @@ const PlanillaOficializacionDetalle: React.FC<Props> = ({ planillaId }) => {
                       </span>
                     )}
                   </td>
+                  {hayPresentesDeOtroEquipo && (
+                    <td className="py-1.5 pr-3 text-xs text-slate-500">
+                      {nombrePorEquipoId.get(idEquipoDePresente(presente) ?? '') ?? '—'}
+                    </td>
+                  )}
                   {CAMPOS.map((campo) => (
                     <td
                       key={campo}
