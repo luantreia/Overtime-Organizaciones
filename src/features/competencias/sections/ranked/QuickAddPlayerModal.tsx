@@ -1,16 +1,19 @@
 import React, { useState } from 'react';
+import { Overlay } from 'overtime-kit';
 import { Button, Input, Select } from '../../../../shared/components/ui';
 
 interface QuickAddPlayerModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: (datos: { 
-    nombre: string; 
-    alias?: string; 
-    genero?: string; 
+  onSuccess: (datos: {
+    nombre: string;
+    alias?: string;
+    genero?: string;
     fechaNacimiento?: string;
   }) => Promise<void>;
 }
+
+const FORM_ID = 'quick-add-player-form';
 
 export const QuickAddPlayerModal: React.FC<QuickAddPlayerModalProps> = ({
   isOpen,
@@ -31,11 +34,11 @@ export const QuickAddPlayerModal: React.FC<QuickAddPlayerModalProps> = ({
     setBusy(true);
     setError(null);
     try {
-      await onSuccess({ 
-        nombre, 
-        alias, 
+      await onSuccess({
+        nombre,
+        alias,
         genero: genero || undefined,
-        fechaNacimiento: fechaNacimiento || undefined 
+        fechaNacimiento: fechaNacimiento || undefined
       });
       setNombre('');
       setAlias('');
@@ -48,64 +51,65 @@ export const QuickAddPlayerModal: React.FC<QuickAddPlayerModalProps> = ({
     }
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
-        <h2 className="mb-4 text-xl font-bold text-slate-900">Nuevo Jugador Rápido</h2>
-        
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <Input
-            label="Nombre Completo"
-            value={nombre}
-            onChange={(e) => setNombre(e.target.value)}
-            placeholder="Ej: Juan Pérez"
-            required
-            autoFocus
-          />
-          
-          <Input
-            label="Apodo / Alias (Opcional)"
-            value={alias}
-            onChange={(e) => setAlias(e.target.value)}
-            placeholder="Ej: El Rayo"
-          />
+    <Overlay
+      isOpen={isOpen}
+      onClose={onClose}
+      size="sm"
+      title="Nuevo Jugador Rápido"
+      footer={
+        <div className="flex justify-end gap-3">
+          <Button variant="outline" onClick={onClose} disabled={busy}>
+            Cancelar
+          </Button>
+          <Button
+            type="submit"
+            form={FORM_ID}
+            loading={busy}
+            disabled={!nombre.trim() || busy}
+          >
+            Crear y Agregar
+          </Button>
+        </div>
+      }
+    >
+      <form id={FORM_ID} onSubmit={handleSubmit} className="space-y-4">
+        <Input
+          label="Nombre Completo"
+          value={nombre}
+          onChange={(e) => setNombre(e.target.value)}
+          placeholder="Ej: Juan Pérez"
+          required
+          autoFocus
+        />
 
-          <Input
-            label="Fecha de Nacimiento (Opcional)"
-            type="date"
-            value={fechaNacimiento}
-            onChange={(e) => setFechaNacimiento(e.target.value)}
-          />
+        <Input
+          label="Apodo / Alias (Opcional)"
+          value={alias}
+          onChange={(e) => setAlias(e.target.value)}
+          placeholder="Ej: El Rayo"
+        />
 
-          <Select
-            label="Género"
-            value={genero}
-            onChange={(e) => setGenero(e.target.value as any)}
-            options={[
-              { label: 'Masculino', value: 'masculino' },
-              { label: 'Femenino', value: 'femenino' },
-              { label: 'Otro', value: 'otro' },
-            ]}
-          />
+        <Input
+          label="Fecha de Nacimiento (Opcional)"
+          type="date"
+          value={fechaNacimiento}
+          onChange={(e) => setFechaNacimiento(e.target.value)}
+        />
 
-          {error && <p className="text-sm text-red-600">{error}</p>}
+        <Select
+          label="Género"
+          value={genero}
+          onChange={(e) => setGenero(e.target.value as any)}
+          options={[
+            { label: 'Masculino', value: 'masculino' },
+            { label: 'Femenino', value: 'femenino' },
+            { label: 'Otro', value: 'otro' },
+          ]}
+        />
 
-          <div className="flex justify-end gap-3 pt-4">
-            <Button variant="outline" onClick={onClose} disabled={busy}>
-              Cancelar
-            </Button>
-            <Button 
-              type="submit" 
-              loading={busy}
-              disabled={!nombre.trim() || busy}
-            >
-              Crear y Agregar
-            </Button>
-          </div>
-        </form>
-      </div>
-    </div>
+        {error && <p className="text-sm text-red-600">{error}</p>}
+      </form>
+    </Overlay>
   );
 };
