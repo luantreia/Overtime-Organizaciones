@@ -81,7 +81,7 @@ export const RankedMatchSettingsModal: React.FC<RankedMatchSettingsModalProps> =
     <Overlay
       isOpen={isOpen}
       onClose={onClose}
-      size="md"
+      size="sm"
       title="Opciones"
       footer={
         <div className="flex gap-2">

@@ -124,7 +124,7 @@ export const PlayerAdvancedSettingsModal: React.FC<PlayerAdvancedSettingsModalPr
     <Overlay
       isOpen={isOpen}
       onClose={onClose}
-      size="lg"
+      size="md"
       title={`Ajustes: ${playerName}`}
       footer={
         <>
