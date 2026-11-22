@@ -6,7 +6,7 @@ import { getPartidosPorCompetencia } from '../../partidos/services/partidoServic
 import { getSolicitudesEdicion } from '../../../shared/features/solicitudes/services/solicitudesEdicionService';
 import type { ISolicitudEdicion } from '../../../shared/features/solicitudes/types/solicitudesEdicion';
 import type { Partido } from '../../../types';
-import AtencionSection, { type HuecoDato } from '../sections/AtencionSection';
+import AtencionSection, { type HuecoDato, type PartidoPendiente } from '../sections/AtencionSection';
 import ProximosPartidosSection from '../sections/ProximosPartidosSection';
 import ProgresoTemporadasSection, { type ProgresoTemporada } from '../sections/ProgresoTemporadasSection';
 
@@ -16,7 +16,7 @@ const DashboardOrgPage = () => {
   const [loadingCompetencias, setLoadingCompetencias] = useState(false);
   const [loadingResumen, setLoadingResumen] = useState(false);
 
-  const [partidosPendientes, setPartidosPendientes] = useState<Partido[]>([]);
+  const [partidosPendientes, setPartidosPendientes] = useState<PartidoPendiente[]>([]);
   const [partidosProximos, setPartidosProximos] = useState<Partido[]>([]);
   const [huecos, setHuecos] = useState<HuecoDato[]>([]);
   const [progresoTemporadas, setProgresoTemporadas] = useState<ProgresoTemporada[]>([]);
@@ -105,7 +105,7 @@ const DashboardOrgPage = () => {
 
         if (cancelado) return;
 
-        const pendientes: Partido[] = [];
+        const pendientes: PartidoPendiente[] = [];
         const proximos: Partido[] = [];
         const huecosAcumulados: HuecoDato[] = [];
         const progresoAcumulado: ProgresoTemporada[] = [];
@@ -115,7 +115,7 @@ const DashboardOrgPage = () => {
             if (p.estado !== 'programado' && p.estado !== 'en_juego') continue;
             const fechaPartido = new Date(p.hora ? `${p.fecha}T${p.hora}` : p.fecha);
             if (Number.isNaN(fechaPartido.getTime())) continue;
-            if (fechaPartido < ahora) pendientes.push(p);
+            if (fechaPartido < ahora) pendientes.push({ ...p, competenciaId: competencia._id });
             else if (fechaPartido <= en7dias) proximos.push(p);
           }
 

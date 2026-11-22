@@ -2,6 +2,8 @@ import { Link } from 'react-router-dom';
 import type { Partido } from '../../../types';
 import type { ISolicitudEdicion } from '../../../shared/features/solicitudes/types/solicitudesEdicion';
 
+export type PartidoPendiente = Partido & { competenciaId: string };
+
 export interface HuecoDato {
   id: string;
   texto: string;
@@ -10,7 +12,7 @@ export interface HuecoDato {
 
 interface AtencionSectionProps {
   loading: boolean;
-  partidosPendientes: Partido[];
+  partidosPendientes: PartidoPendiente[];
   solicitudesPendientes: ISolicitudEdicion[];
   solicitudesPendientesCount: number;
   huecos: HuecoDato[];
@@ -115,7 +117,7 @@ const AtencionSection = ({ loading, partidosPendientes, solicitudesPendientes, s
         <ul className="divide-y divide-slate-100 rounded-2xl border border-slate-200 bg-white">
           {partidosPendientes.slice(0, 4).map((p) => (
             <li key={`partido-${p.id}`}>
-              <Link to={`/partidos/${p.id}`} className="flex items-center gap-3 px-4 py-3 text-sm transition hover:bg-slate-50">
+              <Link to={`/competencias/${p.competenciaId}?tab=partidos`} className="flex items-center gap-3 px-4 py-3 text-sm transition hover:bg-slate-50">
                 <span className="shrink-0 text-base" aria-hidden>🕐</span>
                 <span className="flex-1 text-slate-700">{partidoTexto(p)}</span>
                 <span className="flex-shrink-0 rounded-full bg-rose-100 px-2 py-0.5 text-2xs font-bold uppercase tracking-wide text-rose-700">
