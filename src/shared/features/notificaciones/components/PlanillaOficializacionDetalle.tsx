@@ -6,6 +6,7 @@ import {
   totalesOficiales,
   type RevisionPlanilla,
 } from '../../solicitudes/services/planillaRevisionService';
+import ReconciliacionPartidoModal from '../../solicitudes/components/ReconciliacionPartidoModal';
 
 /**
  * Lo que ve el organizador antes de aprobar la oficialización de una planilla.
@@ -30,6 +31,7 @@ const PlanillaOficializacionDetalle: React.FC<Props> = ({ planillaId }) => {
   const [revision, setRevision] = useState<RevisionPlanilla | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [reconciliando, setReconciliando] = useState(false);
 
   useEffect(() => {
     let cancelado = false;
@@ -110,7 +112,22 @@ const PlanillaOficializacionDetalle: React.FC<Props> = ({ planillaId }) => {
           {planilla.sets.length} set{planilla.sets.length === 1 ? '' : 's'} · visibilidad al aprobar:{' '}
           {planilla.visibilidadObjetivo === 'publica' ? 'pública' : 'solo organización'}
         </p>
+        {/* Aprobar esta planilla sola esconde si el otro equipo mandó una distinta: desde acá
+            se ven todas las versiones del partido juntas y se elige cuál manda por equipo. */}
+        <button
+          type="button"
+          onClick={() => setReconciliando(true)}
+          className="mt-2 text-xs font-semibold text-indigo-600 hover:text-indigo-800"
+        >
+          Comparar con todas las versiones del partido y reconciliar →
+        </button>
       </div>
+
+      <ReconciliacionPartidoModal
+        partidoId={String(planilla.partido)}
+        isOpen={reconciliando}
+        onClose={() => setReconciliando(false)}
+      />
 
       {(setsNuevos > 0 || presentesNuevos > 0) && (
         <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
