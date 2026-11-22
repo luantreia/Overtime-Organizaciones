@@ -1,6 +1,7 @@
 import { useState, type FC } from 'react';
 import type { Partido } from '../../../types';
 import { ShareStandingsModal } from './ShareStandingsModal';
+import { DataTable } from 'overtime-kit';
 
 type Row = {
   equipo: string;
@@ -99,45 +100,34 @@ export const TablaStandings: FC<Props> = ({ partidos, title = 'Rendimiento por e
         no con el reglamento de cada fase: para la tabla oficial, con sus criterios de desempate, mirá
         la fase en la estructura de la competencia.
       </p>
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Equipo</th>
-              <th className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase">J</th>
-              <th className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase">W</th>
-              <th className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase">D</th>
-              <th className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase">L</th>
-              <th className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase">GF</th>
-              <th className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase">GC</th>
-              <th className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase">Dif</th>
-              <th
-                className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase"
-                title="Conteo genérico 3/1/0, no el reglamento de la fase"
-              >
-                Pts
-              </th>
-              <th className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase">Efect.</th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {rows.map((r) => (
-              <tr key={r.equipo} className="hover:bg-gray-50">
-                <td className="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-900">{r.equipo}</td>
-                <td className="px-2 py-2 whitespace-nowrap text-sm text-center">{r.j}</td>
-                <td className="px-2 py-2 whitespace-nowrap text-sm text-center">{r.w}</td>
-                <td className="px-2 py-2 whitespace-nowrap text-sm text-center">{r.d}</td>
-                <td className="px-2 py-2 whitespace-nowrap text-sm text-center">{r.l}</td>
-                <td className="px-2 py-2 whitespace-nowrap text-sm text-center">{r.gf}</td>
-                <td className="px-2 py-2 whitespace-nowrap text-sm text-center">{r.gc}</td>
-                <td className="px-2 py-2 whitespace-nowrap text-sm text-center">{r.dif}</td>
-                <td className="px-2 py-2 whitespace-nowrap text-sm text-center font-semibold">{r.pts}</td>
-                <td className="px-2 py-2 whitespace-nowrap text-sm text-center">{r.ef}%</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      {/* Sin defaultSort: `rows` ya viene ordenado por pts, dif, gf. Ordenar por otra columna es
+          parte del análisis (¿quién tiene mejor efectividad?), no reemplaza ese orden. */}
+      <DataTable
+        caption={title}
+        data={rows}
+        rowKey={(r) => r.equipo}
+        empty="No hay partidos finalizados en el filtro actual."
+        pageSize={0}
+        mobile="scroll"
+        columns={[
+          { id: 'equipo', header: 'Equipo', sortValue: (r) => r.equipo, cell: (r) => <span className="whitespace-nowrap font-medium text-gray-900">{r.equipo}</span> },
+          { id: 'j', header: <abbr title="Jugados" className="no-underline">J</abbr>, align: 'center', sortValue: (r) => r.j, cell: (r) => r.j },
+          { id: 'w', header: <abbr title="Ganados" className="no-underline">W</abbr>, align: 'center', sortValue: (r) => r.w, cell: (r) => r.w },
+          { id: 'd', header: <abbr title="Empatados" className="no-underline">D</abbr>, align: 'center', sortValue: (r) => r.d, cell: (r) => r.d },
+          { id: 'l', header: <abbr title="Perdidos" className="no-underline">L</abbr>, align: 'center', sortValue: (r) => r.l, cell: (r) => r.l },
+          { id: 'gf', header: <abbr title="Puntos a favor" className="no-underline">GF</abbr>, align: 'center', sortValue: (r) => r.gf, cell: (r) => r.gf },
+          { id: 'gc', header: <abbr title="Puntos en contra" className="no-underline">GC</abbr>, align: 'center', sortValue: (r) => r.gc, cell: (r) => r.gc },
+          { id: 'dif', header: <abbr title="Diferencia" className="no-underline">Dif</abbr>, align: 'center', sortValue: (r) => r.dif, cell: (r) => r.dif },
+          {
+            id: 'pts',
+            header: <abbr title="Conteo genérico 3/1/0, no el reglamento de la fase" className="no-underline">Pts</abbr>,
+            align: 'center',
+            sortValue: (r) => r.pts,
+            cell: (r) => <span className="font-semibold">{r.pts}</span>,
+          },
+          { id: 'ef', header: 'Efect.', align: 'center', sortValue: (r) => r.ef, cell: (r) => `${r.ef}%` },
+        ]}
+      />
 
       {competenciaNombre && (
         <ShareStandingsModal

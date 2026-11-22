@@ -20,6 +20,7 @@ import {
 } from '../../../shared/utils/types/orgTypes';
 import { Button, Input, Select } from '../../../shared/components/ui';
 import ConfirmModal from '../../../shared/components/ConfirmModal/ConfirmModal';
+import { DataTable } from 'overtime-kit';
 
 interface GestionMiembrosProps {
   organizacionId: string;
@@ -277,87 +278,53 @@ const GestionMiembros: React.FC<GestionMiembrosProps> = ({
       )}
 
       {/* Lista de miembros */}
-      {loading ? (
-        <div className="text-center py-8">
-          <p className="text-gray-500">Cargando miembros...</p>
-        </div>
-      ) : miembros.length === 0 ? (
-        <div className="rounded-lg border border-gray-200 p-8 text-center">
-          <p className="text-gray-500">No hay miembros en esta organización.</p>
-        </div>
-      ) : (
-        <div className="overflow-hidden rounded-lg border border-gray-200">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Miembro
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Rol
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Estado
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Notas
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Acciones
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {miembros.map((miembro) => (
-                <tr key={miembro._id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div>
-                      <div className="text-sm font-medium text-gray-900">
-                        {(miembro.usuarioId as any)?.nombre || 'Usuario'}
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        {(miembro.usuarioId as any)?.email || ''}
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="text-sm text-gray-900">
-                      {ORG_MEMBER_ROLE_OPTIONS.find(opt => opt.value === miembro.rol)?.label || miembro.rol}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${getEstadoBadge(miembro.estado)}`}>
-                      {miembro.estado}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-500">
-                    {miembro.notas || '-'}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex gap-2">
-                      <Button
-                        onClick={() => startEdit(miembro)}
-                        variant="outline"
-                        size="sm"
-                      >
-                        Editar
-                      </Button>
-                      <Button
-                        onClick={() => handleEliminarMiembro(miembro)}
-                        variant="outline"
-                        size="sm"
-                        className="text-red-600 hover:text-red-700 hover:border-red-300"
-                      >
-                        Eliminar
-                      </Button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+      <DataTable
+        caption="Miembros de la organización"
+        data={miembros}
+        rowKey={(m) => m._id}
+        loading={loading}
+        empty="No hay miembros en esta organización."
+        columns={[
+          {
+            id: 'miembro',
+            header: 'Miembro',
+            sortValue: (m) => (m.usuarioId as any)?.nombre,
+            cell: (m) => (
+              <div className="whitespace-nowrap">
+                <div className="text-sm font-medium text-gray-900">{(m.usuarioId as any)?.nombre || 'Usuario'}</div>
+                <div className="text-sm text-gray-500">{(m.usuarioId as any)?.email || ''}</div>
+              </div>
+            ),
+          },
+          {
+            id: 'rol',
+            header: 'Rol',
+            sortValue: (m) => m.rol,
+            cell: (m) => <span className="text-sm text-gray-900">{ORG_MEMBER_ROLE_OPTIONS.find((opt) => opt.value === m.rol)?.label || m.rol}</span>,
+          },
+          {
+            id: 'estado',
+            header: 'Estado',
+            sortValue: (m) => m.estado,
+            cell: (m) => <span className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${getEstadoBadge(m.estado)}`}>{m.estado}</span>,
+          },
+          { id: 'notas', header: 'Notas', hideOnMobile: true, cell: (m) => <span className="text-sm text-gray-500">{m.notas || '-'}</span> },
+          {
+            id: 'acciones',
+            header: <span className="sr-only">Acciones</span>,
+            cell: (m) => (
+              <div className="flex gap-2">
+                <Button onClick={() => startEdit(m)} variant="outline" size="sm">
+                  Editar
+                </Button>
+                <Button onClick={() => handleEliminarMiembro(m)} variant="outline" size="sm" className="text-red-600 hover:text-red-700 hover:border-red-300">
+                  Eliminar
+                </Button>
+              </div>
+            ),
+          },
+        ]}
+      />
 
       <ConfirmModal
         isOpen={!!confirmEliminarMiembro}
