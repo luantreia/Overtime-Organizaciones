@@ -104,6 +104,8 @@ const ReconciliacionPartidoModal: React.FC<Props> = ({ partidoId, isOpen, onClos
     [datos],
   );
 
+  // Una planilla de totales no tiene sets: no lleva columna en la tabla de ganadores de set.
+  const fuentesConSets = (datos?.fuentes ?? []).filter((f) => f.modo === 'sets');
   const algoParaPublicar = Object.values(eleccion).some((f) => f !== FUENTE_OFICIAL);
 
   const publicar = async (confirmar: boolean): Promise<void> => {
@@ -337,7 +339,7 @@ const ReconciliacionPartidoModal: React.FC<Props> = ({ partidoId, isOpen, onClos
                   <thead>
                     <tr className="border-b border-slate-200 text-left text-[10px] font-bold uppercase tracking-wide text-slate-400">
                       <th className="pb-2 pr-3">Set</th>
-                      {datos.fuentes.map((f) => (
+                      {fuentesConSets.map((f) => (
                         <th key={f.id} className="pb-2 pr-3">{etiquetaFuente(f)}</th>
                       ))}
                     </tr>
@@ -351,7 +353,7 @@ const ReconciliacionPartidoModal: React.FC<Props> = ({ partidoId, isOpen, onClos
                             <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700">difiere</span>
                           )}
                         </td>
-                        {datos.fuentes.map((f) => (
+                        {fuentesConSets.map((f) => (
                           <td key={f.id} className="py-1.5 pr-3 text-xs text-slate-600">{s.valores[f.id] ?? '—'}</td>
                         ))}
                       </tr>
