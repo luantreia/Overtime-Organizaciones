@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { useFiltrosURL } from '../../../shared/hooks/useFiltrosURL';
 import { useOrganizacion } from '../../../app/providers/OrganizacionContext';
 import {
   listCompetenciasByOrganizacion,
@@ -18,9 +20,12 @@ const CompetenciasOrgPage = () => {
   });
   const [creating, setCreating] = useState(false);
   const [showForm, setShowForm] = useState(false);
-  const [busqueda, setBusqueda] = useState('');
-  const [estado, setEstado] = useState('');
-  const [page, setPage] = useState(1);
+  // Búsqueda, estado y página en la URL: volver desde una competencia mantiene la lista como estaba.
+  const filtros = useFiltrosURL<'q' | 'estado' | 'page'>();
+  const busqueda = filtros.get('q');
+  const estado = filtros.get('estado');
+  const page = Math.max(1, Number(filtros.get('page')) || 1);
+  const setPage = (n: number) => filtros.set({ page: n > 1 ? n : null });
   const pageSize = 8;
 
   const refresh = async (orgId: string) => {
@@ -100,7 +105,7 @@ const CompetenciasOrgPage = () => {
               placeholder="Nombre o descripción"
               className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
               value={busqueda}
-              onChange={(e) => { setBusqueda(e.target.value); setPage(1); }}
+              onChange={(e) => filtros.set({ q: e.target.value, page: null })}
             />
           </div>
           <div>
@@ -108,7 +113,7 @@ const CompetenciasOrgPage = () => {
             <select id="competenciasorgpage-estado"
               className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
               value={estado}
-              onChange={(e) => { setEstado(e.target.value); setPage(1); }}
+              onChange={(e) => filtros.set({ estado: e.target.value, page: null })}
             >
               <option value="">Todos los estados</option>
               <option value="en_creacion">En creación</option>
@@ -122,7 +127,7 @@ const CompetenciasOrgPage = () => {
             <button 
               type="button" 
               className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 transition shadow-sm"
-              onClick={()=>{ setBusqueda(''); setEstado(''); setPage(1); }}
+              onClick={()=> filtros.set({ q: null, estado: null, page: null })}
             >
               Limpiar filtros
             </button>
@@ -236,11 +241,11 @@ const CompetenciasOrgPage = () => {
                 ) : (
                   <div className="grid gap-4 md:grid-cols-2">
                     {pageItems.map((c) => (
-                      <a key={c._id} href={`/competencias/${c._id}`} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-card hover:bg-slate-50">
+                      <Link key={c._id} to={`/competencias/${c._id}`} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-card hover:bg-slate-50">
                         <h3 className="text-lg font-semibold text-slate-900">{c.nombre ?? 'Competencia'}</h3>
                         <p className="mt-1 text-sm text-slate-600">{c.modalidad ?? '—'} · {c.categoria ?? '—'}</p>
                         <p className="text-xs text-slate-500">Estado: {c.estado ?? '—'}</p>
-                      </a>
+                      </Link>
                     ))}
                   </div>
                 )}
@@ -250,7 +255,7 @@ const CompetenciasOrgPage = () => {
                       type="button"
                       disabled={currentPage === 1}
                       className="rounded-lg border border-slate-200 px-3 py-1.5 disabled:opacity-50"
-                      onClick={() => setPage((p) => Math.max(1, p - 1))}
+                      onClick={() => setPage(currentPage - 1)}
                     >
                       Anterior
                     </button>
@@ -259,7 +264,7 @@ const CompetenciasOrgPage = () => {
                       type="button"
                       disabled={currentPage === totalPages}
                       className="rounded-lg border border-slate-200 px-3 py-1.5 disabled:opacity-50"
-                      onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                      onClick={() => setPage(currentPage + 1)}
                     >
                       Siguiente
                     </button>

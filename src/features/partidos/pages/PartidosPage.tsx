@@ -1,9 +1,10 @@
 import { useOrganizacion } from '../../../app/providers/OrganizacionContext';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import PartidoCard from '../../../shared/components/PartidoCard/PartidoCard';
 import {
   getPartidosPorFase,
   getPartidosPorCompetencia,
+  getPartidosPorTemporada,
 } from '../services/partidoService';
 import type { JugadorPartido, Partido } from '../../../types';
 import { ModalPartidoAdmin } from '../components';
@@ -16,6 +17,9 @@ import { useToast } from '../../../shared/components/Toast/ToastProvider';
 import { listCompetenciasByOrganizacion } from '../../competencias/services/competenciasService';
 import { listTemporadasByCompetencia } from '../../competencias/services/temporadasService';
 import { listFasesByTemporada } from '../../competencias/services/fasesService';
+import { useFiltrosURL } from '../../../shared/hooks/useFiltrosURL';
+
+type ModalAbierto = { tipo: 'admin' | 'alineacion' | 'info'; partidoId: string } | null;
 
 const PartidosPage = () => {
   const token = useToken();
@@ -23,23 +27,22 @@ const PartidosPage = () => {
   const { addToast } = useToast();
   const [todos, setTodos] = useState<Partido[]>([]);
   const [loading, setLoading] = useState(false);
-  const [modalAdminAbierto, setModalAdminAbierto] = useState(false);
-  const [partidoAdminId, setPartidoAdminId] = useState<string | null>(null);
-  const [alineacionModalAbierto, setAlineacionModalAbierto] = useState(false);
-  const [partidoAlineacionId, setPartidoAlineacionId] = useState<string | null>(null);
-  const [infoModalAbierto, setInfoModalAbierto] = useState(false);
-  const [partidoInfoId, setPartidoInfoId] = useState<string | null>(null);
-  // Paginación
-  const [page, setPage] = useState<number>(1);
+  // Un solo modal abierto a la vez: antes eran 3 pares "abierto + id" que podían desincronizarse.
+  const [modal, setModal] = useState<ModalAbierto>(null);
+  const cerrarModal = () => setModal(null);
   const pageSize = 16;
-  // Filtros por competencia > temporada > fase
+  // Opciones de los selects (datos, no filtros: se recargan según lo elegido)
   const [competencias, setCompetencias] = useState<Array<{ _id: string; nombre?: string }>>([]);
   const [temporadas, setTemporadas] = useState<Array<{ _id: string; nombre?: string }>>([]);
   const [fases, setFases] = useState<Array<{ _id: string; nombre?: string }>>([]);
-  const [competenciaId, setCompetenciaId] = useState<string>('');
-  const [temporadaId, setTemporadaId] = useState<string>('');
-  const [faseId, setFaseId] = useState<string>('');
-  const [vista, setVista] = useState<'lista' | 'calendario'>('lista');
+  // Filtros en la URL: sobreviven a recargar, a "atrás" y se pueden compartir por link.
+  const filtros = useFiltrosURL<'competencia' | 'temporada' | 'fase' | 'vista' | 'page'>();
+  const competenciaId = filtros.get('competencia');
+  const temporadaId = filtros.get('temporada');
+  const faseId = filtros.get('fase');
+  const vista: 'lista' | 'calendario' = filtros.get('vista') === 'calendario' ? 'calendario' : 'lista';
+  const page = Math.max(1, Number(filtros.get('page')) || 1);
+  const setPage = (n: number) => filtros.set({ page: n > 1 ? n : null });
 
   const refreshPartidos = useCallback(async () => {
     try {
@@ -47,6 +50,8 @@ const PartidosPage = () => {
       let partidos: Partido[] = [];
       if (faseId) {
         partidos = await getPartidosPorFase(faseId);
+      } else if (temporadaId) {
+        partidos = await getPartidosPorTemporada(temporadaId);
       } else if (competenciaId) {
         partidos = await getPartidosPorCompetencia(competenciaId);
       } else if (organizacionSeleccionada?.id) {
@@ -63,94 +68,70 @@ const PartidosPage = () => {
       // Ordenar por fecha ascendente (más próximos primero)
       const ordenados = [...partidos].sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime());
       setTodos(ordenados);
-      setPage(1);
     } catch (error) {
       console.error(error);
       addToast({ type: 'error', title: 'Error', message: 'No pudimos cargar los partidos.' });
     } finally {
       setLoading(false);
     }
-  }, [competenciaId, faseId, organizacionSeleccionada?.id, addToast]);
+  }, [competenciaId, temporadaId, faseId, organizacionSeleccionada?.id, addToast]);
 
   useEffect(() => {
-    if (!competenciaId && !faseId && !organizacionSeleccionada?.id) {
+    if (!organizacionSeleccionada?.id) {
       setTodos([]);
       return;
     }
     void refreshPartidos();
-  }, [competenciaId, faseId, organizacionSeleccionada?.id, refreshPartidos]);
+  }, [organizacionSeleccionada?.id, refreshPartidos]);
 
-  // Cargar listas para filtros
+  // Cambiar de organización invalida los filtros. Se compara contra la anterior (y no en cada
+  // montaje) para no borrar los filtros que vienen en el link cuando el contexto termina de cargar.
+  const orgAnterior = useRef(organizacionSeleccionada?.id);
+  const { set: setFiltros } = filtros;
   useEffect(() => {
-    const load = async () => {
-      setCompetencias([]);
-      setTemporadas([]); setFases([]); setTemporadaId(''); setFaseId(''); setCompetenciaId('');
-      if (!organizacionSeleccionada?.id) return;
-      try {
-        const comps = await listCompetenciasByOrganizacion(organizacionSeleccionada.id);
-        setCompetencias(comps as any);
-      } catch {}
-    };
-    void load();
+    const actual = organizacionSeleccionada?.id;
+    if (orgAnterior.current && actual && orgAnterior.current !== actual) {
+      setFiltros({ competencia: null, temporada: null, fase: null, page: null });
+    }
+    orgAnterior.current = actual;
+  }, [organizacionSeleccionada?.id, setFiltros]);
+
+  // Opciones de los selects. Sólo cargan datos: los resets de filtros hijos van en los onChange.
+  useEffect(() => {
+    setCompetencias([]);
+    if (!organizacionSeleccionada?.id) return;
+    listCompetenciasByOrganizacion(organizacionSeleccionada.id)
+      .then((comps) => setCompetencias(comps as any))
+      .catch(() => {});
   }, [organizacionSeleccionada?.id]);
 
   useEffect(() => {
-    const load = async () => {
-      setTemporadas([]); setFases([]); setTemporadaId(''); setFaseId('');
-      if (!competenciaId) return;
-      try {
-        const temps = await listTemporadasByCompetencia(competenciaId);
-        setTemporadas(temps as any);
-      } catch {}
-    };
-    void load();
+    setTemporadas([]);
+    if (!competenciaId) return;
+    listTemporadasByCompetencia(competenciaId)
+      .then((temps) => setTemporadas(temps as any))
+      .catch(() => {});
   }, [competenciaId]);
 
   useEffect(() => {
-    const load = async () => {
-      setFases([]); setFaseId('');
-      if (!temporadaId) return;
-      try {
-        const fs = await listFasesByTemporada(temporadaId);
-        setFases(fs as any);
-      } catch {}
-    };
-    void load();
+    setFases([]);
+    if (!temporadaId) return;
+    listFasesByTemporada(temporadaId)
+      .then((fs) => setFases(fs as any))
+      .catch(() => {});
   }, [temporadaId]);
 
-  const handleSeleccionar = async (partidoId: string) => {
-    try {
-      setPartidoAdminId(partidoId);
-      setModalAdminAbierto(true);
-    } catch (error) {
-      console.error(error);
-      addToast({ type: 'error', title: 'Error', message: 'No pudimos cargar el detalle del partido' });
-    }
-  };
-
-  const handleAbrirAlineacion = (partidoId: string) => {
-    setPartidoAlineacionId(partidoId);
-    setAlineacionModalAbierto(true);
-  };
-
-  const handleCerrarAlineacion = () => {
-    setAlineacionModalAbierto(false);
-    setPartidoAlineacionId(null);
-  };
-
-  const handleAbrirInformacion = (partidoId: string) => {
-    setPartidoInfoId(partidoId);
-    setInfoModalAbierto(true);
-  };
-
-  const handleCerrarInformacion = () => {
-    setInfoModalAbierto(false);
-    setPartidoInfoId(null);
-  };
+  const handleSeleccionar = (partidoId: string) => setModal({ tipo: 'admin', partidoId });
+  const handleAbrirAlineacion = (partidoId: string) => setModal({ tipo: 'alineacion', partidoId });
+  const handleAbrirInformacion = (partidoId: string) => setModal({ tipo: 'info', partidoId });
 
   const handleAlineacionActualizada = (jugadores: JugadorPartido[]) => {
     // setAlineacion(jugadores); // No longer needed as we don't store local alignment state
   };
+
+  // Un link viejo puede traer ?page=9 de una lista que ahora es más corta.
+  const totalPaginas = Math.max(1, Math.ceil(todos.length / pageSize));
+  const paginaActual = Math.min(page, totalPaginas);
 
   return (
     <div className="space-y-8">
@@ -164,14 +145,14 @@ const PartidosPage = () => {
         <div className="flex rounded-lg border border-slate-200 bg-white p-0.5 shadow-sm">
           <button
             type="button"
-            onClick={() => setVista('lista')}
+            onClick={() => filtros.set({ vista: null })}
             className={`rounded-md px-3 py-1.5 text-xs font-medium transition ${vista === 'lista' ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}
           >
             Lista
           </button>
           <button
             type="button"
-            onClick={() => setVista('calendario')}
+            onClick={() => filtros.set({ vista: 'calendario' })}
             className={`rounded-md px-3 py-1.5 text-xs font-medium transition ${vista === 'calendario' ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}
           >
             Calendario
@@ -186,7 +167,7 @@ const PartidosPage = () => {
             <select id="partidospage-competencia" 
               className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm" 
               value={competenciaId} 
-              onChange={(e)=> setCompetenciaId(e.target.value)}
+              onChange={(e)=> filtros.set({ competencia: e.target.value, temporada: null, fase: null, page: null })}
             >
               <option value="">Todas las competencias</option>
               {competencias.map(c => (<option key={c._id} value={c._id}>{c.nombre || c._id}</option>))}
@@ -197,7 +178,7 @@ const PartidosPage = () => {
             <select id="partidospage-temporada" 
               className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm" 
               value={temporadaId} 
-              onChange={(e)=> setTemporadaId(e.target.value)} 
+              onChange={(e)=> filtros.set({ temporada: e.target.value, fase: null, page: null })} 
               disabled={!competenciaId}
             >
               <option value="">Todas las temporadas</option>
@@ -209,7 +190,7 @@ const PartidosPage = () => {
             <select id="partidospage-fase-etapa" 
               className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm" 
               value={faseId} 
-              onChange={(e)=> setFaseId(e.target.value)} 
+              onChange={(e)=> filtros.set({ fase: e.target.value, page: null })} 
               disabled={!temporadaId}
             >
               <option value="">Todas las fases</option>
@@ -220,7 +201,7 @@ const PartidosPage = () => {
             <button 
               type="button" 
               className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 transition shadow-sm"
-              onClick={()=>{ setCompetenciaId(''); setTemporadaId(''); setFaseId(''); setPage(1); }}
+              onClick={()=> filtros.set({ competencia: null, temporada: null, fase: null, page: null })}
             >
               Limpiar filtros
             </button>
@@ -228,17 +209,13 @@ const PartidosPage = () => {
         </div>
       </section>
 
-      {modalAdminAbierto && partidoAdminId ? (
+      {modal?.tipo === 'admin' ? (
         <ModalPartidoAdmin
-          partidoId={partidoAdminId}
+          partidoId={modal.partidoId}
           token={token ?? ''}
-          onClose={() => {
-            setModalAdminAbierto(false);
-            setPartidoAdminId(null);
-          }}
+          onClose={cerrarModal}
           onPartidoEliminado={() => {
-            setModalAdminAbierto(false);
-            setPartidoAdminId(null);
+            cerrarModal();
             void refreshPartidos();
           }}
           onAlineacionActualizada={handleAlineacionActualizada}
@@ -246,19 +223,19 @@ const PartidosPage = () => {
       ) : null}
 
       <ModalAlineacionPartido
-        partidoId={partidoAlineacionId ?? ''}
-        isOpen={alineacionModalAbierto && Boolean(partidoAlineacionId)}
-        onClose={handleCerrarAlineacion}
+        partidoId={modal?.tipo === 'alineacion' ? modal.partidoId : ''}
+        isOpen={modal?.tipo === 'alineacion'}
+        onClose={cerrarModal}
         onSaved={(jugadores) => {
           handleAlineacionActualizada(jugadores);
-          handleCerrarAlineacion();
+          cerrarModal();
         }}
       />
 
       <ModalInformacionPartido
-        partidoId={partidoInfoId}
-        isOpen={infoModalAbierto && Boolean(partidoInfoId)}
-        onClose={handleCerrarInformacion}
+        partidoId={modal?.tipo === 'info' ? modal.partidoId : null}
+        isOpen={modal?.tipo === 'info'}
+        onClose={cerrarModal}
       />
 
       {vista === 'calendario' ? (
@@ -283,7 +260,7 @@ const PartidosPage = () => {
           ) : todos.length ? (
             <>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {todos.slice((page - 1) * pageSize, page * pageSize).map((partido) => (
+                {todos.slice((paginaActual - 1) * pageSize, paginaActual * pageSize).map((partido) => (
                   <PartidoCard
                     key={partido.id}
                     partido={partido}
@@ -320,17 +297,17 @@ const PartidosPage = () => {
                 <button
                   type="button"
                   className="rounded border border-slate-200 px-3 py-1.5 text-xs hover:bg-slate-50 disabled:opacity-50"
-                  onClick={() => setPage(p => Math.max(1, p - 1))}
-                  disabled={page === 1}
+                  onClick={() => setPage(paginaActual - 1)}
+                  disabled={paginaActual === 1}
                 >
                   ← Anterior
                 </button>
-                <span className="text-xs text-slate-600">Página {page} de {Math.max(1, Math.ceil(todos.length / pageSize))}</span>
+                <span className="text-xs text-slate-600">Página {paginaActual} de {totalPaginas}</span>
                 <button
                   type="button"
                   className="rounded border border-slate-200 px-3 py-1.5 text-xs hover:bg-slate-50 disabled:opacity-50"
-                  onClick={() => setPage(p => Math.min(Math.ceil(todos.length / pageSize), p + 1))}
-                  disabled={page >= Math.ceil(todos.length / pageSize)}
+                  onClick={() => setPage(paginaActual + 1)}
+                  disabled={paginaActual >= totalPaginas}
                 >
                   Siguiente →
                 </button>

@@ -51,10 +51,9 @@ export default function PartidosSection({
     setModalAdminAbierto(true);
   };
 
-  const handleSelectTemporada = (id: string) => {
-    setSelectedTemporadaId(id);
-    setSelectedFaseId('');
-  };
+  // El padre limpia la fase al cambiar de temporada en la misma escritura: dos escrituras seguidas
+  // a la URL en el mismo evento se pisan (la segunda parte de la query vieja).
+  const handleSelectTemporada = (id: string) => setSelectedTemporadaId(id);
 
   const handleAbrirAlineacion = (id: string) => {
     setPartidoAlineacionId(id);
