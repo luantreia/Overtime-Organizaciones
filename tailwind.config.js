@@ -15,10 +15,7 @@ module.exports = {
   ],
   theme: {
     extend: {
-      // Espejo de los tokens de overtime-kit v0.2.0 (text-muted, text-2xs). Borrar al subir el pin a v0.2.0.
-      fontSize: { '2xs': ['11px', { lineHeight: '16px' }] },
       colors: {
-        muted: '#64748b',
         brand: {
           50: '#f5f7ff',
           100: '#ebefff',
