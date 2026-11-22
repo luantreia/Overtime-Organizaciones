@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Tabs } from 'overtime-kit';
 import type { Partido } from '../../../types';
 import type { BackendTemporada, BackendFase } from '../services';
 import PartidoCard from '../../../shared/components/PartidoCard/PartidoCard';
@@ -120,22 +121,14 @@ export default function PartidosSection({
             </label>
           </div>
           <div className="flex items-center justify-end gap-2">
-            <div className="flex rounded-lg border border-slate-200 bg-white p-0.5">
-              <button
-                type="button"
-                onClick={() => setVista('lista')}
-                className={`rounded-md px-3 py-1 text-xs font-medium transition ${vista === 'lista' ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}
-              >
-                Lista
-              </button>
-              <button
-                type="button"
-                onClick={() => setVista('calendario')}
-                className={`rounded-md px-3 py-1 text-xs font-medium transition ${vista === 'calendario' ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}
-              >
-                Calendario
-              </button>
-            </div>
+            <Tabs
+              aria-label="Vista de partidos"
+              variante="segmentado"
+              size="sm"
+              items={[{ id: 'lista', label: 'Lista' }, { id: 'calendario', label: 'Calendario' }]}
+              value={vista}
+              onChange={setVista}
+            />
             <button
               type="button"
               onClick={() => setBulkEditAbierto(true)}

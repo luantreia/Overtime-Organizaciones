@@ -1,4 +1,5 @@
 import { Link, useParams } from 'react-router-dom';
+import { Tabs, TabPanel } from 'overtime-kit';
 import { useFiltrosURL } from '../../../shared/hooks/useFiltrosURL';
 import { useCompetenciaDetalle } from '../hooks/useCompetenciaDetalle';
 import GeneralTab from '../tabs/GeneralTab';
@@ -51,32 +52,30 @@ const CompetenciaDetallePage = () => {
         </nav>
         <h1 className="text-2xl font-semibold text-slate-900">{nombre}</h1>
         <p className="text-sm text-slate-500">Administración y estructura</p>
-        <div className="mt-2 flex gap-2 text-sm overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0 sm:overflow-visible">
-          {tabs.map((t) => (
-            <button
-              key={t}
-              type="button"
-              onClick={() => setTab(t)}
-              aria-current={tab === t ? 'page' : undefined}
-              className={`rounded-lg px-3 py-1.5 whitespace-nowrap ${tab === t ? 'bg-brand-100 text-brand-700' : 'border border-slate-200 text-slate-700 hover:bg-slate-50'}`}
-            >
-              {ETIQUETAS[t]}
-            </button>
-          ))}
-        </div>
+        <Tabs
+          aria-label="Secciones de la competencia"
+          idBase="competencia"
+          size="sm"
+          className="mt-2 pb-2 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0"
+          items={tabs.map((t) => ({ id: t, label: ETIQUETAS[t] }))}
+          value={tab}
+          onChange={setTab}
+        />
       </header>
 
-      {tab === 'general' ? <GeneralTab competenciaId={competenciaId} detalle={detalle} /> : null}
-      {tab === 'estructura' ? <EstructuraTab competenciaId={competenciaId} detalle={detalle} /> : null}
-      {tab === 'partidos' ? <PartidosTab competenciaId={competenciaId} detalle={detalle} /> : null}
-      {tab === 'ranked' ? (
-        <CompetenciaRankedSection
-          competenciaId={competenciaId}
-          modalidad={detalle.datos.modalidad}
-          categoria={detalle.datos.categoria}
-          organizacionId={detalle.organizacionId || undefined}
-        />
-      ) : null}
+      <TabPanel idBase="competencia" id={tab}>
+        {tab === 'general' ? <GeneralTab competenciaId={competenciaId} detalle={detalle} /> : null}
+        {tab === 'estructura' ? <EstructuraTab competenciaId={competenciaId} detalle={detalle} /> : null}
+        {tab === 'partidos' ? <PartidosTab competenciaId={competenciaId} detalle={detalle} /> : null}
+        {tab === 'ranked' ? (
+          <CompetenciaRankedSection
+            competenciaId={competenciaId}
+            modalidad={detalle.datos.modalidad}
+            categoria={detalle.datos.categoria}
+            organizacionId={detalle.organizacionId || undefined}
+          />
+        ) : null}
+      </TabPanel>
     </div>
   );
 };

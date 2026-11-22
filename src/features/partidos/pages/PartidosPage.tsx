@@ -1,5 +1,6 @@
 import { useOrganizacion } from '../../../app/providers/OrganizacionContext';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { Tabs } from 'overtime-kit';
 import PartidoCard from '../../../shared/components/PartidoCard/PartidoCard';
 import {
   getPartidosPorFase,
@@ -18,6 +19,11 @@ import { listCompetenciasByOrganizacion } from '../../competencias/services/comp
 import { listTemporadasByCompetencia } from '../../competencias/services/temporadasService';
 import { listFasesByTemporada } from '../../competencias/services/fasesService';
 import { useFiltrosURL } from '../../../shared/hooks/useFiltrosURL';
+
+const VISTAS = [
+  { id: 'lista' as const, label: 'Lista' },
+  { id: 'calendario' as const, label: 'Calendario' },
+];
 
 type ModalAbierto = { tipo: 'admin' | 'alineacion' | 'info'; partidoId: string } | null;
 
@@ -142,22 +148,14 @@ const PartidosPage = () => {
             Gestioná los encuentros de las competencias de {organizacionSeleccionada?.nombre}
           </p>
         </div>
-        <div className="flex rounded-lg border border-slate-200 bg-white p-0.5 shadow-sm">
-          <button
-            type="button"
-            onClick={() => filtros.set({ vista: null })}
-            className={`rounded-md px-3 py-1.5 text-xs font-medium transition ${vista === 'lista' ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}
-          >
-            Lista
-          </button>
-          <button
-            type="button"
-            onClick={() => filtros.set({ vista: 'calendario' })}
-            className={`rounded-md px-3 py-1.5 text-xs font-medium transition ${vista === 'calendario' ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}
-          >
-            Calendario
-          </button>
-        </div>
+        <Tabs
+          aria-label="Vista de partidos"
+          variante="segmentado"
+          size="sm"
+          items={VISTAS}
+          value={vista}
+          onChange={(v) => filtros.set({ vista: v === 'lista' ? null : v })}
+        />
       </header>
 
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-card">
