@@ -85,15 +85,15 @@ export const RankedMatchSettingsModal: React.FC<RankedMatchSettingsModalProps> =
       title="Opciones"
       footer={
         <div className="flex gap-2">
-          <Button variant="secondary" onClick={onClose} className="flex-1 uppercase text-[10px] font-black py-2">Cerrar</Button>
-          <Button variant="primary" onClick={handleUpdateConfig} className="flex-1 uppercase text-[10px] font-black py-2">Guardar</Button>
+          <Button variant="secondary" onClick={onClose} className="flex-1 uppercase text-2xs font-black py-2">Cerrar</Button>
+          <Button variant="primary" onClick={handleUpdateConfig} className="flex-1 uppercase text-2xs font-black py-2">Guardar</Button>
         </div>
       }
     >
       <div className="space-y-4 sm:space-y-6">
         {/* Acciones Rápidas */}
         <div className="space-y-3">
-          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Mesa de Control</label>
+          <label className="text-2xs font-black text-muted uppercase tracking-widest leading-none">Mesa de Control</label>
           <div className="grid grid-cols-2 gap-2 sm:gap-3">
             <button
               onClick={openMatchLink}
@@ -102,7 +102,7 @@ export const RankedMatchSettingsModal: React.FC<RankedMatchSettingsModalProps> =
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
               </svg>
-              <span className="text-[9px] sm:text-[10px] font-bold uppercase">Abrir Mesa</span>
+              <span className="text-2xs sm:text-2xs font-bold uppercase">Abrir Mesa</span>
             </button>
             <button
               onClick={copyMatchLink}
@@ -111,14 +111,14 @@ export const RankedMatchSettingsModal: React.FC<RankedMatchSettingsModalProps> =
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
               </svg>
-              <span className="text-[9px] sm:text-[10px] font-bold uppercase">Copiar Link</span>
+              <span className="text-2xs sm:text-2xs font-bold uppercase">Copiar Link</span>
             </button>
           </div>
         </div>
 
         {/* Ajustes de Timer */}
         <div className="space-y-4 pt-4 border-t border-slate-100">
-          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Configuración de Tiempos</label>
+          <label className="text-2xs font-black text-muted uppercase tracking-widest leading-none">Configuración de Tiempos</label>
 
           <div className="grid grid-cols-1 gap-4">
             <div className="space-y-1.5">
@@ -150,7 +150,7 @@ export const RankedMatchSettingsModal: React.FC<RankedMatchSettingsModalProps> =
                 />
                 <button
                   onClick={() => setLocalConfig({...localConfig, setDuration: localConfig.setDuration === 0 ? 180 : 0})}
-                  className={`px-2 py-1 rounded text-[9px] font-bold border transition-colors ${localConfig.setDuration === 0 ? 'bg-emerald-100 border-emerald-200 text-emerald-700' : 'bg-slate-50 border-slate-200 text-slate-500'}`}
+                  className={`px-2 py-1 rounded text-2xs font-bold border transition-colors ${localConfig.setDuration === 0 ? 'bg-emerald-100 border-emerald-200 text-emerald-700' : 'bg-slate-50 border-slate-200 text-slate-500'}`}
                 >
                    {localConfig.setDuration === 0 ? 'SET' : 'INF'}
                 </button>
@@ -161,7 +161,7 @@ export const RankedMatchSettingsModal: React.FC<RankedMatchSettingsModalProps> =
                <div className="flex justify-between items-center">
                   <div className="flex flex-col">
                      <span className="text-[11px] sm:text-xs font-bold text-slate-700">Muerte Súbita</span>
-                     <span className="text-[9px] text-slate-400">Desempate al final.</span>
+                     <span className="text-2xs text-muted">Desempate al final.</span>
                   </div>
                   <Toggle
                     checked={localConfig.useSuddenDeath}
@@ -184,7 +184,7 @@ export const RankedMatchSettingsModal: React.FC<RankedMatchSettingsModalProps> =
 
           {/* Ajustes de Audio */}
           <div className="space-y-4 pt-4 border-t border-slate-100">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Alertas y Sonidos</label>
+            <label className="text-2xs font-black text-muted uppercase tracking-widest leading-none">Alertas y Sonidos</label>
 
             <div className="grid grid-cols-1 gap-2">
               <div className="flex justify-between items-center bg-slate-50 p-2 sm:p-3 rounded-xl border border-slate-100">
@@ -201,7 +201,7 @@ export const RankedMatchSettingsModal: React.FC<RankedMatchSettingsModalProps> =
                   <select
                     value={localConfig.whistleType || 'standard'}
                     onChange={(e) => setLocalConfig({...localConfig, whistleType: e.target.value as any})}
-                    className="text-[9px] bg-transparent border-none p-0 font-bold text-emerald-600 focus:ring-0 cursor-pointer"
+                    className="text-2xs bg-transparent border-none p-0 font-bold text-emerald-600 focus:ring-0 cursor-pointer"
                   >
                     <option value="standard">Estándar</option>
                     <option value="double">Doble</option>
@@ -233,33 +233,33 @@ export const RankedMatchSettingsModal: React.FC<RankedMatchSettingsModalProps> =
               <div className="space-y-3 p-3 bg-slate-50 rounded-xl border border-slate-100">
                 {localConfig.enableMatchStartAlert && (
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">Locución Inicio</label>
+                    <label className="text-2xs font-bold text-slate-500 uppercase tracking-tighter">Locución Inicio</label>
                     <input
                       type="text"
                       value={localConfig.matchStartMessage}
                       onChange={(e) => setLocalConfig({...localConfig, matchStartMessage: e.target.value})}
-                      className="w-full p-2 text-[10px] font-bold text-slate-700 bg-white border border-slate-200 rounded-lg placeholder:text-slate-300"
+                      className="w-full p-2 text-2xs font-bold text-slate-700 bg-white border border-slate-200 rounded-lg placeholder:text-muted"
                       placeholder="Ej: ¡A jugar!"
                     />
                   </div>
                 )}
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">Locución Muerte Súbita</label>
+                  <label className="text-2xs font-bold text-slate-500 uppercase tracking-tighter">Locución Muerte Súbita</label>
                   <input
                     type="text"
                     value={localConfig.suddenDeathMessage}
                     onChange={(e) => setLocalConfig({...localConfig, suddenDeathMessage: e.target.value})}
-                    className="w-full p-2 text-[10px] font-bold text-slate-700 bg-white border border-slate-200 rounded-lg placeholder:text-slate-300"
+                    className="w-full p-2 text-2xs font-bold text-slate-700 bg-white border border-slate-200 rounded-lg placeholder:text-muted"
                     placeholder="Ej: ¡Muerte Súbita activa!"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">Locución Fin de Tiempo</label>
+                  <label className="text-2xs font-bold text-slate-500 uppercase tracking-tighter">Locución Fin de Tiempo</label>
                   <input
                     type="text"
                     value={localConfig.matchEndMessage}
                     onChange={(e) => setLocalConfig({...localConfig, matchEndMessage: e.target.value})}
-                    className="w-full p-2 text-[10px] font-bold text-slate-700 bg-white border border-slate-200 rounded-lg placeholder:text-slate-300"
+                    className="w-full p-2 text-2xs font-bold text-slate-700 bg-white border border-slate-200 rounded-lg placeholder:text-muted"
                     placeholder="Ej: Tiempo cumplido."
                   />
                 </div>
@@ -267,7 +267,7 @@ export const RankedMatchSettingsModal: React.FC<RankedMatchSettingsModalProps> =
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">Voz {Math.round((localConfig.voiceVolume ?? 1) * 100)}%</span>
+                  <span className="text-2xs font-bold text-slate-500 uppercase tracking-tighter">Voz {Math.round((localConfig.voiceVolume ?? 1) * 100)}%</span>
                   <input
                     type="range" min="0" max="1" step="0.1"
                     value={localConfig.voiceVolume ?? 1}
@@ -276,7 +276,7 @@ export const RankedMatchSettingsModal: React.FC<RankedMatchSettingsModalProps> =
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">Sonido {Math.round((localConfig.buzzerVolume ?? 0.5) * 100)}%</span>
+                  <span className="text-2xs font-bold text-slate-500 uppercase tracking-tighter">Sonido {Math.round((localConfig.buzzerVolume ?? 0.5) * 100)}%</span>
                   <input
                     type="range" min="0" max="1" step="0.1"
                     value={localConfig.buzzerVolume ?? 0.5}
@@ -288,11 +288,11 @@ export const RankedMatchSettingsModal: React.FC<RankedMatchSettingsModalProps> =
 
               {voices.length > 0 && (
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">Tipo de Voz</label>
+                  <label className="text-2xs font-bold text-slate-500 uppercase tracking-tighter">Tipo de Voz</label>
                   <select
                     value={localConfig.voiceIndex ?? 0}
                     onChange={(e) => setLocalConfig({...localConfig, voiceIndex: parseInt(e.target.value)})}
-                    className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-[10px] font-bold text-slate-700"
+                    className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-2xs font-bold text-slate-700"
                   >
                     {voices.map((v, i) => (
                       <option key={i} value={i}>{v.name}</option>
@@ -308,7 +308,7 @@ export const RankedMatchSettingsModal: React.FC<RankedMatchSettingsModalProps> =
                       if (voices[localConfig.voiceIndex ?? 0]) u.voice = voices[localConfig.voiceIndex ?? 0];
                       window.speechSynthesis.speak(u);
                     }}
-                    className="text-[9px] text-emerald-600 font-bold hover:underline py-1"
+                    className="text-2xs text-emerald-600 font-bold hover:underline py-1"
                   >
                     Probar sonido...
                   </button>

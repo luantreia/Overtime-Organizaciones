@@ -237,7 +237,7 @@ export const ModalPartidoAdmin = ({ partidoId, token, onClose, onPartidoEliminad
           <div className="flex flex-col items-center">
             <div className="text-2xl font-black text-slate-900 flex items-center gap-3">
                 <span>{partido.marcadorLocal ?? 0}</span>
-                <span className="text-slate-300">-</span>
+                <span className="text-muted">-</span>
                 <span>{partido.marcadorVisitante ?? 0}</span>
             </div>
           </div>

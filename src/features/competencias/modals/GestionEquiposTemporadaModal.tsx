@@ -46,7 +46,7 @@ function SectionHeader({ icon, children, count, tone = 'slate' }: { icon: React.
       {icon}
       {children}
       {typeof count === 'number' && (
-        <span className={`flex h-4 min-w-[1rem] items-center justify-center rounded-full px-1 text-[10px] font-black normal-case tracking-normal ${tone === 'brand' ? 'bg-brand-100 text-brand-700' : 'bg-slate-200 text-slate-600'}`}>
+        <span className={`flex h-4 min-w-[1rem] items-center justify-center rounded-full px-1 text-2xs font-black normal-case tracking-normal ${tone === 'brand' ? 'bg-brand-100 text-brand-700' : 'bg-slate-200 text-slate-600'}`}>
           {count}
         </span>
       )}
@@ -174,7 +174,7 @@ export default function GestionEquiposTemporadaModal({
                         <span className="truncate font-bold leading-tight text-slate-900">
                           {s.datosPropuestos?.equipoNombre || s.datosPropuestos?.equipoId || 'Equipo'}
                         </span>
-                        <span className="text-[10px] font-medium uppercase text-slate-500">
+                        <span className="text-2xs font-medium uppercase text-slate-500">
                           Solicitado {new Date(s.createdAt).toLocaleDateString()}
                         </span>
                       </div>
@@ -218,12 +218,12 @@ export default function GestionEquiposTemporadaModal({
                         <span className="truncate font-bold leading-tight text-slate-700">
                           {s.datosPropuestos?.equipoNombre || s.datosPropuestos?.equipoId || 'Equipo'}
                         </span>
-                        <span className="text-[10px] font-medium uppercase text-slate-400">
+                        <span className="text-2xs font-medium uppercase text-muted">
                           Enviado {new Date(s.createdAt).toLocaleDateString()}
                         </span>
                       </div>
                     </div>
-                    <span className="flex-shrink-0 rounded-full border border-amber-100 bg-amber-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-amber-700">
+                    <span className="flex-shrink-0 rounded-full border border-amber-100 bg-amber-50 px-2.5 py-1 text-2xs font-bold uppercase tracking-wide text-amber-700">
                       Pendiente
                     </span>
                   </li>
@@ -268,7 +268,7 @@ export default function GestionEquiposTemporadaModal({
                       <button
                         type="button"
                         title={bajaSolicitada.has(pt._id) ? 'Solicitud de baja ya enviada' : 'Solicitar eliminación de la temporada (requiere doble confirmación)'}
-                        className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-600 disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-slate-400"
+                        className="rounded-lg p-1.5 text-muted transition-colors hover:bg-rose-50 hover:text-rose-600 disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-muted"
                         onClick={() => handleSolicitarBaja(pt._id, nombre)}
                         disabled={!esAdmin || bajaSolicitada.has(pt._id)}
                       >
@@ -280,10 +280,10 @@ export default function GestionEquiposTemporadaModal({
               })}
               {participaciones.length === 0 && !loadingSolicitudes && (
                 <li className="mt-2 rounded-xl border border-dashed border-slate-200 bg-slate-50/50 py-8 text-center">
-                  <p className="text-xs font-medium text-slate-400">No hay equipos activos en esta temporada</p>
+                  <p className="text-xs font-medium text-muted">No hay equipos activos en esta temporada</p>
                 </li>
               )}
-              {loadingSolicitudes && <li className="animate-pulse py-4 text-center text-xs text-slate-400">Buscando solicitudes...</li>}
+              {loadingSolicitudes && <li className="animate-pulse py-4 text-center text-xs text-muted">Buscando solicitudes...</li>}
             </ul>
           </div>
 
@@ -416,7 +416,7 @@ export default function GestionEquiposTemporadaModal({
                         }}
                       >
                         <span className="font-medium text-slate-900">{opt.nombre}</span>
-                        {opt.pais && <span className="ml-2 text-[10px] uppercase text-slate-400">{opt.pais}</span>}
+                        {opt.pais && <span className="ml-2 text-2xs uppercase text-muted">{opt.pais}</span>}
                       </button>
                     ))}
                   </div>

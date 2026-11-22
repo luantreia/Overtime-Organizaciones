@@ -141,12 +141,12 @@ const ModalBulkEditFechasPartidos = ({ isOpen, partidos, onClose, onUpdated }: M
                         <span>
                           {(partido.equipoLocal?.nombre || partido.localNombre || 'Local')} vs {(partido.equipoVisitante?.nombre || partido.visitanteNombre || partido.rival || 'Visitante')}
                         </span>
-                        <span className="text-xs uppercase tracking-wide text-slate-400">{partido.estado}</span>
+                        <span className="text-xs uppercase tracking-wide text-muted">{partido.estado}</span>
                       </div>
                       <p className="text-xs text-slate-500">
                         {partido.fecha} {partido.hora ? `· ${partido.hora}` : ''} {partido.escenario ? `· ${partido.escenario}` : ''}
                       </p>
-                      {partido.etapa ? <p className="text-xs text-slate-400">{partido.etapa}</p> : null}
+                      {partido.etapa ? <p className="text-xs text-muted">{partido.etapa}</p> : null}
                     </div>
                   </label>
                 ))}

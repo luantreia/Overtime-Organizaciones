@@ -109,7 +109,7 @@ export const RankedScoreboard: React.FC<RankedScoreboardProps> = ({
             Cancha en Vivo
           </h2>
           {isBasicMode && (
-            <span className="bg-amber-100 text-amber-700 text-[9px] px-1.5 py-0.5 rounded font-black uppercase tracking-tighter border border-amber-200">
+            <span className="bg-amber-100 text-amber-700 text-2xs px-1.5 py-0.5 rounded font-black uppercase tracking-tighter border border-amber-200">
               LOCAL
             </span>
           )}
@@ -129,7 +129,7 @@ export const RankedScoreboard: React.FC<RankedScoreboardProps> = ({
           {!startTime && (
             <button
               onClick={startTimer}
-              className="px-3 py-2 bg-emerald-600 text-white rounded-lg text-[10px] sm:text-xs font-bold shadow-sm hover:bg-emerald-700 animate-pulse uppercase"
+              className="px-3 py-2 bg-emerald-600 text-white rounded-lg text-2xs sm:text-xs font-bold shadow-sm hover:bg-emerald-700 animate-pulse uppercase"
             >
               ▶ Iniciar
             </button>
@@ -194,8 +194,8 @@ export const RankedScoreboard: React.FC<RankedScoreboardProps> = ({
                   onKeyDown={e => { if (e.key === 'Enter') commitTimerEdit(); if (e.key === 'Escape') setEditingTimer(false); }}
                   className="w-14 rounded border border-emerald-300 px-1.5 py-1 text-[11px] text-center focus:outline-none focus:ring-1 focus:ring-emerald-400"
                 />
-                <button onClick={commitTimerEdit} className="text-[10px] font-bold text-emerald-600 hover:text-emerald-800">OK</button>
-                <button onClick={() => setEditingTimer(false)} className="text-[10px] text-slate-400 hover:text-slate-600">✕</button>
+                <button onClick={commitTimerEdit} className="text-2xs font-bold text-emerald-600 hover:text-emerald-800">OK</button>
+                <button onClick={() => setEditingTimer(false)} className="text-2xs text-muted hover:text-slate-600">✕</button>
               </div>
             )}
           </div>
@@ -207,25 +207,25 @@ export const RankedScoreboard: React.FC<RankedScoreboardProps> = ({
           {sets.map((set, idx) => (
             <div
               key={idx}
-              className={`group relative w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white shadow-sm ${
+              className={`group relative w-6 h-6 rounded-full flex items-center justify-center text-2xs font-bold text-white shadow-sm ${
                 set.winner === 'local' ? 'bg-red-500' : set.winner === 'visitante' ? 'bg-blue-500' : 'bg-slate-400'
               }`}
             >
               {idx + 1}
-              <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[9px] px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-10 transition-opacity">
+              <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-2xs px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-10 transition-opacity">
                 {formatTime(set.time)}
               </div>
             </div>
           ))}
           {sets.length === 0 && (
-            <span className="text-[10px] text-slate-400 italic">Esperando sets...</span>
+            <span className="text-2xs text-muted italic">Esperando sets...</span>
           )}
         </div>
         {sets.length > 0 && (
           <button
             onClick={removeLastSet}
             disabled={busy}
-            className="text-[10px] text-slate-400 hover:text-red-500 underline transition-colors disabled:opacity-50 font-medium py-1"
+            className="text-2xs text-muted hover:text-red-500 underline transition-colors disabled:opacity-50 font-medium py-1"
           >
             Deshacer último set
           </button>
@@ -261,7 +261,7 @@ export const RankedScoreboard: React.FC<RankedScoreboardProps> = ({
             <button
               onClick={() => addSet('empate')}
               disabled={busy}
-              className="px-2 py-1.5 rounded-lg bg-slate-500 text-white text-[10px] font-bold shadow-sm hover:bg-slate-600 active:scale-95 transition-all uppercase disabled:opacity-50"
+              className="px-2 py-1.5 rounded-lg bg-slate-500 text-white text-2xs font-bold shadow-sm hover:bg-slate-600 active:scale-95 transition-all uppercase disabled:opacity-50"
               title="Empate de set (+1 c/u)"
             >
               Empate
@@ -278,12 +278,12 @@ export const RankedScoreboard: React.FC<RankedScoreboardProps> = ({
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
                 </svg>
               </button>
-              <span className="text-[9px] font-black text-emerald-600 uppercase tracking-tighter text-center leading-none">
+              <span className="text-2xs font-black text-emerald-600 uppercase tracking-tighter text-center leading-none">
                 {isWaitingForNextSet ? 'Set' : 'Play'}
               </span>
             </div>
           ) : (
-            <span className="text-lg sm:text-2xl font-bold text-slate-300">VS</span>
+            <span className="text-lg sm:text-2xl font-bold text-muted">VS</span>
           )}
         </div>
 

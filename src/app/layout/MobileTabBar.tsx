@@ -23,8 +23,8 @@ export default function MobileTabBar() {
   if (!isAuthenticated) return null;
 
   const tabClass = ({ isActive }: { isActive: boolean }) =>
-    `flex flex-1 flex-col items-center gap-0.5 py-1.5 text-[10px] font-bold ${
-      isActive ? 'text-brand-600' : 'text-slate-400'
+    `flex flex-1 flex-col items-center gap-0.5 py-1.5 text-2xs font-bold ${
+      isActive ? 'text-brand-600' : 'text-muted'
     }`;
 
   return (
@@ -77,8 +77,8 @@ export default function MobileTabBar() {
         <button
           type="button"
           onClick={() => setMoreOpen((v) => !v)}
-          className={`flex flex-1 flex-col items-center gap-0.5 py-1.5 text-[10px] font-bold ${
-            moreOpen ? 'text-brand-600' : 'text-slate-400'
+          className={`flex flex-1 flex-col items-center gap-0.5 py-1.5 text-2xs font-bold ${
+            moreOpen ? 'text-brand-600' : 'text-muted'
           }`}
         >
           <span className="text-lg leading-none">⋯</span>

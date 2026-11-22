@@ -83,10 +83,10 @@ export const VisualBracket: React.FC<VisualBracketProps> = ({ matches, onMatchCl
   if (matches.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center p-12 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
-        <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center text-2xl mb-4 text-slate-400">🏆</div>
-        <p className="text-sm font-black text-slate-400 uppercase tracking-widest text-center">
+        <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center text-2xl mb-4 text-muted">🏆</div>
+        <p className="text-sm font-black text-muted uppercase tracking-widest text-center">
           Dibuja la competencia<br/>
-          <span className="text-[10px] font-bold lowercase opacity-70">Arrastra equipos para crear los primeros partidos</span>
+          <span className="text-2xs font-bold lowercase opacity-70">Arrastra equipos para crear los primeros partidos</span>
         </p>
       </div>
     );
@@ -114,7 +114,7 @@ export const VisualBracket: React.FC<VisualBracketProps> = ({ matches, onMatchCl
         </svg>
         {columnas.map((columna) => (
           <div key={columna.etapa} className="flex min-w-[184px] flex-1 flex-col">
-            <h5 className="mb-3 rounded-md bg-slate-100 py-1.5 text-center text-[9.5px] font-extrabold uppercase tracking-wide text-slate-500">
+            <h5 className="mb-3 rounded-md bg-slate-100 py-1.5 text-center text-2xs font-extrabold uppercase tracking-wide text-slate-500">
               {columna.label}
             </h5>
 
@@ -175,10 +175,10 @@ export const VisualBracket: React.FC<VisualBracketProps> = ({ matches, onMatchCl
                     {(m.estado === 'en_juego' || m.estado === 'finalizado') && (
                       <div className="absolute right-0 top-0 z-10">
                         {m.estado === 'en_juego' && (
-                          <span className="rounded-bl-md bg-red-500 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-tighter text-white animate-pulse">En Vivo</span>
+                          <span className="rounded-bl-md bg-red-500 px-1.5 py-0.5 text-2xs font-black uppercase tracking-tighter text-white animate-pulse">En Vivo</span>
                         )}
                         {m.estado === 'finalizado' && (
-                          <span className="rounded-bl-md bg-emerald-500 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-tighter text-white">Final</span>
+                          <span className="rounded-bl-md bg-emerald-500 px-1.5 py-0.5 text-2xs font-black uppercase tracking-tighter text-white">Final</span>
                         )}
                       </div>
                     )}
@@ -187,8 +187,8 @@ export const VisualBracket: React.FC<VisualBracketProps> = ({ matches, onMatchCl
                       <LineaEquipo nombre={m.visitanteNombre || (m.localNombre ? 'BYE' : 'TBD')} marcador={m.marcadorVisitante} gano={visitaGana} />
                     </div>
                     <div className="flex items-center justify-between border-t border-slate-100 bg-slate-50/60 px-2.5 py-1">
-                      <span className="text-[8px] font-black uppercase italic text-slate-300">ID: {m.id.slice(-4)}</span>
-                      <span className="text-[9px] font-bold text-slate-400">{new Date(m.fecha).toLocaleDateString()}</span>
+                      <span className="text-2xs font-black uppercase italic text-muted">ID: {m.id.slice(-4)}</span>
+                      <span className="text-2xs font-bold text-muted">{new Date(m.fecha).toLocaleDateString()}</span>
                     </div>
                   </div>
                 );
@@ -197,13 +197,13 @@ export const VisualBracket: React.FC<VisualBracketProps> = ({ matches, onMatchCl
                   onClick={() => onAutoCreate(columna.etapa)}
                   className="group flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-slate-200 bg-slate-50/50 p-5 opacity-60 transition-all hover:border-brand-400 hover:bg-white hover:opacity-100"
                 >
-                  <span className="text-[10px] font-black uppercase text-slate-400 transition-colors group-hover:text-brand-600">+ Crear {columna.label}</span>
+                  <span className="text-2xs font-black uppercase text-muted transition-colors group-hover:text-brand-600">+ Crear {columna.label}</span>
                 </button>
               ) : (
                 <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-slate-100 bg-slate-50/30 p-5 opacity-40">
-                  <span className="text-center text-[10px] font-black uppercase tracking-widest text-slate-300">
+                  <span className="text-center text-2xs font-black uppercase tracking-widest text-muted">
                      {columna.label}<br/>
-                     <span className="text-[8px] italic font-bold lowercase opacity-70">Pendiente de resultados</span>
+                     <span className="text-2xs italic font-bold lowercase opacity-70">Pendiente de resultados</span>
                   </span>
                 </div>
               )}
@@ -215,7 +215,7 @@ export const VisualBracket: React.FC<VisualBracketProps> = ({ matches, onMatchCl
             sigue después. Antes esta pantalla no lo mostraba en absoluto. */}
         {tercerPuesto && (
           <div className="flex min-w-[184px] flex-1 flex-col">
-            <h5 className="mb-3 rounded-md bg-amber-100 py-1.5 text-center text-[9.5px] font-extrabold uppercase tracking-wide text-amber-700">
+            <h5 className="mb-3 rounded-md bg-amber-100 py-1.5 text-center text-2xs font-extrabold uppercase tracking-wide text-amber-700">
               3er Puesto
             </h5>
             <div className="flex flex-1 flex-col justify-around gap-3">

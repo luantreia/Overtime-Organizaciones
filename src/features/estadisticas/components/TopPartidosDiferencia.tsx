@@ -38,7 +38,7 @@ export const TopPartidosDiferencia: FC<Props> = ({ partidos, title = 'Partidos c
           <li key={p.id} className="py-3 flex items-center justify-between">
             <div className="min-w-0">
               <div className="text-sm font-medium text-slate-900 truncate">
-                {p.localNombre ?? 'Local'} <span className="text-slate-400">vs</span> {p.visitanteNombre ?? 'Visitante'}
+                {p.localNombre ?? 'Local'} <span className="text-muted">vs</span> {p.visitanteNombre ?? 'Visitante'}
               </div>
               <div className="text-xs text-slate-500">
                 {(p.fecha ?? '').slice(0, 10)}{p.etapa ? ` • ${p.etapa}` : ''}

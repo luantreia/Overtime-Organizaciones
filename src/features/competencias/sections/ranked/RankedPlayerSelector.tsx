@@ -109,10 +109,10 @@ export const RankedPlayerSelector: React.FC<RankedPlayerSelectorProps> = ({
       <div className="mb-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div className="flex items-center gap-2 flex-wrap">
           <h2 className="text-sm font-semibold flex items-center gap-1.5">
-            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-brand-600 text-[9px] font-black text-white">1</span>
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-brand-600 text-2xs font-black text-white">1</span>
             Jugadores
           </h2>
-          <div className="flex rounded border text-[10px] overflow-hidden">
+          <div className="flex rounded border text-2xs overflow-hidden">
             <button 
               type="button" 
               className={`px-2 py-1 ${!showAll ? 'bg-slate-200 font-bold' : 'bg-white'}`} 
@@ -132,7 +132,7 @@ export const RankedPlayerSelector: React.FC<RankedPlayerSelectorProps> = ({
             type="button" 
             onClick={() => setIsQuickAddOpen(true)}
             disabled={busy}
-            className="rounded bg-brand-600 px-1.5 py-1 text-[10px] font-bold text-white hover:bg-brand-700 transition-colors disabled:opacity-50"
+            className="rounded bg-brand-600 px-1.5 py-1 text-2xs font-bold text-white hover:bg-brand-700 transition-colors disabled:opacity-50"
           >
             + NUEVO
           </button>
@@ -150,12 +150,12 @@ export const RankedPlayerSelector: React.FC<RankedPlayerSelectorProps> = ({
         {/* Grupos Dinámicos */}
         {[
           { label: 'Presentes y Listos', items: filtered.filter(p => presentes.includes(p._id)), color: 'text-emerald-600' },
-          { label: 'Ausentes / Por llegar', items: filtered.filter(p => !presentes.includes(p._id)), color: 'text-slate-400' }
+          { label: 'Ausentes / Por llegar', items: filtered.filter(p => !presentes.includes(p._id)), color: 'text-muted' }
         ].map((group, gIdx) => (
           group.items.length > 0 && (
             <div key={gIdx} className="bg-white">
               <div className="sticky top-0 bg-slate-50/90 backdrop-blur-sm z-10 px-3 py-1.5 flex items-center justify-between border-b border-slate-200">
-                <span className={`text-[10px] uppercase font-black tracking-tight ${group.color}`}>
+                <span className={`text-2xs uppercase font-black tracking-tight ${group.color}`}>
                   {group.label} ({group.items.length})
                 </span>
               </div>
@@ -182,7 +182,7 @@ export const RankedPlayerSelector: React.FC<RankedPlayerSelectorProps> = ({
                               onChange={() => toggleSelect(p._id)} 
                               className="rounded text-brand-600 focus:ring-brand-500 h-3.5 w-3.5 border-slate-300"
                             />
-                            <span className={`truncate text-[11px] sm:text-xs font-bold ${isPresent ? 'text-slate-800' : 'text-slate-400 font-medium italic'}`}>
+                            <span className={`truncate text-[11px] sm:text-xs font-bold ${isPresent ? 'text-slate-800' : 'text-muted font-medium italic'}`}>
                               {p.nombre}
                             </span>
                           </label>
@@ -193,10 +193,10 @@ export const RankedPlayerSelector: React.FC<RankedPlayerSelectorProps> = ({
                           <button
                             type="button"
                             onClick={() => togglePresente(p._id, !isPresent)}
-                            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[10px] font-black uppercase transition-all border min-h-[30px] ${
+                            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-2xs font-black uppercase transition-all border min-h-[30px] ${
                               isPresent
                                 ? 'bg-emerald-50 text-emerald-700 border-emerald-200 shadow-sm'
-                                : 'bg-slate-50 text-slate-400 border-slate-200'
+                                : 'bg-slate-50 text-muted border-slate-200'
                             }`}
                           >
                             <span className={`h-1.5 w-1.5 rounded-full ${
@@ -206,7 +206,7 @@ export const RankedPlayerSelector: React.FC<RankedPlayerSelectorProps> = ({
                           </button>
 
                           <Menu as="div" className="relative inline-block text-left">
-                            <Menu.Button className="flex items-center justify-center h-8 w-8 rounded-full text-slate-300 hover:text-brand-600 hover:bg-slate-100 transition-colors">
+                            <Menu.Button className="flex items-center justify-center h-8 w-8 rounded-full text-muted hover:text-brand-600 hover:bg-slate-100 transition-colors">
                               <EllipsisVerticalIcon className="h-5 w-5" />
                             </Menu.Button>
                             <Transition
@@ -227,7 +227,7 @@ export const RankedPlayerSelector: React.FC<RankedPlayerSelectorProps> = ({
                                           onClick={() => onAgregarJugador(p._id)}
                                           className={`${
                                             active ? 'bg-slate-100 text-brand-700' : 'text-slate-700'
-                                          } flex w-full items-center px-3 py-1.5 text-[10px] font-medium`}
+                                          } flex w-full items-center px-3 py-1.5 text-2xs font-medium`}
                                         >
                                           <UserPlusIcon className="mr-2 h-3.5 w-3.5 text-brand-500" />
                                           Añadir a Competencia
@@ -241,7 +241,7 @@ export const RankedPlayerSelector: React.FC<RankedPlayerSelectorProps> = ({
                                           onClick={() => onEliminarJugador(p._id)}
                                           className={`${
                                             active ? 'bg-rose-50 text-rose-700' : 'text-rose-700'
-                                          } flex w-full items-center px-3 py-1.5 text-[10px] font-medium`}
+                                          } flex w-full items-center px-3 py-1.5 text-2xs font-medium`}
                                         >
                                           <TrashIcon className="mr-2 h-3.5 w-3.5 text-rose-500" />
                                           Quitar
@@ -258,7 +258,7 @@ export const RankedPlayerSelector: React.FC<RankedPlayerSelectorProps> = ({
                       
                       <div className="flex items-center gap-1.5 mt-0.5 pl-5.5">
                         {/* PJ Hoy */}
-                        <span className={`flex items-center gap-1 rounded px-1.5 py-0.5 text-[9px] font-black border ${
+                        <span className={`flex items-center gap-1 rounded px-1.5 py-0.5 text-2xs font-black border ${
                           pjHoy === 0
                             ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
                             : 'bg-slate-50 text-slate-500 border-slate-100'
@@ -269,7 +269,7 @@ export const RankedPlayerSelector: React.FC<RankedPlayerSelectorProps> = ({
                         {/* Descanso (D: X) */}
                         {isPresent && rest >= 0 && (
                           <span
-                            className={`flex items-center gap-1 rounded px-1.5 py-0.5 text-[9px] font-black border ${
+                            className={`flex items-center gap-1 rounded px-1.5 py-0.5 text-2xs font-black border ${
                               rest === 0
                                 ? 'bg-red-50 text-red-600 border-red-200 animate-pulse'
                                 : rest >= 2
@@ -348,7 +348,7 @@ export const RankedPlayerSelector: React.FC<RankedPlayerSelectorProps> = ({
                 if (e.target.value) onCopyPresentesDesde(e.target.value);
                 e.target.value = '';
               }}
-              className="w-full rounded border border-slate-200 bg-slate-50 px-2 py-2 text-[10px] font-medium text-slate-500 outline-none focus:ring-1 focus:ring-brand-500"
+              className="w-full rounded border border-slate-200 bg-slate-50 px-2 py-2 text-2xs font-medium text-slate-500 outline-none focus:ring-1 focus:ring-brand-500"
               title="Trae los presentes marcados hoy en otra competencia y los suma a esta lista"
             >
               <option value="">📋 Copiar presentes de...</option>

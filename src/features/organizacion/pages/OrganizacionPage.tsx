@@ -276,7 +276,7 @@ const OrganizacionPage = () => {
                   value={form.logoUrl}
                   onChange={(e) => setForm({...form, logoUrl: e.target.value})}
                 />
-                <p className="mt-1 text-xs text-slate-400">
+                <p className="mt-1 text-xs text-muted">
                   Subí la imagen a{' '}
                   <a href="https://postimages.org/" target="_blank" rel="noopener noreferrer" className="underline">
                     postimages.org
@@ -311,7 +311,7 @@ const OrganizacionPage = () => {
                     </p>
                   )
                 )}
-                <p className="mt-1 text-xs text-slate-400">
+                <p className="mt-1 text-xs text-muted">
                   Se reproduce silenciado, en loop y sin controles. Elegí un video con movimiento parejo:
                   el nombre de la organización va escrito encima.
                 </p>

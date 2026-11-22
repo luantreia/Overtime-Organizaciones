@@ -103,9 +103,9 @@ function PlayoffBracketOverview({ faseId }: { faseId: string }) {
       .finally(() => setLoading(false));
   }, [faseId]);
 
-  if (loading) return <div className="py-6 text-center text-xs text-slate-400">Cargando llaves…</div>;
+  if (loading) return <div className="py-6 text-center text-xs text-muted">Cargando llaves…</div>;
   if (matches.length === 0) return (
-    <div className="rounded-xl border border-dashed border-slate-200 py-6 text-center text-xs text-slate-400">
+    <div className="rounded-xl border border-dashed border-slate-200 py-6 text-center text-xs text-muted">
       No hay partidos generados todavía.
     </div>
   );
@@ -340,11 +340,11 @@ export default function EstructuraSection(props: Props) {
       {/* ── Content ─────────────────────────────────────────────────────── */}
       <section className="mt-4">
         {loading ? (
-          <div className="py-10 text-center text-sm text-slate-400">Cargando…</div>
+          <div className="py-10 text-center text-sm text-muted">Cargando…</div>
         ) : !t ? (
           /* ── Empty state ──────────────────────────────────────────────── */
           <div className="rounded-2xl border-2 border-dashed border-slate-200 bg-white px-6 py-14 text-center">
-            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-400">
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-muted">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-6 w-6">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 9v7.5" />
               </svg>
@@ -371,11 +371,11 @@ export default function EstructuraSection(props: Props) {
                 {stepperSteps.map((step, idx) => (
                   <div key={step.label} className="flex items-center gap-2 shrink-0">
                     <div className={`flex h-5 w-5 items-center justify-center rounded-full ${
-                      step.done ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-400'
+                      step.done ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-muted'
                     }`}>
-                      {step.done ? <IconCheck /> : <span className="text-[10px] font-bold">{idx + 1}</span>}
+                      {step.done ? <IconCheck /> : <span className="text-2xs font-bold">{idx + 1}</span>}
                     </div>
-                    <span className={`text-xs whitespace-nowrap ${step.done ? 'font-medium text-slate-700' : 'text-slate-400'}`}>
+                    <span className={`text-xs whitespace-nowrap ${step.done ? 'font-medium text-slate-700' : 'text-muted'}`}>
                       {step.label}
                     </span>
                     {idx < stepperSteps.length - 1 && (
@@ -428,7 +428,7 @@ export default function EstructuraSection(props: Props) {
                   className={`rounded-lg p-1.5 transition-colors disabled:opacity-40 ${
                     t.ganador
                       ? 'text-amber-500 hover:bg-amber-50'
-                      : 'text-slate-400 hover:bg-slate-100 hover:text-slate-600'
+                      : 'text-muted hover:bg-slate-100 hover:text-slate-600'
                   }`}
                 >
                   <IconStar />
@@ -444,7 +444,7 @@ export default function EstructuraSection(props: Props) {
                     setEditFechaFin(t.fechaFin ? t.fechaFin.slice(0, 10) : '');
                     setEditEstado(t.estado || 'en_creacion');
                   }}
-                  className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 disabled:opacity-40"
+                  className="rounded-lg p-1.5 text-muted transition-colors hover:bg-slate-100 hover:text-slate-600 disabled:opacity-40"
                 >
                   <IconPencil />
                 </button>
@@ -453,7 +453,7 @@ export default function EstructuraSection(props: Props) {
                   disabled={!esAdmin}
                   title="Eliminar temporada"
                   onClick={() => onEliminarTemporada(t)}
-                  className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-600 disabled:opacity-40"
+                  className="rounded-lg p-1.5 text-muted transition-colors hover:bg-rose-50 hover:text-rose-600 disabled:opacity-40"
                 >
                   <IconTrash />
                 </button>
@@ -463,7 +463,7 @@ export default function EstructuraSection(props: Props) {
             {/* Fases */}
             <div className="px-6 py-5">
               <div className="mb-4 flex items-center justify-between">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">Fases</h4>
+                <h4 className="text-xs font-bold uppercase tracking-wider text-muted">Fases</h4>
                 <button
                   type="button"
                   disabled={!esAdmin}
@@ -477,7 +477,7 @@ export default function EstructuraSection(props: Props) {
 
               {(fasesPorTemporada[t._id] || []).length === 0 ? (
                 <div className="rounded-xl border border-dashed border-slate-200 py-8 text-center">
-                  <p className="text-sm text-slate-400">Aún no hay fases. Creá la primera para organizar los partidos.</p>
+                  <p className="text-sm text-muted">Aún no hay fases. Creá la primera para organizar los partidos.</p>
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -496,19 +496,19 @@ export default function EstructuraSection(props: Props) {
                           onClick={() => toggleFase(f._id)}
                         >
                           <div className="flex min-w-0 items-center gap-2.5">
-                            <span className="shrink-0 text-slate-400">
+                            <span className="shrink-0 text-muted">
                               {isExpanded ? <IconChevronDown /> : <IconChevronRight />}
                             </span>
                             <span className="truncate font-semibold text-slate-900">{f.nombre ?? 'Fase'}</span>
-                            <span className={`shrink-0 rounded border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${tipoBadgeClass(f.tipo)}`}>
+                            <span className={`shrink-0 rounded border px-1.5 py-0.5 text-2xs font-bold uppercase tracking-wider ${tipoBadgeClass(f.tipo)}`}>
                               {f.tipo || 'otro'}
                             </span>
                             {esFinalizada && (
-                              <span className="shrink-0 rounded border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-700">
+                              <span className="shrink-0 rounded border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 text-2xs font-bold uppercase tracking-wider text-emerald-700">
                                 finalizada
                               </span>
                             )}
-                            <span className="shrink-0 text-xs text-slate-400">{participantesFase.length} eq.</span>
+                            <span className="shrink-0 text-xs text-muted">{participantesFase.length} eq.</span>
                           </div>
 
                           <div className="ml-2 flex items-center gap-0.5" onClick={e => e.stopPropagation()}>
@@ -517,7 +517,7 @@ export default function EstructuraSection(props: Props) {
                               disabled={!esAdmin}
                               title="Editar fase"
                               onClick={() => onEditarFase(f, t._id)}
-                              className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 disabled:opacity-40"
+                              className="rounded-lg p-1.5 text-muted transition-colors hover:bg-slate-100 hover:text-slate-600 disabled:opacity-40"
                             >
                               <IconPencil />
                             </button>
@@ -526,7 +526,7 @@ export default function EstructuraSection(props: Props) {
                               disabled={!esAdmin}
                               title="Eliminar fase"
                               onClick={() => onEliminarFase(f, t._id)}
-                              className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-600 disabled:opacity-40"
+                              className="rounded-lg p-1.5 text-muted transition-colors hover:bg-rose-50 hover:text-rose-600 disabled:opacity-40"
                             >
                               <IconTrash />
                             </button>
@@ -573,12 +573,12 @@ export default function EstructuraSection(props: Props) {
                             {f.tipo === 'playoff' ? (
                               <div className="space-y-4">
                                 <div className="rounded-xl border border-slate-100 bg-slate-50/40 p-3">
-                                  <p className="mb-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">Bracket</p>
+                                  <p className="mb-3 text-2xs font-bold uppercase tracking-widest text-muted">Bracket</p>
                                   <PlayoffBracketOverview faseId={f._id} />
                                 </div>
                                 {participantesFase.length > 0 && (
                                   <div>
-                                    <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">Participantes</p>
+                                    <p className="mb-2 text-2xs font-bold uppercase tracking-widest text-muted">Participantes</p>
                                     <TablaPosiciones participaciones={mapParticipacionesFase(participantesFase)} />
                                   </div>
                                 )}
@@ -680,7 +680,7 @@ export default function EstructuraSection(props: Props) {
             {/* Equipos inscriptos */}
             {asignandoCampeon && (participacionesTemporadaPorId[asignandoCampeon._id] || []).length > 0 && (
               <div>
-                <p className="mb-2 text-xs font-bold uppercase tracking-widest text-slate-400">Equipos participantes</p>
+                <p className="mb-2 text-xs font-bold uppercase tracking-widest text-muted">Equipos participantes</p>
                 <div className="max-h-44 space-y-1 overflow-y-auto">
                   {(participacionesTemporadaPorId[asignandoCampeon._id] || []).map(pt => {
                     const eqId   = typeof pt.equipo === 'string' ? pt.equipo : ((pt.equipo as any)?._id ?? '');
@@ -708,7 +708,7 @@ export default function EstructuraSection(props: Props) {
 
             {/* Búsqueda libre */}
             <div>
-              <p className="mb-2 text-xs font-bold uppercase tracking-widest text-slate-400">Buscar otro equipo</p>
+              <p className="mb-2 text-xs font-bold uppercase tracking-widest text-muted">Buscar otro equipo</p>
               <div className="relative">
                 <input
                   type="text"
@@ -735,7 +735,7 @@ export default function EstructuraSection(props: Props) {
                         onClick={() => { setCampeonId(opt._id); setCampeonSearch(opt.nombre || ''); setCampeonOptions([]); }}
                       >
                         <span className="font-medium">{opt.nombre}</span>
-                        {opt.pais && <span className="ml-2 text-[10px] text-slate-400 uppercase">{opt.pais}</span>}
+                        {opt.pais && <span className="ml-2 text-2xs text-muted uppercase">{opt.pais}</span>}
                       </button>
                     ))}
                   </div>
@@ -747,7 +747,7 @@ export default function EstructuraSection(props: Props) {
             {campeonId && (
               <button
                 type="button"
-                className="text-xs text-slate-400 hover:text-rose-500 transition-colors"
+                className="text-xs text-muted hover:text-rose-500 transition-colors"
                 onClick={() => setCampeonId('')}
               >
                 × Quitar campeón asignado

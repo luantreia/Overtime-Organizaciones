@@ -26,7 +26,7 @@ export default function EmbudoJugadores({ pasos, className = '' }: Props) {
     <div className={`-mx-1 flex items-center gap-0.5 overflow-x-auto px-1 pb-0.5 ${className}`}>
       {pasos.map((paso, i) => (
         <div key={paso.etiqueta} className="flex flex-shrink-0 items-center gap-0.5">
-          {i > 0 && <ChevronRightIcon className="h-3.5 w-3.5 flex-shrink-0 text-slate-300" />}
+          {i > 0 && <ChevronRightIcon className="h-3.5 w-3.5 flex-shrink-0 text-muted" />}
           <span
             className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-semibold ${
               paso.activo

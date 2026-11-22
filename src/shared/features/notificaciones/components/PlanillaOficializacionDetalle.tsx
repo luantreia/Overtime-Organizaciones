@@ -156,7 +156,7 @@ const PlanillaOficializacionDetalle: React.FC<Props> = ({ planillaId }) => {
       <div className="overflow-x-auto">
         <table className="w-full min-w-[560px] text-sm">
           <thead>
-            <tr className="border-b border-slate-200 text-left text-[10px] font-bold uppercase tracking-wide text-slate-400">
+            <tr className="border-b border-slate-200 text-left text-2xs font-bold uppercase tracking-wide text-muted">
               <th className="pb-2 pr-3">Jugador</th>
               {hayPresentesDeOtroEquipo && <th className="pb-2 pr-3">Equipo</th>}
               {CAMPOS.map((campo) => (
@@ -182,7 +182,7 @@ const PlanillaOficializacionDetalle: React.FC<Props> = ({ planillaId }) => {
                   <td className="py-1.5 pr-3 text-slate-800">
                     {nombreDeJugador(presente.jugador)}
                     {!presente.jugadorPartido && (
-                      <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700">
+                      <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-2xs font-bold text-amber-700">
                         Alta nueva
                       </span>
                     )}
@@ -204,7 +204,7 @@ const PlanillaOficializacionDetalle: React.FC<Props> = ({ planillaId }) => {
                       {propuesto[campo]}
                     </td>
                   ))}
-                  <td className="py-1.5 text-right text-xs text-slate-400">
+                  <td className="py-1.5 text-right text-xs text-muted">
                     {actual === undefined
                       ? '—'
                       : difiere

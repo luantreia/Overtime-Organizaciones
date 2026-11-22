@@ -62,7 +62,7 @@ export const ShareStandingsModal: React.FC<ShareStandingsModalProps> = ({
             <div className="text-[11px] font-black uppercase tracking-[0.25em] opacity-70">LoD</div>
             <div className="text-lg font-bold uppercase tracking-wide mt-0.5">{competenciaNombre}</div>
             {organizacionNombre && <div className="text-xs font-semibold opacity-80 mt-0.5">{organizacionNombre}</div>}
-            <div className="text-[10px] uppercase tracking-widest opacity-60 mt-1">Tabla de posiciones · {hoy}</div>
+            <div className="text-2xs uppercase tracking-widest opacity-60 mt-1">Tabla de posiciones · {hoy}</div>
           </div>
 
           <div className="space-y-2">
@@ -74,7 +74,7 @@ export const ShareStandingsModal: React.FC<ShareStandingsModalProps> = ({
                 <div className="w-8 text-lg font-black opacity-80 shrink-0">#{i + 1}</div>
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-bold truncate">{row.equipo}</div>
-                  <div className="text-[10px] opacity-70">J {row.j} · G {row.w} · E {row.d} · P {row.l}</div>
+                  <div className="text-2xs opacity-70">J {row.j} · G {row.w} · E {row.d} · P {row.l}</div>
                 </div>
                 <div className="text-lg font-black shrink-0">{row.pts} pts</div>
               </div>

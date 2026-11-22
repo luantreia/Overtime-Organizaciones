@@ -465,7 +465,7 @@ export const ModalAlineacionPartido = ({
       }`}
     >
       <span className="truncate">{nombre}</span>
-      <span className={`ml-1.5 text-xs font-black ${lado === valor ? 'text-brand-600' : 'text-slate-400'}`}>
+      <span className={`ml-1.5 text-xs font-black ${lado === valor ? 'text-brand-600' : 'text-muted'}`}>
         {contarPresentes(opciones)}
       </span>
     </button>
@@ -482,7 +482,7 @@ export const ModalAlineacionPartido = ({
       footer={
         !isRanked ? (
           <div className="flex items-center justify-between gap-2 px-4 pb-1 sm:px-5">
-            <span className="text-xs text-slate-400">
+            <span className="text-xs text-muted">
               {hayCambios
                 ? `${cambios.aAgregar.length} alta(s) · ${cambios.aQuitar.length} baja(s) · ${cambios.aActualizar.length} cambio(s)`
                 : 'Sin cambios'}

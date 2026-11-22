@@ -205,7 +205,7 @@ const ModalInformacionPartido = ({ partidoId, isOpen, onClose, onEliminar }: Mod
                   <h2 className="text-sm font-bold text-slate-800 leading-tight">
                     {modoEdicion ? 'Editando Encuentro' : 'Detalles del Encuentro'}
                   </h2>
-                  <p className="text-[10px] text-slate-500 font-medium">{partido.nombrePartido || 'ID: ' + partido._id?.substring(0,8)}</p>
+                  <p className="text-2xs text-slate-500 font-medium">{partido.nombrePartido || 'ID: ' + partido._id?.substring(0,8)}</p>
                 </div>
               </div>
 
@@ -235,7 +235,7 @@ const ModalInformacionPartido = ({ partidoId, isOpen, onClose, onEliminar }: Mod
                         type="button"
                         onClick={() => setConfirmarEliminar(true)}
                         title="Eliminar partido"
-                        className="inline-flex items-center p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                        className="inline-flex items-center p-1.5 text-muted hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
                       >
                         <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4"><path d="M6 2a1 1 0 00-1 1H3.5a.5.5 0 000 1h9a.5.5 0 000-1H11a1 1 0 00-1-1H6zM3 5.5a.5.5 0 01.5-.5h9a.5.5 0 01.5.5v7A1.5 1.5 0 0111.5 14h-7A1.5 1.5 0 013 12.5v-7z"/></svg>
                       </button>
@@ -310,7 +310,7 @@ const ModalInformacionPartido = ({ partidoId, isOpen, onClose, onEliminar }: Mod
                         className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
                       />
                       {((partido as any)?.fase?.fechaInicio || (partido as any)?.competencia?.fechaInicio) && (
-                        <p className="mt-1 text-[10px] text-blue-500 font-medium px-1 italic">
+                        <p className="mt-1 text-2xs text-blue-500 font-medium px-1 italic">
                           💡 Sugerencia: {(partido as any)?.fase?.nombre || 'Competencia'} entre 
                           {new Date((partido as any)?.fase?.fechaInicio || (partido as any)?.competencia?.fechaInicio).toLocaleDateString()} y 
                           {new Date((partido as any)?.fase?.fechaFin || (partido as any)?.competencia?.fechaFin).toLocaleDateString()}
@@ -484,7 +484,7 @@ const ModalInformacionPartido = ({ partidoId, isOpen, onClose, onEliminar }: Mod
                     <button
                       type="button"
                       onClick={handleRecalcular}
-                      className="text-[10px] font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 bg-white px-2 py-1 rounded border border-blue-100 shadow-sm"
+                      className="text-2xs font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 bg-white px-2 py-1 rounded border border-blue-100 shadow-sm"
                     >
                       <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
                       RECALCULAR DESDE SETS
@@ -525,7 +525,7 @@ const ModalInformacionPartido = ({ partidoId, isOpen, onClose, onEliminar }: Mod
                       />
                     </div>
                   </div>
-                  <p className="text-center text-[10px] text-slate-400 mt-4 italic font-medium">
+                  <p className="text-center text-2xs text-muted mt-4 italic font-medium">
                     * Modificar manualmente el marcador anulará el cálculo automático por sets.
                   </p>
                 </div>
@@ -561,12 +561,12 @@ const ModalInformacionPartido = ({ partidoId, isOpen, onClose, onEliminar }: Mod
                     <div className="flex flex-col items-center gap-2">
                        {/* Badge de Estado Dinámico */}
                        {partido.estado === 'en_juego' ? (
-                        <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-500 text-white text-[10px] font-black uppercase tracking-widest animate-pulse">
+                        <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-500 text-white text-2xs font-black uppercase tracking-widest animate-pulse">
                           <span className="w-1.5 h-1.5 rounded-full bg-white"></span>
                           En Vivo
                         </span>
                       ) : (
-                        <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
+                        <span className={`px-3 py-1 rounded-full text-2xs font-black uppercase tracking-widest ${
                           partido.estado === 'finalizado' ? 'bg-blue-500 text-white' : 'bg-slate-700 text-slate-300'
                         }`}>
                           {partido.estado || 'Programado'}
@@ -579,7 +579,7 @@ const ModalInformacionPartido = ({ partidoId, isOpen, onClose, onEliminar }: Mod
                         <span className="text-5xl font-black text-white tabular-nums drop-shadow-sm">{partido.marcadorVisitante ?? 0}</span>
                       </div>
                       
-                      <div className="px-3 py-0.5 rounded bg-white/5 border border-white/10 text-[10px] text-slate-400 font-medium tracking-tight">
+                      <div className="px-3 py-0.5 rounded bg-white/5 border border-white/10 text-2xs text-slate-400 font-medium tracking-tight">
                         Puntuación Final
                       </div>
                     </div>
@@ -606,7 +606,7 @@ const ModalInformacionPartido = ({ partidoId, isOpen, onClose, onEliminar }: Mod
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Bloque Logística */}
                   <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
-                    <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <h4 className="text-[11px] font-bold text-muted uppercase tracking-wider mb-3 flex items-center gap-2">
                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                        Logística del Encuentro
                     </h4>
@@ -614,7 +614,7 @@ const ModalInformacionPartido = ({ partidoId, isOpen, onClose, onEliminar }: Mod
                       <div className="flex gap-3">
                         <div className="w-1 h-8 rounded-full bg-blue-500 opacity-20" />
                         <div>
-                          <p className="text-[10px] text-slate-500 leading-none">Fecha y Hora</p>
+                          <p className="text-2xs text-slate-500 leading-none">Fecha y Hora</p>
                           <p className="text-sm font-semibold text-slate-800">
                             {partido.fecha ? new Date(partido.fecha).toLocaleDateString('es-ES', { 
                               weekday: 'long', 
@@ -629,7 +629,7 @@ const ModalInformacionPartido = ({ partidoId, isOpen, onClose, onEliminar }: Mod
                       <div className="flex gap-3">
                         <div className="w-1 h-8 rounded-full bg-emerald-500 opacity-20" />
                         <div>
-                          <p className="text-[10px] text-slate-500 leading-none">Ubicación / Cancha</p>
+                          <p className="text-2xs text-slate-500 leading-none">Ubicación / Cancha</p>
                           <p className="text-sm font-semibold text-slate-800">{partido.ubicacion || 'Sin asignar'}</p>
                         </div>
                       </div>
@@ -638,13 +638,13 @@ const ModalInformacionPartido = ({ partidoId, isOpen, onClose, onEliminar }: Mod
 
                   {/* Bloque Competencia */}
                   <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
-                    <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <h4 className="text-[11px] font-bold text-muted uppercase tracking-wider mb-3 flex items-center gap-2">
                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
                        Contexto del Torneo
                     </h4>
                     <div className="space-y-3">
                       <div>
-                        <p className="text-[10px] text-slate-500 leading-none">Competición</p>
+                        <p className="text-2xs text-slate-500 leading-none">Competición</p>
                         <p className="text-sm font-bold text-blue-600">
                           {typeof partido.competencia === 'string'
                             ? partido.competencia
@@ -653,11 +653,11 @@ const ModalInformacionPartido = ({ partidoId, isOpen, onClose, onEliminar }: Mod
                       </div>
                       <div className="grid grid-cols-2 gap-2">
                         <div>
-                          <p className="text-[10px] text-slate-500 leading-none">Categoría</p>
+                          <p className="text-2xs text-slate-500 leading-none">Categoría</p>
                           <p className="text-xs font-semibold text-slate-800">{partido.categoria || 'N/A'}</p>
                         </div>
                         <div>
-                          <p className="text-[10px] text-slate-500 leading-none">Etapa/Grupo</p>
+                          <p className="text-2xs text-slate-500 leading-none">Etapa/Grupo</p>
                           <p className="text-xs font-semibold text-slate-800">
                             {(partido as any).etapa || '—'} { (partido as any).grupo ? `(Grup. ${(partido as any).grupo})` : ''}
                           </p>

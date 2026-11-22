@@ -92,7 +92,7 @@ export default function FaseLigaSection({ participantes, esAdmin, onUpdate, onDe
                 </tr>
               ))}
               {rows.length === 0 ? (
-                <tr><td className="py-2 text-slate-400" colSpan={esAdmin ? 8 : 7}>Sin equipos</td></tr>
+                <tr><td className="py-2 text-muted" colSpan={esAdmin ? 8 : 7}>Sin equipos</td></tr>
               ) : null}
             </tbody>
           </table>

@@ -10,7 +10,7 @@ const ProximosPartidosSection = ({ loading, partidos }: ProximosPartidosSectionP
   <section className="space-y-4">
     <header className="flex items-center justify-between">
       <h2 className="text-lg font-semibold text-slate-900">Próximos partidos</h2>
-      <span className="text-xs uppercase tracking-wide text-slate-400">Próximos 7 días</span>
+      <span className="text-xs uppercase tracking-wide text-muted">Próximos 7 días</span>
     </header>
     {loading ? (
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

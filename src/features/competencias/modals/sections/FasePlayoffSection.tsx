@@ -121,13 +121,13 @@ export default function FasePlayoffSection({
             <div className="flex gap-4">
               <button 
                 onClick={handleRandomizeSeeds}
-                className="text-[10px] font-black uppercase text-brand-600 hover:text-brand-700 underline decoration-brand-200 underline-offset-4 decoration-2 text-left"
+                className="text-2xs font-black uppercase text-brand-600 hover:text-brand-700 underline decoration-brand-200 underline-offset-4 decoration-2 text-left"
               >
                 🎲 Aleatorio
               </button>
               <button 
                 onClick={handlePerformanceSeeds}
-                className="text-[10px] font-black uppercase text-brand-600 hover:text-brand-700 underline decoration-brand-200 underline-offset-4 decoration-2 text-left"
+                className="text-2xs font-black uppercase text-brand-600 hover:text-brand-700 underline decoration-brand-200 underline-offset-4 decoration-2 text-left"
               >
                 📈 Por Rendimiento
               </button>
@@ -185,7 +185,7 @@ export default function FasePlayoffSection({
             </tr>
           ))}
           {rows.length === 0 ? (
-            <tr><td className="py-2 text-slate-400" colSpan={esAdmin ? 4 : 3}>Sin participantes</td></tr>
+            <tr><td className="py-2 text-muted" colSpan={esAdmin ? 4 : 3}>Sin participantes</td></tr>
           ) : null}
         </tbody>
       </table>
@@ -198,7 +198,7 @@ export default function FasePlayoffSection({
               <div key={idx} className="rounded border border-slate-200 bg-white p-2 text-xs">
                 <div className="flex items-center justify-between">
                   <span className="truncate pr-2">{p.a}</span>
-                  <span className="text-slate-400">vs</span>
+                  <span className="text-muted">vs</span>
                   <span className="truncate pl-2">{p.b}</span>
                 </div>
               </div>

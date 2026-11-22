@@ -92,7 +92,7 @@ export default function FaseGruposSection({ participantes, esAdmin, onUpdate, on
                 </tr>
               ))}
               {rows.length === 0 ? (
-                <tr><td className="py-2 text-slate-400" colSpan={esAdmin ? 9 : 8}>Sin equipos</td></tr>
+                <tr><td className="py-2 text-muted" colSpan={esAdmin ? 9 : 8}>Sin equipos</td></tr>
               ) : null}
             </tbody>
           </table>

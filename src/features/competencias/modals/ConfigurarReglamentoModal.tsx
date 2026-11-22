@@ -143,12 +143,12 @@ export default function ConfigurarReglamentoModal({ isOpen, onClose, fase, todas
       title={<span className="text-2xl font-black text-slate-900 normal-case">REGLAMENTO DE FASE</span>}
       subtitle={
         <span className="flex items-center gap-2">
-          <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded border ${
+          <span className={`text-2xs font-black uppercase px-2 py-0.5 rounded border ${
             isTableType ? 'bg-blue-50 border-blue-200 text-blue-600' : 'bg-purple-50 border-purple-200 text-purple-600'
           }`}>
             {fase.tipo}
           </span>
-          <span className="text-sm font-bold text-slate-400 italic">{fase.nombre}</span>
+          <span className="text-sm font-bold text-muted italic">{fase.nombre}</span>
         </span>
       }
       footer={
@@ -156,7 +156,7 @@ export default function ConfigurarReglamentoModal({ isOpen, onClose, fase, todas
           <button
             disabled={saving}
             onClick={onClose}
-            className="px-6 py-2.5 text-sm font-black text-slate-400 uppercase tracking-widest hover:text-slate-600 transition-colors disabled:opacity-50"
+            className="px-6 py-2.5 text-sm font-black text-muted uppercase tracking-widest hover:text-slate-600 transition-colors disabled:opacity-50"
           >
             Cancelar
           </button>
@@ -188,7 +188,7 @@ export default function ConfigurarReglamentoModal({ isOpen, onClose, fase, todas
                 <h3 className="text-xs font-black uppercase tracking-widest text-brand-600 border-b border-brand-100 pb-1">Reglas de Puntuación</h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="text-[10px] font-black uppercase text-slate-500">Victoria</label>
+                    <label className="text-2xs font-black uppercase text-slate-500">Victoria</label>
                     <input 
                       type="number" 
                       value={config.puntuacion?.victoria} 
@@ -197,7 +197,7 @@ export default function ConfigurarReglamentoModal({ isOpen, onClose, fase, todas
                     />
                   </div>
                   <div>
-                    <label className="text-[10px] font-black uppercase text-slate-500">Empate</label>
+                    <label className="text-2xs font-black uppercase text-slate-500">Empate</label>
                     <input 
                       type="number" 
                       value={config.puntuacion?.empate} 
@@ -207,7 +207,7 @@ export default function ConfigurarReglamentoModal({ isOpen, onClose, fase, todas
                   </div>
                   <div className="col-span-2 grid grid-cols-2 gap-4 bg-slate-50 p-3 rounded-xl border border-dashed border-slate-200">
                     <div>
-                      <label className="text-[9px] font-black uppercase text-brand-500">Set Ganado (+)</label>
+                      <label className="text-2xs font-black uppercase text-brand-500">Set Ganado (+)</label>
                       <input 
                         type="number" 
                         value={config.puntuacion?.setGanado} 
@@ -216,7 +216,7 @@ export default function ConfigurarReglamentoModal({ isOpen, onClose, fase, todas
                       />
                     </div>
                     <div>
-                      <label className="text-[9px] font-black uppercase text-blue-500">Árbitro (+) </label>
+                      <label className="text-2xs font-black uppercase text-blue-500">Árbitro (+) </label>
                       <input 
                         type="number" 
                         value={config.puntuacion?.arbitroPresentado} 
@@ -226,7 +226,7 @@ export default function ConfigurarReglamentoModal({ isOpen, onClose, fase, todas
                     </div>
                   </div>
                   <div className="col-span-2">
-                    <label className="text-[9px] font-black uppercase text-rose-500">Penalización No Árbitro (-)</label>
+                    <label className="text-2xs font-black uppercase text-rose-500">Penalización No Árbitro (-)</label>
                     <input 
                       type="number" 
                       value={config.puntuacion?.penalizacionNoArbitro} 
@@ -240,12 +240,12 @@ export default function ConfigurarReglamentoModal({ isOpen, onClose, fase, todas
               {/* SECCIÓN DESEMPATE CON ORDEN */}
               <div className="space-y-4">
                 <h3 className="text-xs font-black uppercase tracking-widest text-brand-600 border-b border-brand-100 pb-1">Prioridad de Desempate</h3>
-                <p className="text-[9px] text-slate-400 italic">El primer criterio es el más importante. Arrastra para ordenar.</p>
+                <p className="text-2xs text-muted italic">El primer criterio es el más importante. Arrastra para ordenar.</p>
                 <div className="space-y-2">
                   {config.criteriosDesempate.map((c: string, idx: number) => (
                     <div key={c} className="flex items-center justify-between p-2 rounded-xl bg-white border-2 border-slate-100 shadow-sm">
                       <div className="flex items-center gap-3">
-                        <span className="text-[10px] font-black text-slate-300">#{idx + 1}</span>
+                        <span className="text-2xs font-black text-muted">#{idx + 1}</span>
                         <span className="text-[11px] font-black text-slate-700">{c.replace(/_/g, ' ')}</span>
                       </div>
                       <div className="flex items-center gap-1">
@@ -264,7 +264,7 @@ export default function ConfigurarReglamentoModal({ isOpen, onClose, fase, todas
                         e.target.value = '';
                       }
                     }}
-                    className="w-full mt-4 rounded-lg bg-slate-50 border-2 border-dashed border-slate-200 p-2 text-[10px] font-black uppercase text-slate-400 focus:border-brand-500 focus:outline-none"
+                    className="w-full mt-4 rounded-lg bg-slate-50 border-2 border-dashed border-slate-200 p-2 text-2xs font-black uppercase text-muted focus:border-brand-500 focus:outline-none"
                   >
                     <option value="">+ Añadir Criterio</option>
                     {['PUNTOS', 'DIF_SETS', 'SETS_FAVOR', 'PUNTOS_FAVOR', 'DIF_PUNTOS', 'CARA_A_CARA', 'MENOS_TARJETAS']
@@ -281,7 +281,7 @@ export default function ConfigurarReglamentoModal({ isOpen, onClose, fase, todas
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   {isTableType && (
                     <div>
-                      <label className="text-[10px] font-black uppercase text-slate-500">¿Cuántos clasifican?</label>
+                      <label className="text-2xs font-black uppercase text-slate-500">¿Cuántos clasifican?</label>
                       <input 
                           type="number" 
                           value={config.progresion?.clasificanDirecto} 
@@ -291,8 +291,8 @@ export default function ConfigurarReglamentoModal({ isOpen, onClose, fase, todas
                     </div>
                   )}
                   <div className={isPlayoffType ? "md:col-span-1" : ""}>
-                    <label className="text-[10px] font-black uppercase text-green-600">Destino Ganadores</label>
-                    <p className="text-[8px] text-slate-400 mb-1 italic">Para campeones o clasificados</p>
+                    <label className="text-2xs font-black uppercase text-green-600">Destino Ganadores</label>
+                    <p className="text-2xs text-muted mb-1 italic">Para campeones o clasificados</p>
                     <select 
                       value={config.progresion?.destinoGanadores || ''}
                       onChange={(e) => setConfig({...config, progresion: {...config.progresion, destinoGanadores: e.target.value}})}
@@ -305,8 +305,8 @@ export default function ConfigurarReglamentoModal({ isOpen, onClose, fase, todas
                     </select>
                   </div>
                   <div className="md:col-span-1">
-                    <label className="text-[10px] font-black uppercase text-indigo-600">Estrategia de Sembrado (Seed)</label>
-                    <p className="text-[8px] text-slate-400 mb-1 italic">¿Cómo se asigna el número de seed al clasificar?</p>
+                    <label className="text-2xs font-black uppercase text-indigo-600">Estrategia de Sembrado (Seed)</label>
+                    <p className="text-2xs text-muted mb-1 italic">¿Cómo se asigna el número de seed al clasificar?</p>
                     <select 
                       value={config.progresion?.estrategiaSembrado}
                       onChange={(e) => setConfig({...config, progresion: {...config.progresion, estrategiaSembrado: e.target.value as any}})}
@@ -318,8 +318,8 @@ export default function ConfigurarReglamentoModal({ isOpen, onClose, fase, todas
                     </select>
                   </div>
                   <div className={isPlayoffType ? "md:col-span-2" : ""}>
-                    <label className="text-[10px] font-black uppercase text-rose-600">Destino Perdedores (Copa de Plata / Repechaje)</label>
-                    <p className="text-[8px] text-slate-400 mb-1 italic">¿A dónde van los que quedan eliminados de esta fase?</p>
+                    <label className="text-2xs font-black uppercase text-rose-600">Destino Perdedores (Copa de Plata / Repechaje)</label>
+                    <p className="text-2xs text-muted mb-1 italic">¿A dónde van los que quedan eliminados de esta fase?</p>
                     <select 
                       value={config.progresion?.destinoPerdedores || ''}
                       onChange={(e) => setConfig({...config, progresion: {...config.progresion, destinoPerdedores: e.target.value}})}
@@ -343,8 +343,8 @@ export default function ConfigurarReglamentoModal({ isOpen, onClose, fase, todas
                  <div className="bg-slate-50 p-6 rounded-2xl border-2 border-slate-100">
                     <h3 className="text-xs font-black uppercase tracking-widest text-slate-900 border-b border-slate-200 pb-2 mb-4">Flujo de Perdedores</h3>
                     <div>
-                      <label className="text-[10px] font-black uppercase text-rose-600">Enviar eliminados a otra fase:</label>
-                      <p className="text-[9px] text-slate-400 mb-2 italic">Ej: Perdedores de esta llave pasan a la "Llave de Plata"</p>
+                      <label className="text-2xs font-black uppercase text-rose-600">Enviar eliminados a otra fase:</label>
+                      <p className="text-2xs text-muted mb-2 italic">Ej: Perdedores de esta llave pasan a la "Llave de Plata"</p>
                       <select 
                         value={config.progresion?.destinoPerdedores || ''}
                         onChange={(e) => setConfig({...config, progresion: {...config.progresion, destinoPerdedores: e.target.value}})}
@@ -359,7 +359,7 @@ export default function ConfigurarReglamentoModal({ isOpen, onClose, fase, todas
 
                     {config.progresion?.destinoPerdedores && (
                       <div className="mt-4 animate-in slide-in-from-top-2">
-                        <label className="text-[10px] font-black uppercase text-slate-500 mb-2 block">¿En qué rondas hay revancha (Plata)?</label>
+                        <label className="text-2xs font-black uppercase text-slate-500 mb-2 block">¿En qué rondas hay revancha (Plata)?</label>
                         <div className="grid grid-cols-2 gap-2">
                           {[
                             { label: 'Treintaidosavos', value: 'treintaidosavos' },
@@ -388,11 +388,11 @@ export default function ConfigurarReglamentoModal({ isOpen, onClose, fase, todas
                                 }}
                                 className="accent-rose-500"
                               />
-                              <span className="text-[10px] font-bold text-slate-600">{ronda.label}</span>
+                              <span className="text-2xs font-bold text-slate-600">{ronda.label}</span>
                             </label>
                           ))}
                         </div>
-                        <p className="text-[9px] text-slate-400 mt-2 italic">Solo los perdedores de estas rondas viajarán a la fase de destino.</p>
+                        <p className="text-2xs text-muted mt-2 italic">Solo los perdedores de estas rondas viajarán a la fase de destino.</p>
                       </div>
                     )}
                  </div>
@@ -400,13 +400,13 @@ export default function ConfigurarReglamentoModal({ isOpen, onClose, fase, todas
               <div className="bg-purple-50 p-6 rounded-2xl border-2 border-purple-100">
                  <h3 className="text-xs font-black uppercase tracking-widest text-purple-900 mb-4 flex items-center gap-2">
                    Mecánicas de Eliminación
-                   <span className="bg-purple-200 text-purple-700 text-[8px] px-1.5 py-0.5 rounded-full">INFO</span>
+                   <span className="bg-purple-200 text-purple-700 text-2xs px-1.5 py-0.5 rounded-full">INFO</span>
                  </h3>
                  
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                    <div className="space-y-4">
                      <div>
-                       <label className="text-[10px] font-black uppercase text-purple-500 mb-2 block">Formato del cuadro</label>
+                       <label className="text-2xs font-black uppercase text-purple-500 mb-2 block">Formato del cuadro</label>
                        <select 
                           value={config.playoff.formato} 
                           onChange={(e) => setConfig({...config, playoff: {...config.playoff, formato: e.target.value as 'simple' | 'doble_eliminacion'}})}
@@ -417,7 +417,7 @@ export default function ConfigurarReglamentoModal({ isOpen, onClose, fase, todas
                        </select>
                      </div>
                      <div className="p-3 bg-white/50 rounded-xl border border-purple-200">
-                        <p className="text-[10px] font-bold text-purple-800 leading-relaxed">
+                        <p className="text-2xs font-bold text-purple-800 leading-relaxed">
                           {config.playoff?.formato === 'simple' 
                             ? "🚩 Eliminación directa. Se puede configurar que los perdedores de ciertas rondas (ej: Octavos) pasen a otra fase de consolación."
                             : "🔄 Llave de ganadores y perdedores dentro de la misma fase (Double Bracket). Se necesitan dos derrotas para quedar fuera."}
@@ -436,7 +436,7 @@ export default function ConfigurarReglamentoModal({ isOpen, onClose, fase, todas
                           />
                           <div>
                             <span className="text-xs font-black text-slate-700 block">¿Partido por 3er Puesto?</span>
-                            <span className="text-[9px] font-bold text-slate-400">Duelo entre perdedores de semis</span>
+                            <span className="text-2xs font-bold text-muted">Duelo entre perdedores de semis</span>
                           </div>
                         </label>
                      </div>
@@ -451,7 +451,7 @@ export default function ConfigurarReglamentoModal({ isOpen, onClose, fase, todas
                           />
                           <div>
                             <span className="text-xs font-black text-slate-700 block">¿Ida y Vuelta?</span>
-                            <span className="text-[9px] font-bold text-slate-400">Dos partidos por cada cruce</span>
+                            <span className="text-2xs font-bold text-muted">Dos partidos por cada cruce</span>
                           </div>
                         </label>
                      </div>

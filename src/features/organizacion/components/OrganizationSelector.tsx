@@ -35,7 +35,7 @@ const OrganizationSelector = () => {
           <span className="block truncate">
             {organizacionSeleccionada?.nombre ?? 'Seleccionar organización'}
           </span>
-          <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2 text-slate-400">
+          <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2 text-muted">
             <ChevronUpDownIcon aria-hidden className="h-5 w-5" />
           </span>
         </Listbox.Button>

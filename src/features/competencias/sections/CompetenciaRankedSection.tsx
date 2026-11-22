@@ -772,18 +772,18 @@ export default function CompetenciaRankedSection({
             className="flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-200 transition-colors"
           >
             🏐 {modalidad || '—'} · {categoria || '—'}
-            <span className={`text-[9px] transition-transform ${configOpen ? 'rotate-180' : ''}`}>▾</span>
+            <span className={`text-2xs transition-transform ${configOpen ? 'rotate-180' : ''}`}>▾</span>
           </button>
 
           {matchId ? (
             <button
               type="button"
               onClick={() => setMatchBarOpen((v) => !v)}
-              className="flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200 px-3 py-2 text-[10px] font-black uppercase text-emerald-700"
+              className="flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200 px-3 py-2 text-2xs font-black uppercase text-emerald-700"
             >
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
               En curso
-              <span className={`text-[9px] transition-transform ${matchBarOpen ? 'rotate-180' : ''}`}>▾</span>
+              <span className={`text-2xs transition-transform ${matchBarOpen ? 'rotate-180' : ''}`}>▾</span>
             </button>
           ) : (
             <Button
@@ -802,11 +802,11 @@ export default function CompetenciaRankedSection({
           <div className="border-t border-slate-100 bg-slate-50/70 px-3 py-3 sm:px-4">
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
               <div className="space-y-1">
-                <label className="text-[10px] uppercase tracking-wider font-bold text-slate-500">Temporada</label>
+                <label className="text-2xs uppercase tracking-wider font-bold text-slate-500">Temporada</label>
                 <select
                   value={selectedTemporada}
                   onChange={(e) => setSelectedTemporada(e.target.value)}
-                  className="h-10 w-full rounded-md border border-slate-200 bg-white px-2 text-xs outline-none focus:ring-2 focus:ring-brand-500 transition-shadow disabled:bg-slate-50 disabled:text-slate-400"
+                  className="h-10 w-full rounded-md border border-slate-200 bg-white px-2 text-xs outline-none focus:ring-2 focus:ring-brand-500 transition-shadow disabled:bg-slate-50 disabled:text-muted"
                   disabled={busy || !!matchId}
                 >
                   <option value="">Sin temporada</option>
@@ -818,7 +818,7 @@ export default function CompetenciaRankedSection({
 
               {sedes.length > 0 && (
                 <div className="space-y-1">
-                  <label className="text-[10px] uppercase tracking-wider font-bold text-slate-500">Sede</label>
+                  <label className="text-2xs uppercase tracking-wider font-bold text-slate-500">Sede</label>
                   <select
                     value={selectedSedeId}
                     onChange={(e) => handleSedeChange(e.target.value)}
@@ -835,7 +835,7 @@ export default function CompetenciaRankedSection({
 
               {selectedSede && (selectedSede.canchas?.length ?? 0) > 0 && (
                 <div className="space-y-1">
-                  <label className="text-[10px] uppercase tracking-wider font-bold text-slate-500">Cancha</label>
+                  <label className="text-2xs uppercase tracking-wider font-bold text-slate-500">Cancha</label>
                   <select
                     value={selectedCancha}
                     onChange={(e) => handleCanchaChange(e.target.value)}
@@ -851,20 +851,20 @@ export default function CompetenciaRankedSection({
               )}
 
               <div className="space-y-1">
-                <label className="text-[10px] uppercase tracking-wider font-bold text-slate-500" title="Online: sincroniza con el servidor. Offline: guarda solo localmente.">
+                <label className="text-2xs uppercase tracking-wider font-bold text-slate-500" title="Online: sincroniza con el servidor. Offline: guarda solo localmente.">
                   Modo
                 </label>
                 <div className="flex items-center h-10 bg-white border border-slate-200 rounded-md p-1 gap-1">
                   <button
                     onClick={() => setIsBasicMode(false)}
-                    className={`flex-1 rounded text-[11px] font-bold transition-all ${!isBasicMode ? 'bg-slate-100 text-brand-600' : 'text-slate-400'}`}
+                    className={`flex-1 rounded text-[11px] font-bold transition-all ${!isBasicMode ? 'bg-slate-100 text-brand-600' : 'text-muted'}`}
                     title="Sincroniza equipos y sets con el servidor en tiempo real"
                   >
                     Online
                   </button>
                   <button
                     onClick={() => setIsBasicMode(true)}
-                    className={`flex-1 rounded text-[11px] font-bold transition-all ${isBasicMode ? 'bg-slate-100 text-brand-600' : 'text-slate-400'}`}
+                    className={`flex-1 rounded text-[11px] font-bold transition-all ${isBasicMode ? 'bg-slate-100 text-brand-600' : 'text-muted'}`}
                     title="Guarda el estado solo en este dispositivo"
                   >
                     Offline
@@ -877,7 +877,7 @@ export default function CompetenciaRankedSection({
 
         {matchId && matchBarOpen && (
           <div className="border-t border-slate-100 bg-slate-50/70 px-3 py-2 sm:px-4 flex items-center justify-between">
-            <span className="font-mono text-[10px] text-slate-400 bg-slate-100 rounded px-1.5 py-0.5">ID: {matchId.slice(-6).toUpperCase()}</span>
+            <span className="font-mono text-2xs text-muted bg-slate-100 rounded px-1.5 py-0.5">ID: {matchId.slice(-6).toUpperCase()}</span>
             <div className="flex gap-4">
               <button onClick={abandonMatch} className="text-[11px] text-slate-500 hover:text-slate-700 font-bold uppercase tracking-tight underline underline-offset-2">Abandonar</button>
               <button onClick={() => showConfirm('¿Eliminar Partido?', 'Se perderá el progreso de este partido.', onCancelMatch)} className="text-[11px] text-red-500 hover:text-red-700 font-bold uppercase tracking-tight underline underline-offset-2">Eliminar</button>

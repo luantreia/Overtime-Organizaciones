@@ -87,7 +87,7 @@ const ProgresoTemporadasSection = ({ loading, temporadas }: ProgresoTemporadasSe
               className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-card transition hover:border-brand-300 hover:shadow-md"
             >
               <Link to={`/competencias/${t.competenciaId}`} className="block">
-                <p className="text-xs uppercase tracking-wide text-slate-400">{t.competenciaNombre}</p>
+                <p className="text-xs uppercase tracking-wide text-muted">{t.competenciaNombre}</p>
                 <p className="text-lg font-semibold text-slate-900">{t.temporadaNombre}</p>
               </Link>
 
@@ -115,7 +115,7 @@ const ProgresoTemporadasSection = ({ loading, temporadas }: ProgresoTemporadasSe
               </div>
 
               {t.partidosTotal === 0 ? (
-                <p className="text-xs italic text-slate-400">Fixture no generado todavía</p>
+                <p className="text-xs italic text-muted">Fixture no generado todavía</p>
               ) : (
                 <div className="flex items-center gap-2">
                   <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">

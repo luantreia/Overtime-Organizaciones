@@ -59,7 +59,7 @@ export const RankedAdminTools: React.FC<RankedAdminToolsProps> = ({
       <Card className="p-3 sm:p-4 border-slate-100 shadow-sm bg-white">
         <h3 className="mb-3 text-[11px] sm:text-sm font-bold text-slate-700 flex items-center justify-between">
           <span>Historial y Partidos Abiertos</span>
-          <span className="text-[9px] sm:text-[10px] text-slate-400 font-normal uppercase">Mostrando {recentMatches.length}</span>
+          <span className="text-2xs sm:text-2xs text-muted font-normal uppercase">Mostrando {recentMatches.length}</span>
         </h3>
         <label className="mb-3 flex items-center gap-2 cursor-pointer select-none">
           <input
@@ -68,13 +68,13 @@ export const RankedAdminTools: React.FC<RankedAdminToolsProps> = ({
             onChange={(e) => setSoloAbiertos(e.target.checked)}
             className="h-3.5 w-3.5 rounded text-brand-600 focus:ring-brand-500 border-slate-300"
           />
-          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">
+          <span className="text-2xs font-bold text-slate-500 uppercase tracking-wide">
             Solo abiertos (sin terminar) — para encontrar los que quedaron perdidos
           </span>
         </label>
         <div className="space-y-2">
           {recentMatches.length === 0 ? (
-            <p className="text-xs text-slate-400 italic py-2 text-center">
+            <p className="text-xs text-muted italic py-2 text-center">
               {soloAbiertos ? 'No hay partidos abiertos en este scope' : 'No hay partidos registrados en este scope'}
             </p>
           ) : (
@@ -86,23 +86,23 @@ export const RankedAdminTools: React.FC<RankedAdminToolsProps> = ({
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex flex-col">
                        <div className="flex items-center gap-2">
-                          <span className="text-[9px] font-mono font-bold text-slate-400 bg-slate-50 px-1.5 py-0.5 rounded border">
+                          <span className="text-2xs font-mono font-bold text-muted bg-slate-50 px-1.5 py-0.5 rounded border">
                             ID: {matchId.slice(-6).toUpperCase()}
                           </span>
-                          <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded uppercase tracking-tight ${
+                          <span className={`text-2xs font-bold px-1.5 py-0.5 rounded uppercase tracking-tight ${
                             isFinalizado ? 'bg-slate-100 text-slate-500' : 'bg-emerald-50 text-emerald-600 border border-emerald-100 animate-pulse'
                           }`}>
                             {isFinalizado ? 'Finalizado' : 'En Juego'}
                           </span>
                        </div>
-                       <span className="text-[10px] text-slate-400 font-medium mt-1">
+                       <span className="text-2xs text-muted font-medium mt-1">
                           {new Date(m.fecha).toLocaleString([], { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
                        </span>
                     </div>
                     
                     <div className="flex items-center gap-3 bg-slate-50 px-3 py-1 rounded-full border border-slate-100">
                       <span className="text-base font-black text-red-600 leading-none">{m.marcadorLocal}</span>
-                      <span className="text-[10px] text-slate-300 font-bold">VS</span>
+                      <span className="text-2xs text-muted font-bold">VS</span>
                       <span className="text-base font-black text-blue-600 leading-none">{m.marcadorVisitante}</span>
                     </div>
                   </div>
@@ -110,13 +110,13 @@ export const RankedAdminTools: React.FC<RankedAdminToolsProps> = ({
                   <div className="grid grid-cols-2 gap-2 mb-3 py-2 border-y border-slate-50">
                      <div className="flex items-center gap-1">
                         <div className="w-1.5 h-1.5 rounded-full bg-red-500" />
-                        <span className="text-[9px] text-slate-400 font-medium uppercase">
+                        <span className="text-2xs text-muted font-medium uppercase">
                           {m.rojoPlayers?.length || 0} Jugadores
                         </span>
                      </div>
                      <div className="flex items-center gap-1">
                         <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                        <span className="text-[9px] text-slate-400 font-medium uppercase">
+                        <span className="text-2xs text-muted font-medium uppercase">
                           {m.azulPlayers?.length || 0} Jugadores
                         </span>
                      </div>
@@ -124,14 +124,14 @@ export const RankedAdminTools: React.FC<RankedAdminToolsProps> = ({
 
                   {isFinalizado && (m.ratingDeltas?.length > 0) && (
                     <div className="mb-3 px-2 py-1.5 bg-brand-50/50 rounded border border-brand-100 flex items-center justify-between">
-                       <span className="text-[9px] font-bold text-brand-700 uppercase">
+                       <span className="text-2xs font-bold text-brand-700 uppercase">
                           Deltas {selectedTemporada ? 'Temporada' : 'Global'}
                        </span>
                        <div className="flex gap-2">
-                          <span className="text-[10px] font-bold text-emerald-600">
+                          <span className="text-2xs font-bold text-emerald-600">
                              Max: +{Math.max(...m.ratingDeltas.map((d: any) => d.delta || 0)).toFixed(1)}
                           </span>
-                          <span className="text-[10px] font-bold text-red-600">
+                          <span className="text-2xs font-bold text-red-600">
                              Min: {Math.min(...m.ratingDeltas.map((d: any) => d.delta || 0)).toFixed(1)}
                           </span>
                        </div>
@@ -142,7 +142,7 @@ export const RankedAdminTools: React.FC<RankedAdminToolsProps> = ({
                     <Button
                       size="sm"
                       variant={isFinalizado ? 'outline' : 'primary'}
-                      className={`flex-1 h-8 text-[10px] font-bold uppercase tracking-wider ${isFinalizado ? 'border-brand-200 text-brand-600 hover:bg-brand-50' : ''}`}
+                      className={`flex-1 h-8 text-2xs font-bold uppercase tracking-wider ${isFinalizado ? 'border-brand-200 text-brand-600 hover:bg-brand-50' : ''}`}
                       onClick={() => onEditResult(m)}
                       disabled={busy}
                     >
@@ -152,7 +152,7 @@ export const RankedAdminTools: React.FC<RankedAdminToolsProps> = ({
                       <Button
                         size="sm"
                         variant="outline"
-                        className="h-8 px-3 text-[10px] font-bold uppercase tracking-wider text-red-600 border-red-200 hover:bg-red-50"
+                        className="h-8 px-3 text-2xs font-bold uppercase tracking-wider text-red-600 border-red-200 hover:bg-red-50"
                         onClick={() => onDeleteMatch(m)}
                         disabled={busy}
                         title="Borrar este partido (ej. quedó abierto por error)"
@@ -170,7 +170,7 @@ export const RankedAdminTools: React.FC<RankedAdminToolsProps> = ({
               size="sm"
               variant="outline"
               onClick={onLoadMoreRecentMatches}
-              className="w-full h-8 text-[10px] font-bold uppercase tracking-wider border-slate-200 text-slate-600"
+              className="w-full h-8 text-2xs font-bold uppercase tracking-wider border-slate-200 text-slate-600"
             >
               Ver más partidos
             </Button>
@@ -183,13 +183,13 @@ export const RankedAdminTools: React.FC<RankedAdminToolsProps> = ({
         className="flex w-full items-center justify-between rounded-lg border border-slate-200 bg-white p-3 text-xs sm:text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
       >
         <span className="flex items-center gap-2">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5 text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
           </svg>
           Herramientas Avanzadas
         </span>
-        <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 sm:h-5 sm:w-5 text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 sm:h-5 sm:w-5 text-muted transition-transform ${isOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
         </svg>
       </button>
@@ -203,7 +203,7 @@ export const RankedAdminTools: React.FC<RankedAdminToolsProps> = ({
                 <Button 
                   size="sm" 
                   variant="outline"
-                  className="w-full flex items-center justify-center gap-2 text-[10px] font-bold border-amber-300 bg-white"
+                  className="w-full flex items-center justify-center gap-2 text-2xs font-bold border-amber-300 bg-white"
                   onClick={onCleanupGhosts}
                   disabled={busy}
                 >
@@ -214,17 +214,17 @@ export const RankedAdminTools: React.FC<RankedAdminToolsProps> = ({
                 </Button>
               </div>
               <div className="space-y-1.5">
-                <label className="text-[9px] uppercase tracking-wider font-extrabold text-slate-400">Forzar Conversion Ranked</label>
+                <label className="text-2xs uppercase tracking-wider font-extrabold text-muted">Forzar Conversion Ranked</label>
                 <div className="flex gap-2">
                   <input value={convertId} onChange={(e)=>setConvertId(e.target.value)} placeholder="Part. ID" className="flex-1 rounded-md border px-2 py-1 text-xs outline-none focus:ring-1 focus:ring-brand-500 min-w-0" />
-                  <Button size="sm" onClick={onMarkAsRanked} disabled={busy || !convertId.trim()} className="h-8 text-[10px] px-2">Marcar</Button>
+                  <Button size="sm" onClick={onMarkAsRanked} disabled={busy || !convertId.trim()} className="h-8 text-2xs px-2">Marcar</Button>
                 </div>
               </div>
               <div className="space-y-1.5">
-                <label className="text-[9px] uppercase tracking-wider font-extrabold text-red-600">Revertir MMR Partido</label>
+                <label className="text-2xs uppercase tracking-wider font-extrabold text-red-600">Revertir MMR Partido</label>
                 <div className="flex gap-2">
                   <input value={revertId} onChange={(e)=>setRevertId(e.target.value)} placeholder="Part. ID" className="flex-1 rounded-md border px-2 py-1 text-xs outline-none focus:ring-1 focus:ring-red-500 min-w-0" />
-                  <Button size="sm" variant="outline" className="h-8 text-[10px] px-2 text-red-600 border-red-200 hover:bg-red-50" onClick={onRevertMatch} disabled={busy || !revertId.trim()}>Revertir</Button>
+                  <Button size="sm" variant="outline" className="h-8 text-2xs px-2 text-red-600 border-red-200 hover:bg-red-50" onClick={onRevertMatch} disabled={busy || !revertId.trim()}>Revertir</Button>
                 </div>
               </div>
             </div>

@@ -272,7 +272,7 @@ const PartidosPage = () => {
         <section className="space-y-4">
           <header className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-slate-900">Todos los partidos filtrados</h2>
-            <span className="text-xs uppercase tracking-wide text-slate-400">{todos.length} en total</span>
+            <span className="text-xs uppercase tracking-wide text-muted">{todos.length} en total</span>
           </header>
           {loading ? (
             <div className="space-y-3">

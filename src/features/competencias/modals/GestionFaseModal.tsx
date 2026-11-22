@@ -661,9 +661,9 @@ export default function GestionParticipantesFaseModal({
 
   const renderStatusBadge = (estado: string) => {
     switch (estado?.toLowerCase()) {
-      case 'finalizado': return <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-600 uppercase">Finalizado</span>;
-      case 'en_curso': return <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700 uppercase animate-pulse">En curso</span>;
-      default: return <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-600 uppercase">Pendiente</span>;
+      case 'finalizado': return <span className="rounded-full bg-slate-100 px-2 py-0.5 text-2xs font-bold text-slate-600 uppercase">Finalizado</span>;
+      case 'en_curso': return <span className="rounded-full bg-amber-100 px-2 py-0.5 text-2xs font-bold text-amber-700 uppercase animate-pulse">En curso</span>;
+      default: return <span className="rounded-full bg-blue-50 px-2 py-0.5 text-2xs font-bold text-blue-600 uppercase">Pendiente</span>;
     }
   };
 
@@ -695,7 +695,7 @@ export default function GestionParticipantesFaseModal({
             {isEditingEtapa && entryEtapa && (
               <>
                 <label className="flex flex-col gap-0.5">
-                  <span className="text-[9px] font-bold uppercase tracking-wide text-slate-400">Etapa</span>
+                  <span className="text-2xs font-bold uppercase tracking-wide text-muted">Etapa</span>
                   <select
                     className="rounded-lg border border-brand-300 bg-white px-2 py-1 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
                     value={entryEtapa.etapa}
@@ -728,7 +728,7 @@ export default function GestionParticipantesFaseModal({
             {isEditingFecha && entryFecha && (
               <>
                 <label className="flex flex-col gap-0.5">
-                  <span className="text-[9px] font-bold uppercase tracking-wide text-slate-400">Fecha</span>
+                  <span className="text-2xs font-bold uppercase tracking-wide text-muted">Fecha</span>
                   <input
                     type="date"
                     className="rounded-lg border border-brand-300 bg-white px-2 py-1 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
@@ -738,7 +738,7 @@ export default function GestionParticipantesFaseModal({
                   />
                 </label>
                 <label className="flex flex-col gap-0.5">
-                  <span className="text-[9px] font-bold uppercase tracking-wide text-slate-400">Hora</span>
+                  <span className="text-2xs font-bold uppercase tracking-wide text-muted">Hora</span>
                   <input
                     type="time"
                     className="rounded-lg border border-brand-300 bg-white px-2 py-1 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
@@ -774,11 +774,11 @@ export default function GestionParticipantesFaseModal({
               className={`flex items-center gap-1.5 rounded-lg px-1 -mx-1 text-left transition-colors ${puedeEditarEtapa ? 'hover:bg-slate-50 cursor-pointer' : 'cursor-default'}`}
               title={puedeEditarEtapa ? 'Editar etapa' : undefined}
             >
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              <span className="text-2xs font-bold uppercase tracking-wider text-muted">
                 {p.etapa ? p.etapa.replace('_', ' ') : (p.grupo ? `Grupo ${p.grupo}` : (p.division ? `División ${p.division}` : 'Partido'))}
               </span>
               {puedeEditarEtapa && (
-                <svg viewBox="0 0 16 16" fill="currentColor" className="h-2.5 w-2.5 text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity">
+                <svg viewBox="0 0 16 16" fill="currentColor" className="h-2.5 w-2.5 text-muted opacity-0 group-hover:opacity-100 transition-opacity">
                   <path d="M11.013 1.427a1.75 1.75 0 012.474 2.474l-8.5 8.5a1.75 1.75 0 01-.734.44l-3.001.9a.25.25 0 01-.31-.31l.9-3a1.75 1.75 0 01.439-.733l8.5-8.5z" />
                 </svg>
               )}
@@ -794,14 +794,14 @@ export default function GestionParticipantesFaseModal({
                 {new Date(p.fecha).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' })} {p.hora ? `· ${p.hora}` : ''}
               </span>
               {puedeEditarFecha && (
-                <svg viewBox="0 0 16 16" fill="currentColor" className="h-2.5 w-2.5 text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity">
+                <svg viewBox="0 0 16 16" fill="currentColor" className="h-2.5 w-2.5 text-muted opacity-0 group-hover:opacity-100 transition-opacity">
                   <path d="M11.013 1.427a1.75 1.75 0 012.474 2.474l-8.5 8.5a1.75 1.75 0 01-.734.44l-3.001.9a.25.25 0 01-.31-.31l.9-3a1.75 1.75 0 01.439-.733l8.5-8.5z" />
                 </svg>
               )}
             </button>
             {sugerencia?.difiere && (
               <span
-                className={`mt-0.5 rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide ${
+                className={`mt-0.5 rounded px-1.5 py-0.5 text-2xs font-bold uppercase tracking-wide ${
                   sugerencia.confiable ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-500'
                 }`}
                 title={
@@ -838,7 +838,7 @@ export default function GestionParticipantesFaseModal({
                   onKeyDown={e => { if (e.key === 'Enter') void handleSaveQuickScore(p.id); if (e.key === 'Escape') closeQuickEdit(p.id); }}
                   autoFocus
                 />
-                <span className="text-slate-400 font-bold text-sm">-</span>
+                <span className="text-muted font-bold text-sm">-</span>
                 <input
                   type="number"
                   min={0}
@@ -852,7 +852,7 @@ export default function GestionParticipantesFaseModal({
               <button
                 type="button"
                 onClick={() => patchQuickEdit(p.id, { finalizar: !entry.finalizar })}
-                className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-bold uppercase transition-colors ${
+                className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-2xs font-bold uppercase transition-colors ${
                   entry.finalizar
                     ? 'bg-emerald-100 text-emerald-700 border border-emerald-200'
                     : 'bg-amber-50 text-amber-600 border border-amber-200'
@@ -869,11 +869,11 @@ export default function GestionParticipantesFaseModal({
                 onClick={() => openQuickEdit(p)}
                 className="flex flex-col items-center gap-0.5 group/vs px-2 py-1 rounded-lg hover:bg-brand-50 transition-colors"
               >
-                <span className="text-lg font-black text-slate-300 group-hover/vs:text-brand-500 transition-colors">VS</span>
-                <span className="text-[9px] font-bold text-slate-300 group-hover/vs:text-brand-500 uppercase tracking-wide transition-colors">cargar</span>
+                <span className="text-lg font-black text-muted group-hover/vs:text-brand-500 transition-colors">VS</span>
+                <span className="text-2xs font-bold text-muted group-hover/vs:text-brand-500 uppercase tracking-wide transition-colors">cargar</span>
               </button>
             ) : (
-              <span className="text-xl font-black text-slate-300 px-2">VS</span>
+              <span className="text-xl font-black text-muted px-2">VS</span>
             )
           ) : p.estado === 'finalizado' ? (
             <button
@@ -983,7 +983,7 @@ export default function GestionParticipantesFaseModal({
       {/* Edición rápida de video (independiente del resultado) */}
       {isEditingVideo && videoEntry && (
         <div className="mt-2 flex items-center gap-2 pt-2 border-t border-slate-100">
-          <VideoCameraIcon className="h-4 w-4 shrink-0 text-slate-400" />
+          <VideoCameraIcon className="h-4 w-4 shrink-0 text-muted" />
           <input
             type="text"
             autoFocus
@@ -1025,19 +1025,19 @@ export default function GestionParticipantesFaseModal({
       <div className="mb-6 rounded-2xl bg-slate-50 p-4 border border-slate-100">
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
           <div className="flex flex-col lg:items-center">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Equipos</span>
+            <span className="text-2xs font-bold text-muted uppercase tracking-widest">Equipos</span>
             <span className="text-xl font-black text-brand-600">{items.length}</span>
           </div>
           <div className="flex flex-col lg:items-center border-l border-slate-200 pl-4 sm:pl-0 sm:border-l-0 sm:border-x">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Partidos</span>
+            <span className="text-2xs font-bold text-muted uppercase tracking-widest">Partidos</span>
             <span className="text-xl font-black text-slate-700">{partidos.length}</span>
           </div>
           <div className="flex flex-col lg:items-center border-t sm:border-t-0 pt-4 sm:pt-0 sm:border-r border-slate-200">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Finalizados</span>
+            <span className="text-2xs font-bold text-muted uppercase tracking-widest">Finalizados</span>
             <span className="text-xl font-black text-green-600">{partidos.filter(p => p.estado === 'finalizado').length}</span>
           </div>
           <div className="flex flex-col lg:items-center border-l sm:border-l-0 border-t sm:border-t-0 pt-4 sm:pt-0 pl-4 sm:pl-0 border-slate-200">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Progreso</span>
+            <span className="text-2xs font-bold text-muted uppercase tracking-widest">Progreso</span>
             <span className="text-xl font-black text-slate-900">{statsCompletado}%</span>
           </div>
         </div>
@@ -1157,7 +1157,7 @@ export default function GestionParticipantesFaseModal({
             {/* BUSCADOR Y FILTROS */}
             <div className="flex flex-col sm:flex-row gap-4">
               <div className="relative flex-1">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">🔍</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted">🔍</span>
                 <input
                   type="text"
                   placeholder="Buscar equipo..."
@@ -1194,7 +1194,7 @@ export default function GestionParticipantesFaseModal({
                 <p className="text-sm font-bold text-slate-500 uppercase tracking-widest">
                   {searchTerm || filterEstado !== 'all' ? 'No se encontraron partidos' : 'No hay partidos programados'}
                 </p>
-                <p className="text-xs text-slate-400 mt-1">
+                <p className="text-xs text-muted mt-1">
                   {searchTerm || filterEstado !== 'all' 
                     ? 'Intenta ajustando los filtros o el buscador.' 
                     : 'Crea partidos manualmente o genera la llave en la pestaña Configuración.'}
@@ -1204,8 +1204,8 @@ export default function GestionParticipantesFaseModal({
               <>
                 {(tipo === 'playoff' || tipo === 'promocion') && (
                   <div className="mb-10 animate-in fade-in duration-700">
-                    <h5 className="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-6 flex items-center gap-3">
-                      <span className="p-1 px-2 bg-slate-900 text-white rounded text-[9px]">DIAGRAMA</span>
+                    <h5 className="text-[11px] font-black uppercase tracking-widest text-muted mb-6 flex items-center gap-3">
+                      <span className="p-1 px-2 bg-slate-900 text-white rounded text-2xs">DIAGRAMA</span>
                       Cuadro de Competencia
                     </h5>
                     <VisualBracket
@@ -1290,7 +1290,7 @@ export default function GestionParticipantesFaseModal({
                     {(tipo === 'grupo' ? Object.entries(porGrupo) : tipo === 'liga' ? Object.entries(porDivision) : (Object.keys(porGrupo).some(k => k !== '—') ? Object.entries(porGrupo) : Object.entries(porDivision)))
                       .map(([key, arr]) => (
                         <div key={key}>
-                          <h5 className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-slate-400 mb-4">
+                          <h5 className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-muted mb-4">
                             <span className="block h-px flex-1 bg-slate-100"></span>
                             {tipo === 'grupo' ? `Grupo ${key}` : tipo === 'liga' ? `División ${key}` : (key !== '—' ? `Grupo ${key}` : 'Fase Regular')}
                             <span className="block h-px flex-1 bg-slate-100"></span>
@@ -1368,21 +1368,21 @@ export default function GestionParticipantesFaseModal({
                         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100 text-lg">⚠️</div>
                         <div className="flex flex-col">
                           <span className="text-[11px] font-black text-amber-900 uppercase tracking-tight">Partidos Detectados</span>
-                          <span className="text-[10px] font-bold text-amber-700 leading-tight">Ya se han generado {partidos.length} partidos. No puedes generar nuevos mientras existan encuentros.</span>
+                          <span className="text-2xs font-bold text-amber-700 leading-tight">Ya se han generado {partidos.length} partidos. No puedes generar nuevos mientras existan encuentros.</span>
                         </div>
                       </div>
                       
                       <div className="flex flex-col sm:flex-row gap-2">
                         <button 
                           type="button"
-                          className="flex-1 rounded-xl bg-amber-600 px-4 py-3 text-[10px] font-black uppercase tracking-widest text-white hover:bg-amber-700 transition shadow-lg shadow-amber-200 flex items-center justify-center gap-2"
+                          className="flex-1 rounded-xl bg-amber-600 px-4 py-3 text-2xs font-black uppercase tracking-widest text-white hover:bg-amber-700 transition shadow-lg shadow-amber-200 flex items-center justify-center gap-2"
                           onClick={() => setConfirmDeleteAllPartidos(true)}
                         >
                           🗑️ Limpiar y Reiniciar Fase
                         </button>
                         <button 
                           onClick={() => setActiveTab('partidos')}
-                          className="flex-1 rounded-xl bg-white border border-amber-200 px-4 py-3 text-[10px] font-black uppercase tracking-widest text-amber-700 hover:bg-amber-100 transition flex items-center justify-center gap-2"
+                          className="flex-1 rounded-xl bg-white border border-amber-200 px-4 py-3 text-2xs font-black uppercase tracking-widest text-amber-700 hover:bg-amber-100 transition flex items-center justify-center gap-2"
                         >
                           📅 Ver Calendario
                         </button>
@@ -1426,7 +1426,7 @@ export default function GestionParticipantesFaseModal({
                     </button>
                   )}
                 </div>
-                <p className="mt-3 text-[10px] text-brand-600/70 font-medium italic">
+                <p className="mt-3 text-2xs text-brand-600/70 font-medium italic">
                   {partidos.length > 0
                     ? '* El calendario ya está configurado. Debes reiniciarlo si deseas cambiar el formato o los participantes.'
                     : tipo === 'promocion'
@@ -1442,13 +1442,13 @@ export default function GestionParticipantesFaseModal({
               <div id="gestion-partidos-header" className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                 <div className="flex items-center justify-between mb-4">
                   <h6 className="text-sm font-extrabold text-slate-900 uppercase tracking-tight flex items-center gap-2">
-                    <span className="flex h-5 w-5 items-center justify-center rounded bg-brand-100 text-[10px] text-brand-600">+</span>
+                    <span className="flex h-5 w-5 items-center justify-center rounded bg-brand-100 text-2xs text-brand-600">+</span>
                     {modoVisual ? 'Crear Partidos (Visual)' : 'Crear Partidos (Manual)'}
                   </h6>
                   <button 
                     type="button"
                     onClick={() => setModoVisual(!modoVisual)}
-                    className="text-[10px] font-black uppercase text-brand-600 bg-brand-50 px-3 py-1.5 rounded-lg border border-brand-100 hover:bg-brand-100 transition shadow-sm"
+                    className="text-2xs font-black uppercase text-brand-600 bg-brand-50 px-3 py-1.5 rounded-lg border border-brand-100 hover:bg-brand-100 transition shadow-sm"
                   >
                     {modoVisual ? '⌨️ Modo Formulario' : '🖱️ Modo Visual'}
                   </button>
@@ -1463,8 +1463,8 @@ export default function GestionParticipantesFaseModal({
                         {/* Cruces Sugeridos (Automáticos por Rama) */}
                         {sugerencias.length > 0 && (
                           <div className="animate-in slide-in-from-top-2 duration-400">
-                             <h6 className="text-[10px] font-black text-brand-600 uppercase tracking-widest mb-3 px-1 flex items-center gap-2">
-                               <span className="flex h-4 w-4 items-center justify-center rounded bg-brand-100 text-[10px]">✨</span>
+                             <h6 className="text-2xs font-black text-brand-600 uppercase tracking-widest mb-3 px-1 flex items-center gap-2">
+                               <span className="flex h-4 w-4 items-center justify-center rounded bg-brand-100 text-2xs">✨</span>
                                Cruces Sugeridos
                              </h6>
                              <div className="flex flex-col gap-2">
@@ -1490,15 +1490,15 @@ export default function GestionParticipantesFaseModal({
                                    }}
                                    className="group flex flex-col gap-1 p-2.5 bg-brand-50 border border-brand-100 rounded-xl hover:border-brand-400 hover:bg-white transition-all text-left"
                                  >
-                                    <div className="flex items-center justify-between text-[8px] font-black text-brand-400 uppercase mb-1">
+                                    <div className="flex items-center justify-between text-2xs font-black text-brand-400 uppercase mb-1">
                                        <span>{idx % 2 === 0 ? 'Rama Superior' : 'Rama Inferior'}</span>
                                        <span className="opacity-0 group-hover:opacity-100 transition-opacity">Auto-completar ⚡</span>
                                     </div>
-                                    <div className="text-[10px] font-bold text-slate-700 leading-tight">
-                                       Ganador {s.labelMatch1} <br/> <span className="text-slate-300 font-bold px-0.5 whitespace-nowrap">vs</span> <br/> Ganador {s.labelMatch2}
+                                    <div className="text-2xs font-bold text-slate-700 leading-tight">
+                                       Ganador {s.labelMatch1} <br/> <span className="text-muted font-bold px-0.5 whitespace-nowrap">vs</span> <br/> Ganador {s.labelMatch2}
                                     </div>
                                     {(!s.local || !s.visitante) && (
-                                       <span className="text-[7px] font-bold text-amber-600 uppercase mt-1 italic">* Esperando resultados</span>
+                                       <span className="text-2xs font-bold text-amber-600 uppercase mt-1 italic">* Esperando resultados</span>
                                     )}
                                  </button>
                                ))}
@@ -1509,7 +1509,7 @@ export default function GestionParticipantesFaseModal({
 
                         {/* Inscritos Originales */}
                         <div>
-                          <h6 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1 flex items-center gap-2">
+                          <h6 className="text-2xs font-black text-muted uppercase tracking-widest mb-3 px-1 flex items-center gap-2">
                              <div className="w-1.5 h-1.5 rounded-full bg-brand-500"></div>
                              Inscritos en Fase
                           </h6>
@@ -1536,7 +1536,7 @@ export default function GestionParticipantesFaseModal({
                                     {escudo ? <img src={escudo} alt={nombre} className="h-full w-full object-contain" /> : '🛡️'}
                                   </div>
                                   <span className="truncate flex-1">{nombre}</span>
-                                  {!isSelected && <span className="text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity">⠿</span>}
+                                  {!isSelected && <span className="text-muted opacity-0 group-hover:opacity-100 transition-opacity">⠿</span>}
                                 </div>
                               );
                            })}
@@ -1546,7 +1546,7 @@ export default function GestionParticipantesFaseModal({
                       {/* Ganadores de Rondas Previas */}
                       {ganadoresDisponibles.length > 0 && (
                           <div className="animate-in slide-in-from-left-4 duration-500">
-                            <h6 className="text-[10px] font-black text-green-600 uppercase tracking-widest mb-3 px-1 flex items-center gap-2">
+                            <h6 className="text-2xs font-black text-green-600 uppercase tracking-widest mb-3 px-1 flex items-center gap-2">
                                <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
                                Ganadores Avanzando
                             </h6>
@@ -1562,8 +1562,8 @@ export default function GestionParticipantesFaseModal({
                                     {g.escudo ? <img src={g.escudo} alt={g.nombre || ''} className="h-full w-full object-contain" /> : '🏆'}
                                   </div>
                                   <div className="flex flex-col min-w-0 flex-1">
-                                    <span className="text-[10px] font-black text-green-900 truncate leading-none uppercase">{g.nombre}</span>
-                                    <span className="text-[8px] font-bold text-green-600 uppercase mt-1 tracking-tight">Viene de {g.etapa}</span>
+                                    <span className="text-2xs font-black text-green-900 truncate leading-none uppercase">{g.nombre}</span>
+                                    <span className="text-2xs font-bold text-green-600 uppercase mt-1 tracking-tight">Viene de {g.etapa}</span>
                                   </div>
                                   <span className="text-green-200 group-hover:text-green-400">⠿</span>
                                 </div>
@@ -1606,7 +1606,7 @@ export default function GestionParticipantesFaseModal({
                                         return escudo ? <img src={escudo} alt="Local" className="w-full h-full object-contain" /> : '🏆';
                                       })()}
                                     </div>
-                                    <span className="text-[10px] font-black text-slate-900 text-center uppercase tracking-tight line-clamp-2 px-1">
+                                    <span className="text-2xs font-black text-slate-900 text-center uppercase tracking-tight line-clamp-2 px-1">
                                       {(() => {
                                         const pFound = items.find(i => {
                                           const eq = (i.participacionTemporada as any)?.equipo;
@@ -1624,7 +1624,7 @@ export default function GestionParticipantesFaseModal({
                                   <div className="w-12 h-12 rounded-full border-2 border-slate-700 flex items-center justify-center text-slate-600 group-hover:border-brand-500 group-hover:text-brand-500 transition-colors">
                                      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" /></svg>
                                   </div>
-                                  <span className="text-[9px] text-slate-500 font-black uppercase text-center tracking-[0.2em]">Local</span>
+                                  <span className="text-2xs text-slate-500 font-black uppercase text-center tracking-[0.2em]">Local</span>
                                </div>
                              )}
                            </div>
@@ -1658,7 +1658,7 @@ export default function GestionParticipantesFaseModal({
                                         return escudo ? <img src={escudo} alt="Visita" className="w-full h-full object-contain" /> : '🛡️';
                                       })()}
                                     </div>
-                                    <span className="text-[10px] font-black text-slate-900 text-center uppercase tracking-tight line-clamp-2 px-1">
+                                    <span className="text-2xs font-black text-slate-900 text-center uppercase tracking-tight line-clamp-2 px-1">
                                       {(() => {
                                         const pFound = items.find(i => {
                                           const eq = (i.participacionTemporada as any)?.equipo;
@@ -1676,7 +1676,7 @@ export default function GestionParticipantesFaseModal({
                                   <div className="w-12 h-12 rounded-full border-2 border-slate-700 flex items-center justify-center text-slate-600 group-hover:border-brand-500 group-hover:text-brand-500 transition-colors">
                                      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" /></svg>
                                   </div>
-                                  <span className="text-[9px] text-slate-500 font-black uppercase text-center tracking-[0.2em]">Visita</span>
+                                  <span className="text-2xs text-slate-500 font-black uppercase text-center tracking-[0.2em]">Visita</span>
                                </div>
                              )}
                            </div>
@@ -1684,7 +1684,7 @@ export default function GestionParticipantesFaseModal({
 
                         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
                             <div className="lg:col-span-1">
-                              <label className="text-[9px] font-black text-slate-400 uppercase mb-2 block ml-1">Etapa de la Llave</label>
+                              <label className="text-2xs font-black text-muted uppercase mb-2 block ml-1">Etapa de la Llave</label>
                               <select className="w-full rounded-2xl border-2 border-slate-100 bg-white px-4 py-3 text-xs font-black uppercase tracking-wider focus:ring-4 focus:ring-brand-500/10 focus:border-brand-500 transition-all outline-none" value={nuevaEtapa} onChange={(e)=> setNuevaEtapa(e.target.value)}>
                                 <option value="octavos">Octavos</option>
                                 <option value="cuartos">Cuartos</option>
@@ -1693,7 +1693,7 @@ export default function GestionParticipantesFaseModal({
                               </select>
                             </div>
                             <div className="lg:col-span-2">
-                               <label className="text-[9px] font-black text-slate-400 uppercase mb-2 block ml-1">Programación</label>
+                               <label className="text-2xs font-black text-muted uppercase mb-2 block ml-1">Programación</label>
                                <div className="flex gap-2">
                                   <input 
                                     type="date" 
@@ -1709,7 +1709,7 @@ export default function GestionParticipantesFaseModal({
                             <div className="lg:col-span-1 flex flex-col justify-end">
                                <button
                                  type="button"
-                                 className="w-full rounded-2xl bg-slate-900 px-4 py-4 text-[10px] font-black uppercase tracking-widest text-white hover:bg-slate-800 transition shadow-lg active:scale-95"
+                                 className="w-full rounded-2xl bg-slate-900 px-4 py-4 text-2xs font-black uppercase tracking-widest text-white hover:bg-slate-800 transition shadow-lg active:scale-95"
                                  disabled={!nuevoLocal || !nuevoVisitante || !nuevaFecha}
                                  onClick={() => {
                                    const localFound = items.find(i => (typeof (i.participacionTemporada as any)?.equipo === 'string' ? (i.participacionTemporada as any).equipo : (i.participacionTemporada as any).equipo?._id) === nuevoLocal);
@@ -1759,10 +1759,10 @@ export default function GestionParticipantesFaseModal({
                       <div className="mt-6 border-t border-slate-100 pt-6 animate-in slide-in-from-bottom-2 duration-300">
                         <div className="flex items-center justify-between mb-4">
                           <h6 className="text-[11px] font-black text-indigo-600 uppercase tracking-widest flex items-center gap-2">
-                             <span className="flex h-5 w-5 items-center justify-center rounded bg-indigo-100 text-[10px]">📋</span>
+                             <span className="flex h-5 w-5 items-center justify-center rounded bg-indigo-100 text-2xs">📋</span>
                              Partidos Listos para Generar ({partidosEnCola.length})
                           </h6>
-                          <button onClick={() => setPartidosEnCola([])} className="text-[10px] text-red-500 font-bold hover:underline">Limpiar lista</button>
+                          <button onClick={() => setPartidosEnCola([])} className="text-2xs text-red-500 font-bold hover:underline">Limpiar lista</button>
                         </div>
                         
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
@@ -1770,14 +1770,14 @@ export default function GestionParticipantesFaseModal({
                             <div key={idx} className="flex items-center justify-between p-3 bg-indigo-50/50 border border-indigo-100 rounded-xl relative group">
                                <button 
                                  onClick={() => setPartidosEnCola(prev => prev.filter((_, i) => i !== idx))}
-                                 className="absolute -top-2 -right-2 bg-white text-red-500 rounded-full w-5 h-5 flex items-center justify-center text-[10px] shadow-sm border border-red-100 opacity-0 group-hover:opacity-100 transition-opacity"
+                                 className="absolute -top-2 -right-2 bg-white text-red-500 rounded-full w-5 h-5 flex items-center justify-center text-2xs shadow-sm border border-red-100 opacity-0 group-hover:opacity-100 transition-opacity"
                                >✕</button>
                                <div className="flex flex-col">
-                                 <span className="text-[9px] font-black text-indigo-400 uppercase leading-none mb-1">{q.etapa}</span>
+                                 <span className="text-2xs font-black text-indigo-400 uppercase leading-none mb-1">{q.etapa}</span>
                                  <span className="text-xs font-bold text-slate-800">{q.localNombre} vs {q.visitanteNombre}</span>
                                </div>
                                <div className="text-right">
-                                 <span className="text-[10px] font-bold text-slate-400">{q.fecha}</span>
+                                 <span className="text-2xs font-bold text-muted">{q.fecha}</span>
                                </div>
                             </div>
                           ))}
@@ -1835,7 +1835,7 @@ export default function GestionParticipantesFaseModal({
                 ) : (
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div className="space-y-3">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase">Equipos</label>
+                      <label className="text-2xs font-bold text-muted uppercase">Equipos</label>
                       <select className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500/20" value={nuevoLocal} onChange={(e)=> setNuevoLocal(e.target.value)}>
                         <option value="">Local…</option>
                         {items.map((pf: any) => {
@@ -1856,7 +1856,7 @@ export default function GestionParticipantesFaseModal({
                       </select>
                     </div>
                     <div className="space-y-3">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase">Detalles</label>
+                      <label className="text-2xs font-bold text-muted uppercase">Detalles</label>
                       <select className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500/20" value={nuevaEtapa} onChange={(e)=> setNuevaEtapa(e.target.value)}>
                         <option value="">Etapa…</option>
                         <option value="octavos">Octavos</option>
@@ -1901,7 +1901,7 @@ export default function GestionParticipantesFaseModal({
                 <div className="space-y-4">
                   <div>
                     <div className="flex items-center justify-between mb-2">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Equipos disponibles en la Temporada</label>
+                      <label className="text-2xs font-bold text-muted uppercase tracking-widest">Equipos disponibles en la Temporada</label>
                       <button 
                         type="button"
                         onClick={() => {
@@ -1911,7 +1911,7 @@ export default function GestionParticipantesFaseModal({
                             setSelectedPTs(opcionesAgregar.map(o => o._id));
                           }
                         }}
-                        className="text-[10px] font-extrabold text-brand-600 uppercase hover:underline"
+                        className="text-2xs font-extrabold text-brand-600 uppercase hover:underline"
                       >
                         {selectedPTs.length === opcionesAgregar.length ? 'Deseleccionar todos' : 'Seleccionar todos'}
                       </button>
@@ -1943,7 +1943,7 @@ export default function GestionParticipantesFaseModal({
                               {escudo ? (
                                 <img src={escudo} alt={nombre} className="h-full w-full object-cover" />
                               ) : (
-                                <div className="flex h-full w-full items-center justify-center text-[10px] text-slate-400">🛡️</div>
+                                <div className="flex h-full w-full items-center justify-center text-2xs text-muted">🛡️</div>
                               )}
                               {isSelected && (
                                 <div className="absolute inset-0 flex items-center justify-center bg-brand-600/40 text-white">
@@ -1953,7 +1953,7 @@ export default function GestionParticipantesFaseModal({
                             </div>
                             <div className="flex flex-col items-start min-w-0">
                                 <span className="truncate w-full leading-tight">{nombre}</span>
-                                <span className={`text-[9px] font-medium ${isSelected ? 'text-brand-100' : 'text-slate-400'}`}>Disponible</span>
+                                <span className={`text-2xs font-medium ${isSelected ? 'text-brand-100' : 'text-muted'}`}>Disponible</span>
                             </div>
                           </button>
                         );
@@ -1964,13 +1964,13 @@ export default function GestionParticipantesFaseModal({
                   <div className="grid gap-4 sm:grid-cols-3">
                     {tipo === 'grupo' && (
                       <div>
-                        <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Asignar Grupo</label>
+                        <label className="text-2xs font-bold text-muted uppercase block mb-1">Asignar Grupo</label>
                         <input placeholder="Ej: A, B..." className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm" value={grupo} onChange={(e)=>setGrupo(e.target.value)} />
                       </div>
                     )}
                     {tipo === 'liga' && (
                       <div>
-                        <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Asignar División</label>
+                        <label className="text-2xs font-bold text-muted uppercase block mb-1">Asignar División</label>
                         <input placeholder="Ej: Oro, Plata..." className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm" value={division} onChange={(e)=>setDivision(e.target.value)} />
                       </div>
                     )}
@@ -2030,7 +2030,7 @@ export default function GestionParticipantesFaseModal({
             ) : (
               <span className="text-slate-500">{competenciaNombre || 'Competencia'}</span>
             )}
-            <span className="text-slate-300">/</span>
+            <span className="text-muted">/</span>
             {competenciaId && temporadaId ? (
               <Link to={`/competencias/${competenciaId}?tab=estructura&temporada=${temporadaId}`} onClick={onClose} className="text-slate-500 hover:text-brand-600 hover:underline">
                 {temporadaNombre || 'Temporada'}
@@ -2038,7 +2038,7 @@ export default function GestionParticipantesFaseModal({
             ) : (
               <span className="text-slate-500">{temporadaNombre || 'Temporada'}</span>
             )}
-            <span className="text-slate-300">/</span>
+            <span className="text-muted">/</span>
             <span className="text-slate-900">{fase?.nombre || 'Fase'}</span>
           </div>
         }

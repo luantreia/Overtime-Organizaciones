@@ -30,11 +30,11 @@ export const TeamBuilder: React.FC<TeamBuilderProps> = ({
     <div className="rounded-lg border border-slate-200 bg-white p-3 sm:p-4 h-fit">
       <div className="space-y-4 sm:space-y-6">
         <h2 className="text-sm font-semibold flex items-center gap-1.5 mb-1">
-          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-brand-600 text-[9px] font-black text-white">2</span>
+          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-brand-600 text-2xs font-black text-white">2</span>
           Armar Equipos
         </h2>
         {matchActive && onToggleAFK && (rojo.length > 0 || azul.length > 0) && (
-          <p className="-mt-3 text-[10px] text-slate-400 italic">
+          <p className="-mt-3 text-2xs text-muted italic">
             Tocá <strong className="not-italic text-slate-500">AFK</strong> para reportar abandono en el punto — aplica doble penalización al finalizar.
           </p>
         )}
@@ -44,11 +44,11 @@ export const TeamBuilder: React.FC<TeamBuilderProps> = ({
               <div className="w-2 h-2 rounded-full bg-red-600 animate-pulse" />
               Rojo
             </span>
-            <span className="text-[10px] font-normal text-slate-400">{rojo.length}/9</span>
+            <span className="text-2xs font-normal text-muted">{rojo.length}/9</span>
           </h3>
           <div className="min-h-[80px] sm:min-h-[100px] rounded-md border border-red-50 bg-red-50/20 p-2">
             {rojo.length === 0 ? (
-              <p className="text-[9px] text-red-300 text-center py-4 italic">Seleccioná jugadores de la lista</p>
+              <p className="text-2xs text-red-300 text-center py-4 italic">Seleccioná jugadores de la lista</p>
             ) : (
               <ul className="space-y-1">
                 {rojo.map((id) => {
@@ -66,8 +66,8 @@ export const TeamBuilder: React.FC<TeamBuilderProps> = ({
                       {matchActive && onToggleAFK && (
                         <button
                           type="button"
-                          className={`px-2 h-7 flex items-center justify-center rounded-full text-[9px] font-black uppercase transition-colors border ${
-                            isAfk ? 'bg-red-500 border-red-600 text-white' : 'bg-white border-slate-200 text-slate-400 hover:border-red-200 hover:text-red-500'
+                          className={`px-2 h-7 flex items-center justify-center rounded-full text-2xs font-black uppercase transition-colors border ${
+                            isAfk ? 'bg-red-500 border-red-600 text-white' : 'bg-white border-slate-200 text-muted hover:border-red-200 hover:text-red-500'
                           }`}
                           onClick={() => onToggleAFK(id)}
                           title="Reportar AFK / abandono (doble penalización)"
@@ -100,11 +100,11 @@ export const TeamBuilder: React.FC<TeamBuilderProps> = ({
               <div className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
               Azul
             </span>
-            <span className="text-[10px] font-normal text-slate-400">{azul.length}/9</span>
+            <span className="text-2xs font-normal text-muted">{azul.length}/9</span>
           </h3>
           <div className="min-h-[80px] sm:min-h-[100px] rounded-md border border-blue-50 bg-blue-50/20 p-2">
             {azul.length === 0 ? (
-              <p className="text-[9px] text-blue-300 text-center py-4 italic">Seleccioná jugadores de la lista</p>
+              <p className="text-2xs text-blue-300 text-center py-4 italic">Seleccioná jugadores de la lista</p>
             ) : (
               <ul className="space-y-1">
                 {azul.map((id) => {
@@ -122,8 +122,8 @@ export const TeamBuilder: React.FC<TeamBuilderProps> = ({
                       {matchActive && onToggleAFK && (
                         <button
                           type="button"
-                          className={`px-2 h-7 flex items-center justify-center rounded-full text-[9px] font-black uppercase transition-colors border ${
-                            isAfk ? 'bg-red-500 border-red-600 text-white' : 'bg-white border-slate-200 text-slate-400 hover:border-red-200 hover:text-red-500'
+                          className={`px-2 h-7 flex items-center justify-center rounded-full text-2xs font-black uppercase transition-colors border ${
+                            isAfk ? 'bg-red-500 border-red-600 text-white' : 'bg-white border-slate-200 text-muted hover:border-red-200 hover:text-red-500'
                           }`}
                           onClick={() => onToggleAFK(id)}
                           title="Reportar AFK / abandono (doble penalización)"
@@ -159,7 +159,7 @@ export const TeamBuilder: React.FC<TeamBuilderProps> = ({
           >
             Confirmar Equipos
           </Button>
-          <p className="mt-2 text-[9px] text-slate-400 text-center italic leading-tight">
+          <p className="mt-2 text-2xs text-muted text-center italic leading-tight">
             Debes confirmar los equipos para registrar los Partidos Jugados (PJ).
           </p>
         </div>

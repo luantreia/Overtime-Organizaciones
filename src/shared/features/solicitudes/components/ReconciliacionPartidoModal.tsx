@@ -276,7 +276,7 @@ const ReconciliacionPartidoModal: React.FC<Props> = ({ partidoId, isOpen, onClos
                   <div className="overflow-x-auto">
                     <table className="w-full min-w-[560px] text-sm">
                       <thead>
-                        <tr className="border-b border-slate-200 text-left text-[10px] font-bold uppercase tracking-wide text-slate-400">
+                        <tr className="border-b border-slate-200 text-left text-2xs font-bold uppercase tracking-wide text-muted">
                           <th className="pb-2 pr-3">Jugador</th>
                           {fuentes.map((f) => (
                             <th
@@ -285,7 +285,7 @@ const ReconciliacionPartidoModal: React.FC<Props> = ({ partidoId, isOpen, onClos
                             >
                               {etiquetaFuente(f)}
                               {f.estado && f.tipo === 'planilla' && (
-                                <span className="block font-normal normal-case text-slate-400">
+                                <span className="block font-normal normal-case text-muted">
                                   {ESTADO_LABEL[f.estado] ?? f.estado} · {f.modo === 'sets' ? 'por set' : 'totales'}
                                 </span>
                               )}
@@ -301,7 +301,7 @@ const ReconciliacionPartidoModal: React.FC<Props> = ({ partidoId, isOpen, onClos
                               <td className="py-1.5 pr-3 text-slate-800">
                                 {nombreJugador(fila.jugador)}
                                 {fila.difiere && (
-                                  <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700">
+                                  <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-2xs font-bold text-amber-700">
                                     difiere
                                   </span>
                                 )}
@@ -337,7 +337,7 @@ const ReconciliacionPartidoModal: React.FC<Props> = ({ partidoId, isOpen, onClos
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[400px] text-sm">
                   <thead>
-                    <tr className="border-b border-slate-200 text-left text-[10px] font-bold uppercase tracking-wide text-slate-400">
+                    <tr className="border-b border-slate-200 text-left text-2xs font-bold uppercase tracking-wide text-muted">
                       <th className="pb-2 pr-3">Set</th>
                       {fuentesConSets.map((f) => (
                         <th key={f.id} className="pb-2 pr-3">{etiquetaFuente(f)}</th>
@@ -350,7 +350,7 @@ const ReconciliacionPartidoModal: React.FC<Props> = ({ partidoId, isOpen, onClos
                         <td className="py-1.5 pr-3 text-slate-800">
                           {s.numeroSet}
                           {s.difiere && (
-                            <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700">difiere</span>
+                            <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-2xs font-bold text-amber-700">difiere</span>
                           )}
                         </td>
                         {fuentesConSets.map((f) => (

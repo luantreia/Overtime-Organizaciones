@@ -232,13 +232,13 @@ export const TablaPosiciones: React.FC<TablaPosicionesProps> = ({ faseId, partic
               <table className="w-full table-fixed border-collapse bg-white [font-variant-numeric:tabular-nums]">
                 <thead>
                   <tr>
-                    <th className="w-8 py-1.5 px-2 text-left text-[9.5px] font-extrabold uppercase tracking-wide text-slate-500">#</th>
-                    <th className="py-1.5 px-2 text-left text-[9.5px] font-extrabold uppercase tracking-wide text-slate-500">Equipo</th>
-                    <th className="w-11 py-1.5 px-1 text-center text-[9.5px] font-extrabold uppercase tracking-wide text-slate-500">PJ</th>
-                    <th className="w-11 py-1.5 px-1 text-center text-[9.5px] font-extrabold uppercase tracking-wide text-slate-500 hidden sm:table-cell">PG</th>
-                    <th className="w-11 py-1.5 px-1 text-center text-[9.5px] font-extrabold uppercase tracking-wide text-slate-500 hidden sm:table-cell">PP</th>
-                    <th className="w-14 py-1.5 px-1 text-center text-[9.5px] font-extrabold uppercase tracking-wide text-slate-500 hidden md:table-cell">Dif</th>
-                    <th className="w-14 py-1.5 px-1 text-center text-[9.5px] font-extrabold uppercase tracking-wide text-slate-500">Pts</th>
+                    <th className="w-8 py-1.5 px-2 text-left text-2xs font-extrabold uppercase tracking-wide text-slate-500">#</th>
+                    <th className="py-1.5 px-2 text-left text-2xs font-extrabold uppercase tracking-wide text-slate-500">Equipo</th>
+                    <th className="w-11 py-1.5 px-1 text-center text-2xs font-extrabold uppercase tracking-wide text-slate-500">PJ</th>
+                    <th className="w-11 py-1.5 px-1 text-center text-2xs font-extrabold uppercase tracking-wide text-slate-500 hidden sm:table-cell">PG</th>
+                    <th className="w-11 py-1.5 px-1 text-center text-2xs font-extrabold uppercase tracking-wide text-slate-500 hidden sm:table-cell">PP</th>
+                    <th className="w-14 py-1.5 px-1 text-center text-2xs font-extrabold uppercase tracking-wide text-slate-500 hidden md:table-cell">Dif</th>
+                    <th className="w-14 py-1.5 px-1 text-center text-2xs font-extrabold uppercase tracking-wide text-slate-500">Pts</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -254,7 +254,7 @@ export const TablaPosiciones: React.FC<TablaPosicionesProps> = ({ faseId, partic
                           esCorte ? 'border-b-2 border-dashed border-emerald-400' : 'border-b border-slate-50 last:border-b-0',
                         ].filter(Boolean).join(' ')}
                       >
-                        <td className="py-1.5 px-2 text-[11px] font-bold text-slate-400">
+                        <td className="py-1.5 px-2 text-[11px] font-bold text-muted">
                           {p.posicion ?? index + 1}
                         </td>
                         <td className="py-1.5 px-2 text-[12.5px] font-semibold text-slate-900">
@@ -281,7 +281,7 @@ export const TablaPosiciones: React.FC<TablaPosicionesProps> = ({ faseId, partic
               </table>
             </div>
             {(hayClasificados || hayEliminados) && (
-              <div className="flex flex-wrap gap-3 border-t border-slate-100 bg-slate-50 px-3 py-1.5 text-[10.5px] text-slate-500">
+              <div className="flex flex-wrap gap-3 border-t border-slate-100 bg-slate-50 px-3 py-1.5 text-2xs text-slate-500">
                 {hayClasificados && (
                   <span className="flex items-center gap-1.5">
                     <i className="inline-block h-2 w-2 rounded-sm bg-emerald-200" />

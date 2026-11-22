@@ -212,7 +212,7 @@ export const MatchTimer: React.FC<MatchTimerProps> = ({
       <div className={`flex flex-col items-center justify-center p-1 sm:p-1.5 rounded-lg border font-mono shadow-sm transition-colors min-w-[50px] sm:min-w-[60px] ${
         isSuddenDeath ? 'bg-amber-500 border-amber-600 text-white animate-pulse' : 'bg-white border-slate-200 text-slate-800'
       }`}>
-        <span className={`text-[7px] sm:text-[8px] uppercase tracking-tighter font-black leading-none mb-0.5 ${isSuddenDeath ? 'text-white' : 'text-slate-400'}`}>
+        <span className={`text-2xs sm:text-2xs uppercase tracking-tighter font-black leading-none mb-0.5 ${isSuddenDeath ? 'text-white' : 'text-slate-400'}`}>
           {isSuddenDeath ? 'SÚBITA' : isUnlimitedSet ? 'TIEMPO' : `SET ${sets.length + 1}`}
         </span>
         <span className="text-sm sm:text-base font-black leading-none">
@@ -222,7 +222,7 @@ export const MatchTimer: React.FC<MatchTimerProps> = ({
 
       {/* Match Timer */}
       <div className="flex flex-col items-center justify-center p-1 sm:p-1.5 rounded-lg bg-slate-900 text-white font-mono shadow-inner border border-slate-700 min-w-[50px] sm:min-w-[60px]">
-        <span className="text-[7px] sm:text-[8px] uppercase tracking-tighter text-slate-400 font-bold leading-none mb-0.5">Global</span>
+        <span className="text-2xs sm:text-2xs uppercase tracking-tighter text-slate-400 font-bold leading-none mb-0.5">Global</span>
         <span className="text-xs sm:text-sm font-bold leading-none">
           {String(totalMin).padStart(2, '0')}:{String(totalSec).padStart(2, '0')}
         </span>

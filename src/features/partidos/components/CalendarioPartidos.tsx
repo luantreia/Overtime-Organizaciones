@@ -11,7 +11,7 @@ const ESTADO_STYLE: Record<string, { chip: string; dot: string; label: string }>
   programado:   { chip: 'bg-blue-50 text-blue-800 hover:bg-blue-100',    dot: 'bg-blue-400',    label: 'Programado' },
   en_juego:     { chip: 'bg-amber-50 text-amber-800 hover:bg-amber-100', dot: 'bg-amber-400',   label: 'En juego' },
   finalizado:   { chip: 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100', dot: 'bg-emerald-400', label: 'Finalizado' },
-  cancelado:    { chip: 'bg-slate-100 text-slate-400',                   dot: 'bg-slate-300',   label: 'Cancelado' },
+  cancelado:    { chip: 'bg-slate-100 text-muted',                   dot: 'bg-slate-300',   label: 'Cancelado' },
 };
 
 type Props = {
@@ -93,7 +93,7 @@ export default function CalendarioPartidos({ partidos, onSeleccionar }: Props) {
       {/* Encabezado de días */}
       <div className="grid grid-cols-7 border-b border-slate-100 bg-slate-50">
         {DIAS_SEMANA.map(d => (
-          <div key={d} className="py-2 text-center text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+          <div key={d} className="py-2 text-center text-[11px] font-semibold uppercase tracking-wide text-muted">
             {d}
           </div>
         ))}
@@ -131,7 +131,7 @@ export default function CalendarioPartidos({ partidos, onSeleccionar }: Props) {
                           type="button"
                           onClick={() => onSeleccionar(p.id)}
                           title={`${titulo}${p.hora ? ' · ' + p.hora : ''}`}
-                          className={`flex w-full items-center gap-1 truncate rounded px-1 py-0.5 text-left text-[10px] font-medium transition ${style.chip}`}
+                          className={`flex w-full items-center gap-1 truncate rounded px-1 py-0.5 text-left text-2xs font-medium transition ${style.chip}`}
                         >
                           <span className={`h-1.5 w-1.5 flex-shrink-0 rounded-full ${style.dot}`} />
                           <span className="truncate">
@@ -142,7 +142,7 @@ export default function CalendarioPartidos({ partidos, onSeleccionar }: Props) {
                       );
                     })}
                     {psDia.length > MAX_VISIBLE && (
-                      <span className="block px-1 text-[10px] text-slate-400">
+                      <span className="block px-1 text-2xs text-muted">
                         +{psDia.length - MAX_VISIBLE} más
                       </span>
                     )}

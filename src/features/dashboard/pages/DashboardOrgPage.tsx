@@ -292,9 +292,9 @@ const DashboardOrgPage = () => {
                   <span className="text-xl group-hover:translate-x-1 transition-transform">→</span>
                 </div>
                 <div className="mt-2 text-sm text-slate-600">
-                  <p><span className="text-slate-400">Modalidad:</span> {c.modalidad ?? '—'}</p>
-                  <p><span className="text-slate-400">Categoría:</span> {c.categoria ?? '—'}</p>
-                  <p><span className="text-slate-400">Estado:</span> <span className="capitalize">{c.estado?.replace('_', ' ') ?? '—'}</span></p>
+                  <p><span className="text-muted">Modalidad:</span> {c.modalidad ?? '—'}</p>
+                  <p><span className="text-muted">Categoría:</span> {c.categoria ?? '—'}</p>
+                  <p><span className="text-muted">Estado:</span> <span className="capitalize">{c.estado?.replace('_', ' ') ?? '—'}</span></p>
                 </div>
               </Link>
             ))}

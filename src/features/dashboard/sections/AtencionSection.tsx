@@ -118,7 +118,7 @@ const AtencionSection = ({ loading, partidosPendientes, solicitudesPendientes, s
               <Link to={`/partidos/${p.id}`} className="flex items-center gap-3 px-4 py-3 text-sm transition hover:bg-slate-50">
                 <span className="shrink-0 text-base" aria-hidden>🕐</span>
                 <span className="flex-1 text-slate-700">{partidoTexto(p)}</span>
-                <span className="flex-shrink-0 rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-rose-700">
+                <span className="flex-shrink-0 rounded-full bg-rose-100 px-2 py-0.5 text-2xs font-bold uppercase tracking-wide text-rose-700">
                   Sin finalizar
                 </span>
               </Link>
@@ -131,10 +131,10 @@ const AtencionSection = ({ loading, partidosPendientes, solicitudesPendientes, s
                 <span className="flex-1 text-slate-700">
                   {solicitudTexto(s)}
                   {s.requiereDobleConfirmacion && (
-                    <span className="ml-1.5 text-[10px] font-bold uppercase tracking-wide text-amber-600">· doble confirmación</span>
+                    <span className="ml-1.5 text-2xs font-bold uppercase tracking-wide text-amber-600">· doble confirmación</span>
                   )}
                 </span>
-                <span className="flex-shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-700">
+                <span className="flex-shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-2xs font-bold uppercase tracking-wide text-amber-700">
                   Revisar
                 </span>
               </Link>
@@ -145,7 +145,7 @@ const AtencionSection = ({ loading, partidosPendientes, solicitudesPendientes, s
               <Link to={h.href} className="flex items-center gap-3 px-4 py-3 text-sm transition hover:bg-slate-50">
                 <span className="shrink-0 text-base" aria-hidden>🕳️</span>
                 <span className="flex-1 text-slate-700">{h.texto}</span>
-                <span className="flex-shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-700">
+                <span className="flex-shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-2xs font-bold uppercase tracking-wide text-amber-700">
                   Revisar
                 </span>
               </Link>

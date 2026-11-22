@@ -45,18 +45,18 @@ function Fila({
     <li className="flex min-h-[44px] flex-wrap items-center gap-x-3 gap-y-1 py-2.5 sm:flex-nowrap">
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-medium text-slate-800">{nombreDeUsuario(a)}</p>
-        {email && <p className="truncate text-xs text-slate-400">{email}</p>}
+        {email && <p className="truncate text-xs text-muted">{email}</p>}
       </div>
       <span className="flex-shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-600">
         {rol?.label || a.rol}
       </span>
       {a.hasta && (
-        <span className="flex-shrink-0 text-[11px] text-slate-400">
+        <span className="flex-shrink-0 text-[11px] text-muted">
           hasta {new Date(a.hasta).toLocaleDateString()}
         </span>
       )}
       {heredada ? (
-        <span className="flex-shrink-0 rounded-full border border-slate-200 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-slate-400">
+        <span className="flex-shrink-0 rounded-full border border-slate-200 px-2 py-0.5 text-2xs font-bold uppercase tracking-wide text-muted">
           de la fase
         </span>
       ) : (
@@ -65,7 +65,7 @@ function Fila({
             type="button"
             title="Revocar acceso"
             onClick={() => onRevocar(a._id)}
-            className="flex-shrink-0 rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-600"
+            className="flex-shrink-0 rounded-lg p-1.5 text-muted transition-colors hover:bg-rose-50 hover:text-rose-600"
           >
             <TrashIcon className="h-4 w-4" />
           </button>
@@ -200,7 +200,7 @@ export default function GestionPlanillerosModal({
                 <Fila key={a._id} a={a} heredada />
               ))}
             </ul>
-            <p className="mt-1.5 text-[11px] text-slate-400">
+            <p className="mt-1.5 text-[11px] text-muted">
               Ya pueden cargar este partido. Se gestionan desde la fase.
             </p>
           </div>
@@ -218,7 +218,7 @@ export default function GestionPlanillerosModal({
             </div>
           ) : propias.length === 0 ? (
             <div className="mt-2 rounded-xl border border-dashed border-slate-200 bg-slate-50/50 py-6 text-center">
-              <p className="text-sm text-slate-400">
+              <p className="text-sm text-muted">
                 {esDePartido ? 'Nadie asignado a este partido' : 'Todavía no hay planilleros en esta fase'}
               </p>
             </div>
@@ -263,7 +263,7 @@ export default function GestionPlanillerosModal({
               </button>
             </div>
             {ayudaRol && <p className="text-[11px] text-slate-500">{ayudaRol}</p>}
-            <p className="text-[11px] text-slate-400">
+            <p className="text-[11px] text-muted">
               {esDePartido
                 ? 'El acceso vence al final del día del partido.'
                 : 'Habilita a la persona en todos los partidos de esta fase.'}{' '}

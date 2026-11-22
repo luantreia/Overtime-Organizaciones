@@ -68,7 +68,7 @@ export default function SelectorJugadores({
   if (filas.length === 0) {
     return (
       <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/50 py-10 text-center">
-        <p className="text-sm text-slate-400">{vacioMensaje}</p>
+        <p className="text-sm text-muted">{vacioMensaje}</p>
       </div>
     );
   }
@@ -79,7 +79,7 @@ export default function SelectorJugadores({
       <div className="sticky top-0 z-10 space-y-2 bg-white pb-2 dark:bg-slate-900">
         <div className="flex items-center gap-2">
           <div className="relative flex-1">
-            <MagnifyingGlassIcon className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <MagnifyingGlassIcon className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
             <input
               type="search"
               inputMode="search"
@@ -114,7 +114,7 @@ export default function SelectorJugadores({
             </>
           )}
           {accionExtra}
-          <span className="ml-auto text-slate-400">{etiquetaContador}</span>
+          <span className="ml-auto text-muted">{etiquetaContador}</span>
         </div>
       </div>
 
@@ -135,7 +135,7 @@ export default function SelectorJugadores({
               />
               <span className="min-w-0 flex-1 truncate text-sm text-slate-800">
                 {f.nombre}
-                {f.alias && <span className="ml-1.5 text-xs text-slate-400">({f.alias})</span>}
+                {f.alias && <span className="ml-1.5 text-xs text-muted">({f.alias})</span>}
               </span>
               {f.badge}
               {/* En mobile ocupa toda la fila siguiente; desde sm queda a la derecha */}
@@ -151,7 +151,7 @@ export default function SelectorJugadores({
           </li>
         ))}
         {filtradas.length === 0 && (
-          <li className="py-8 text-center text-sm text-slate-400">Sin resultados para "{busqueda}"</li>
+          <li className="py-8 text-center text-sm text-muted">Sin resultados para "{busqueda}"</li>
         )}
       </ul>
     </div>

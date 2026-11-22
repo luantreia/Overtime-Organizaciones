@@ -25,7 +25,7 @@ function SectionHeader({ icon, children, count }: { icon: React.ReactNode; child
       {icon}
       {children}
       {typeof count === 'number' && (
-        <span className="flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-slate-200 px-1 text-[10px] font-black normal-case tracking-normal text-slate-600">
+        <span className="flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-slate-200 px-1 text-2xs font-black normal-case tracking-normal text-slate-600">
           {count}
         </span>
       )}
@@ -155,11 +155,11 @@ export default function JugadoresTemporadaModal({ isOpen, onClose, participacion
           checked: seleccionados.has(opt._id),
           disabled: noElegible,
           badge: noElegible ? (
-            <span className="flex-shrink-0 rounded-full border border-rose-200 bg-rose-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-rose-700">
+            <span className="flex-shrink-0 rounded-full border border-rose-200 bg-rose-50 px-2 py-0.5 text-2xs font-bold uppercase tracking-wide text-rose-700">
               Fuera de categoría{opt.categoriaCompetencia ? ` · ${opt.categoriaCompetencia}` : ''}
             </span>
           ) : opt.estado === 'baja' ? (
-            <span className="flex-shrink-0 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-700">
+            <span className="flex-shrink-0 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-2xs font-bold uppercase tracking-wide text-amber-700">
               Baja{opt.hasta ? ` · hasta ${new Date(opt.hasta).toLocaleDateString()}` : ''}
             </span>
           ) : undefined,
@@ -255,7 +255,7 @@ export default function JugadoresTemporadaModal({ isOpen, onClose, participacion
             </div>
           ) : items.length === 0 ? (
             <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/50 py-8 text-center">
-              <p className="text-sm text-slate-400">Todavía no hay jugadores en la lista de buena fe</p>
+              <p className="text-sm text-muted">Todavía no hay jugadores en la lista de buena fe</p>
             </div>
           ) : (
             <ul className="divide-y divide-slate-100 border-t border-slate-100">
@@ -268,7 +268,7 @@ export default function JugadoresTemporadaModal({ isOpen, onClose, participacion
                   >
                     <span className="min-w-0 flex-1 truncate text-sm font-medium text-slate-800">{nombre}</span>
                     <div className="flex w-full items-center gap-2 sm:w-auto sm:flex-shrink-0">
-                      <label className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-slate-400">
+                      <label className="flex items-center gap-1 text-2xs font-bold uppercase tracking-wide text-muted">
                         <span className="hidden sm:inline">N°</span>
                         <input
                           type="number"
@@ -318,7 +318,7 @@ export default function JugadoresTemporadaModal({ isOpen, onClose, participacion
                             ? 'Solicitud de baja ya enviada'
                             : 'Solicitar baja de la lista de buena fe (requiere doble confirmación)'
                         }
-                        className="ml-auto rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-600 disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-slate-400 sm:ml-0"
+                        className="ml-auto rounded-lg p-1.5 text-muted transition-colors hover:bg-rose-50 hover:text-rose-600 disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-muted sm:ml-0"
                         onClick={() => handleSolicitarBaja(it._id, nombre)}
                         disabled={bajaSolicitada.has(it._id)}
                       >
@@ -377,7 +377,7 @@ export default function JugadoresTemporadaModal({ isOpen, onClose, participacion
               </button>
             </div>
           )}
-          <p className="mt-2 text-[11px] text-slate-400">
+          <p className="mt-2 text-[11px] text-muted">
             Las altas quedan pendientes de aprobación. El dorsal se carga una vez aprobado, desde la lista de arriba.
           </p>
         </div>

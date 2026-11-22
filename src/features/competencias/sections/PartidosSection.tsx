@@ -146,7 +146,7 @@ export default function PartidosSection({
             </button>
           </div>
         </div>
-        <div className="flex items-center justify-between gap-2 text-xs font-medium uppercase tracking-wider text-slate-400">
+        <div className="flex items-center justify-between gap-2 text-xs font-medium uppercase tracking-wider text-muted">
           <span>{partidosFiltrados.length} {partidosFiltrados.length === 1 ? 'Partido' : 'Partidos'}</span>
           {selectedTemporadaId ? (
             <span>{(fasesPorTemporada[selectedTemporadaId] || []).length} fase(s) cargada(s)</span>
