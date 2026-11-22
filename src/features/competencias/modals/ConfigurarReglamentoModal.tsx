@@ -188,8 +188,8 @@ export default function ConfigurarReglamentoModal({ isOpen, onClose, fase, todas
                 <h3 className="text-xs font-black uppercase tracking-widest text-brand-600 border-b border-brand-100 pb-1">Reglas de Puntuación</h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="text-2xs font-black uppercase text-slate-500">Victoria</label>
-                    <input 
+                    <label htmlFor="configurarreglamentomodal-victoria" className="text-2xs font-black uppercase text-slate-500">Victoria</label>
+                    <input id="configurarreglamentomodal-victoria" 
                       type="number" 
                       value={config.puntuacion?.victoria} 
                       onChange={(e) => setConfig({...config, puntuacion: {...config.puntuacion, victoria: Number(e.target.value)}})}
@@ -197,8 +197,8 @@ export default function ConfigurarReglamentoModal({ isOpen, onClose, fase, todas
                     />
                   </div>
                   <div>
-                    <label className="text-2xs font-black uppercase text-slate-500">Empate</label>
-                    <input 
+                    <label htmlFor="configurarreglamentomodal-empate" className="text-2xs font-black uppercase text-slate-500">Empate</label>
+                    <input id="configurarreglamentomodal-empate" 
                       type="number" 
                       value={config.puntuacion?.empate} 
                       onChange={(e) => setConfig({...config, puntuacion: {...config.puntuacion, empate: Number(e.target.value)}})}
@@ -207,8 +207,8 @@ export default function ConfigurarReglamentoModal({ isOpen, onClose, fase, todas
                   </div>
                   <div className="col-span-2 grid grid-cols-2 gap-4 bg-slate-50 p-3 rounded-xl border border-dashed border-slate-200">
                     <div>
-                      <label className="text-2xs font-black uppercase text-brand-500">Set Ganado (+)</label>
-                      <input 
+                      <label htmlFor="configurarreglamentomodal-set-ganado" className="text-2xs font-black uppercase text-brand-500">Set Ganado (+)</label>
+                      <input id="configurarreglamentomodal-set-ganado" 
                         type="number" 
                         value={config.puntuacion?.setGanado} 
                         onChange={(e) => setConfig({...config, puntuacion: {...config.puntuacion, setGanado: Number(e.target.value)}})}
@@ -216,8 +216,8 @@ export default function ConfigurarReglamentoModal({ isOpen, onClose, fase, todas
                       />
                     </div>
                     <div>
-                      <label className="text-2xs font-black uppercase text-blue-500">Árbitro (+) </label>
-                      <input 
+                      <label htmlFor="configurarreglamentomodal-arbitro" className="text-2xs font-black uppercase text-blue-500">Árbitro (+) </label>
+                      <input id="configurarreglamentomodal-arbitro" 
                         type="number" 
                         value={config.puntuacion?.arbitroPresentado} 
                         onChange={(e) => setConfig({...config, puntuacion: {...config.puntuacion, arbitroPresentado: Number(e.target.value)}})}
@@ -226,8 +226,8 @@ export default function ConfigurarReglamentoModal({ isOpen, onClose, fase, todas
                     </div>
                   </div>
                   <div className="col-span-2">
-                    <label className="text-2xs font-black uppercase text-rose-500">Penalización No Árbitro (-)</label>
-                    <input 
+                    <label htmlFor="configurarreglamentomodal-penalizacion-no-arbitro" className="text-2xs font-black uppercase text-rose-500">Penalización No Árbitro (-)</label>
+                    <input id="configurarreglamentomodal-penalizacion-no-arbitro" 
                       type="number" 
                       value={config.puntuacion?.penalizacionNoArbitro} 
                       onChange={(e) => setConfig({...config, puntuacion: {...config.puntuacion, penalizacionNoArbitro: Number(e.target.value)}})}
@@ -281,8 +281,8 @@ export default function ConfigurarReglamentoModal({ isOpen, onClose, fase, todas
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   {isTableType && (
                     <div>
-                      <label className="text-2xs font-black uppercase text-slate-500">¿Cuántos clasifican?</label>
-                      <input 
+                      <label htmlFor="configurarreglamentomodal-cuantos-clasifican" className="text-2xs font-black uppercase text-slate-500">¿Cuántos clasifican?</label>
+                      <input id="configurarreglamentomodal-cuantos-clasifican" 
                           type="number" 
                           value={config.progresion?.clasificanDirecto} 
                           onChange={(e) => setConfig({...config, progresion: {...config.progresion, clasificanDirecto: Number(e.target.value)}})}
@@ -291,9 +291,9 @@ export default function ConfigurarReglamentoModal({ isOpen, onClose, fase, todas
                     </div>
                   )}
                   <div className={isPlayoffType ? "md:col-span-1" : ""}>
-                    <label className="text-2xs font-black uppercase text-green-600">Destino Ganadores</label>
+                    <label htmlFor="configurarreglamentomodal-destino-ganadores" className="text-2xs font-black uppercase text-green-600">Destino Ganadores</label>
                     <p className="text-2xs text-muted mb-1 italic">Para campeones o clasificados</p>
-                    <select 
+                    <select id="configurarreglamentomodal-destino-ganadores" 
                       value={config.progresion?.destinoGanadores || ''}
                       onChange={(e) => setConfig({...config, progresion: {...config.progresion, destinoGanadores: e.target.value}})}
                       className="w-full rounded-lg border-2 border-white p-2 text-xs font-bold text-slate-700 shadow-sm focus:border-green-500 focus:outline-none"
@@ -305,9 +305,9 @@ export default function ConfigurarReglamentoModal({ isOpen, onClose, fase, todas
                     </select>
                   </div>
                   <div className="md:col-span-1">
-                    <label className="text-2xs font-black uppercase text-indigo-600">Estrategia de Sembrado (Seed)</label>
+                    <label htmlFor="configurarreglamentomodal-estrategia-de-sembrado-seed" className="text-2xs font-black uppercase text-indigo-600">Estrategia de Sembrado (Seed)</label>
                     <p className="text-2xs text-muted mb-1 italic">¿Cómo se asigna el número de seed al clasificar?</p>
-                    <select 
+                    <select id="configurarreglamentomodal-estrategia-de-sembrado-seed" 
                       value={config.progresion?.estrategiaSembrado}
                       onChange={(e) => setConfig({...config, progresion: {...config.progresion, estrategiaSembrado: e.target.value as any}})}
                       className="w-full rounded-lg border-2 border-white p-2 text-xs font-bold text-slate-700 shadow-sm focus:border-indigo-500 focus:outline-none"
@@ -318,9 +318,9 @@ export default function ConfigurarReglamentoModal({ isOpen, onClose, fase, todas
                     </select>
                   </div>
                   <div className={isPlayoffType ? "md:col-span-2" : ""}>
-                    <label className="text-2xs font-black uppercase text-rose-600">Destino Perdedores (Copa de Plata / Repechaje)</label>
+                    <label htmlFor="configurarreglamentomodal-destino-perdedores-copa-de-pla" className="text-2xs font-black uppercase text-rose-600">Destino Perdedores (Copa de Plata / Repechaje)</label>
                     <p className="text-2xs text-muted mb-1 italic">¿A dónde van los que quedan eliminados de esta fase?</p>
-                    <select 
+                    <select id="configurarreglamentomodal-destino-perdedores-copa-de-pla" 
                       value={config.progresion?.destinoPerdedores || ''}
                       onChange={(e) => setConfig({...config, progresion: {...config.progresion, destinoPerdedores: e.target.value}})}
                       className="w-full rounded-lg border-2 border-white p-2 text-xs font-bold text-slate-700 shadow-sm focus:border-rose-500 focus:outline-none"
@@ -343,9 +343,9 @@ export default function ConfigurarReglamentoModal({ isOpen, onClose, fase, todas
                  <div className="bg-slate-50 p-6 rounded-2xl border-2 border-slate-100">
                     <h3 className="text-xs font-black uppercase tracking-widest text-slate-900 border-b border-slate-200 pb-2 mb-4">Flujo de Perdedores</h3>
                     <div>
-                      <label className="text-2xs font-black uppercase text-rose-600">Enviar eliminados a otra fase:</label>
+                      <label htmlFor="configurarreglamentomodal-enviar-eliminados-a-otra-fase" className="text-2xs font-black uppercase text-rose-600">Enviar eliminados a otra fase:</label>
                       <p className="text-2xs text-muted mb-2 italic">Ej: Perdedores de esta llave pasan a la "Llave de Plata"</p>
-                      <select 
+                      <select id="configurarreglamentomodal-enviar-eliminados-a-otra-fase" 
                         value={config.progresion?.destinoPerdedores || ''}
                         onChange={(e) => setConfig({...config, progresion: {...config.progresion, destinoPerdedores: e.target.value}})}
                         className="w-full rounded-lg border-2 border-white p-2 text-xs font-bold text-slate-700 shadow-sm focus:border-rose-500 focus:outline-none"
@@ -359,7 +359,7 @@ export default function ConfigurarReglamentoModal({ isOpen, onClose, fase, todas
 
                     {config.progresion?.destinoPerdedores && (
                       <div className="mt-4 animate-in slide-in-from-top-2">
-                        <label className="text-2xs font-black uppercase text-slate-500 mb-2 block">¿En qué rondas hay revancha (Plata)?</label>
+                        <p className="text-2xs font-black uppercase text-slate-500 mb-2 block">¿En qué rondas hay revancha (Plata)?</p>
                         <div className="grid grid-cols-2 gap-2">
                           {[
                             { label: 'Treintaidosavos', value: 'treintaidosavos' },
@@ -406,8 +406,8 @@ export default function ConfigurarReglamentoModal({ isOpen, onClose, fase, todas
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                    <div className="space-y-4">
                      <div>
-                       <label className="text-2xs font-black uppercase text-purple-500 mb-2 block">Formato del cuadro</label>
-                       <select 
+                       <label htmlFor="configurarreglamentomodal-formato-del-cuadro" className="text-2xs font-black uppercase text-purple-500 mb-2 block">Formato del cuadro</label>
+                       <select id="configurarreglamentomodal-formato-del-cuadro" 
                           value={config.playoff.formato} 
                           onChange={(e) => setConfig({...config, playoff: {...config.playoff, formato: e.target.value as 'simple' | 'doble_eliminacion'}})}
                           className="w-full rounded-lg border-2 border-white p-3 font-black text-slate-700 shadow-sm focus:border-brand-500 focus:outline-none"
@@ -427,8 +427,8 @@ export default function ConfigurarReglamentoModal({ isOpen, onClose, fase, todas
 
                    <div className="flex flex-col gap-4 py-2">
                      <div className="group relative">
-                        <label className="flex items-center gap-3 cursor-pointer p-4 rounded-2xl bg-white border-2 border-transparent hover:border-purple-300 transition-all">
-                          <input 
+                        <label htmlFor="configurarreglamentomodal-campo-430" className="flex items-center gap-3 cursor-pointer p-4 rounded-2xl bg-white border-2 border-transparent hover:border-purple-300 transition-all">
+                          <input id="configurarreglamentomodal-campo-430" 
                             type="checkbox" 
                             checked={config.playoff?.tercerPuesto}
                             onChange={(e) => setConfig({...config, playoff: {...config.playoff, tercerPuesto: e.target.checked}})}
@@ -442,8 +442,8 @@ export default function ConfigurarReglamentoModal({ isOpen, onClose, fase, todas
                      </div>
 
                      <div className="group relative">
-                        <label className="flex items-center gap-3 cursor-pointer p-4 rounded-2xl bg-white border-2 border-transparent hover:border-purple-300 transition-all">
-                          <input 
+                        <label htmlFor="configurarreglamentomodal-campo-445" className="flex items-center gap-3 cursor-pointer p-4 rounded-2xl bg-white border-2 border-transparent hover:border-purple-300 transition-all">
+                          <input id="configurarreglamentomodal-campo-445" 
                             type="checkbox" 
                             checked={config.playoff?.idaYVuelta}
                             onChange={(e) => setConfig({...config, playoff: {...config.playoff, idaYVuelta: e.target.checked}})}

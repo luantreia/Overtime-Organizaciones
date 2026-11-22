@@ -140,6 +140,8 @@ export default function SelectorJugadores({
               {f.badge}
               {/* En mobile ocupa toda la fila siguiente; desde sm queda a la derecha */}
               {f.extra && (
+                // Sólo evita que un click en los controles extra marque/desmarque la fila (es un <label>).
+                // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
                 <div
                   className="w-full pl-8 sm:w-auto sm:flex-shrink-0 sm:pl-0"
                   onClick={(e) => e.preventDefault()}

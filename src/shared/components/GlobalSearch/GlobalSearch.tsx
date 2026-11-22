@@ -97,24 +97,26 @@ export default function GlobalSearch() {
         <div className="absolute z-50 mt-1 w-full overflow-hidden rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5">
           <ul className="max-h-60 overflow-auto py-1">
             {results.map((player) => (
-              <li
-                key={player._id}
-                className="cursor-pointer px-4 py-2 hover:bg-slate-100"
-                onClick={() => handleSelect(player._id)}
-              >
-                <div className="flex items-center">
-                  {player.foto ? (
-                    <img src={player.foto} alt="" className="h-8 w-8 rounded-full object-cover mr-3" />
-                  ) : (
-                    <div className="h-8 w-8 rounded-full bg-slate-200 flex items-center justify-center mr-3 text-xs font-bold text-slate-500">
-                      {player.nombre.charAt(0)}
+              <li key={player._id}>
+                <button
+                  type="button"
+                  onClick={() => handleSelect(player._id)}
+                  className="block w-full cursor-pointer px-4 py-2 text-left hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40"
+                >
+                  <div className="flex items-center">
+                    {player.foto ? (
+                      <img src={player.foto} alt="" className="h-8 w-8 rounded-full object-cover mr-3" />
+                    ) : (
+                      <div className="h-8 w-8 rounded-full bg-slate-200 flex items-center justify-center mr-3 text-xs font-bold text-slate-500">
+                        {player.nombre.charAt(0)}
+                      </div>
+                    )}
+                    <div>
+                      <p className="text-sm font-medium text-slate-900">{player.nombre}</p>
+                      {player.alias && <p className="text-xs text-slate-500">{player.alias}</p>}
                     </div>
-                  )}
-                  <div>
-                    <p className="text-sm font-medium text-slate-900">{player.nombre}</p>
-                    {player.alias && <p className="text-xs text-slate-500">{player.alias}</p>}
                   </div>
-                </div>
+                </button>
               </li>
             ))}
           </ul>

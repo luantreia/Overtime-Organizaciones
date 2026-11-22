@@ -192,10 +192,11 @@ const GestionMiembros: React.FC<GestionMiembrosProps> = ({
           
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">
+              <label htmlFor="miembro-email" className="mb-1 block text-sm font-medium text-gray-700">
                 Email del Usuario
               </label>
               <Input
+                id="miembro-email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -205,10 +206,11 @@ const GestionMiembros: React.FC<GestionMiembrosProps> = ({
             </div>
             
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">
+              <label htmlFor="miembro-rol" className="mb-1 block text-sm font-medium text-gray-700">
                 Rol
               </label>
               <Select
+                id="miembro-rol"
                 value={rol}
                 onChange={(e) => setRol(e.target.value as OrgMemberRole)}
               >
@@ -222,10 +224,11 @@ const GestionMiembros: React.FC<GestionMiembrosProps> = ({
           </div>
 
           <div className="mt-4">
-            <label className="mb-1 block text-sm font-medium text-gray-700">
+            <label htmlFor="miembro-permisos" className="mb-1 block text-sm font-medium text-gray-700">
               Permisos Adicionales (opcional)
             </label>
             <Select
+                id="miembro-permisos"
               multiple
               value={permisos}
               onChange={(e) => {
@@ -243,10 +246,11 @@ const GestionMiembros: React.FC<GestionMiembrosProps> = ({
           </div>
 
           <div className="mt-4">
-            <label className="mb-1 block text-sm font-medium text-gray-700">
+            <label htmlFor="miembro-notas" className="mb-1 block text-sm font-medium text-gray-700">
               Notas (opcional)
             </label>
             <Input
+                id="miembro-notas"
               value={notas}
               onChange={(e) => setNotas(e.target.value)}
               placeholder="Notas sobre el miembro..."

@@ -240,8 +240,8 @@ const OrganizacionPage = () => {
           ) : (
             <div className="space-y-4">
               <div>
-                <label className="mb-1 block text-xs font-medium text-slate-500 uppercase">Nombre</label>
-                <input 
+                <label htmlFor="organizacionpage-nombre" className="mb-1 block text-xs font-medium text-slate-500 uppercase">Nombre</label>
+                <input id="organizacionpage-nombre" 
                   type="text"
                   className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none"
                   value={form.nombre}
@@ -249,8 +249,8 @@ const OrganizacionPage = () => {
                 />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-medium text-slate-500 uppercase">Descripción</label>
-                <textarea 
+                <label htmlFor="organizacionpage-descripcion" className="mb-1 block text-xs font-medium text-slate-500 uppercase">Descripción</label>
+                <textarea id="organizacionpage-descripcion" 
                   className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none"
                   rows={3}
                   value={form.descripcion}
@@ -258,8 +258,8 @@ const OrganizacionPage = () => {
                 />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-medium text-slate-500 uppercase">Sitio Web</label>
-                <input 
+                <label htmlFor="organizacionpage-sitio-web" className="mb-1 block text-xs font-medium text-slate-500 uppercase">Sitio Web</label>
+                <input id="organizacionpage-sitio-web" 
                   type="text"
                   className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none"
                   placeholder="https://ejemplo.com"
@@ -268,8 +268,8 @@ const OrganizacionPage = () => {
                 />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-medium text-slate-500 uppercase">URL del Logo</label>
-                <input
+                <label htmlFor="organizacionpage-url-del-logo" className="mb-1 block text-xs font-medium text-slate-500 uppercase">URL del Logo</label>
+                <input id="organizacionpage-url-del-logo"
                   type="text"
                   className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none"
                   placeholder="URL de la imagen"
@@ -285,8 +285,8 @@ const OrganizacionPage = () => {
                 </p>
               </div>
               <div>
-                <label className="mb-1 block text-xs font-medium text-slate-500 uppercase">Video de fondo (YouTube)</label>
-                <input
+                <label htmlFor="organizacionpage-video-de-fondo-youtube" className="mb-1 block text-xs font-medium text-slate-500 uppercase">Video de fondo (YouTube)</label>
+                <input id="organizacionpage-video-de-fondo-youtube"
                   type="text"
                   className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none"
                   placeholder="https://youtube.com/watch?v=..."
@@ -317,7 +317,7 @@ const OrganizacionPage = () => {
                 </p>
               </div>
               <div>
-                <label className="mb-1 block text-xs font-medium text-slate-500 uppercase">Redes sociales</label>
+                <p className="mb-1 block text-xs font-medium text-slate-500 uppercase">Redes sociales</p>
                 <div className="grid gap-2">
                   {([
                     ['instagram', 'Instagram', 'https://instagram.com/...'],

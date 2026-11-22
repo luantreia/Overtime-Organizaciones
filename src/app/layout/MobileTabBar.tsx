@@ -30,7 +30,12 @@ export default function MobileTabBar() {
   return (
     <>
       {moreOpen && (
+        // Fondo para cerrar con el mouse/toque; con teclado se cierra desde el botón "Más".
+
+        // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
+
         <div
+          aria-hidden="true"
           className="fixed inset-0 z-40 bg-slate-900/30 xl:hidden"
           onClick={() => setMoreOpen(false)}
         />

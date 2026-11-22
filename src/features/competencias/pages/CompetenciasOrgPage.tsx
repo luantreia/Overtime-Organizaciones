@@ -95,8 +95,8 @@ const CompetenciasOrgPage = () => {
       <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-6 shadow-card">
         <div className="grid grid-cols-1 gap-4 md:grid-cols-4 items-end">
           <div className="md:col-span-2">
-            <label className="mb-1 block text-xs font-medium text-slate-600">Buscar</label>
-            <input
+            <label htmlFor="competenciasorgpage-buscar" className="mb-1 block text-xs font-medium text-slate-600">Buscar</label>
+            <input id="competenciasorgpage-buscar"
               placeholder="Nombre o descripción"
               className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
               value={busqueda}
@@ -104,8 +104,8 @@ const CompetenciasOrgPage = () => {
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-slate-600">Estado</label>
-            <select
+            <label htmlFor="competenciasorgpage-estado" className="mb-1 block text-xs font-medium text-slate-600">Estado</label>
+            <select id="competenciasorgpage-estado"
               className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
               value={estado}
               onChange={(e) => { setEstado(e.target.value); setPage(1); }}
@@ -135,8 +135,8 @@ const CompetenciasOrgPage = () => {
           <h2 className="text-lg font-semibold text-slate-900">Crear competencia</h2>
           <form className="mt-4 grid gap-4 md:grid-cols-3" onSubmit={onSubmit}>
             <div>
-              <label className="mb-1 block text-xs font-medium text-slate-600">Modalidad</label>
-              <select
+              <label htmlFor="competenciasorgpage-modalidad" className="mb-1 block text-xs font-medium text-slate-600">Modalidad</label>
+              <select id="competenciasorgpage-modalidad"
                 className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
                 value={form.modalidad ?? ''}
                 onChange={(e) => setForm((prev) => ({ ...prev, modalidad: e.target.value as any }))}
@@ -147,8 +147,8 @@ const CompetenciasOrgPage = () => {
               </select>
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-slate-600">Categoría</label>
-              <select
+              <label htmlFor="competenciasorgpage-categoria" className="mb-1 block text-xs font-medium text-slate-600">Categoría</label>
+              <select id="competenciasorgpage-categoria"
                 className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
                 value={form.categoria ?? ''}
                 onChange={(e) => setForm((prev) => ({ ...prev, categoria: e.target.value as any }))}
@@ -161,8 +161,8 @@ const CompetenciasOrgPage = () => {
               </select>
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-slate-600">Tipo</label>
-              <select
+              <label htmlFor="competenciasorgpage-tipo" className="mb-1 block text-xs font-medium text-slate-600">Tipo</label>
+              <select id="competenciasorgpage-tipo"
                 className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
                 value={form.tipo ?? ''}
                 onChange={(e) => setForm((prev) => ({ ...prev, tipo: e.target.value as any }))}
@@ -173,8 +173,8 @@ const CompetenciasOrgPage = () => {
               </select>
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-slate-600">Fecha inicio</label>
-              <input
+              <label htmlFor="competenciasorgpage-fecha-inicio" className="mb-1 block text-xs font-medium text-slate-600">Fecha inicio</label>
+              <input id="competenciasorgpage-fecha-inicio"
                 type="date"
                 className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
                 value={form.fechaInicio ?? ''}
@@ -183,8 +183,8 @@ const CompetenciasOrgPage = () => {
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-slate-600">Fecha fin</label>
-              <input
+              <label htmlFor="competenciasorgpage-fecha-fin" className="mb-1 block text-xs font-medium text-slate-600">Fecha fin</label>
+              <input id="competenciasorgpage-fecha-fin"
                 type="date"
                 className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
                 value={form.fechaFin ?? ''}
@@ -192,8 +192,8 @@ const CompetenciasOrgPage = () => {
               />
             </div>
             <div className="md:col-span-3">
-              <label className="mb-1 block text-xs font-medium text-slate-600">Descripción</label>
-              <textarea
+              <label htmlFor="competenciasorgpage-descripcion" className="mb-1 block text-xs font-medium text-slate-600">Descripción</label>
+              <textarea id="competenciasorgpage-descripcion"
                 className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
                 rows={2}
                 value={form.descripcion ?? ''}

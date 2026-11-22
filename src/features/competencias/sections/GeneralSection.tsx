@@ -50,20 +50,20 @@ export default function GeneralSection(props: Props) {
         <h2 className="text-lg font-semibold text-slate-900">Datos de la competencia</h2>
         <form className="mt-4 grid gap-4 md:grid-cols-3" onSubmit={onSubmit}>
           <div className="md:col-span-3">
-            <label className="mb-1 block text-xs font-medium text-slate-600">Nombre</label>
-            <input className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm" value={nombre} onChange={(e)=>setNombre(e.target.value)} />
+            <label htmlFor="generalsection-nombre" className="mb-1 block text-xs font-medium text-slate-600">Nombre</label>
+            <input id="generalsection-nombre" className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm" value={nombre} onChange={(e)=>setNombre(e.target.value)} />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-slate-600">Modalidad</label>
-            <select className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm" value={modalidad} onChange={(e)=>setModalidad(e.target.value as any)}>
+            <label htmlFor="generalsection-modalidad" className="mb-1 block text-xs font-medium text-slate-600">Modalidad</label>
+            <select id="generalsection-modalidad" className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm" value={modalidad} onChange={(e)=>setModalidad(e.target.value as any)}>
               <option value="">—</option>
               <option value="Foam">Foam</option>
               <option value="Cloth">Cloth</option>
             </select>
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-slate-600">Categoría</label>
-            <select className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm" value={categoria} onChange={(e)=>setCategoria(e.target.value as any)}>
+            <label htmlFor="generalsection-categoria" className="mb-1 block text-xs font-medium text-slate-600">Categoría</label>
+            <select id="generalsection-categoria" className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm" value={categoria} onChange={(e)=>setCategoria(e.target.value as any)}>
               <option value="">—</option>
               <option value="Masculino">Masculino</option>
               <option value="Femenino">Femenino</option>
@@ -72,8 +72,8 @@ export default function GeneralSection(props: Props) {
             </select>
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-slate-600">Tipo</label>
-            <select className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm" value={tipo} onChange={(e)=>setTipo(e.target.value as any)}>
+            <label htmlFor="generalsection-tipo" className="mb-1 block text-xs font-medium text-slate-600">Tipo</label>
+            <select id="generalsection-tipo" className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm" value={tipo} onChange={(e)=>setTipo(e.target.value as any)}>
               <option value="">—</option>
               <option value="liga">Liga</option>
               <option value="torneo">Torneo</option>
@@ -81,21 +81,21 @@ export default function GeneralSection(props: Props) {
             </select>
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-slate-600">Fecha inicio</label>
-            <input type="date" className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm" value={fechaInicio} onChange={(e)=>setFechaInicio(e.target.value)} />
+            <label htmlFor="generalsection-fecha-inicio" className="mb-1 block text-xs font-medium text-slate-600">Fecha inicio</label>
+            <input id="generalsection-fecha-inicio" type="date" className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm" value={fechaInicio} onChange={(e)=>setFechaInicio(e.target.value)} />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-slate-600">Fecha fin</label>
-            <input type="date" className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm" value={fechaFin} onChange={(e)=>setFechaFin(e.target.value)} />
+            <label htmlFor="generalsection-fecha-fin" className="mb-1 block text-xs font-medium text-slate-600">Fecha fin</label>
+            <input id="generalsection-fecha-fin" type="date" className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm" value={fechaFin} onChange={(e)=>setFechaFin(e.target.value)} />
           </div>
           <div className="md:col-span-3">
-            <label className="mb-1 block text-xs font-medium text-slate-600">Descripción</label>
-            <textarea className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm" rows={2} value={descripcion} onChange={(e)=>setDescripcion(e.target.value)} />
+            <label htmlFor="generalsection-descripcion" className="mb-1 block text-xs font-medium text-slate-600">Descripción</label>
+            <textarea id="generalsection-descripcion" className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm" rows={2} value={descripcion} onChange={(e)=>setDescripcion(e.target.value)} />
           </div>
             <div className="md:col-span-3">
-              <label className="mb-1 block text-xs font-medium text-slate-600">Ranked (opt-in por competencia)</label>
+              <label htmlFor="generalsection-ranked-opt-in-por-competencia" className="mb-1 block text-xs font-medium text-slate-600">Ranked (opt-in por competencia)</label>
               <label className="inline-flex items-center gap-2 text-sm">
-                <input type="checkbox" checked={rankedEnabled} onChange={(e)=>setRankedEnabled(e.target.checked)} />
+                <input id="generalsection-ranked-opt-in-por-competencia" type="checkbox" checked={rankedEnabled} onChange={(e)=>setRankedEnabled(e.target.checked)} />
                 <span>Habilitar pestaña Ranked y ranking por competencia</span>
               </label>
             </div>

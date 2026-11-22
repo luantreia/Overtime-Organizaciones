@@ -1684,8 +1684,8 @@ export default function GestionParticipantesFaseModal({
 
                         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
                             <div className="lg:col-span-1">
-                              <label className="text-2xs font-black text-muted uppercase mb-2 block ml-1">Etapa de la Llave</label>
-                              <select className="w-full rounded-2xl border-2 border-slate-100 bg-white px-4 py-3 text-xs font-black uppercase tracking-wider focus:ring-4 focus:ring-brand-500/10 focus:border-brand-500 transition-all outline-none" value={nuevaEtapa} onChange={(e)=> setNuevaEtapa(e.target.value)}>
+                              <label htmlFor="gestionfasemodal-etapa-de-la-llave" className="text-2xs font-black text-muted uppercase mb-2 block ml-1">Etapa de la Llave</label>
+                              <select id="gestionfasemodal-etapa-de-la-llave" className="w-full rounded-2xl border-2 border-slate-100 bg-white px-4 py-3 text-xs font-black uppercase tracking-wider focus:ring-4 focus:ring-brand-500/10 focus:border-brand-500 transition-all outline-none" value={nuevaEtapa} onChange={(e)=> setNuevaEtapa(e.target.value)}>
                                 <option value="octavos">Octavos</option>
                                 <option value="cuartos">Cuartos</option>
                                 <option value="semifinal">Semifinal</option>
@@ -1693,9 +1693,9 @@ export default function GestionParticipantesFaseModal({
                               </select>
                             </div>
                             <div className="lg:col-span-2">
-                               <label className="text-2xs font-black text-muted uppercase mb-2 block ml-1">Programación</label>
+                               <label htmlFor="gestionfasemodal-programacion" className="text-2xs font-black text-muted uppercase mb-2 block ml-1">Programación</label>
                                <div className="flex gap-2">
-                                  <input 
+                                  <input id="gestionfasemodal-programacion" 
                                     type="date" 
                                     className="flex-1 rounded-2xl border-2 border-slate-100 bg-white px-4 py-3 text-xs font-bold focus:border-brand-500 outline-none transition-all" 
                                     value={nuevaFecha} 
@@ -1835,8 +1835,8 @@ export default function GestionParticipantesFaseModal({
                 ) : (
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div className="space-y-3">
-                      <label className="text-2xs font-bold text-muted uppercase">Equipos</label>
-                      <select className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500/20" value={nuevoLocal} onChange={(e)=> setNuevoLocal(e.target.value)}>
+                      <label htmlFor="gestionfasemodal-equipos" className="text-2xs font-bold text-muted uppercase">Equipos</label>
+                      <select id="gestionfasemodal-equipos" className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500/20" value={nuevoLocal} onChange={(e)=> setNuevoLocal(e.target.value)}>
                         <option value="">Local…</option>
                         {items.map((pf: any) => {
                           const eq = (pf?.participacionTemporada?.equipo as any);
@@ -1856,8 +1856,8 @@ export default function GestionParticipantesFaseModal({
                       </select>
                     </div>
                     <div className="space-y-3">
-                      <label className="text-2xs font-bold text-muted uppercase">Detalles</label>
-                      <select className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500/20" value={nuevaEtapa} onChange={(e)=> setNuevaEtapa(e.target.value)}>
+                      <label htmlFor="gestionfasemodal-detalles" className="text-2xs font-bold text-muted uppercase">Detalles</label>
+                      <select id="gestionfasemodal-detalles" className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500/20" value={nuevaEtapa} onChange={(e)=> setNuevaEtapa(e.target.value)}>
                         <option value="">Etapa…</option>
                         <option value="octavos">Octavos</option>
                         <option value="cuartos">Cuartos</option>
@@ -1901,7 +1901,7 @@ export default function GestionParticipantesFaseModal({
                 <div className="space-y-4">
                   <div>
                     <div className="flex items-center justify-between mb-2">
-                      <label className="text-2xs font-bold text-muted uppercase tracking-widest">Equipos disponibles en la Temporada</label>
+                      <p className="text-2xs font-bold text-muted uppercase tracking-widest">Equipos disponibles en la Temporada</p>
                       <button 
                         type="button"
                         onClick={() => {
@@ -1964,14 +1964,14 @@ export default function GestionParticipantesFaseModal({
                   <div className="grid gap-4 sm:grid-cols-3">
                     {tipo === 'grupo' && (
                       <div>
-                        <label className="text-2xs font-bold text-muted uppercase block mb-1">Asignar Grupo</label>
-                        <input placeholder="Ej: A, B..." className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm" value={grupo} onChange={(e)=>setGrupo(e.target.value)} />
+                        <label htmlFor="gestionfasemodal-asignar-grupo" className="text-2xs font-bold text-muted uppercase block mb-1">Asignar Grupo</label>
+                        <input id="gestionfasemodal-asignar-grupo" placeholder="Ej: A, B..." className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm" value={grupo} onChange={(e)=>setGrupo(e.target.value)} />
                       </div>
                     )}
                     {tipo === 'liga' && (
                       <div>
-                        <label className="text-2xs font-bold text-muted uppercase block mb-1">Asignar División</label>
-                        <input placeholder="Ej: Oro, Plata..." className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm" value={division} onChange={(e)=>setDivision(e.target.value)} />
+                        <label htmlFor="gestionfasemodal-asignar-division" className="text-2xs font-bold text-muted uppercase block mb-1">Asignar División</label>
+                        <input id="gestionfasemodal-asignar-division" placeholder="Ej: Oro, Plata..." className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm" value={division} onChange={(e)=>setDivision(e.target.value)} />
                       </div>
                     )}
 

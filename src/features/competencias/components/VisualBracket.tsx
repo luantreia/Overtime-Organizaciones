@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import type { Partido } from '../../../types';
 import { derivarRondas, extraerTercerPuesto, etapasSecuencialesAMostrar, construirEnlaces, ETAPA_LABELS, type EtapaConocida } from './derivarRondas';
 import { useConectoresLlave } from './useConectoresLlave';
+import { accionable } from '../../../shared/utils/accionable';
 
 /** `derivarRondas`/`construirEnlaces` necesitan el id de cada equipo en un campo plano
  * (`equipoLocalId`), no anidado (`equipoLocal.id`) — así el mismo código sirve para cualquier
@@ -157,7 +158,7 @@ export const VisualBracket: React.FC<VisualBracketProps> = ({ matches, onMatchCl
                     key={m.id}
                     ref={registrarTarjeta(m.id)}
                     data-partido-id={m.id}
-                    onClick={() => onMatchClick?.(m.id)}
+                    {...accionable(onMatchClick ? () => onMatchClick(m.id) : undefined)}
                     draggable={!!onReorder}
                     onDragStart={(e) => {
                       if (!onReorder) return;
@@ -220,7 +221,7 @@ export const VisualBracket: React.FC<VisualBracketProps> = ({ matches, onMatchCl
             </h5>
             <div className="flex flex-1 flex-col justify-around gap-3">
               <div
-                onClick={() => onMatchClick?.(tercerPuesto.id)}
+                {...accionable(onMatchClick ? () => onMatchClick(tercerPuesto.id) : undefined)}
                 className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm transition-all cursor-pointer hover:border-amber-400 hover:shadow-md"
               >
                 <div className="divide-y divide-slate-100">

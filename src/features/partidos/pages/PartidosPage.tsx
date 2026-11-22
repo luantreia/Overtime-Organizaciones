@@ -182,8 +182,8 @@ const PartidosPage = () => {
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-card">
         <div className="grid gap-4 md:grid-cols-4 items-end">
           <div>
-            <label className="mb-1 block text-xs font-medium text-slate-600">Competencia</label>
-            <select 
+            <label htmlFor="partidospage-competencia" className="mb-1 block text-xs font-medium text-slate-600">Competencia</label>
+            <select id="partidospage-competencia" 
               className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm" 
               value={competenciaId} 
               onChange={(e)=> setCompetenciaId(e.target.value)}
@@ -193,8 +193,8 @@ const PartidosPage = () => {
             </select>
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-slate-600">Temporada</label>
-            <select 
+            <label htmlFor="partidospage-temporada" className="mb-1 block text-xs font-medium text-slate-600">Temporada</label>
+            <select id="partidospage-temporada" 
               className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm" 
               value={temporadaId} 
               onChange={(e)=> setTemporadaId(e.target.value)} 
@@ -205,8 +205,8 @@ const PartidosPage = () => {
             </select>
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-slate-600">Fase / Etapa</label>
-            <select 
+            <label htmlFor="partidospage-fase-etapa" className="mb-1 block text-xs font-medium text-slate-600">Fase / Etapa</label>
+            <select id="partidospage-fase-etapa" 
               className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm" 
               value={faseId} 
               onChange={(e)=> setFaseId(e.target.value)} 

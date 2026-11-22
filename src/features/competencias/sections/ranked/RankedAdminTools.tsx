@@ -214,16 +214,16 @@ export const RankedAdminTools: React.FC<RankedAdminToolsProps> = ({
                 </Button>
               </div>
               <div className="space-y-1.5">
-                <label className="text-2xs uppercase tracking-wider font-extrabold text-muted">Forzar Conversion Ranked</label>
+                <label htmlFor="rankedadmintools-forzar-conversion-ranked" className="text-2xs uppercase tracking-wider font-extrabold text-muted">Forzar Conversion Ranked</label>
                 <div className="flex gap-2">
-                  <input value={convertId} onChange={(e)=>setConvertId(e.target.value)} placeholder="Part. ID" className="flex-1 rounded-md border px-2 py-1 text-xs outline-none focus:ring-1 focus:ring-brand-500 min-w-0" />
+                  <input id="rankedadmintools-forzar-conversion-ranked" value={convertId} onChange={(e)=>setConvertId(e.target.value)} placeholder="Part. ID" className="flex-1 rounded-md border px-2 py-1 text-xs outline-none focus:ring-1 focus:ring-brand-500 min-w-0" />
                   <Button size="sm" onClick={onMarkAsRanked} disabled={busy || !convertId.trim()} className="h-8 text-2xs px-2">Marcar</Button>
                 </div>
               </div>
               <div className="space-y-1.5">
-                <label className="text-2xs uppercase tracking-wider font-extrabold text-red-600">Revertir MMR Partido</label>
+                <label htmlFor="rankedadmintools-revertir-mmr-partido" className="text-2xs uppercase tracking-wider font-extrabold text-red-600">Revertir MMR Partido</label>
                 <div className="flex gap-2">
-                  <input value={revertId} onChange={(e)=>setRevertId(e.target.value)} placeholder="Part. ID" className="flex-1 rounded-md border px-2 py-1 text-xs outline-none focus:ring-1 focus:ring-red-500 min-w-0" />
+                  <input id="rankedadmintools-revertir-mmr-partido" value={revertId} onChange={(e)=>setRevertId(e.target.value)} placeholder="Part. ID" className="flex-1 rounded-md border px-2 py-1 text-xs outline-none focus:ring-1 focus:ring-red-500 min-w-0" />
                   <Button size="sm" variant="outline" className="h-8 text-2xs px-2 text-red-600 border-red-200 hover:bg-red-50" onClick={onRevertMatch} disabled={busy || !revertId.trim()}>Revertir</Button>
                 </div>
               </div>

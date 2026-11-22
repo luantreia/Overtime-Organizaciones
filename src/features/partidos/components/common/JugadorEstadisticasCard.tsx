@@ -150,6 +150,14 @@ const JugadorEstadisticasCard: FC<JugadorEstadisticasCardProps> = ({
                 onMouseUp={handleMouseUp}
                 onMouseLeave={handleMouseUp}
                 onClick={() => handleClick(campo)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    handleClick(campo);
+                  }
+                }}
                 // Eventos para mobile
                 onTouchStart={() => handleMouseDown(campo)}
                 onTouchEnd={handleMouseUp}

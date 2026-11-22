@@ -85,8 +85,8 @@ const EstadisticasOrgPage = () => {
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-card">
         <div className="grid gap-4 md:grid-cols-4 items-end">
           <div className="md:col-span-2">
-            <label className="mb-1 block text-xs font-medium text-slate-600">Competencia</label>
-            <select
+            <label htmlFor="estadisticasorgpage-competencia" className="mb-1 block text-xs font-medium text-slate-600">Competencia</label>
+            <select id="estadisticasorgpage-competencia"
               className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
               value={competenciaId}
               onChange={(e) => setCompetenciaId(e.target.value)}
@@ -97,8 +97,8 @@ const EstadisticasOrgPage = () => {
             </select>
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-slate-600">Fase / Etapa</label>
-            <select
+            <label htmlFor="estadisticasorgpage-fase-etapa" className="mb-1 block text-xs font-medium text-slate-600">Fase / Etapa</label>
+            <select id="estadisticasorgpage-fase-etapa"
               className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
               value={fase}
               onChange={(e) => setFase(e.target.value)}

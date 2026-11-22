@@ -27,6 +27,7 @@ import {
 import { getPartidosPorCompetencia, getPartidosPorTemporada } from '../../partidos/services/partidoService';
 import { listTemporadasByCompetencia, type BackendTemporada } from '../services';
 import { listCompetenciasByOrganizacion, type BackendCompetencia } from '../services/competenciasService';
+import { accionable } from '../../../shared/utils/accionable';
 
 // Hooks
 import { useAttendance, readPresentesForCompetencia } from '../hooks/useAttendance';
@@ -736,7 +737,8 @@ export default function CompetenciaRankedSection({
       {/* Notifications */}
       {error && (
         <div
-          onClick={() => setError(null)}
+          {...accionable(() => setError(null))}
+          aria-label={`Error: ${error}. Tocar para cerrar`}
           className="fixed top-4 right-4 z-[100] cursor-pointer rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700 shadow-lg animate-in fade-in slide-in-from-top-4 min-w-[200px] max-w-xs"
         >
           <div className="flex justify-between items-start gap-4">
@@ -750,7 +752,8 @@ export default function CompetenciaRankedSection({
       )}
       {success && (
         <div
-          onClick={() => setSuccess(null)}
+          {...accionable(() => setSuccess(null))}
+          aria-label={`${success}. Tocar para cerrar`}
           className="fixed bottom-4 right-4 z-[100] cursor-pointer rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-700 shadow-lg animate-in fade-in slide-in-from-bottom-4 min-w-[200px] max-w-xs"
         >
           <div className="flex justify-between items-start gap-4">
@@ -802,8 +805,8 @@ export default function CompetenciaRankedSection({
           <div className="border-t border-slate-100 bg-slate-50/70 px-3 py-3 sm:px-4">
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
               <div className="space-y-1">
-                <label className="text-2xs uppercase tracking-wider font-bold text-slate-500">Temporada</label>
-                <select
+                <label htmlFor="competenciarankedsection-temporada" className="text-2xs uppercase tracking-wider font-bold text-slate-500">Temporada</label>
+                <select id="competenciarankedsection-temporada"
                   value={selectedTemporada}
                   onChange={(e) => setSelectedTemporada(e.target.value)}
                   className="h-10 w-full rounded-md border border-slate-200 bg-white px-2 text-xs outline-none focus:ring-2 focus:ring-brand-500 transition-shadow disabled:bg-slate-50 disabled:text-muted"
@@ -818,8 +821,8 @@ export default function CompetenciaRankedSection({
 
               {sedes.length > 0 && (
                 <div className="space-y-1">
-                  <label className="text-2xs uppercase tracking-wider font-bold text-slate-500">Sede</label>
-                  <select
+                  <label htmlFor="competenciarankedsection-sede" className="text-2xs uppercase tracking-wider font-bold text-slate-500">Sede</label>
+                  <select id="competenciarankedsection-sede"
                     value={selectedSedeId}
                     onChange={(e) => handleSedeChange(e.target.value)}
                     className="h-10 w-full rounded-md border border-slate-200 bg-white px-2 text-xs outline-none focus:ring-2 focus:ring-brand-500 transition-shadow"
@@ -835,8 +838,8 @@ export default function CompetenciaRankedSection({
 
               {selectedSede && (selectedSede.canchas?.length ?? 0) > 0 && (
                 <div className="space-y-1">
-                  <label className="text-2xs uppercase tracking-wider font-bold text-slate-500">Cancha</label>
-                  <select
+                  <label htmlFor="competenciarankedsection-cancha" className="text-2xs uppercase tracking-wider font-bold text-slate-500">Cancha</label>
+                  <select id="competenciarankedsection-cancha"
                     value={selectedCancha}
                     onChange={(e) => handleCanchaChange(e.target.value)}
                     className="h-10 w-full rounded-md border border-slate-200 bg-white px-2 text-xs outline-none focus:ring-2 focus:ring-brand-500 transition-shadow"
@@ -851,9 +854,9 @@ export default function CompetenciaRankedSection({
               )}
 
               <div className="space-y-1">
-                <label className="text-2xs uppercase tracking-wider font-bold text-slate-500" title="Online: sincroniza con el servidor. Offline: guarda solo localmente.">
+                <p className="text-2xs uppercase tracking-wider font-bold text-slate-500" title="Online: sincroniza con el servidor. Offline: guarda solo localmente.">
                   Modo
-                </label>
+                </p>
                 <div className="flex items-center h-10 bg-white border border-slate-200 rounded-md p-1 gap-1">
                   <button
                     onClick={() => setIsBasicMode(false)}

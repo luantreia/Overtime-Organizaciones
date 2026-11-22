@@ -15,6 +15,7 @@ import { VisualBracket } from '../components/VisualBracket';
 import { getPartidosPorFase } from '../../partidos/services/partidoService';
 import type { Partido } from '../../../types';
 import { useToast } from '../../../shared/components/Toast/ToastProvider';
+import { accionable } from '../../../shared/utils/accionable';
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 
@@ -492,8 +493,8 @@ export default function EstructuraSection(props: Props) {
 
                         {/* Fase header */}
                         <div
-                          className="flex cursor-pointer items-center justify-between px-4 py-3 transition-colors hover:bg-slate-50"
-                          onClick={() => toggleFase(f._id)}
+                          className="flex cursor-pointer items-center justify-between px-4 py-3 transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40"
+                          {...accionable(() => toggleFase(f._id))}
                         >
                           <div className="flex min-w-0 items-center gap-2.5">
                             <span className="shrink-0 text-muted">
@@ -511,6 +512,8 @@ export default function EstructuraSection(props: Props) {
                             <span className="shrink-0 text-xs text-muted">{participantesFase.length} eq.</span>
                           </div>
 
+                          {/* Sólo corta la propagación para que los botones de adentro no plieguen la fase. */}
+                          {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
                           <div className="ml-2 flex items-center gap-0.5" onClick={e => e.stopPropagation()}>
                             <button
                               type="button"
@@ -609,8 +612,8 @@ export default function EstructuraSection(props: Props) {
         message={
           <div className="space-y-3">
             <div>
-              <label className="mb-1 block text-xs font-medium text-slate-600">Nombre</label>
-              <input
+              <label htmlFor="estructurasection-nombre" className="mb-1 block text-xs font-medium text-slate-600">Nombre</label>
+              <input id="estructurasection-nombre"
                 autoFocus
                 className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
                 value={nuevoNombreTemporada}
@@ -619,8 +622,8 @@ export default function EstructuraSection(props: Props) {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="mb-1 block text-xs font-medium text-slate-600">Inicio</label>
-                <input
+                <label htmlFor="estructurasection-inicio" className="mb-1 block text-xs font-medium text-slate-600">Inicio</label>
+                <input id="estructurasection-inicio"
                   type="date"
                   className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
                   value={editFechaInicio}
@@ -628,8 +631,8 @@ export default function EstructuraSection(props: Props) {
                 />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-medium text-slate-600">Fin</label>
-                <input
+                <label htmlFor="estructurasection-fin" className="mb-1 block text-xs font-medium text-slate-600">Fin</label>
+                <input id="estructurasection-fin"
                   type="date"
                   className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
                   value={editFechaFin}
@@ -638,8 +641,8 @@ export default function EstructuraSection(props: Props) {
               </div>
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-slate-600">Estado</label>
-              <select
+              <label htmlFor="estructurasection-estado" className="mb-1 block text-xs font-medium text-slate-600">Estado</label>
+              <select id="estructurasection-estado"
                 className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
                 value={editEstado}
                 onChange={e => setEditEstado(e.target.value)}

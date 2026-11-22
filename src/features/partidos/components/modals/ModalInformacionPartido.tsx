@@ -274,8 +274,8 @@ const ModalInformacionPartido = ({ partidoId, isOpen, onClose, onEliminar }: Mod
                    
                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="col-span-full">
-                      <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1 ml-1">Nombre del Partido</label>
-                      <input
+                      <label htmlFor="modalinformacionpartido-nombre-del-partido" className="block text-[11px] font-bold text-slate-500 uppercase mb-1 ml-1">Nombre del Partido</label>
+                      <input id="modalinformacionpartido-nombre-del-partido"
                         type="text"
                         placeholder="Ej: Gran Final de Verano"
                         value={datosEdicion.nombrePartido}
@@ -286,8 +286,8 @@ const ModalInformacionPartido = ({ partidoId, isOpen, onClose, onEliminar }: Mod
                       />
                     </div>
                     <div>
-                      <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1 ml-1">Fecha y Hora</label>
-                      <input
+                      <label htmlFor="modalinformacionpartido-fecha-y-hora" className="block text-[11px] font-bold text-slate-500 uppercase mb-1 ml-1">Fecha y Hora</label>
+                      <input id="modalinformacionpartido-fecha-y-hora"
                         type="datetime-local"
                         value={datosEdicion.fecha}
                         min={
@@ -318,8 +318,8 @@ const ModalInformacionPartido = ({ partidoId, isOpen, onClose, onEliminar }: Mod
                       )}
                     </div>
                     <div>
-                      <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1 ml-1">Ubicación / Cancha</label>
-                      <input
+                      <label htmlFor="modalinformacionpartido-ubicacion-cancha" className="block text-[11px] font-bold text-slate-500 uppercase mb-1 ml-1">Ubicación / Cancha</label>
+                      <input id="modalinformacionpartido-ubicacion-cancha"
                         type="text"
                         value={datosEdicion.ubicacion}
                         onChange={(e) =>
@@ -329,8 +329,8 @@ const ModalInformacionPartido = ({ partidoId, isOpen, onClose, onEliminar }: Mod
                       />
                     </div>
                     <div className="col-span-full">
-                      <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1 ml-1">Video de YouTube (en vivo o final)</label>
-                      <input
+                      <label htmlFor="modalinformacionpartido-video-de-youtube-en-vivo-o-fin" className="block text-[11px] font-bold text-slate-500 uppercase mb-1 ml-1">Video de YouTube (en vivo o final)</label>
+                      <input id="modalinformacionpartido-video-de-youtube-en-vivo-o-fin"
                         type="text"
                         placeholder="https://youtube.com/watch?v=..."
                         value={datosEdicion.videoUrl || ''}
@@ -354,8 +354,8 @@ const ModalInformacionPartido = ({ partidoId, isOpen, onClose, onEliminar }: Mod
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1 ml-1">Estado</label>
-                    <select
+                    <label htmlFor="modalinformacionpartido-estado" className="block text-[11px] font-bold text-slate-500 uppercase mb-1 ml-1">Estado</label>
+                    <select id="modalinformacionpartido-estado"
                       value={datosEdicion.estado}
                       onChange={(e) =>
                         setDatosEdicion((prev) => (prev ? { ...prev, estado: e.target.value } : prev))
@@ -369,8 +369,8 @@ const ModalInformacionPartido = ({ partidoId, isOpen, onClose, onEliminar }: Mod
                     </select>
                   </div>
                   <div>
-                    <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1 ml-1">Modalidad</label>
-                    <select
+                    <label htmlFor="modalinformacionpartido-modalidad" className="block text-[11px] font-bold text-slate-500 uppercase mb-1 ml-1">Modalidad</label>
+                    <select id="modalinformacionpartido-modalidad"
                       value={datosEdicion.modalidad}
                       onChange={(e) =>
                         setDatosEdicion((prev) => (prev ? { ...prev, modalidad: e.target.value } : prev))
@@ -384,8 +384,8 @@ const ModalInformacionPartido = ({ partidoId, isOpen, onClose, onEliminar }: Mod
                     </select>
                   </div>
                   <div>
-                    <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1 ml-1">Categoría</label>
-                    <select
+                    <label htmlFor="modalinformacionpartido-categoria" className="block text-[11px] font-bold text-slate-500 uppercase mb-1 ml-1">Categoría</label>
+                    <select id="modalinformacionpartido-categoria"
                       value={datosEdicion.categoria}
                       onChange={(e) =>
                         setDatosEdicion((prev) => (prev ? { ...prev, categoria: e.target.value } : prev))
@@ -413,8 +413,8 @@ const ModalInformacionPartido = ({ partidoId, isOpen, onClose, onEliminar }: Mod
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="md:col-span-2">
-                        <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1 ml-1">Competencia</label>
-                        <select
+                        <label htmlFor="modalinformacionpartido-competencia" className="block text-[11px] font-bold text-slate-500 uppercase mb-1 ml-1">Competencia</label>
+                        <select id="modalinformacionpartido-competencia"
                           value={datosEdicion.competencia}
                           onChange={(e) =>
                             setDatosEdicion((prev) => (prev ? { ...prev, competencia: e.target.value } : prev))
@@ -429,8 +429,8 @@ const ModalInformacionPartido = ({ partidoId, isOpen, onClose, onEliminar }: Mod
                         </select>
                     </div>
                     <div>
-                      <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1 ml-1">Etapa</label>
-                      <select
+                      <label htmlFor="modalinformacionpartido-etapa" className="block text-[11px] font-bold text-slate-500 uppercase mb-1 ml-1">Etapa</label>
+                      <select id="modalinformacionpartido-etapa"
                         value={datosEdicion.etapa || ''}
                         onChange={(e) => setDatosEdicion((prev) => (prev ? { ...prev, etapa: e.target.value } : prev))}
                         className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
@@ -449,8 +449,8 @@ const ModalInformacionPartido = ({ partidoId, isOpen, onClose, onEliminar }: Mod
                     </div>
                     <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1 ml-1">Grupo</label>
-                        <input
+                        <label htmlFor="modalinformacionpartido-grupo" className="block text-[11px] font-bold text-slate-500 uppercase mb-1 ml-1">Grupo</label>
+                        <input id="modalinformacionpartido-grupo"
                           type="text"
                           placeholder="Ej: A"
                           value={datosEdicion.grupo || ''}
@@ -459,8 +459,8 @@ const ModalInformacionPartido = ({ partidoId, isOpen, onClose, onEliminar }: Mod
                         />
                       </div>
                       <div>
-                        <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1 ml-1">División</label>
-                        <input
+                        <label htmlFor="modalinformacionpartido-division" className="block text-[11px] font-bold text-slate-500 uppercase mb-1 ml-1">División</label>
+                        <input id="modalinformacionpartido-division"
                           type="text"
                           placeholder="Ej: 1"
                           value={datosEdicion.division || ''}
