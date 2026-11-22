@@ -20,70 +20,17 @@ const App = () => {
       <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-6 py-8 pb-24 xl:pb-8">
         <Routes>
           <Route path="/login" element={<LoginPage />} />
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <DashboardOrgPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/organizacion"
-            element={
-              <ProtectedRoute>
-                <OrganizacionPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/competencias"
-            element={
-              <ProtectedRoute>
-                <CompetenciasOrgPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/competencias/:id"
-            element={
-              <ProtectedRoute>
-                <CompetenciaDetallePage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/partidos"
-            element={
-              <ProtectedRoute>
-                <PartidosPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/estadisticas"
-            element={
-              <ProtectedRoute>
-                <EstadisticasOrgPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/notificaciones"
-            element={
-              <ProtectedRoute>
-                <NotificacionesOrgPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/perfil"
-            element={
-              <ProtectedRoute>
-                <PerfilPage />
-              </ProtectedRoute>
-            }
-          />
+          {/* Una sola guarda para todas las rutas privadas: cada página nueva entra como hija acá. */}
+          <Route element={<ProtectedRoute />}>
+            <Route path="/dashboard" element={<DashboardOrgPage />} />
+            <Route path="/organizacion" element={<OrganizacionPage />} />
+            <Route path="/competencias" element={<CompetenciasOrgPage />} />
+            <Route path="/competencias/:id" element={<CompetenciaDetallePage />} />
+            <Route path="/partidos" element={<PartidosPage />} />
+            <Route path="/estadisticas" element={<EstadisticasOrgPage />} />
+            <Route path="/notificaciones" element={<NotificacionesOrgPage />} />
+            <Route path="/perfil" element={<PerfilPage />} />
+          </Route>
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </main>

@@ -1,9 +1,10 @@
-import { Navigate, useLocation } from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import type { ReactNode } from 'react';
 import { useAuth } from '../providers/AuthContext';
 
 interface ProtectedRouteProps {
-  children: ReactNode;
+  /** Sin children se usa como ruta padre (layout route) y renderiza las hijas vía <Outlet />. */
+  children?: ReactNode;
 }
 
 const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
@@ -25,7 +26,7 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     return <Navigate to="/login" replace state={{ from: location }} />;
   }
 
-  return <>{children}</>;
+  return children ? <>{children}</> : <Outlet />;
 };
 
 export default ProtectedRoute;

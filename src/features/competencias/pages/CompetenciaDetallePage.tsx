@@ -1,295 +1,35 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { listTemporadasByCompetencia, crearTemporada, BackendTemporada, actualizarTemporada, eliminarTemporada, listFasesByTemporada, crearFase, generarFixture, BackendFase, actualizarFase, eliminarFase, addCompetenciaAdministrador, getCompetenciaAdministradores, removeCompetenciaAdministrador, actualizarCompetencia, eliminarCompetencia, type AdminUser, listParticipacionesByTemporada, type BackendParticipacionTemporada, crearSolicitudParticipacionTemporada, listParticipacionesByFase, type BackendParticipacionFase, crearParticipacionFase, updateParticipacionTemporada, getCompetenciaDetalle } from '../services';
-import { getPartidosPorCompetencia, getPartidosPorTemporada, getPartidosPorFase } from '../../partidos/services/partidoService';
-import type { Partido } from '../../../types';
-import { useToast } from '../../../shared/components/Toast/ToastProvider';
-import { useAuth } from '../../../app/providers/AuthContext';
-import GeneralSection from '../sections/GeneralSection';
-import EstructuraSection from '../sections/EstructuraSection';
-import PartidosSection from '../sections/PartidosSection';
-import ConfirmEliminarTemporadaModal from '../modals/ConfirmEliminarTemporadaModal';
-import ConfirmEliminarFaseModal from '../modals/ConfirmEliminarFaseModal';
-import ConfirmEliminarCompetenciaModal from '../modals/ConfirmEliminarCompetenciaModal';
+import { Link, useParams } from 'react-router-dom';
+import { useFiltrosURL } from '../../../shared/hooks/useFiltrosURL';
+import { useCompetenciaDetalle } from '../hooks/useCompetenciaDetalle';
+import GeneralTab from '../tabs/GeneralTab';
+import EstructuraTab from '../tabs/EstructuraTab';
+import PartidosTab from '../tabs/PartidosTab';
 import CompetenciaRankedSection from '../sections/CompetenciaRankedSection';
-import ModalBase from '../../../shared/components/ModalBase/ModalBase';
 
+type Tab = 'general' | 'estructura' | 'partidos' | 'ranked';
+
+const ETIQUETAS: Record<Tab, string> = {
+  general: 'General',
+  estructura: 'Temporadas/Fases',
+  partidos: 'Partidos',
+  ranked: 'Ranked',
+};
+
+/**
+ * Cáscara del detalle de una competencia: carga lo compartido, dibuja el encabezado y elige la
+ * pestaña según `?tab=`. Cada pestaña es dueña de su propio estado (ver `../tabs/`); si algo nuevo
+ * es de una sola pestaña, va en esa pestaña y no acá.
+ */
 const CompetenciaDetallePage = () => {
   const { id: competenciaId } = useParams<{ id: string }>();
-  const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const [temporadas, setTemporadas] = useState<BackendTemporada[]>([]);
-  const [fasesPorTemporada, setFasesPorTemporada] = useState<Record<string, BackendFase[]>>({});
-  const [loading, setLoading] = useState(false);
-  const tab = (searchParams.get('tab') as 'general' | 'estructura' | 'partidos' | 'ranked') || 'estructura';
-  const setTab = useCallback((next: 'general' | 'estructura' | 'partidos' | 'ranked') => {
-    setSearchParams((prev) => {
-      const params = new URLSearchParams(prev);
-      if (next === 'estructura') params.delete('tab');
-      else params.set('tab', next);
-      return params;
-    }, { replace: true });
-  }, [setSearchParams]);
+  const detalle = useCompetenciaDetalle(competenciaId);
+  const filtros = useFiltrosURL<'tab'>();
 
-  // detalle competencia y admins
-  const [nombre, setNombre] = useState('');
-  const [organizacionId, setOrganizacionId] = useState('');
-  const [modalidad, setModalidad] = useState<'Foam' | 'Cloth' | ''>('');
-  const [categoria, setCategoria] = useState<'Masculino' | 'Femenino' | 'Mixto' | 'Libre' | ''>('');
-  const [tipo, setTipo] = useState<'liga' | 'torneo' | 'otro' | ''>('');
-  const [rankedEnabled, setRankedEnabled] = useState<boolean>(false);
-  const [fechaInicio, setFechaInicio] = useState('');
-  const [fechaFin, setFechaFin] = useState('');
-  const [descripcion, setDescripcion] = useState('');
-  const [esAdminBackend, setEsAdminBackend] = useState<boolean | null>(null);
-  const [admins, setAdmins] = useState<AdminUser[]>([]);
-  const [adminEmail, setAdminEmail] = useState('');
-  const [saving, setSaving] = useState(false);
-
-  // partidos
-  const [partidos, setPartidos] = useState<Partido[]>([]);
-  const [filtroEstado, setFiltroEstado] = useState<string>('');
-  const [selectedTemporadaId, setSelectedTemporadaId] = useState<string>('');
-  const [selectedFaseId, setSelectedFaseId] = useState<string>('');
-
-  // participaciones
-  const [participacionesTemporada, setParticipacionesTemporada] = useState<Record<string, BackendParticipacionTemporada[]>>({});
-  const [participacionesFase, setParticipacionesFase] = useState<Record<string, BackendParticipacionFase[]>>({});
-
-  // confirm dialogs
-  const [confirmEliminarTemp, setConfirmEliminarTemp] = useState<BackendTemporada | null>(null);
-  const [confirmEliminarFase, setConfirmEliminarFase] = useState<{ fase: BackendFase; temporadaId: string } | null>(null);
-  const [renameFase, setRenameFase] = useState<{ fase: BackendFase; temporadaId: string; value: string; tipo: NonNullable<BackendFase['tipo']> | '' } | null>(null);
-  const [confirmEliminarComp, setConfirmEliminarComp] = useState(false);
-
-  const { addToast } = useToast();
-  const { user } = useAuth();
-
-  const esAdmin = useMemo(() => {
-    if (esAdminBackend) return true;
-    if (user?.rol === 'admin' || user?.rol === 'manager' || user?.rol === 'editor') return true;
-    if (user) {
-      const uId = user.id;
-      const uEmail = (user.email || '').trim().toLowerCase();
-      if (admins.some(a => a._id === uId)) return true;
-      if (uEmail && admins.some(a => (a.email || '').trim().toLowerCase() === uEmail)) return true;
-    }
-    return false;
-  }, [esAdminBackend, user, admins]);
-
-  const loadAll = useCallback(async () => {
-    if (!competenciaId) return;
-    setLoading(true);
-    try {
-      const detalle = await getCompetenciaDetalle(competenciaId);
-
-      setNombre(detalle.nombre ?? 'Competencia');
-      setModalidad((detalle.modalidad as any) ?? '');
-      setCategoria((detalle.categoria as any) ?? '');
-      setTipo((detalle.tipo as any) ?? '');
-      setFechaInicio(detalle.fechaInicio ? detalle.fechaInicio.slice(0, 10) : '');
-      setFechaFin(detalle.fechaFin ? detalle.fechaFin.slice(0, 10) : '');
-      setDescripcion((detalle as any).descripcion ?? '');
-      setRankedEnabled(Boolean(detalle.rankedEnabled));
-      setEsAdminBackend(Boolean(detalle.esAdmin));
-      setAdmins((detalle.administradores as AdminUser[]) || []);
-      const org = (detalle as any).organizacion;
-      setOrganizacionId(typeof org === 'string' ? org : org?._id ?? '');
-
-      const temps = detalle.temporadas ?? [];
-      setTemporadas(temps as unknown as BackendTemporada[]);
-
-      const fasesMap: Record<string, BackendFase[]> = {};
-      const ptsMap: Record<string, BackendParticipacionTemporada[]> = {};
-      const pfMap: Record<string, BackendParticipacionFase[]> = {};
-
-      for (const t of temps) {
-        fasesMap[t._id] = t.fases as unknown as BackendFase[];
-        ptsMap[t._id] = t.participaciones as unknown as BackendParticipacionTemporada[];
-        for (const f of t.fases) {
-          pfMap[f._id] = f.participaciones as unknown as BackendParticipacionFase[];
-        }
-      }
-
-      setFasesPorTemporada(fasesMap);
-      setParticipacionesTemporada(ptsMap);
-      setParticipacionesFase(pfMap);
-    } finally {
-      setLoading(false);
-    }
-  }, [competenciaId]);
-
-  const loadPartidos = useCallback(async () => {
-    if (!competenciaId) return;
-    setLoading(true);
-    try {
-      let listaPartidos: Partido[] = [];
-      if (selectedFaseId) {
-        listaPartidos = await getPartidosPorFase(selectedFaseId);
-      } else if (selectedTemporadaId) {
-        listaPartidos = await getPartidosPorTemporada(selectedTemporadaId);
-      } else {
-        listaPartidos = await getPartidosPorCompetencia(competenciaId);
-      }
-      setPartidos(listaPartidos);
-    } catch (error) {
-      console.error('Error cargando partidos:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, [competenciaId, selectedFaseId, selectedTemporadaId]);
-
-  useEffect(() => {
-    void loadAll();
-  }, [loadAll]);
-
-  useEffect(() => {
-    void loadPartidos();
-  }, [loadPartidos]);
-
-  const onGenerarFixture = async (faseId: string) => {
-    await generarFixture(faseId);
-    addToast({ type: 'success', title: 'Fixture generado' });
-  };
-
-  const onEditarTemporada = async (t: BackendTemporada, payload: { nombre?: string; fechaInicio?: string; fechaFin?: string; estado?: string }) => {
-    await actualizarTemporada(t._id, payload as Partial<BackendTemporada>);
-    void loadAll();
-  };
-
-  const onAsignarCampeon = async (temporadaId: string, ganadorId: string | null) => {
-    await actualizarTemporada(temporadaId, { ganador: ganadorId } as any);
-    addToast({ type: 'success', title: ganadorId ? 'Campeón asignado' : 'Campeón removido' });
-    void loadAll();
-  };
-
-  const onEliminarTemporada = async (t: BackendTemporada) => {
-    setConfirmEliminarTemp(t);
-  };
-
-  const onEditarFase = async (fase: BackendFase, temporadaId: string, payload?: Partial<BackendFase>) => {
-    if (payload) {
-      // Si viene payload (ej: pasando configuracion), lo usamos directamente
-      await actualizarFase(fase._id, payload);
-      const fases = await listFasesByTemporada(temporadaId);
-      setFasesPorTemporada((prev) => ({ ...prev, [temporadaId]: fases }));
-      if (payload?.configuracion) {
-        addToast({ type: 'success', title: 'Reglamento actualizado' });
-      }
-      return;
-    }
-    setRenameFase({ fase, temporadaId, value: fase.nombre || 'Fase', tipo: fase.tipo || '' });
-  };
-
-  const handleConfirmEditarFase = async () => {
-    if (!renameFase) return;
-    const { fase, temporadaId, value, tipo } = renameFase;
-    setRenameFase(null);
-    const nuevo = value.trim() || fase.nombre;
-    if (!nuevo) return;
-    const payload: Partial<BackendFase> = { nombre: nuevo };
-    if (tipo && tipo !== fase.tipo) payload.tipo = tipo;
-    await actualizarFase(fase._id, payload);
-    const fases = await listFasesByTemporada(temporadaId);
-    setFasesPorTemporada((prev) => ({ ...prev, [temporadaId]: fases }));
-  };
-
-  const onEliminarFase = async (fase: BackendFase, temporadaId: string) => {
-    setConfirmEliminarFase({ fase, temporadaId });
-  };
-
-  const guardarGeneral = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!competenciaId) return;
-    setSaving(true);
-    try {
-      await actualizarCompetencia(competenciaId, {
-        nombre,
-        modalidad: modalidad || undefined,
-        categoria: categoria || undefined,
-        tipo: tipo || undefined,
-        fechaInicio: fechaInicio || undefined,
-        fechaFin: fechaFin || undefined,
-        descripcion,
-        rankedEnabled,
-      });
-      addToast({ type: 'success', title: 'Competencia actualizada' });
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const eliminarEstaCompetencia = async () => {
-    setConfirmEliminarComp(true);
-  };
-
-  const agregarAdmin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!competenciaId || !adminEmail.trim()) return;
-    await addCompetenciaAdministrador(competenciaId, { email: adminEmail.trim() });
-    setAdminEmail('');
-    const { administradores } = await getCompetenciaAdministradores(competenciaId);
-    setAdmins(administradores || []);
-  };
-
-  const quitarAdmin = async (adminId: string) => {
-    if (!competenciaId) return;
-    await removeCompetenciaAdministrador(competenciaId, adminId);
-    const { administradores } = await getCompetenciaAdministradores(competenciaId);
-    setAdmins(administradores || []);
-  };
-
-  const crearSolicitudParticipacionTemporadaHandler = async (temporadaId: string, equipoId: string) => {
-    if (!temporadaId || !equipoId) return;
-    await crearSolicitudParticipacionTemporada(temporadaId, equipoId);
-    addToast({ type: 'success', title: 'Solicitud enviada a administradores' });
-  };
-
-  const crearParticipacionFaseHandler = async (faseId: string, participacionTemporadaId: string, opts?: { grupo?: string; division?: string }) => {
-    if (!faseId || !participacionTemporadaId) return;
-    await crearParticipacionFase({ fase: faseId, participacionTemporada: participacionTemporadaId, grupo: opts?.grupo, division: opts?.division });
-    const lista = await listParticipacionesByFase(faseId);
-    setParticipacionesFase((prev) => ({ ...prev, [faseId]: lista }));
-    addToast({ type: 'success', title: 'Participación agregada a la fase' });
-  };
-
-  const crearTemporadaHandler = async (payload: { nombre: string; fechaInicio: string; fechaFin?: string }) => {
-    if (!competenciaId) return;
-    await crearTemporada({ competencia: competenciaId, nombre: payload.nombre, fechaInicio: payload.fechaInicio, fechaFin: payload.fechaFin });
-    const temps = await listTemporadasByCompetencia(competenciaId);
-    setTemporadas(temps);
-  };
-
-  const crearFaseHandler = async (
-    temporadaId: string,
-    payload: {
-      nombre: string;
-      descripcion?: string;
-      tipo?: 'grupo' | 'liga' | 'playoff' | 'promocion' | 'otro';
-      orden?: number;
-      fechaInicio?: string;
-      fechaFin?: string;
-      numeroClasificados?: number;
-      faseOrigenA?: string;
-      faseOrigenB?: string;
-    }
-  ) => {
-    await crearFase({ temporada: temporadaId, ...payload });
-    const fases = await listFasesByTemporada(temporadaId);
-    setFasesPorTemporada((prev) => ({ ...prev, [temporadaId]: fases }));
-  };
-
-  const updateParticipacionTemporadaHandler = async (id: string, body: Partial<{ estado: string }>) => {
-    await updateParticipacionTemporada(id, body);
-    let tempIdToRefresh: string | undefined;
-    for (const [tid, items] of Object.entries(participacionesTemporada)) {
-      if ((items || []).some((it) => it._id === id)) { tempIdToRefresh = tid; break; }
-    }
-    if (tempIdToRefresh) {
-      const list = await listParticipacionesByTemporada(tempIdToRefresh);
-      setParticipacionesTemporada((prev) => ({ ...prev, [tempIdToRefresh!]: list }));
-    }
-  };
+  const tabs: Tab[] = ['general', 'estructura', 'partidos', ...(detalle.datos.rankedEnabled ? ['ranked' as const] : [])];
+  const pedida = filtros.get('tab') as Tab;
+  const tab: Tab = tabs.includes(pedida) ? pedida : 'estructura';
+  // `estructura` es la pestaña por defecto: no se escribe en la URL.
+  const setTab = (t: Tab) => filtros.set({ tab: t === 'estructura' ? null : t });
 
   if (!competenciaId) {
     return (
@@ -299,194 +39,42 @@ const CompetenciaDetallePage = () => {
     );
   }
 
+  const nombre = detalle.datos.nombre || 'Competencia';
+
   return (
     <div className="space-y-8">
       <header className="flex flex-col gap-2">
         <nav className="text-xs text-slate-500">
           <Link className="hover:underline" to="/competencias">Competencias</Link>
           <span> / </span>
-          <span className="text-slate-700 font-medium">{nombre || 'Competencia'}</span>
+          <span className="text-slate-700 font-medium">{nombre}</span>
         </nav>
-        <h1 className="text-2xl font-semibold text-slate-900">{nombre || 'Competencia'}</h1>
+        <h1 className="text-2xl font-semibold text-slate-900">{nombre}</h1>
         <p className="text-sm text-slate-500">Administración y estructura</p>
         <div className="mt-2 flex gap-2 text-sm overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0 sm:overflow-visible">
-          {(['general','estructura','partidos', ...(rankedEnabled ? ['ranked'] as const : [])] as const).map(t => (
+          {tabs.map((t) => (
             <button
               key={t}
               type="button"
               onClick={() => setTab(t)}
-              className={`rounded-lg px-3 py-1.5 whitespace-nowrap ${tab===t ? 'bg-brand-100 text-brand-700' : 'border border-slate-200 text-slate-700 hover:bg-slate-50'}`}
+              aria-current={tab === t ? 'page' : undefined}
+              className={`rounded-lg px-3 py-1.5 whitespace-nowrap ${tab === t ? 'bg-brand-100 text-brand-700' : 'border border-slate-200 text-slate-700 hover:bg-slate-50'}`}
             >
-              {t === 'general' ? 'General' : t === 'estructura' ? 'Temporadas/Fases' : t === 'partidos' ? 'Partidos' : 'Ranked'}
+              {ETIQUETAS[t]}
             </button>
           ))}
         </div>
       </header>
 
-      {tab === 'general' ? (
-        <GeneralSection
-          nombre={nombre}
-          setNombre={setNombre}
-          modalidad={modalidad}
-          setModalidad={setModalidad as any}
-          categoria={categoria}
-          setCategoria={setCategoria as any}
-          tipo={tipo}
-          setTipo={setTipo as any}
-          fechaInicio={fechaInicio}
-          setFechaInicio={setFechaInicio}
-          fechaFin={fechaFin}
-          setFechaFin={setFechaFin}
-          descripcion={descripcion}
-          setDescripcion={setDescripcion}
-          rankedEnabled={rankedEnabled}
-          setRankedEnabled={setRankedEnabled}
-          esAdmin={esAdmin}
-          saving={saving}
-          onSubmit={guardarGeneral}
-          adminEmail={adminEmail}
-          setAdminEmail={setAdminEmail}
-          admins={admins}
-          onAgregarAdmin={agregarAdmin}
-          onQuitarAdmin={quitarAdmin}
-          onEliminarCompetenciaRequested={eliminarEstaCompetencia}
-        />
-      ) : null}
-
-      {tab === 'estructura' ? (
-        <EstructuraSection
-          esAdmin={esAdmin}
-          loading={loading}
-          competenciaId={competenciaId}
-          competenciaNombre={nombre}
-          organizacionId={organizacionId || undefined}
-          onRefresh={loadAll}
-          onSubmitCrearTemporada={crearTemporadaHandler}
-          temporadas={temporadas}
-          fasesPorTemporada={fasesPorTemporada}
-          onSubmitCrearFase={crearFaseHandler}
-          onEditarTemporada={onEditarTemporada}
-          onAsignarCampeon={onAsignarCampeon}
-          onEliminarTemporada={onEliminarTemporada}
-          onGenerarFixture={onGenerarFixture}
-          onEditarFase={onEditarFase}
-          onEliminarFase={onEliminarFase}
-          participacionesTemporadaPorId={participacionesTemporada}
-          participacionesFasePorId={participacionesFase}
-          onCrearSolicitudParticipacionTemporada={crearSolicitudParticipacionTemporadaHandler}
-          onCrearParticipacionFase={crearParticipacionFaseHandler}
-          onUpdateParticipacionTemporada={updateParticipacionTemporadaHandler}
-        />
-      ) : null}
-
-      
-
-      {tab === 'partidos' ? (
-        <PartidosSection
-          partidos={partidos}
-          filtroEstado={filtroEstado}
-          setFiltroEstado={setFiltroEstado}
-          temporadas={temporadas}
-          fasesPorTemporada={fasesPorTemporada}
-          selectedTemporadaId={selectedTemporadaId}
-          selectedFaseId={selectedFaseId}
-          setSelectedTemporadaId={setSelectedTemporadaId}
-          setSelectedFaseId={setSelectedFaseId}
-          onRefresh={loadPartidos}
-        />
-      ) : null}
-
+      {tab === 'general' ? <GeneralTab competenciaId={competenciaId} detalle={detalle} /> : null}
+      {tab === 'estructura' ? <EstructuraTab competenciaId={competenciaId} detalle={detalle} /> : null}
+      {tab === 'partidos' ? <PartidosTab competenciaId={competenciaId} detalle={detalle} /> : null}
       {tab === 'ranked' ? (
-        <CompetenciaRankedSection competenciaId={competenciaId} modalidad={modalidad} categoria={categoria} organizacionId={organizacionId || undefined} />
-      ) : null}
-
-      {confirmEliminarTemp ? (
-        <ConfirmEliminarTemporadaModal
-          isOpen={true}
-          nombre={confirmEliminarTemp.nombre}
-          onConfirm={async () => {
-            await eliminarTemporada(confirmEliminarTemp._id);
-            const temps = await listTemporadasByCompetencia(competenciaId!);
-            setTemporadas(temps);
-            setFasesPorTemporada((prev) => {
-              const copy = { ...prev };
-              delete copy[confirmEliminarTemp._id];
-              return copy;
-            });
-            setConfirmEliminarTemp(null);
-            addToast({ type: 'success', title: 'Temporada eliminada' });
-          }}
-          onCancel={() => setConfirmEliminarTemp(null)}
-        />
-      ) : null}
-
-      {confirmEliminarFase ? (
-        <ConfirmEliminarFaseModal
-          isOpen={true}
-          nombre={confirmEliminarFase.fase.nombre}
-          onConfirm={async () => {
-            await eliminarFase(confirmEliminarFase.fase._id);
-            const fases = await listFasesByTemporada(confirmEliminarFase.temporadaId);
-            setFasesPorTemporada((prev) => ({ ...prev, [confirmEliminarFase.temporadaId]: fases }));
-            setConfirmEliminarFase(null);
-            addToast({ type: 'success', title: 'Fase eliminada' });
-          }}
-          onCancel={() => setConfirmEliminarFase(null)}
-        />
-      ) : null}
-
-      {renameFase ? (
-        <ModalBase isOpen onClose={() => setRenameFase(null)} title="Editar fase" size="sm">
-          <div className="p-4 space-y-4">
-            <label className="block text-sm text-slate-600">
-              Nombre de la fase
-              <input
-                type="text"
-                autoFocus
-                value={renameFase.value}
-                onChange={(e) => setRenameFase({ ...renameFase, value: e.target.value })}
-                onKeyDown={(e) => { if (e.key === 'Enter') handleConfirmEditarFase(); }}
-                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-              />
-            </label>
-            <label className="block text-sm text-slate-600">
-              Tipo
-              <select
-                value={renameFase.tipo}
-                onChange={(e) => setRenameFase({ ...renameFase, tipo: e.target.value as NonNullable<BackendFase['tipo']> | '' })}
-                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-              >
-                <option value="">—</option>
-                <option value="grupo">Grupo</option>
-                <option value="liga">Liga</option>
-                <option value="playoff">Playoff</option>
-                <option value="promocion">Promoción</option>
-                <option value="otro">Otro</option>
-              </select>
-            </label>
-            {renameFase.tipo && renameFase.tipo !== renameFase.fase.tipo && (
-              <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
-                Cambiar el tipo no migra las asignaciones existentes: "Grupo" usa el campo <strong>grupo</strong> de cada equipo y "Liga" usa <strong>división</strong>. Si esta fase ya tenía equipos agrupados con el tipo anterior, puede que tengas que reasignarlos.
-              </p>
-            )}
-            <div className="flex justify-end gap-3">
-              <button type="button" onClick={() => setRenameFase(null)} className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:border-slate-300">Cancelar</button>
-              <button type="button" onClick={handleConfirmEditarFase} className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">Guardar</button>
-            </div>
-          </div>
-        </ModalBase>
-      ) : null}
-
-      {confirmEliminarComp ? (
-        <ConfirmEliminarCompetenciaModal
-          isOpen={true}
-          onConfirm={async () => {
-            if (!competenciaId) return;
-            await eliminarCompetencia(competenciaId);
-            addToast({ type: 'success', title: 'Competencia eliminada' });
-            navigate('/competencias');
-          }}
-          onCancel={() => setConfirmEliminarComp(false)}
+        <CompetenciaRankedSection
+          competenciaId={competenciaId}
+          modalidad={detalle.datos.modalidad}
+          categoria={detalle.datos.categoria}
+          organizacionId={detalle.organizacionId || undefined}
         />
       ) : null}
     </div>
