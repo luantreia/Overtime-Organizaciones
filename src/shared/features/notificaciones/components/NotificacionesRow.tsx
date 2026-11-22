@@ -3,6 +3,7 @@
 import React from 'react';
 import type { NotificacionesRowProps } from '../types/notificacionesTypes';
 import { AprobarButton } from './AprobarButton';
+import { ResumenSolicitud, esCampoTecnico, humanizar, valorLegible } from './ResumenSolicitud';
 import PlanillaOficializacionDetalle from './PlanillaOficializacionDetalle';
 
 // Maps raw datosPropuestos keys to Spanish labels
@@ -35,6 +36,8 @@ function renderDatos(datos: Record<string, any>) {
   const keys = Object.keys(datos).filter(k => {
     // Skip internal/noise keys
     if (k === '__v' || k === '_id') return false;
+    // Ids y listas de ids: no le dicen nada a quien aprueba (el contexto ya trae los nombres).
+    if (esCampoTecnico(k, datos[k])) return false;
     // Skip raw ID if we have a name for it
     if (REDUNDANT_ID_KEYS.has(k)) {
       const nameKey = k.replace('Id', 'Nombre');
@@ -58,12 +61,12 @@ function renderDatos(datos: Record<string, any>) {
           // Pretty-print ISO dates
           value = /^\d{4}-\d{2}-\d{2}T/.test(s)
             ? new Date(s).toLocaleString('es-ES', { dateStyle: 'medium', timeStyle: 'short' })
-            : s;
+            : valorLegible(s);
         }
         return (
           <div key={k}>
             <dt className="text-2xs font-bold uppercase tracking-wide text-muted">
-              {FIELD_LABELS[k] ?? k}
+              {FIELD_LABELS[k] ?? humanizar(k)}
             </dt>
             <dd className="text-sm text-slate-800 truncate" title={value}>{value}</dd>
           </div>
@@ -171,9 +174,9 @@ export const AccionesSolicitud: React.FC<AccionesProps> = ({ solicitud, rechazoE
 
 /** Lo que se ve al expandir una solicitud: quién la pidió, qué propone y, si la rechazaron, por qué. */
 export const DetalleSolicitud: React.FC<{ solicitud: Solicitud }> = ({ solicitud }) => {
-  const formatDate = formatearFechaSolicitud;
   return (
     <div className="space-y-3 rounded-xl border border-slate-200 bg-white p-4">
+      <ResumenSolicitud solicitud={solicitud as any} />
 
       {/* Meta: quién pidió + doble confirmación */}
       <div className="flex flex-wrap items-start gap-x-6 gap-y-2 border-b border-slate-100 pb-3">
@@ -203,18 +206,6 @@ export const DetalleSolicitud: React.FC<{ solicitud: Solicitud }> = ({ solicitud
             </p>
           </div>
         )}
-
-        {solicitud.entidad && (
-          <div>
-            <p className="text-2xs font-bold uppercase tracking-wide text-muted">Entidad</p>
-            <p className="font-mono text-xs text-slate-500">{solicitud.entidad}</p>
-          </div>
-        )}
-
-        <div className="ml-auto text-right">
-          <p className="text-2xs font-bold uppercase tracking-wide text-muted">Fecha</p>
-          <p className="text-xs text-slate-500">{formatDate(solicitud.createdAt)}</p>
-        </div>
       </div>
 
       {/* Datos propuestos — legibles.
