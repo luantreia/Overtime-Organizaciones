@@ -1,3 +1,4 @@
+import { toDatetimeLocalValue } from '../../../../utils/formatDate';
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import ModalBase from '../../../../shared/components/ModalBase/ModalBase';
 import { ConfiguracionAvanzadaSection } from '../sections/SectionConfiguracionAvanzada';
@@ -87,7 +88,7 @@ export const ModalPartidoAdmin = ({ partidoId, token, onClose, onPartidoEliminad
       
       setPartido(partidoConSets);
       setDatosEdicion({
-        fecha: partidoDetalle.fecha ? new Date(partidoDetalle.fecha).toISOString().slice(0, 16) : '',
+        fecha: partidoDetalle.fecha ? toDatetimeLocalValue(partidoDetalle.fecha) : '',
         ubicacion: partidoDetalle.ubicacion || '',
         estado: partidoDetalle.estado || 'programado',
         nombrePartido: partidoDetalle.nombrePartido || '',

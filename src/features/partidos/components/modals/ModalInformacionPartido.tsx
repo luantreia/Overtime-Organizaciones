@@ -1,3 +1,4 @@
+import { toDatetimeLocalValue } from '../../../../utils/formatDate';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import ModalBase from '../../../../shared/components/ModalBase/ModalBase';
 import {
@@ -63,7 +64,7 @@ const ModalInformacionPartido = ({ partidoId, isOpen, onClose, onEliminar }: Mod
       const detalle = await getPartidoDetallado(partidoId);
       setPartido(detalle);
       setDatosEdicion({
-        fecha: detalle.fecha ? new Date(detalle.fecha).toISOString().slice(0, 16) : '',
+        fecha: detalle.fecha ? toDatetimeLocalValue(detalle.fecha) : '',
         ubicacion: detalle.ubicacion || '',
         estado: detalle.estado || 'programado',
         nombrePartido: detalle.nombrePartido || '',
