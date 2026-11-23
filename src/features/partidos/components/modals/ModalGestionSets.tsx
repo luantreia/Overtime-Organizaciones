@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import ModalBase from '../../../../shared/components/ModalBase/ModalBase';
+import { CapturaSetOficial, crearApiCaptura, type Fetcher } from 'overtime-kit/captura';
+import { authFetch } from '../../../../shared/utils/authFetch';
 import ConfirmModal from '../../../../shared/components/ConfirmModal/ConfirmModal';
 import { useToast } from '../../../../shared/components/Toast/ToastProvider';
 import {
@@ -9,6 +11,11 @@ import {
   eliminarSetPartido,
   type SetPartido,
 } from '../../services/partidoService';
+
+// Captura con video (overtime-kit/captura). A nivel de módulo: CapturaSetOficial recarga si cambia.
+const fetcherCaptura: Fetcher = (ruta, init) =>
+  authFetch(ruta, { method: init?.method ?? 'GET', body: init?.body ? JSON.parse(init.body) : undefined });
+const apiCaptura = crearApiCaptura(fetcherCaptura);
 
 type ModalGestionSetsProps = {
   partidoId: string;
@@ -35,6 +42,7 @@ const ModalGestionSets = ({ partidoId, isOpen, onClose, onAbrirCaptura, modalida
   const [loading, setLoading] = useState(false);
   const [savingId, setSavingId] = useState<string | null>(null);
   const [confirmEliminar, setConfirmEliminar] = useState<{ open: boolean; setId?: string; numero?: number }>({ open: false });
+  const [capturaVideo, setCapturaVideo] = useState<{ setId: string; numero: number } | null>(null);
 
   const numerosExistentes = useMemo(() => sets.map(s => s.numeroSet).sort((a,b) => a-b), [sets]);
 
@@ -168,6 +176,14 @@ const ModalGestionSets = ({ partidoId, isOpen, onClose, onAbrirCaptura, modalida
                       </select>
                     </td>
                     <td className="px-3 py-2 text-right space-x-2">
+                      <button
+                        type="button"
+                        onClick={() => setCapturaVideo({ setId: s._id, numero: s.numeroSet })}
+                        className="rounded border border-brand-300 px-3 py-1.5 text-xs text-brand-700 hover:bg-brand-50"
+                        title="Tiempos del set, outs y línea de vivos sobre el video"
+                      >
+                        Con video
+                      </button>
                       {onAbrirCaptura ? (
                         <button
                           type="button"
@@ -208,6 +224,21 @@ const ModalGestionSets = ({ partidoId, isOpen, onClose, onAbrirCaptura, modalida
         cancelLabel="Cancelar"
         variant="danger"
       />
+      {capturaVideo && (
+        <ModalBase
+          isOpen
+          onClose={() => setCapturaVideo(null)}
+          title={`Set ${capturaVideo.numero} · captura con video`}
+          size="xl"
+        >
+          <CapturaSetOficial
+            api={apiCaptura}
+            fetcher={fetcherCaptura}
+            partidoId={partidoId}
+            setPartidoId={capturaVideo.setId}
+          />
+        </ModalBase>
+      )}
     </ModalBase>
   );
 };
