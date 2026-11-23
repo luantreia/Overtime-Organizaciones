@@ -1,9 +1,10 @@
+import type { PartidoEstado } from '../../../shared/types/modelos.generado';
 import { authFetch } from '../../../shared/utils/authFetch';
 import type { Partido, JugadorPartido, Competencia } from '../../../types';
 
 type PartidoQuery = {
   equipoId: string;
-  estado?: 'programado' | 'en_juego' | 'finalizado' | 'cancelado';
+  estado?: PartidoEstado;
   competenciaId?: string;
 };
 
@@ -177,7 +178,7 @@ type BackendPartido = {
   equipoVisitante?: BackendEquipoRef | string;
   marcadorLocal?: number;
   marcadorVisitante?: number;
-  estado?: 'programado' | 'en_juego' | 'finalizado' | 'cancelado' | string;
+  estado?: PartidoEstado;
   etapa?: string;
 };
 
@@ -187,13 +188,11 @@ const mapCompetencia = (data?: BackendPartido['competencia']): Competencia | und
     return {
       id: data,
       nombre: 'Competencia',
-      estado: 'activa',
     };
   }
   return {
     id: data._id,
     nombre: data.nombre ?? 'Competencia',
-    estado: 'activa',
   };
 };
 
@@ -212,10 +211,8 @@ const mapEquipoNombre = (equipo?: BackendEquipoRef | string): { id: string; nomb
 export const mapEstadoPartido = (estado?: BackendPartido['estado']): Partido['estado'] => {
   switch (estado) {
     case 'programado':
-    case 'pendiente':
       return 'programado';
     case 'en_juego':
-    case 'confirmado':
       return 'en_juego';
     case 'finalizado':
       return 'finalizado';

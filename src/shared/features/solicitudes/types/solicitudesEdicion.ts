@@ -1,40 +1,6 @@
-export type SolicitudEdicionEstado = 'pendiente' | 'aceptado' | 'rechazado' | 'cancelado';
-
-export type SolicitudEdicionTipo =
-  //pagina partido
-  | 'resultadoPartido'
-  | 'resultadoSet'
-  | 'estadisticasJugadorPartido'
-  | 'estadisticasJugadorSet'
-  | 'estadisticas-set-propuesta'
-  | 'estadisticas-partido-propuesta'
-  // Publicación agrupada por set: reemplaza a la solicitud por fila de
-  // 'estadisticasJugadorSet', que dejaba una entrada por jugador en la bandeja.
-  | 'estadisticasJugadorSet-lote'
-  // Un equipo pide que su planilla propia pase a ser dato oficial de la competencia.
-  | 'planilla-equipo-oficializacion'
-  | 'estadisticasEquipoPartido'
-  | 'estadisticasEquipoSet'
-  //pagina jugador
-  | 'jugador-equipo-crear'
-  | 'jugador-equipo-eliminar'
-  | 'jugador-equipo-editar'
-  | 'contratoEquipoCompetencia'
-  //pagina competencias
-  | 'participacion-temporada-crear'
-  | 'participacion-temporada-actualizar'
-  | 'participacion-temporada-eliminar'
-  //pagina competencias/temporada
-  | 'jugador-temporada-crear'
-  | 'jugador-temporada-actualizar'
-  | 'jugador-temporada-eliminar'
-  //pagina usuario
-  | 'usuario-crear-jugador'
-  | 'usuario-crear-equipo'
-  | 'usuario-crear-organizacion'
-  | 'usuario-solicitar-admin-jugador'
-  | 'usuario-solicitar-admin-equipo'
-  | 'usuario-solicitar-admin-organizacion';
+import type { SolicitudEdicionEstado, SolicitudEdicionTipo } from '../../../types/modelos.generado';
+// Enums derivados del schema de Mongoose (npm run tipos en overtime/). No redeclarar a mano.
+export type { SolicitudEdicionEstado, SolicitudEdicionTipo };
 
 export interface ISolicitudEdicion {
   _id: string;

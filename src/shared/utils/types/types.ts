@@ -1,3 +1,4 @@
+import type { PartidoEstado, CompetenciaEstado } from '../../types/modelos.generado';
 // =====================================================================================
 // TYPES CONSOLIDADOS - overtime-gestion-organizaciones
 // Ubicación: shared/utils/types/types.ts
@@ -116,7 +117,7 @@ export interface ContratoJugadorResumen {
 export interface Competencia {
   id: string;
   nombre: string;
-  estado: 'activa' | 'finalizada' | 'inscripcion';
+  estado?: CompetenciaEstado;
   faseActual?: string;
   posicionActual?: number;
 }
@@ -153,7 +154,7 @@ export interface EquipoCompetencia {
 // TIPOS DE PARTIDOS
 // ========================================
 
-export type EstadoPartido = 'programado' | 'en_juego' | 'finalizado' | 'cancelado';
+export type EstadoPartido = PartidoEstado;
 
 export interface SetPartido {
   _id: string;

@@ -1,3 +1,4 @@
+import type { PartidoEstado } from '../../../../shared/types/modelos.generado';
 import { toDatetimeLocalValue } from '../../../../utils/formatDate';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import ModalBase from '../../../../shared/components/ModalBase/ModalBase';
@@ -33,7 +34,7 @@ const ModalInformacionPartido = ({ partidoId, isOpen, onClose, onEliminar }: Mod
   const [datosEdicion, setDatosEdicion] = useState<{
     fecha: string;
     ubicacion: string;
-    estado: string;
+    estado: PartidoEstado;
     nombrePartido: string;
     marcadorLocal: number;
     marcadorVisitante: number;
@@ -358,7 +359,7 @@ const ModalInformacionPartido = ({ partidoId, isOpen, onClose, onEliminar }: Mod
                     <select id="modalinformacionpartido-estado"
                       value={datosEdicion.estado}
                       onChange={(e) =>
-                        setDatosEdicion((prev) => (prev ? { ...prev, estado: e.target.value } : prev))
+                        setDatosEdicion((prev) => (prev ? { ...prev, estado: e.target.value as PartidoEstado } : prev))
                       }
                       className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
                     >
