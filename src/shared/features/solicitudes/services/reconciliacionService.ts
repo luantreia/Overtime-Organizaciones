@@ -58,6 +58,8 @@ export interface PublicarReconciliacionBody {
   fuentePorEquipo: Record<string, string>;
   visibilidad: 'organizacion' | 'publica';
   confirmarSobrescritura?: boolean;
+  /** Sets que ya existen en el partido y deben tomar el resultado de la planilla. */
+  pisarSets?: number[];
 }
 
 export interface ResultadoPublicacion {

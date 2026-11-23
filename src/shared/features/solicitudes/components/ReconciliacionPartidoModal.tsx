@@ -64,6 +64,8 @@ const ReconciliacionPartidoModal: React.FC<Props> = ({ partidoId, isOpen, onClos
   const [publicando, setPublicando] = useState(false);
   const [confirmacion, setConfirmacion] = useState<ConfirmacionRequerida | null>(null);
   const [resultado, setResultado] = useState<ResultadoPublicacion | null>(null);
+  // Sets existentes que toman el resultado de la planilla (por defecto ninguno: no se pisan).
+  const [pisarSets, setPisarSets] = useState<Set<number>>(() => new Set());
 
   useEffect(() => {
     if (!isOpen) return undefined;
@@ -116,6 +118,7 @@ const ReconciliacionPartidoModal: React.FC<Props> = ({ partidoId, isOpen, onClos
         fuentePorEquipo: eleccion,
         visibilidad,
         confirmarSobrescritura: confirmar,
+        pisarSets: [...pisarSets],
       });
       if ('confirmacion' in r) {
         setConfirmacion(r.confirmacion);
@@ -342,6 +345,7 @@ const ReconciliacionPartidoModal: React.FC<Props> = ({ partidoId, isOpen, onClos
                       {fuentesConSets.map((f) => (
                         <th key={f.id} className="pb-2 pr-3">{etiquetaFuente(f)}</th>
                       ))}
+                      <th className="pb-2">Usar planilla</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -356,14 +360,32 @@ const ReconciliacionPartidoModal: React.FC<Props> = ({ partidoId, isOpen, onClos
                         {fuentesConSets.map((f) => (
                           <td key={f.id} className="py-1.5 pr-3 text-xs text-slate-600">{s.valores[f.id] ?? '—'}</td>
                         ))}
+                        <td className="py-1.5">
+                          {/* Sólo tiene sentido en sets que ya existen y alguna planilla trae otro ganador. */}
+                          {FUENTE_OFICIAL in s.valores && s.difiere ? (
+                            <input
+                              type="checkbox"
+                              checked={pisarSets.has(s.numeroSet)}
+                              onChange={(e) => {
+                                const next = new Set(pisarSets);
+                                if (e.target.checked) next.add(s.numeroSet);
+                                else next.delete(s.numeroSet);
+                                setPisarSets(next);
+                              }}
+                              aria-label={`Usar el resultado de la planilla en el set ${s.numeroSet}`}
+                              className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
+                            />
+                          ) : null}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
               <p className="text-xs text-slate-500">
-                Los ganadores de set no se cambian desde acá: definen el marcador y la tabla de posiciones,
-                y se corrigen desde el partido. Al publicar sólo se crean los sets que todavía no existen.
+                Al publicar se crean los sets que el partido todavía no tiene, con el resultado de la planilla.
+                Los que ya existen quedan como están, salvo los que marques en «Usar planilla». Crear o cambiar
+                sets recalcula el marcador del partido.
               </p>
             </section>
           )}

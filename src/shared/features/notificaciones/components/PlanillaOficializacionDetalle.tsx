@@ -7,6 +7,7 @@ import {
   type RevisionPlanilla,
 } from '../../solicitudes/services/planillaRevisionService';
 import ReconciliacionPartidoModal from '../../solicitudes/components/ReconciliacionPartidoModal';
+import { getSeleccion, setSeleccion } from './SeleccionAprobacion';
 
 /**
  * Lo que ve el organizador antes de aprobar la oficialización de una planilla.
@@ -19,6 +20,11 @@ import ReconciliacionPartidoModal from '../../solicitudes/components/Reconciliac
 
 interface Props {
   planillaId: string;
+  /**
+   * Si viene (solicitud pendiente), el visor deja elegir qué incorporar: jugadores, sets y qué
+   * sets existentes toman el resultado de la planilla. La elección la lee el botón Aprobar.
+   */
+  solicitudId?: string;
 }
 
 type Totales = { throws: number; hits: number; outs: number; catches: number };
@@ -27,7 +33,19 @@ const CAMPOS: Array<keyof Totales> = ['throws', 'hits', 'outs', 'catches'];
 
 const VACIO: Totales = { throws: 0, hits: 0, outs: 0, catches: 0 };
 
-const PlanillaOficializacionDetalle: React.FC<Props> = ({ planillaId }) => {
+const SELECCION_VACIA = { presentes: null as Set<string> | null, incluirSets: true, pisar: new Set<number>() };
+
+const PlanillaOficializacionDetalle: React.FC<Props> = ({ planillaId, solicitudId }) => {
+  // presentes: null = todos (lo mismo que no haber tocado nada).
+  const [sel, setSel] = useState(() => {
+    const previa = solicitudId ? getSeleccion(solicitudId) : undefined;
+    if (!previa) return SELECCION_VACIA;
+    return {
+      presentes: Array.isArray(previa.presentes) ? new Set(previa.presentes as string[]) : null,
+      incluirSets: previa.sets !== false,
+      pisar: new Set(Array.isArray(previa.pisarSets) ? (previa.pisarSets as number[]) : []),
+    };
+  });
   const [revision, setRevision] = useState<RevisionPlanilla | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -87,6 +105,46 @@ const PlanillaOficializacionDetalle: React.FC<Props> = ({ planillaId }) => {
     return idEq && idEq !== equipoDueñoId;
   });
   const equipoDueñoJuega = !equiposDelPartido?.length || equiposDelPartido.some((eq) => eq._id === equipoDueñoId);
+
+  // ── Selección ──────────────────────────────────────────────────────────────
+  const editable = Boolean(solicitudId);
+  const todosIds = planilla.presentes.map((p) => p._id);
+  const elegido = (id: string) => sel.presentes === null || sel.presentes.has(id);
+  const oficialPorNumero = new Map(oficial.sets.map((x) => [x.numeroSet, x.ganadorSet]));
+  // Sets que el partido ya tiene con otro resultado (o sin ganador) y la planilla sí trae uno.
+  const setsEnConflicto = planilla.sets.filter(
+    (x) => oficialPorNumero.has(x.numeroSet) && x.ganadorSet !== 'pendiente' && oficialPorNumero.get(x.numeroSet) !== x.ganadorSet,
+  );
+  const guardar = (next: typeof sel) => {
+    setSel(next);
+    if (!solicitudId) return;
+    const todos = next.presentes === null || next.presentes.size === todosIds.length;
+    const esTodo = todos && next.incluirSets && next.pisar.size === 0;
+    setSeleccion(
+      solicitudId,
+      esTodo
+        ? null
+        : {
+            presentes: next.presentes === null ? todosIds : [...next.presentes],
+            sets: next.incluirSets,
+            pisarSets: [...next.pisar],
+          },
+    );
+  };
+  const togglePresente = (id: string, v: boolean) => {
+    const base = new Set(sel.presentes ?? todosIds);
+    if (v) base.add(id);
+    else base.delete(id);
+    guardar({ ...sel, presentes: base });
+  };
+  const togglePisar = (n: number, v: boolean) => {
+    const base = new Set(sel.pisar);
+    if (v) base.add(n);
+    else base.delete(n);
+    guardar({ ...sel, pisar: base });
+  };
+  const nombreGanador = (g: string) =>
+    g === 'local' ? 'local' : g === 'visitante' ? 'visitante' : g === 'empate' ? 'empate' : 'sin ganador';
 
   return (
     <div className="space-y-3">
@@ -148,7 +206,8 @@ const PlanillaOficializacionDetalle: React.FC<Props> = ({ planillaId }) => {
           </ul>
           <p className="mt-1.5 text-xs">
             Los sets y jugadores que ya existen no se tocan: se reutilizan tal como están, incluido
-            el resultado de cada set.
+            el resultado de cada set, salvo los sets que marques abajo para tomar el resultado de la
+            planilla.
           </p>
         </div>
       )}
@@ -157,6 +216,11 @@ const PlanillaOficializacionDetalle: React.FC<Props> = ({ planillaId }) => {
         <table className="w-full min-w-[560px] text-sm">
           <thead>
             <tr className="border-b border-slate-200 text-left text-2xs font-bold uppercase tracking-wide text-muted">
+              {editable && (
+                <th className="w-8 pb-2 pr-2">
+                  <span className="sr-only">Incorporar</span>
+                </th>
+              )}
               <th className="pb-2 pr-3">Jugador</th>
               {hayPresentesDeOtroEquipo && <th className="pb-2 pr-3">Equipo</th>}
               {CAMPOS.map((campo) => (
@@ -178,7 +242,21 @@ const PlanillaOficializacionDetalle: React.FC<Props> = ({ planillaId }) => {
                 actual !== undefined && CAMPOS.some((c) => actual[c] !== propuesto[c]);
 
               return (
-                <tr key={presente._id} className="border-b border-slate-100 last:border-0">
+                <tr
+                  key={presente._id}
+                  className={`border-b border-slate-100 last:border-0 ${editable && !elegido(presente._id) ? 'opacity-50' : ''}`}
+                >
+                  {editable && (
+                    <td className="py-1.5 pr-2">
+                      <input
+                        type="checkbox"
+                        checked={elegido(presente._id)}
+                        onChange={(e) => togglePresente(presente._id, e.target.checked)}
+                        aria-label={`Incorporar a ${nombreDeJugador(presente.jugador)}`}
+                        className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
+                      />
+                    </td>
+                  )}
                   <td className="py-1.5 pr-3 text-slate-800">
                     {nombreDeJugador(presente.jugador)}
                     {!presente.jugadorPartido && (
@@ -223,6 +301,48 @@ const PlanillaOficializacionDetalle: React.FC<Props> = ({ planillaId }) => {
         en el mismo orden que las columnas. Un «—» significa que ese jugador todavía no tiene
         estadísticas oficiales en este partido.
       </p>
+
+      {editable && planilla.modo === 'sets' && planilla.sets.length > 0 && (
+        <div className="space-y-2 rounded-lg border border-slate-200 p-3">
+          <p className="text-2xs font-bold uppercase tracking-wide text-muted">Sets</p>
+          <label className="flex cursor-pointer items-start gap-2 text-sm text-slate-700">
+            <input
+              type="checkbox"
+              checked={sel.incluirSets}
+              onChange={(e) => guardar({ ...sel, incluirSets: e.target.checked, pisar: e.target.checked ? sel.pisar : new Set() })}
+              className="mt-0.5 h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
+            />
+            <span>
+              Incorporar los sets de la planilla
+              {setsNuevos > 0 ? <> (se crean los {setsNuevos} que el partido no tiene, con su resultado)</> : null}.
+              <span className="block text-xs text-slate-500">
+                Si lo destildás, las estadísticas se cargan sólo en los sets que el partido ya tiene.
+              </span>
+            </span>
+          </label>
+          {sel.incluirSets && setsEnConflicto.length > 0 && (
+            <div className="border-t border-slate-100 pt-2">
+              <p className="mb-1 text-xs text-slate-600">
+                Estos sets ya existen con otro resultado. Marcá los que deben tomar el de la planilla:
+              </p>
+              {setsEnConflicto.map((x) => (
+                <label key={x.numeroSet} className="flex cursor-pointer items-center gap-2 py-0.5 text-sm text-slate-700">
+                  <input
+                    type="checkbox"
+                    checked={sel.pisar.has(x.numeroSet)}
+                    onChange={(e) => togglePisar(x.numeroSet, e.target.checked)}
+                    className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
+                  />
+                  <span>
+                    Set {x.numeroSet}: hoy <b>{nombreGanador(oficialPorNumero.get(x.numeroSet) ?? '')}</b> → planilla{' '}
+                    <b>{nombreGanador(x.ganadorSet)}</b>
+                  </span>
+                </label>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {oficial.sets.length > 0 && (
         <p className="text-xs text-slate-500">
