@@ -78,6 +78,23 @@ export interface RevisionPlanilla {
   planilla: PlanillaCompleta;
   /** Nombres de local y visitante del partido — para mostrar de qué equipo es cada presente. */
   equiposDelPartido: Array<{ _id: string; nombre?: string }>;
+  /**
+   * Qué de lo capturado con video pasaría al partido al aprobar. Misma regla que el traspaso
+   * (planillaOficializacionService.js → trasladarCaptura). Por set: 'pasa', 'ya_tiene' (el set
+   * oficial ya lo tiene y no se pisa), 'reloj' (relojes distintos: no se traslada) o null (la
+   * planilla no lo tiene). Opcional: backends anteriores no lo mandan.
+   */
+  captura?: {
+    camarasNuevas: Array<{ youtubeId: string; etiqueta: string }>;
+    relojesDistintos: boolean;
+    sets: Array<{
+      numeroSet: number;
+      tiempo: EstadoTraspaso;
+      alineacion: Exclude<EstadoTraspaso, 'reloj'>;
+      marcas: number;
+      marcasEstado: EstadoTraspaso;
+    }>;
+  };
   oficial: {
     sets: Array<{ _id: string; numeroSet: number; ganadorSet: string }>;
     /** Convocatoria oficial de CADA equipo del partido, no sólo el dueño de la planilla — clave por equipoId. */
@@ -85,6 +102,8 @@ export interface RevisionPlanilla {
     estadisticas: EstadisticaOficial[];
   };
 }
+
+export type EstadoTraspaso = 'pasa' | 'ya_tiene' | 'reloj' | null;
 
 export const getRevisionPlanilla = (planillaId: string) =>
   authFetch<RevisionPlanilla>(`/planillas-equipo/${planillaId}/revision`);

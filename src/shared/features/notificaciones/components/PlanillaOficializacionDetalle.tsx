@@ -4,6 +4,7 @@ import {
   nombreDeJugador,
   totalesPlanilla,
   totalesOficiales,
+  type EstadoTraspaso,
   type RevisionPlanilla,
 } from '../../solicitudes/services/planillaRevisionService';
 import ReconciliacionPartidoModal from '../../solicitudes/components/ReconciliacionPartidoModal';
@@ -85,7 +86,7 @@ const PlanillaOficializacionDetalle: React.FC<Props> = ({ planillaId, solicitudI
 
   if (!revision) return null;
 
-  const { planilla, oficial, equiposDelPartido } = revision;
+  const { planilla, oficial, equiposDelPartido, captura } = revision;
   const dePlanilla = totalesPlanilla(planilla);
   const deOficial = totalesOficiales(revision);
 
@@ -344,11 +345,75 @@ const PlanillaOficializacionDetalle: React.FC<Props> = ({ planillaId, solicitudI
         </div>
       )}
 
+      {captura && (captura.camarasNuevas.length > 0 || captura.sets.length > 0) && (
+        <CapturaAlAprobar captura={captura} incluirSets={sel.incluirSets} />
+      )}
+
       {oficial.sets.length > 0 && (
         <p className="text-xs text-slate-500">
           El partido ya tiene {oficial.sets.length} set{oficial.sets.length === 1 ? '' : 's'}{' '}
           cargado{oficial.sets.length === 1 ? '' : 's'} por la organización.
         </p>
+      )}
+    </div>
+  );
+};
+
+const ETIQUETA: Record<'pasa' | 'ya_tiene' | 'reloj', { texto: string; clase: string }> = {
+  pasa: { texto: 'pasa', clase: 'text-emerald-700' },
+  ya_tiene: { texto: 'ya tiene, no se pisa', clase: 'text-muted' },
+  reloj: { texto: 'no pasa (reloj)', clase: 'text-amber-700' },
+};
+
+/** Video, tiempos y marcas: qué pasa al partido si se aprueba. */
+const CapturaAlAprobar: React.FC<{ captura: NonNullable<RevisionPlanilla['captura']>; incluirSets: boolean }> = ({
+  captura,
+  incluirSets,
+}) => {
+  const celda = (estado: EstadoTraspaso, texto?: string) => {
+    if (!estado) return <span className="text-muted">—</span>;
+    // Sin sets incorporados, el traspaso de tiempos/marcas/alineación no corre.
+    const e = !incluirSets ? null : ETIQUETA[estado];
+    if (!e) return <span className="text-muted">no pasa (sets destildados)</span>;
+    return <span className={e.clase}>{texto && estado === 'pasa' ? texto : e.texto}</span>;
+  };
+  return (
+    <div className="space-y-2 rounded-lg border border-slate-200 p-3">
+      <p className="text-2xs font-bold uppercase tracking-wide text-muted">Video y marcas</p>
+      {captura.camarasNuevas.length > 0 && (
+        <p className="text-sm text-slate-700">
+          Se suma{captura.camarasNuevas.length === 1 ? '' : 'n'} {captura.camarasNuevas.length} cámara
+          {captura.camarasNuevas.length === 1 ? '' : 's'} al partido:{' '}
+          {captura.camarasNuevas.map((c) => c.etiqueta || c.youtubeId).join(', ')}.
+        </p>
+      )}
+      {captura.relojesDistintos && (
+        <p className="rounded-md bg-amber-50 px-2 py-1.5 text-xs text-amber-900">
+          Las cámaras de la planilla están alineadas distinto que las del partido: sus tiempos y marcas
+          caerían en otro momento del video, así que no se trasladan. Las cámaras nuevas y la alineación sí.
+        </p>
+      )}
+      {captura.sets.length > 0 && (
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-slate-200 text-left text-2xs font-bold uppercase tracking-wide text-muted">
+              <th className="pb-1 pr-3">Set</th>
+              <th className="pb-1 pr-3">Tiempo</th>
+              <th className="pb-1 pr-3">Alineación</th>
+              <th className="pb-1">Marcas</th>
+            </tr>
+          </thead>
+          <tbody className="text-xs">
+            {captura.sets.map((x) => (
+              <tr key={x.numeroSet} className="border-b border-slate-100 last:border-0">
+                <td className="py-1 pr-3 text-sm text-slate-800">{x.numeroSet}</td>
+                <td className="py-1 pr-3">{celda(x.tiempo)}</td>
+                <td className="py-1 pr-3">{celda(x.alineacion)}</td>
+                <td className="py-1">{celda(x.marcasEstado, `pasan ${x.marcas}`)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       )}
     </div>
   );
