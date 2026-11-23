@@ -173,7 +173,7 @@ export const VisualBracket: React.FC<VisualBracketProps> = ({ matches, onMatchCl
                         : 'border-slate-200 hover:border-brand-400 hover:shadow-md'}
                       ${onReorder ? 'cursor-grab active:cursor-grabbing' : ''}`}
                   >
-                    {(m.estado === 'en_juego' || m.estado === 'finalizado') && (
+                    {(m.estado === 'en_juego' || m.estado === 'finalizado' || m.estado === 'suspendido') && (
                       <div className="absolute right-0 top-0 z-10">
                         {m.estado === 'en_juego' && (
                           <span className="rounded-bl-md bg-red-500 px-1.5 py-0.5 text-2xs font-black uppercase tracking-tighter text-white animate-pulse">En Vivo</span>

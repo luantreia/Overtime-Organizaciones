@@ -366,6 +366,7 @@ const ModalInformacionPartido = ({ partidoId, isOpen, onClose, onEliminar }: Mod
                       <option value="programado">Programado</option>
                       <option value="en_juego">En Juego</option>
                       <option value="finalizado">Finalizado</option>
+                      <option value="suspendido">Suspendido</option>
                       <option value="cancelado">Cancelado</option>
                     </select>
                   </div>

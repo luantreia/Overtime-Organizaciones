@@ -14,6 +14,7 @@ const ESTADOS: Array<{ value: Partido['estado']; label: string }> = [
   { value: 'programado', label: 'Programado' },
   { value: 'en_juego', label: 'En juego' },
   { value: 'finalizado', label: 'Finalizado' },
+  { value: 'suspendido', label: 'Suspendido' },
   { value: 'cancelado', label: 'Cancelado' },
 ];
 

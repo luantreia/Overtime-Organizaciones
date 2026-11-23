@@ -217,6 +217,8 @@ export const mapEstadoPartido = (estado?: BackendPartido['estado']): Partido['es
       return 'en_juego';
     case 'finalizado':
       return 'finalizado';
+    case 'suspendido':
+      return 'suspendido';
     case 'cancelado':
       return 'cancelado';
     default:
@@ -235,6 +237,8 @@ export const mapEstadoPartidoToBackend = (
       return 'en_juego';
     case 'finalizado':
       return 'finalizado';
+    case 'suspendido':
+      return 'suspendido';
     case 'cancelado':
       return 'cancelado';
     default:

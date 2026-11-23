@@ -603,7 +603,10 @@ export default function GestionParticipantesFaseModal({
       const matchSearch = search === '' || 
         (p.localNombre || '').toLowerCase().includes(search) ||
         (p.visitanteNombre || '').toLowerCase().includes(search);
-      const matchEstado = filterEstado === 'all' || p.estado === filterEstado;
+      const matchEstado =
+        filterEstado === 'all' ||
+        p.estado === filterEstado ||
+        (filterEstado === 'programado' && p.estado === 'suspendido');
       return matchSearch && matchEstado;
     });
   }, [partidosOrdenados, searchTerm, filterEstado]);
@@ -670,6 +673,7 @@ export default function GestionParticipantesFaseModal({
   const borderByEstado = (estado: string) => {
     if (estado === 'finalizado') return 'border-l-4 border-l-emerald-400';
     if (estado === 'en_juego')   return 'border-l-4 border-l-amber-400';
+    if (estado === 'suspendido') return 'border-l-4 border-l-orange-400';
     return 'border-l-4 border-l-slate-200';
   };
 

@@ -112,7 +112,7 @@ const DashboardOrgPage = () => {
 
         for (const { competencia, detalle, partidos } of resultados) {
           for (const p of partidos) {
-            if (p.estado !== 'programado' && p.estado !== 'en_juego') continue;
+            if (p.estado !== 'programado' && p.estado !== 'en_juego' && p.estado !== 'suspendido') continue;
             const fechaPartido = new Date(p.hora ? `${p.fecha}T${p.hora}` : p.fecha);
             if (Number.isNaN(fechaPartido.getTime())) continue;
             if (fechaPartido < ahora) pendientes.push({ ...p, competenciaId: competencia._id });

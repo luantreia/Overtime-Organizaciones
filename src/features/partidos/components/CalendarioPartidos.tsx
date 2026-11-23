@@ -11,6 +11,7 @@ const ESTADO_STYLE: Record<string, { chip: string; dot: string; label: string }>
   programado:   { chip: 'bg-blue-50 text-blue-800 hover:bg-blue-100',    dot: 'bg-blue-400',    label: 'Programado' },
   en_juego:     { chip: 'bg-amber-50 text-amber-800 hover:bg-amber-100', dot: 'bg-amber-400',   label: 'En juego' },
   finalizado:   { chip: 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100', dot: 'bg-emerald-400', label: 'Finalizado' },
+  suspendido:   { chip: 'bg-amber-100 text-amber-800 hover:bg-amber-200', dot: 'bg-amber-600', label: 'Suspendido' },
   cancelado:    { chip: 'bg-slate-100 text-muted',                   dot: 'bg-slate-300',   label: 'Cancelado' },
 };
 
