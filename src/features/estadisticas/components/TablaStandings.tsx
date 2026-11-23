@@ -75,7 +75,7 @@ export const TablaStandings: FC<Props> = ({ partidos, title = 'Rendimiento por e
   const [isShareOpen, setIsShareOpen] = useState(false);
   if (rows.length === 0) {
     return (
-      <div className="bg-white p-6 rounded-lg shadow text-center text-gray-500">
+      <div className="bg-white p-6 rounded-lg shadow text-center text-slate-500">
         <h4 className="text-lg font-semibold mb-2">{title}</h4>
         <p>No hay partidos finalizados en el filtro actual.</p>
       </div>
@@ -110,7 +110,7 @@ export const TablaStandings: FC<Props> = ({ partidos, title = 'Rendimiento por e
         pageSize={0}
         mobile="scroll"
         columns={[
-          { id: 'equipo', header: 'Equipo', sortValue: (r) => r.equipo, cell: (r) => <span className="whitespace-nowrap font-medium text-gray-900">{r.equipo}</span> },
+          { id: 'equipo', header: 'Equipo', sortValue: (r) => r.equipo, cell: (r) => <span className="whitespace-nowrap font-medium text-slate-900">{r.equipo}</span> },
           { id: 'j', header: <abbr title="Jugados" className="no-underline">J</abbr>, align: 'center', sortValue: (r) => r.j, cell: (r) => r.j },
           { id: 'w', header: <abbr title="Ganados" className="no-underline">W</abbr>, align: 'center', sortValue: (r) => r.w, cell: (r) => r.w },
           { id: 'd', header: <abbr title="Empatados" className="no-underline">D</abbr>, align: 'center', sortValue: (r) => r.d, cell: (r) => r.d },

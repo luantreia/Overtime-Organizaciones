@@ -52,7 +52,7 @@ export const ShareStandingsModal: React.FC<ShareStandingsModalProps> = ({
       <div className="p-6 flex flex-col items-center">
         <div
           ref={cardRef}
-          className="w-[480px] rounded-3xl overflow-hidden relative shadow-2xl bg-gradient-to-br from-brand-600 to-indigo-700 p-8 flex flex-col text-white"
+          className="w-[480px] rounded-3xl overflow-hidden relative shadow-2xl bg-gradient-to-br from-brand-600 to-brand-700 p-8 flex flex-col text-white"
         >
           <div className="absolute top-0 right-0 p-8 opacity-20 pointer-events-none">
             <div className="text-4xl font-black transform rotate-12">OVERTIME</div>

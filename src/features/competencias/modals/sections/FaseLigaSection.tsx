@@ -43,6 +43,7 @@ export default function FaseLigaSection({ participantes, esAdmin, onUpdate, onDe
         return (
         <div key={div} className="rounded-lg border border-slate-200 bg-white p-3">
           <p className="text-xs font-semibold text-slate-700">División {div || '—'}</p>
+          <div className="overflow-x-auto">
           <table className="mt-2 w-full text-left text-xs">
             <thead>
               <tr className="text-slate-500">
@@ -96,6 +97,7 @@ export default function FaseLigaSection({ participantes, esAdmin, onUpdate, onDe
               ) : null}
             </tbody>
           </table>
+          </div>
         </div>
         );
       })}

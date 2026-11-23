@@ -782,7 +782,7 @@ export default function GestionParticipantesFaseModal({
                 {p.etapa ? p.etapa.replace('_', ' ') : (p.grupo ? `Grupo ${p.grupo}` : (p.division ? `División ${p.division}` : 'Partido'))}
               </span>
               {puedeEditarEtapa && (
-                <svg viewBox="0 0 16 16" fill="currentColor" className="h-2.5 w-2.5 text-muted opacity-0 group-hover:opacity-100 transition-opacity">
+                <svg viewBox="0 0 16 16" fill="currentColor" className="h-2.5 w-2.5 text-muted [@media(hover:hover)]:opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity">
                   <path d="M11.013 1.427a1.75 1.75 0 012.474 2.474l-8.5 8.5a1.75 1.75 0 01-.734.44l-3.001.9a.25.25 0 01-.31-.31l.9-3a1.75 1.75 0 01.439-.733l8.5-8.5z" />
                 </svg>
               )}
@@ -798,7 +798,7 @@ export default function GestionParticipantesFaseModal({
                 {new Date(p.fecha).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' })} {p.hora ? `· ${p.hora}` : ''}
               </span>
               {puedeEditarFecha && (
-                <svg viewBox="0 0 16 16" fill="currentColor" className="h-2.5 w-2.5 text-muted opacity-0 group-hover:opacity-100 transition-opacity">
+                <svg viewBox="0 0 16 16" fill="currentColor" className="h-2.5 w-2.5 text-muted [@media(hover:hover)]:opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity">
                   <path d="M11.013 1.427a1.75 1.75 0 012.474 2.474l-8.5 8.5a1.75 1.75 0 01-.734.44l-3.001.9a.25.25 0 01-.31-.31l.9-3a1.75 1.75 0 01.439-.733l8.5-8.5z" />
                 </svg>
               )}
@@ -1496,7 +1496,7 @@ export default function GestionParticipantesFaseModal({
                                  >
                                     <div className="flex items-center justify-between text-2xs font-black text-brand-400 uppercase mb-1">
                                        <span>{idx % 2 === 0 ? 'Rama Superior' : 'Rama Inferior'}</span>
-                                       <span className="opacity-0 group-hover:opacity-100 transition-opacity">Auto-completar ⚡</span>
+                                       <span className="[@media(hover:hover)]:opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity">Auto-completar ⚡</span>
                                     </div>
                                     <div className="text-2xs font-bold text-slate-700 leading-tight">
                                        Ganador {s.labelMatch1} <br/> <span className="text-muted font-bold px-0.5 whitespace-nowrap">vs</span> <br/> Ganador {s.labelMatch2}
@@ -1540,7 +1540,7 @@ export default function GestionParticipantesFaseModal({
                                     {escudo ? <img src={escudo} alt={nombre} className="h-full w-full object-contain" /> : '🛡️'}
                                   </div>
                                   <span className="truncate flex-1">{nombre}</span>
-                                  {!isSelected && <span className="text-muted opacity-0 group-hover:opacity-100 transition-opacity">⠿</span>}
+                                  {!isSelected && <span className="text-muted [@media(hover:hover)]:opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity">⠿</span>}
                                 </div>
                               );
                            })}
@@ -1762,8 +1762,8 @@ export default function GestionParticipantesFaseModal({
                     {partidosEnCola.length > 0 && (
                       <div className="mt-6 border-t border-slate-100 pt-6 animate-in slide-in-from-bottom-2 duration-300">
                         <div className="flex items-center justify-between mb-4">
-                          <h6 className="text-[11px] font-black text-indigo-600 uppercase tracking-widest flex items-center gap-2">
-                             <span className="flex h-5 w-5 items-center justify-center rounded bg-indigo-100 text-2xs">📋</span>
+                          <h6 className="text-[11px] font-black text-brand-600 uppercase tracking-widest flex items-center gap-2">
+                             <span className="flex h-5 w-5 items-center justify-center rounded bg-brand-100 text-2xs">📋</span>
                              Partidos Listos para Generar ({partidosEnCola.length})
                           </h6>
                           <button onClick={() => setPartidosEnCola([])} className="text-2xs text-red-500 font-bold hover:underline">Limpiar lista</button>
@@ -1771,13 +1771,13 @@ export default function GestionParticipantesFaseModal({
                         
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
                           {partidosEnCola.map((q, idx) => (
-                            <div key={idx} className="flex items-center justify-between p-3 bg-indigo-50/50 border border-indigo-100 rounded-xl relative group">
+                            <div key={idx} className="flex items-center justify-between p-3 bg-brand-50/50 border border-brand-100 rounded-xl relative group">
                                <button 
                                  onClick={() => setPartidosEnCola(prev => prev.filter((_, i) => i !== idx))}
-                                 className="absolute -top-2 -right-2 bg-white text-red-500 rounded-full w-5 h-5 flex items-center justify-center text-2xs shadow-sm border border-red-100 opacity-0 group-hover:opacity-100 transition-opacity"
+                                 className="absolute -top-2 -right-2 bg-white text-red-500 rounded-full w-5 h-5 flex items-center justify-center text-2xs shadow-sm border border-red-100 [@media(hover:hover)]:opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity"
                                >✕</button>
                                <div className="flex flex-col">
-                                 <span className="text-2xs font-black text-indigo-400 uppercase leading-none mb-1">{q.etapa}</span>
+                                 <span className="text-2xs font-black text-brand-400 uppercase leading-none mb-1">{q.etapa}</span>
                                  <span className="text-xs font-bold text-slate-800">{q.localNombre} vs {q.visitanteNombre}</span>
                                </div>
                                <div className="text-right">
@@ -1789,7 +1789,7 @@ export default function GestionParticipantesFaseModal({
 
                         <button
                           type="button"
-                          className="w-full rounded-xl bg-indigo-600 px-4 py-4 text-xs font-black uppercase tracking-[0.2em] text-white hover:bg-indigo-700 shadow-xl shadow-indigo-100 transition flex items-center justify-center gap-3"
+                          className="w-full rounded-xl bg-brand-600 px-4 py-4 text-xs font-black uppercase tracking-[0.2em] text-white hover:bg-brand-700 shadow-xl shadow-brand-100 transition flex items-center justify-center gap-3"
                           onClick={async () => {
                             if (!fase?._id) return;
                             setNotice(`Creando ${partidosEnCola.length} partidos en simultáneo...`);

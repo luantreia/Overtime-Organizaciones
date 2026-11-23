@@ -263,8 +263,8 @@ const ReconciliacionPartidoModal: React.FC<Props> = ({ partidoId, isOpen, onClos
                         onClick={() => setEleccion((prev) => ({ ...prev, [equipo._id]: f.id }))}
                         className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${
                           elegida === f.id
-                            ? 'border-indigo-600 bg-indigo-600 text-white'
-                            : 'border-slate-300 bg-white text-slate-600 hover:border-indigo-400'
+                            ? 'border-brand-600 bg-brand-600 text-white'
+                            : 'border-slate-300 bg-white text-slate-600 hover:border-brand-400'
                         }`}
                       >
                         {f.tipo === 'oficial' ? 'Dejar lo oficial' : etiquetaFuente(f)}
@@ -284,7 +284,7 @@ const ReconciliacionPartidoModal: React.FC<Props> = ({ partidoId, isOpen, onClos
                           {fuentes.map((f) => (
                             <th
                               key={f.id}
-                              className={`pb-2 pr-3 text-right ${elegida === f.id ? 'text-indigo-600' : ''}`}
+                              className={`pb-2 pr-3 text-right ${elegida === f.id ? 'text-brand-600' : ''}`}
                             >
                               {etiquetaFuente(f)}
                               {f.estado && f.tipo === 'planilla' && (
@@ -316,7 +316,7 @@ const ReconciliacionPartidoModal: React.FC<Props> = ({ partidoId, isOpen, onClos
                                   <td
                                     key={f.id}
                                     className={`py-1.5 pr-3 text-right text-xs ${
-                                      elegida === f.id ? 'bg-indigo-50 font-semibold text-slate-900' : distinto ? 'text-amber-700' : 'text-slate-500'
+                                      elegida === f.id ? 'bg-brand-50 font-semibold text-slate-900' : distinto ? 'text-amber-700' : 'text-slate-500'
                                     }`}
                                   >
                                     {v ? CAMPOS.map((c) => `${INICIAL[c]}${v[c]}`).join(' ') : '—'}

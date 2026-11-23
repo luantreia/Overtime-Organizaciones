@@ -161,13 +161,13 @@ const GestionMiembros: React.FC<GestionMiembrosProps> = ({
       suspendido: 'bg-yellow-100 text-yellow-800',
       inactivo: 'bg-red-100 text-red-800',
     };
-    return styles[estado as keyof typeof styles] || 'bg-gray-100 text-gray-800';
+    return styles[estado as keyof typeof styles] || 'bg-slate-100 text-slate-800';
   };
 
   if (!canManageMembers) {
     return (
-      <div className="rounded-lg border border-gray-200 p-6 text-center">
-        <p className="text-gray-500">No tienes permisos para gestionar miembros de esta organización.</p>
+      <div className="rounded-lg border border-slate-200 p-6 text-center">
+        <p className="text-slate-500">No tienes permisos para gestionar miembros de esta organización.</p>
       </div>
     );
   }
@@ -178,7 +178,7 @@ const GestionMiembros: React.FC<GestionMiembrosProps> = ({
         <h3 className="text-lg font-semibold">Miembros de la Organización</h3>
         <Button
           onClick={() => setShowAddForm(true)}
-          className="bg-blue-600 hover:bg-blue-700"
+          className="bg-brand-600 hover:bg-brand-700"
         >
           Agregar Miembro
         </Button>
@@ -186,14 +186,14 @@ const GestionMiembros: React.FC<GestionMiembrosProps> = ({
 
       {/* Formulario de agregar/editar */}
       {showAddForm && (
-        <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+        <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
           <h4 className="mb-4 text-md font-medium">
             {editingMember ? 'Editar Miembro' : 'Agregar Nuevo Miembro'}
           </h4>
           
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div>
-              <label htmlFor="miembro-email" className="mb-1 block text-sm font-medium text-gray-700">
+              <label htmlFor="miembro-email" className="mb-1 block text-sm font-medium text-slate-700">
                 Email del Usuario
               </label>
               <Input
@@ -207,7 +207,7 @@ const GestionMiembros: React.FC<GestionMiembrosProps> = ({
             </div>
             
             <div>
-              <label htmlFor="miembro-rol" className="mb-1 block text-sm font-medium text-gray-700">
+              <label htmlFor="miembro-rol" className="mb-1 block text-sm font-medium text-slate-700">
                 Rol
               </label>
               <Select
@@ -225,7 +225,7 @@ const GestionMiembros: React.FC<GestionMiembrosProps> = ({
           </div>
 
           <div className="mt-4">
-            <label htmlFor="miembro-permisos" className="mb-1 block text-sm font-medium text-gray-700">
+            <label htmlFor="miembro-permisos" className="mb-1 block text-sm font-medium text-slate-700">
               Permisos Adicionales (opcional)
             </label>
             <Select
@@ -247,7 +247,7 @@ const GestionMiembros: React.FC<GestionMiembrosProps> = ({
           </div>
 
           <div className="mt-4">
-            <label htmlFor="miembro-notas" className="mb-1 block text-sm font-medium text-gray-700">
+            <label htmlFor="miembro-notas" className="mb-1 block text-sm font-medium text-slate-700">
               Notas (opcional)
             </label>
             <Input
@@ -262,7 +262,7 @@ const GestionMiembros: React.FC<GestionMiembrosProps> = ({
             <Button
               onClick={editingMember ? handleActualizarMiembro : handleAgregarMiembro}
               disabled={submitting || (!editingMember && !email.trim())}
-              className="bg-blue-600 hover:bg-blue-700"
+              className="bg-brand-600 hover:bg-brand-700"
             >
               {submitting ? 'Guardando...' : editingMember ? 'Actualizar' : 'Agregar'}
             </Button>
@@ -291,8 +291,8 @@ const GestionMiembros: React.FC<GestionMiembrosProps> = ({
             sortValue: (m) => (m.usuarioId as any)?.nombre,
             cell: (m) => (
               <div className="whitespace-nowrap">
-                <div className="text-sm font-medium text-gray-900">{(m.usuarioId as any)?.nombre || 'Usuario'}</div>
-                <div className="text-sm text-gray-500">{(m.usuarioId as any)?.email || ''}</div>
+                <div className="text-sm font-medium text-slate-900">{(m.usuarioId as any)?.nombre || 'Usuario'}</div>
+                <div className="text-sm text-slate-500">{(m.usuarioId as any)?.email || ''}</div>
               </div>
             ),
           },
@@ -300,7 +300,7 @@ const GestionMiembros: React.FC<GestionMiembrosProps> = ({
             id: 'rol',
             header: 'Rol',
             sortValue: (m) => m.rol,
-            cell: (m) => <span className="text-sm text-gray-900">{ORG_MEMBER_ROLE_OPTIONS.find((opt) => opt.value === m.rol)?.label || m.rol}</span>,
+            cell: (m) => <span className="text-sm text-slate-900">{ORG_MEMBER_ROLE_OPTIONS.find((opt) => opt.value === m.rol)?.label || m.rol}</span>,
           },
           {
             id: 'estado',
@@ -308,7 +308,7 @@ const GestionMiembros: React.FC<GestionMiembrosProps> = ({
             sortValue: (m) => m.estado,
             cell: (m) => <span className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${getEstadoBadge(m.estado)}`}>{m.estado}</span>,
           },
-          { id: 'notas', header: 'Notas', hideOnMobile: true, cell: (m) => <span className="text-sm text-gray-500">{m.notas || '-'}</span> },
+          { id: 'notas', header: 'Notas', hideOnMobile: true, cell: (m) => <span className="text-sm text-slate-500">{m.notas || '-'}</span> },
           {
             id: 'acciones',
             header: <span className="sr-only">Acciones</span>,

@@ -318,7 +318,7 @@ export const RankedPlayerSelector: React.FC<RankedPlayerSelectorProps> = ({
             <Button
               size="sm"
               variant="outline"
-              className="text-blue-600 border-blue-200 hover:bg-blue-50 text-xs h-auto py-2.5"
+              className="text-brand-600 border-brand-200 hover:bg-brand-50 text-xs h-auto py-2.5"
               disabled={busy || selected.length === 0}
               onClick={onAddToAzul}
             >

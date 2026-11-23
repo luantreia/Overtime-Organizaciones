@@ -156,6 +156,7 @@ export const PlayerAdvancedSettingsModal: React.FC<PlayerAdvancedSettingsModalPr
                  {history.length === 0 ? (
                    <div className="p-4 text-center text-muted italic">No hay partidos registrados.</div>
                  ) : (
+                   <div className="overflow-x-auto">
                    <table className="w-full">
                       <thead className="bg-slate-50 text-2xs sm:text-2xs text-slate-500 font-bold uppercase">
                          <tr>
@@ -220,6 +221,7 @@ export const PlayerAdvancedSettingsModal: React.FC<PlayerAdvancedSettingsModalPr
                          ))}
                       </tbody>
                    </table>
+                   </div>
                  )}
               </div>
            </div>

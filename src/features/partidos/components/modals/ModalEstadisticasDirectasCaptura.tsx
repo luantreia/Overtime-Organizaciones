@@ -137,13 +137,13 @@ const ModalEstadisticasGeneralesCaptura: React.FC<ModalEstadisticasGeneralesCapt
     <ModalBase title="Captura de estadísticas directas" onClose={onClose} size="xl" isOpen>
       {loading ? (
         <div className="text-center py-8">
-          <p className="text-gray-600">Cargando jugadores y estadísticas...</p>
+          <p className="text-slate-600">Cargando jugadores y estadísticas...</p>
         </div>
       ) : (
         <div className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
             <div className="space-y-2">
-              <h3 className="text-base sm:text-lg font-semibold text-blue-800">
+              <h3 className="text-base sm:text-lg font-semibold text-brand-800">
                 {(partido?.equipoLocal as any)?.nombre || (typeof partido?.equipoLocal === 'string' ? 'Equipo Local' : 'Local')}
               </h3>
               <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3 max-h-[70vh] overflow-y-auto pr-1">

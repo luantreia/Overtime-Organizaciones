@@ -43,6 +43,7 @@ export default function FaseGruposSection({ participantes, esAdmin, onUpdate, on
         return (
         <div key={g} className="rounded-lg border border-slate-200 bg-white p-3">
           <p className="text-xs font-semibold text-slate-700">Grupo {g || '—'}</p>
+          <div className="overflow-x-auto">
           <table className="mt-2 w-full text-left text-xs">
             <thead>
               <tr className="text-slate-500">
@@ -96,6 +97,7 @@ export default function FaseGruposSection({ participantes, esAdmin, onUpdate, on
               ) : null}
             </tbody>
           </table>
+          </div>
         </div>
         );
       })}

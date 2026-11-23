@@ -34,7 +34,7 @@ export const SolicitudNotification: React.FC<SolicitudNotificationProps> = ({
   return (
     <button
       onClick={onClick}
-      className={className || 'relative p-2 text-gray-600 hover:text-gray-900'}
+      className={className || 'relative p-2 text-slate-600 hover:text-slate-900'}
       title={`${pendientesCount} solicitud(es) pendiente(s)`}
     >
       {/* Icono de campana */}

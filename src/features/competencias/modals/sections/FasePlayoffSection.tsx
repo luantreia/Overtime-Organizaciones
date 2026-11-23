@@ -143,6 +143,7 @@ export default function FasePlayoffSection({
           </ul>
         </HelpBadge>
       </div>
+      <div className="overflow-x-auto">
       <table className="mt-2 w-full text-left text-xs">
         <thead>
           <tr className="text-slate-500">
@@ -189,6 +190,7 @@ export default function FasePlayoffSection({
           ) : null}
         </tbody>
       </table>
+      </div>
 
       {initialBracket.length > 0 ? (
         <div className="mt-4">

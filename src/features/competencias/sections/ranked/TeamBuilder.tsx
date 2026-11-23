@@ -95,22 +95,22 @@ export const TeamBuilder: React.FC<TeamBuilderProps> = ({
         </div>
 
         <div>
-          <h3 className="mb-2 text-sm font-bold text-blue-600 flex items-center justify-between">
+          <h3 className="mb-2 text-sm font-bold text-brand-600 flex items-center justify-between">
             <span className="flex items-center gap-1.5">
-              <div className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
+              <div className="w-2 h-2 rounded-full bg-brand-600 animate-pulse" />
               Azul
             </span>
             <span className="text-2xs font-normal text-muted">{azul.length}/9</span>
           </h3>
-          <div className="min-h-[80px] sm:min-h-[100px] rounded-md border border-blue-50 bg-blue-50/20 p-2">
+          <div className="min-h-[80px] sm:min-h-[100px] rounded-md border border-brand-50 bg-brand-50/20 p-2">
             {azul.length === 0 ? (
-              <p className="text-2xs text-blue-300 text-center py-4 italic">Seleccioná jugadores de la lista</p>
+              <p className="text-2xs text-brand-300 text-center py-4 italic">Seleccioná jugadores de la lista</p>
             ) : (
               <ul className="space-y-1">
                 {azul.map((id) => {
                   const isAfk = afkPlayers.includes(id);
                   return (
-                  <li key={typeof id === 'string' ? id : ((id as any)?._id || Math.random().toString())} className="group flex items-center justify-between gap-2 rounded bg-white px-2 py-1.5 text-xs shadow-sm ring-1 ring-blue-100">
+                  <li key={typeof id === 'string' ? id : ((id as any)?._id || Math.random().toString())} className="group flex items-center justify-between gap-2 rounded bg-white px-2 py-1.5 text-xs shadow-sm ring-1 ring-brand-100">
                     <span className={`font-medium truncate pr-2 ${isAfk ? 'text-red-500 line-through' : ''}`}>
                        {(() => {
                          const name = nameById(id);
@@ -133,7 +133,7 @@ export const TeamBuilder: React.FC<TeamBuilderProps> = ({
                       )}
                       <button
                         type="button"
-                        className="h-7 w-7 flex items-center justify-center rounded text-blue-300 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                        className="h-7 w-7 flex items-center justify-center rounded text-brand-300 hover:text-brand-600 hover:bg-brand-50 transition-colors"
                         onClick={() => onRemoveFromAzul(id)}
                         title="Quitar"
                       >

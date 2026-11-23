@@ -133,6 +133,7 @@ const ModalGestionSets = ({ partidoId, isOpen, onClose, onAbrirCaptura, modalida
           <p className="text-sm text-slate-500">No hay sets. Creá el primero.</p>
         ) : (
           <div className="overflow-hidden rounded-xl border border-slate-200">
+            <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-slate-200 text-sm">
               <thead className="bg-slate-50 text-xs font-semibold uppercase tracking-wider text-slate-500">
                 <tr>
@@ -188,6 +189,7 @@ const ModalGestionSets = ({ partidoId, isOpen, onClose, onAbrirCaptura, modalida
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
         )}
 

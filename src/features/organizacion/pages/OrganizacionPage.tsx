@@ -104,7 +104,7 @@ const OrganizacionPage = () => {
           {!permissionsLoading && (
             <div className="flex flex-wrap gap-1 mt-1">
               {can.manageTeams && (
-                <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800">
+                <span className="inline-flex items-center rounded-full bg-brand-100 px-2 py-0.5 text-xs font-medium text-brand-800">
                   🏆 Equipos
                 </span>
               )}
@@ -124,7 +124,7 @@ const OrganizacionPage = () => {
                 </span>
               )}
               {can.viewPrivate && (
-                <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-800">
+                <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-800">
                   👁️ Privado
                 </span>
               )}

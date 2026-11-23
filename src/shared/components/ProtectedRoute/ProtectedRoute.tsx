@@ -15,7 +15,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   requiredPermission,
   fallback = null,
   loadingFallback = <div className="flex items-center justify-center p-8">
-    <div className="text-sm text-gray-500">Verificando permisos...</div>
+    <div className="text-sm text-slate-500">Verificando permisos...</div>
   </div>,
 }) => {
   const { can, loading } = useOrgPermissions(organizacionId);
@@ -44,8 +44,8 @@ export const ProtectedOrgRoute: React.FC<ProtectedRouteProps & {
   requiredPermission,
   message = 'No tienes permisos para acceder a esta sección.',
   fallback = (
-    <div className="rounded-lg border border-gray-200 p-6 text-center">
-      <div className="text-gray-500">
+    <div className="rounded-lg border border-slate-200 p-6 text-center">
+      <div className="text-slate-500">
         <div className="mb-2 text-lg">🔒</div>
         <p>{message}</p>
       </div>

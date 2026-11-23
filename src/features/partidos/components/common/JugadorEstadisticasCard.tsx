@@ -122,7 +122,7 @@ const JugadorEstadisticasCard: FC<JugadorEstadisticasCardProps> = ({
     } else if (feedbackColor === 'red') {
       return 'bg-red-300'; // Un rojo claro para la retroalimentación
     }
-    return 'bg-gray-100'; // Color de fondo por defecto o neutro
+    return 'bg-slate-100'; // Color de fondo por defecto o neutro
   };
 
 
@@ -135,7 +135,7 @@ const JugadorEstadisticasCard: FC<JugadorEstadisticasCardProps> = ({
         options={opcionesJugadores}
         onChange={(e: ChangeEvent<HTMLSelectElement>) => onCambiarJugador(e.target.value)}
         placeholder="Seleccione jugador"
-        className="mb-4 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+        className="mb-4 block w-full rounded-md border-slate-300 shadow-sm focus:border-brand-500 focus:ring focus:ring-brand-200 focus:ring-opacity-50"
       />
 
       <div className="grid grid-cols-1  gap-0"> {/* Grid adaptable a 1 o 2 columnas */}
@@ -143,7 +143,7 @@ const JugadorEstadisticasCard: FC<JugadorEstadisticasCardProps> = ({
           const valor = estadisticasJugador[campo] ?? 0;
           return (
             <div key={campo} className="flex flex-col items-center">
-              <span className="text-gray-700 font-medium mb-0">{label}</span>
+              <span className="text-slate-700 font-medium mb-0">{label}</span>
               <div
                 // Eventos para desktop
                 onMouseDown={() => handleMouseDown(campo)}
@@ -164,8 +164,8 @@ const JugadorEstadisticasCard: FC<JugadorEstadisticasCardProps> = ({
                 onTouchCancel={handleMouseUp}
                 // Estilos del botón numérico
                 className={`flex items-center justify-center cursor-pointer select-none
-                            text-xl font-bold text-gray-800
-                            w-12 h-8 rounded-lg border-2 border-gray-200
+                            text-xl font-bold text-slate-800
+                            w-12 h-8 rounded-lg border-2 border-slate-200
                             transition-colors duration-100 ease-out
                             ${getFeedbackClass()}
                             ${valor <= 0 && isLongPressing ? 'opacity-50 cursor-not-allowed' : ''}

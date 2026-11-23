@@ -195,7 +195,7 @@ const ModalInformacionPartido = ({ partidoId, isOpen, onClose, onEliminar }: Mod
             {/* Header de Acciones de Modal */}
             <div className="flex items-center justify-between p-4 bg-slate-50/50 border-b border-slate-100 sticky top-0 z-10 backdrop-blur-md">
               <div className="flex items-center gap-2">
-                <div className={`p-2 rounded-lg ${modoEdicion ? 'bg-amber-100 text-amber-600' : 'bg-blue-100 text-blue-600'}`}>
+                <div className={`p-2 rounded-lg ${modoEdicion ? 'bg-amber-100 text-amber-600' : 'bg-brand-100 text-brand-600'}`}>
                    {modoEdicion ? (
                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                    ) : (
@@ -266,8 +266,8 @@ const ModalInformacionPartido = ({ partidoId, isOpen, onClose, onEliminar }: Mod
               <div className="space-y-6">
                 {/* Sección Básica */}
                 <div className="space-y-4">
-                   <div className="flex items-center gap-2 text-blue-600 mt-2">
-                      <div className="p-1 bg-blue-50 rounded">
+                   <div className="flex items-center gap-2 text-brand-600 mt-2">
+                      <div className="p-1 bg-brand-50 rounded">
                         <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" /></svg>
                       </div>
                       <span className="text-[11px] font-black uppercase tracking-widest">Información General</span>
@@ -283,7 +283,7 @@ const ModalInformacionPartido = ({ partidoId, isOpen, onClose, onEliminar }: Mod
                         onChange={(e) =>
                           setDatosEdicion((prev) => (prev ? { ...prev, nombrePartido: e.target.value } : prev))
                         }
-                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all"
                       />
                     </div>
                     <div>
@@ -308,10 +308,10 @@ const ModalInformacionPartido = ({ partidoId, isOpen, onClose, onEliminar }: Mod
                         onChange={(e) =>
                           setDatosEdicion((prev) => (prev ? { ...prev, fecha: e.target.value } : prev))
                         }
-                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all"
                       />
                       {((partido as any)?.fase?.fechaInicio || (partido as any)?.competencia?.fechaInicio) && (
-                        <p className="mt-1 text-2xs text-blue-500 font-medium px-1 italic">
+                        <p className="mt-1 text-2xs text-brand-500 font-medium px-1 italic">
                           💡 Sugerencia: {(partido as any)?.fase?.nombre || 'Competencia'} entre 
                           {new Date((partido as any)?.fase?.fechaInicio || (partido as any)?.competencia?.fechaInicio).toLocaleDateString()} y 
                           {new Date((partido as any)?.fase?.fechaFin || (partido as any)?.competencia?.fechaFin).toLocaleDateString()}
@@ -326,7 +326,7 @@ const ModalInformacionPartido = ({ partidoId, isOpen, onClose, onEliminar }: Mod
                         onChange={(e) =>
                           setDatosEdicion((prev) => (prev ? { ...prev, ubicacion: e.target.value } : prev))
                         }
-                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all"
                       />
                     </div>
                     <div className="col-span-full">
@@ -338,7 +338,7 @@ const ModalInformacionPartido = ({ partidoId, isOpen, onClose, onEliminar }: Mod
                         onChange={(e) =>
                           setDatosEdicion((prev) => (prev ? { ...prev, videoUrl: e.target.value } : prev))
                         }
-                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all"
                       />
                     </div>
                   </div>
@@ -346,8 +346,8 @@ const ModalInformacionPartido = ({ partidoId, isOpen, onClose, onEliminar }: Mod
 
                 {/* Sección Clasificación */}
                 <div className="pt-4 border-t border-slate-100 space-y-4">
-                  <div className="flex items-center gap-2 text-indigo-600">
-                      <div className="p-1 bg-indigo-50 rounded">
+                  <div className="flex items-center gap-2 text-brand-600">
+                      <div className="p-1 bg-brand-50 rounded">
                         <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 11h.01M7 15h.01M11 7h.01M11 11h.01M11 15h.01M15 7h.01M15 11h.01M15 15h.01" /></svg>
                       </div>
                       <span className="text-[11px] font-black uppercase tracking-widest">Estado y Categoría</span>
@@ -361,7 +361,7 @@ const ModalInformacionPartido = ({ partidoId, isOpen, onClose, onEliminar }: Mod
                       onChange={(e) =>
                         setDatosEdicion((prev) => (prev ? { ...prev, estado: e.target.value as PartidoEstado } : prev))
                       }
-                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all"
                     >
                       <option value="programado">Programado</option>
                       <option value="en_juego">En Juego</option>
@@ -406,8 +406,8 @@ const ModalInformacionPartido = ({ partidoId, isOpen, onClose, onEliminar }: Mod
 
                 {/* Sección Torneo Avanzada */}
                 <div className="pt-4 border-t border-slate-100 space-y-4">
-                  <div className="flex items-center gap-2 text-blue-600">
-                      <div className="p-1 bg-blue-50 rounded">
+                  <div className="flex items-center gap-2 text-brand-600">
+                      <div className="p-1 bg-brand-50 rounded">
                         <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
                       </div>
                       <span className="text-[11px] font-black uppercase tracking-widest">Ubicación en Torneo</span>
@@ -435,7 +435,7 @@ const ModalInformacionPartido = ({ partidoId, isOpen, onClose, onEliminar }: Mod
                       <select id="modalinformacionpartido-etapa"
                         value={datosEdicion.etapa || ''}
                         onChange={(e) => setDatosEdicion((prev) => (prev ? { ...prev, etapa: e.target.value } : prev))}
-                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all"
                       >
                         <option value="">—</option>
                         <option value="treintaidosavos">Treintaidosavos</option>
@@ -457,7 +457,7 @@ const ModalInformacionPartido = ({ partidoId, isOpen, onClose, onEliminar }: Mod
                           placeholder="Ej: A"
                           value={datosEdicion.grupo || ''}
                           onChange={(e) => setDatosEdicion((prev) => (prev ? { ...prev, grupo: e.target.value } : prev))}
-                          className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                          className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all"
                         />
                       </div>
                       <div>
@@ -467,7 +467,7 @@ const ModalInformacionPartido = ({ partidoId, isOpen, onClose, onEliminar }: Mod
                           placeholder="Ej: 1"
                           value={datosEdicion.division || ''}
                           onChange={(e) => setDatosEdicion((prev) => (prev ? { ...prev, division: e.target.value } : prev))}
-                          className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                          className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all"
                         />
                       </div>
                     </div>
@@ -486,7 +486,7 @@ const ModalInformacionPartido = ({ partidoId, isOpen, onClose, onEliminar }: Mod
                     <button
                       type="button"
                       onClick={handleRecalcular}
-                      className="text-2xs font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 bg-white px-2 py-1 rounded border border-blue-100 shadow-sm"
+                      className="text-2xs font-bold text-brand-600 hover:text-brand-800 flex items-center gap-1 bg-white px-2 py-1 rounded border border-brand-100 shadow-sm"
                     >
                       <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
                       RECALCULAR DESDE SETS
@@ -614,7 +614,7 @@ const ModalInformacionPartido = ({ partidoId, isOpen, onClose, onEliminar }: Mod
                     </h4>
                     <div className="space-y-3">
                       <div className="flex gap-3">
-                        <div className="w-1 h-8 rounded-full bg-blue-500 opacity-20" />
+                        <div className="w-1 h-8 rounded-full bg-brand-500 opacity-20" />
                         <div>
                           <p className="text-2xs text-slate-500 leading-none">Fecha y Hora</p>
                           <p className="text-sm font-semibold text-slate-800">
@@ -647,7 +647,7 @@ const ModalInformacionPartido = ({ partidoId, isOpen, onClose, onEliminar }: Mod
                     <div className="space-y-3">
                       <div>
                         <p className="text-2xs text-slate-500 leading-none">Competición</p>
-                        <p className="text-sm font-bold text-blue-600">
+                        <p className="text-sm font-bold text-brand-600">
                           {typeof partido.competencia === 'string'
                             ? partido.competencia
                             : partido.competencia?.nombre || 'Amistoso / Libre'}

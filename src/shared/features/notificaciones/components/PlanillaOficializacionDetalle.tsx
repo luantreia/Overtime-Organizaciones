@@ -175,7 +175,7 @@ const PlanillaOficializacionDetalle: React.FC<Props> = ({ planillaId, solicitudI
         <button
           type="button"
           onClick={() => setReconciliando(true)}
-          className="mt-2 text-xs font-semibold text-indigo-600 hover:text-indigo-800"
+          className="mt-2 text-xs font-semibold text-brand-600 hover:text-brand-800"
         >
           Comparar con todas las versiones del partido y reconciliar →
         </button>

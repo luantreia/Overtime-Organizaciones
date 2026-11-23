@@ -21,7 +21,7 @@ export const TopPartidosDiferencia: FC<Props> = ({ partidos, title = 'Partidos c
 
   if (items.length === 0) {
     return (
-      <div className="bg-white p-6 rounded-lg shadow text-center text-gray-500">
+      <div className="bg-white p-6 rounded-lg shadow text-center text-slate-500">
         <h4 className="text-lg font-semibold mb-2">{title}</h4>
         <p>No hay partidos finalizados para mostrar.</p>
       </div>

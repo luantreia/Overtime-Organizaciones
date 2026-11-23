@@ -216,12 +216,12 @@ export default function ConfigurarReglamentoModal({ isOpen, onClose, fase, todas
                       />
                     </div>
                     <div>
-                      <label htmlFor="configurarreglamentomodal-arbitro" className="text-2xs font-black uppercase text-blue-500">Árbitro (+) </label>
+                      <label htmlFor="configurarreglamentomodal-arbitro" className="text-2xs font-black uppercase text-brand-500">Árbitro (+) </label>
                       <input id="configurarreglamentomodal-arbitro" 
                         type="number" 
                         value={config.puntuacion?.arbitroPresentado} 
                         onChange={(e) => setConfig({...config, puntuacion: {...config.puntuacion, arbitroPresentado: Number(e.target.value)}})}
-                        className="w-full rounded-lg border-2 border-white p-1.5 font-bold text-slate-600 focus:border-blue-500 focus:outline-none"
+                        className="w-full rounded-lg border-2 border-white p-1.5 font-bold text-slate-600 focus:border-brand-500 focus:outline-none"
                       />
                     </div>
                   </div>
@@ -305,12 +305,12 @@ export default function ConfigurarReglamentoModal({ isOpen, onClose, fase, todas
                     </select>
                   </div>
                   <div className="md:col-span-1">
-                    <label htmlFor="configurarreglamentomodal-estrategia-de-sembrado-seed" className="text-2xs font-black uppercase text-indigo-600">Estrategia de Sembrado (Seed)</label>
+                    <label htmlFor="configurarreglamentomodal-estrategia-de-sembrado-seed" className="text-2xs font-black uppercase text-brand-600">Estrategia de Sembrado (Seed)</label>
                     <p className="text-2xs text-muted mb-1 italic">¿Cómo se asigna el número de seed al clasificar?</p>
                     <select id="configurarreglamentomodal-estrategia-de-sembrado-seed" 
                       value={config.progresion?.estrategiaSembrado}
                       onChange={(e) => setConfig({...config, progresion: {...config.progresion, estrategiaSembrado: e.target.value as any}})}
-                      className="w-full rounded-lg border-2 border-white p-2 text-xs font-bold text-slate-700 shadow-sm focus:border-indigo-500 focus:outline-none"
+                      className="w-full rounded-lg border-2 border-white p-2 text-xs font-bold text-slate-700 shadow-sm focus:border-brand-500 focus:outline-none"
                     >
                       <option value="posicion_directa">Posición final (1º=Seed 1, 2º=Seed 2...)</option>
                       <option value="manual">Manual (Sin seed automático)</option>

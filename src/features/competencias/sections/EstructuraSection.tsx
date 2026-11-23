@@ -397,7 +397,7 @@ export default function EstructuraSection(props: Props) {
                   </span>
                 )}
                 {t.estado === 'en_curso' && (
-                  <span className="inline-flex items-center rounded-full border border-blue-200 bg-blue-50 px-2.5 py-0.5 text-xs font-semibold text-blue-700">
+                  <span className="inline-flex items-center rounded-full border border-brand-200 bg-brand-50 px-2.5 py-0.5 text-xs font-semibold text-brand-700">
                     En curso
                   </span>
                 )}

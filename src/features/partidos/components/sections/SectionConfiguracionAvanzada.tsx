@@ -40,7 +40,7 @@ export const ConfiguracionAvanzadaSection: React.FC<ConfiguracionAvanzadaSection
               <select
                 value={(partido.modoVisualizacion as 'automatico' | 'manual') || 'automatico'}
                 onChange={(e) => onCambiarModoVisualizacion(e.target.value as 'automatico' | 'manual')}
-                className="px-3 py-2 text-sm border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                className="px-3 py-2 text-sm border border-brand-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white"
               >
                 <option value="automatico">📊 Estadísticas por Set (calculadas)</option>
                 <option value="manual">✏️ Estadísticas Totales (ingresadas)</option>

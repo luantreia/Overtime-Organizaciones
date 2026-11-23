@@ -14,7 +14,7 @@ import CompetenciaDetallePage from './features/competencias/pages/CompetenciaDet
 
 const App = () => {
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50">
+    <div className="flex min-h-dvh flex-col bg-slate-50">
       <Navbar />
 
       <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-6 py-8 pb-24 xl:pb-8">
