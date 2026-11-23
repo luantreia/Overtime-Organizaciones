@@ -64,7 +64,7 @@ const esEtapaReconocida = (etapa: string): boolean => etapa === 'repechaje' || O
 /** Forma mínima que necesita cualquier `Partido` para poder agruparse y ordenarse acá. */
 export interface PartidoDeLlave {
   id: string;
-  etapa?: string;
+  etapa?: string | null;
   posicionBracket?: number;
   fecha?: string;
   hora?: string;

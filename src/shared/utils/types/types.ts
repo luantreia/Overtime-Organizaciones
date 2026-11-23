@@ -1,3 +1,4 @@
+import type { PartidoCategoria, PartidoEtapa, PartidoModalidad } from '../../types/modelos.generado';
 import type { PartidoEstado, CompetenciaEstado } from '../../types/modelos.generado';
 // =====================================================================================
 // TYPES CONSOLIDADOS - overtime-gestion-organizaciones
@@ -175,7 +176,7 @@ export interface Partido {
   escenario?: string;
   competencia?: Competencia;
   faseId?: string;
-  etapa?: 'octavos' | 'cuartos' | 'semifinal' | 'final' | 'tercer_puesto' | 'repechaje' | 'otro' | string;
+  etapa?: PartidoEtapa | null;
   localNombre?: string;
   visitanteNombre?: string;
   grupo?: string | null;
@@ -202,8 +203,8 @@ export interface Partido {
   rojoPlayers?: string[];
   azulPlayers?: string[];
   ratingDeltas?: Array<{ player: string; delta: number }>;
-  modalidad?: string;
-  categoria?: string;
+  modalidad?: PartidoModalidad;
+  categoria?: PartidoCategoria;
   videoUrl?: string;
 }
 

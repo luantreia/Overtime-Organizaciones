@@ -1,3 +1,4 @@
+import type { PartidoCategoria, PartidoEtapa, PartidoModalidad, PartidoModoEstadisticas, PartidoModoVisualizacion } from '../../../shared/types/modelos.generado';
 import type { PartidoEstado } from '../../../shared/types/modelos.generado';
 import { authFetch } from '../../../shared/utils/authFetch';
 import type { Partido, JugadorPartido, Competencia } from '../../../types';
@@ -68,8 +69,8 @@ type PartidoCreatePayload = {
   hora?: string;
   escenario?: string;
   rivalId: string;
-  modalidad: 'Foam' | 'Cloth';
-  categoria: 'Masculino' | 'Femenino' | 'Mixto' | 'Libre';
+  modalidad: PartidoModalidad;
+  categoria: PartidoCategoria;
 };
 
 type AlineacionPayload = {
@@ -115,8 +116,8 @@ export type PartidoDetallado = BackendPartido & {
   modalidad?: string;
   categoria?: string;
   sets?: SetPartido[];
-  modoVisualizacion?: 'automatico' | 'manual';
-  modoEstadisticas?: 'automatico' | 'manual';
+  modoVisualizacion?: PartidoModoVisualizacion;
+  modoEstadisticas?: PartidoModoEstadisticas;
 };
 
 export type SetPartido = {
@@ -179,7 +180,7 @@ type BackendPartido = {
   marcadorLocal?: number;
   marcadorVisitante?: number;
   estado?: PartidoEstado;
-  etapa?: string;
+  etapa?: PartidoEtapa | null;
 };
 
 const mapCompetencia = (data?: BackendPartido['competencia']): Competencia | undefined => {
