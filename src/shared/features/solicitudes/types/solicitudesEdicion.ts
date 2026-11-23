@@ -1,20 +1,18 @@
-import type { SolicitudEdicionEstado, SolicitudEdicionTipo } from '../../../types/modelos.generado';
+import type { SolicitudEdicion as SolicitudEdicionModelo, SolicitudEdicionEstado, SolicitudEdicionTipo } from '../../../types/modelos.generado';
 // Enums derivados del schema de Mongoose (npm run tipos en overtime/). No redeclarar a mano.
 export type { SolicitudEdicionEstado, SolicitudEdicionTipo };
 
-export interface ISolicitudEdicion {
-  _id: string;
-  tipo: SolicitudEdicionTipo;
-  entidad?: string | null;
+// Forma base generada desde el schema de Mongoose (npm run tipos en overtime/).
+// Solo se sobreescriben los campos que la API entrega distinto al documento crudo.
+export interface ISolicitudEdicion
+  extends Omit<SolicitudEdicionModelo, 'datosPropuestos' | 'creadoPor' | 'aceptadoPor' | 'createdAt' | 'updatedAt'> {
+  /** Mixed en el schema: cada tipo de solicitud define su propia forma. */
   datosPropuestos: Record<string, any>;
-  estado: SolicitudEdicionEstado;
-  aceptadoPor: string[];
-  requiereDobleConfirmacion?: boolean;
-  motivoRechazo?: string;
-  fechaAceptacion?: string;
-  fechaRechazo?: string;
+  /** Algunos endpoints lo devuelven populado. */
   creadoPor: string | { _id: string; nombre?: string; email?: string };
-  aprobadoPor?: string;
+  /** El schema tiene default [], así que siempre viene en las respuestas. */
+  aceptadoPor: string[];
+  /** timestamps: true — siempre presentes en documentos leídos. */
   createdAt: string;
   updatedAt: string;
 }
