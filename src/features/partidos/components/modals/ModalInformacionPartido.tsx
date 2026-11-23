@@ -33,6 +33,7 @@ const ModalInformacionPartido = ({ partidoId, isOpen, onClose, onEliminar }: Mod
   const [eliminando, setEliminando] = useState(false);
   const [datosEdicion, setDatosEdicion] = useState<{
     fecha: string;
+    fechaConfirmada: boolean;
     ubicacion: string;
     estado: PartidoEstado;
     nombrePartido: string;
@@ -66,6 +67,7 @@ const ModalInformacionPartido = ({ partidoId, isOpen, onClose, onEliminar }: Mod
       setPartido(detalle);
       setDatosEdicion({
         fecha: detalle.fecha ? toDatetimeLocalValue(detalle.fecha) : '',
+        fechaConfirmada: (detalle as any).fechaConfirmada !== false,
         ubicacion: detalle.ubicacion || '',
         estado: detalle.estado || 'programado',
         nombrePartido: detalle.nombrePartido || '',
@@ -306,10 +308,22 @@ const ModalInformacionPartido = ({ partidoId, isOpen, onClose, onEliminar }: Mod
                               : undefined
                         }
                         onChange={(e) =>
-                          setDatosEdicion((prev) => (prev ? { ...prev, fecha: e.target.value } : prev))
+                          // Elegir una fecha a mano la confirma.
+                          setDatosEdicion((prev) => (prev ? { ...prev, fecha: e.target.value, fechaConfirmada: true } : prev))
                         }
                         className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all"
                       />
+                      <label className="mt-1.5 flex items-center gap-2 px-1 text-xs text-slate-600">
+                        <input
+                          type="checkbox"
+                          checked={!datosEdicion.fechaConfirmada}
+                          onChange={(e) =>
+                            setDatosEdicion((prev) => (prev ? { ...prev, fechaConfirmada: !e.target.checked } : prev))
+                          }
+                          className="rounded border-slate-300 text-brand-600 focus:ring-brand-500"
+                        />
+                        Fecha a confirmar (en Public se muestra así, no como próximo)
+                      </label>
                       {((partido as any)?.fase?.fechaInicio || (partido as any)?.competencia?.fechaInicio) && (
                         <p className="mt-1 text-2xs text-brand-500 font-medium px-1 italic">
                           💡 Sugerencia: {(partido as any)?.fase?.nombre || 'Competencia'} entre 

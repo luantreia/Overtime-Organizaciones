@@ -66,7 +66,8 @@ const ModalBulkEditFechasPartidos = ({ isOpen, partidos, onClose, onUpdated }: M
 
     const payload: Record<string, unknown> = {};
     if (etapa.trim()) payload.etapa = etapa.trim();
-    if (fecha) payload.fecha = fecha;
+    // Cargar la fecha desde la edición rápida la confirma.
+    if (fecha) { payload.fecha = fecha; payload.fechaConfirmada = true; }
     if (hora) payload.hora = hora;
     if (ubicacion.trim()) payload.ubicacion = ubicacion.trim();
     if (estado) payload.estado = estado;
