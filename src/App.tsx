@@ -1,6 +1,8 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import PerfilPage from './features/perfil/pages/PerfilPage';
 import LoginPage from './features/auth/pages/LoginPage';
+import OlvidePasswordPage from './features/auth/pages/OlvidePasswordPage';
+import ResetPasswordPage from './features/auth/pages/ResetPasswordPage';
 import ProtectedRoute from './app/routes/ProtectedRoute';
 import OrganizacionPage from './features/organizacion/pages/OrganizacionPage';
 import Navbar from './app/layout/Navbar';
@@ -20,6 +22,8 @@ const App = () => {
       <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-6 py-8 pb-24 xl:pb-8">
         <Routes>
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/olvide-password" element={<OlvidePasswordPage />} />
+          <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
           {/* Una sola guarda para todas las rutas privadas: cada página nueva entra como hija acá. */}
           <Route element={<ProtectedRoute />}>
             <Route path="/dashboard" element={<DashboardOrgPage />} />
