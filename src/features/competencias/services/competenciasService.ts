@@ -12,6 +12,8 @@ export type BackendCompetencia = {
   fechaFin?: string;
   descripcion?: string;
   rankedEnabled?: boolean;
+  /** Minutos de cada tiempo del partido. null = 20 (o lo que diga cada fase). */
+  duracionTiempoMinutos?: number | null;
 };
 
 export type AdminUser = { _id: string; email?: string; nombre?: string };
@@ -44,6 +46,8 @@ export type CrearCompetenciaPayload = {
   fechaFin?: string;
   descripcion?: string;
   rankedEnabled?: boolean;
+  /** Minutos de cada tiempo del partido. null = 20 (o lo que diga cada fase). */
+  duracionTiempoMinutos?: number | null;
 };
 
 export async function crearCompetencia(payload: CrearCompetenciaPayload): Promise<BackendCompetencia> {

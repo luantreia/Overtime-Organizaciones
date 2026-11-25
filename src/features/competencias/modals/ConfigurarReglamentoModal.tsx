@@ -3,6 +3,8 @@ import { Overlay } from 'overtime-kit';
 import { BackendFase } from '../services';
 
 interface ReglamentoConfig {
+  /** Minutos de cada tiempo en esta fase. null = la de la competencia. */
+  duracionTiempoMinutos: number | null;
   puntuacion: {
     victoria: number;
     empate: number;
@@ -38,6 +40,7 @@ export default function ConfigurarReglamentoModal({ isOpen, onClose, fase, todas
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [config, setConfig] = useState<ReglamentoConfig>({
+    duracionTiempoMinutos: null,
     puntuacion: {
       victoria: 3,
       empate: 1,
@@ -65,6 +68,7 @@ export default function ConfigurarReglamentoModal({ isOpen, onClose, fase, todas
     if (fase?.configuracion) {
       const conf = fase.configuracion;
       setConfig({
+        duracionTiempoMinutos: (conf as { duracionTiempoMinutos?: number | null }).duracionTiempoMinutos ?? null,
         puntuacion: {
            victoria: conf.puntuacion?.victoria ?? 3,
            empate: conf.puntuacion?.empate ?? 1,
@@ -179,6 +183,24 @@ export default function ConfigurarReglamentoModal({ isOpen, onClose, fase, todas
           </div>
         </div>
       )}
+
+      <div className="mb-6 space-y-2">
+        <h3 className="text-xs font-black uppercase tracking-widest text-brand-600 border-b border-brand-100 pb-1">Reloj de juego</h3>
+        <label htmlFor="configurarreglamentomodal-duracion-tiempo" className="text-2xs font-black uppercase text-slate-500">
+          Duración de cada tiempo (minutos)
+        </label>
+        <input
+          id="configurarreglamentomodal-duracion-tiempo"
+          type="number"
+          min={1}
+          max={120}
+          placeholder="La de la competencia"
+          value={config.duracionTiempoMinutos ?? ''}
+          onChange={(e) => setConfig({ ...config, duracionTiempoMinutos: Number(e.target.value) > 0 ? Number(e.target.value) : null })}
+          className="block w-40 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
+        />
+        <p className="text-2xs text-muted">Vacío = la duración de la competencia (o 20 si tampoco tiene).</p>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {isTableType && (

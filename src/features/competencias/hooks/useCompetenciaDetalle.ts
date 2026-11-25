@@ -23,6 +23,8 @@ export interface DatosCompetencia {
   fechaFin: string;
   descripcion: string;
   rankedEnabled: boolean;
+  /** Texto del input: '' = sin cargar (20 minutos). */
+  duracionTiempoMinutos: string;
 }
 
 const DATOS_VACIOS: DatosCompetencia = {
@@ -34,6 +36,7 @@ const DATOS_VACIOS: DatosCompetencia = {
   fechaFin: '',
   descripcion: '',
   rankedEnabled: false,
+  duracionTiempoMinutos: '',
 };
 
 /**
@@ -74,6 +77,7 @@ export function useCompetenciaDetalle(competenciaId: string | undefined) {
         fechaFin: detalle.fechaFin ? detalle.fechaFin.slice(0, 10) : '',
         descripcion: (detalle as any).descripcion ?? '',
         rankedEnabled: Boolean(detalle.rankedEnabled),
+        duracionTiempoMinutos: detalle.duracionTiempoMinutos ? String(detalle.duracionTiempoMinutos) : '',
       });
       setEsAdminBackend(Boolean(detalle.esAdmin));
       setAdmins((detalle.administradores as AdminUser[]) || []);

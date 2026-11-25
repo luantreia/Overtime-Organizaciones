@@ -17,6 +17,8 @@ type Props = {
   setDescripcion: (v: string) => void;
   rankedEnabled: boolean;
   setRankedEnabled: (v: boolean) => void;
+  duracionTiempoMinutos: string;
+  setDuracionTiempoMinutos: (v: string) => void;
   esAdmin: boolean;
   saving: boolean;
   onSubmit: (e: React.FormEvent) => void;
@@ -38,6 +40,7 @@ export default function GeneralSection(props: Props) {
     fechaFin, setFechaFin,
     descripcion, setDescripcion,
     rankedEnabled, setRankedEnabled,
+    duracionTiempoMinutos, setDuracionTiempoMinutos,
     esAdmin, saving, onSubmit,
     adminEmail, setAdminEmail,
     admins, onAgregarAdmin, onQuitarAdmin,
@@ -87,6 +90,23 @@ export default function GeneralSection(props: Props) {
           <div>
             <label htmlFor="generalsection-fecha-fin" className="mb-1 block text-xs font-medium text-slate-600">Fecha fin</label>
             <input id="generalsection-fecha-fin" type="date" className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm" value={fechaFin} onChange={(e)=>setFechaFin(e.target.value)} />
+          </div>
+          <div>
+            <label htmlFor="generalsection-duracion-tiempo" className="mb-1 block text-xs font-medium text-slate-600">Duración de cada tiempo (minutos)</label>
+            <input
+              id="generalsection-duracion-tiempo"
+              type="number"
+              min={1}
+              max={120}
+              placeholder="20"
+              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
+              value={duracionTiempoMinutos}
+              onChange={(e) => setDuracionTiempoMinutos(e.target.value)}
+              aria-describedby="generalsection-duracion-tiempo-ayuda"
+            />
+            <p id="generalsection-duracion-tiempo-ayuda" className="mt-1 text-2xs text-muted">
+              El reloj de Overtime-Partido arranca cada tiempo con esto. Vacío = 20. Una fase puede tener la suya.
+            </p>
           </div>
           <div className="md:col-span-3">
             <label htmlFor="generalsection-descripcion" className="mb-1 block text-xs font-medium text-slate-600">Descripción</label>

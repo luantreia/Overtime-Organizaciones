@@ -51,6 +51,7 @@ export default function GeneralTab({ competenciaId, detalle }: Props) {
         fechaFin: borrador.fechaFin || undefined,
         descripcion: borrador.descripcion,
         rankedEnabled: borrador.rankedEnabled,
+        duracionTiempoMinutos: Number(borrador.duracionTiempoMinutos) > 0 ? Number(borrador.duracionTiempoMinutos) : null,
       });
       addToast({ type: 'success', title: 'Competencia actualizada' });
       await recargar();
@@ -96,6 +97,8 @@ export default function GeneralTab({ competenciaId, detalle }: Props) {
         setDescripcion={campo('descripcion')}
         rankedEnabled={borrador.rankedEnabled}
         setRankedEnabled={campo('rankedEnabled')}
+        duracionTiempoMinutos={borrador.duracionTiempoMinutos}
+        setDuracionTiempoMinutos={campo('duracionTiempoMinutos')}
         esAdmin={esAdmin}
         saving={saving}
         onSubmit={guardar}
