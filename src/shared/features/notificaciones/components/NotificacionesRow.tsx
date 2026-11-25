@@ -233,6 +233,7 @@ export const DetalleSolicitud: React.FC<{ solicitud: Solicitud }> = ({ solicitud
           <PlanillaOficializacionDetalle
             planillaId={String(solicitud.entidad)}
             solicitudId={solicitud.estado === 'pendiente' ? solicitud._id : undefined}
+            alcance={solicitud.datosPropuestos?.alcance === 'estructura' ? 'estructura' : 'completa'}
           />
         </div>
       ) : (

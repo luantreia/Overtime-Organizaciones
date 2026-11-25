@@ -26,6 +26,12 @@ interface Props {
    * sets existentes toman el resultado de la planilla. La elección la lee el botón Aprobar.
    */
   solicitudId?: string;
+  /**
+   * Qué pidió el equipo: 'estructura' = sólo sets (tiempo, ganador), alineaciones, marcas y
+   * video, sin jugadores; 'completa' = además convocatoria y estadísticas. Con 'estructura' el
+   * backend no incorpora jugadores aunque se aprueben (utils/seleccionAprobacion.js).
+   */
+  alcance?: 'completa' | 'estructura';
 }
 
 type Totales = { throws: number; hits: number; outs: number; catches: number };
@@ -36,7 +42,8 @@ const VACIO: Totales = { throws: 0, hits: 0, outs: 0, catches: 0 };
 
 const SELECCION_VACIA = { presentes: null as Set<string> | null, incluirSets: true, pisar: new Set<number>() };
 
-const PlanillaOficializacionDetalle: React.FC<Props> = ({ planillaId, solicitudId }) => {
+const PlanillaOficializacionDetalle: React.FC<Props> = ({ planillaId, solicitudId, alcance = 'completa' }) => {
+  const soloEstructura = alcance === 'estructura';
   // presentes: null = todos (lo mismo que no haber tocado nada).
   const [sel, setSel] = useState(() => {
     const previa = solicitudId ? getSeleccion(solicitudId) : undefined;
@@ -188,11 +195,11 @@ const PlanillaOficializacionDetalle: React.FC<Props> = ({ planillaId, solicitudI
         onClose={() => setReconciliando(false)}
       />
 
-      {(setsNuevos > 0 || presentesNuevos > 0) && (
+      {(setsNuevos > 0 || (!soloEstructura && presentesNuevos > 0)) && (
         <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
           <p className="font-semibold">Si aprobás, se crea estructura nueva en el partido</p>
           <ul className="mt-1 list-disc space-y-0.5 pl-5 text-xs">
-            {presentesNuevos > 0 && (
+            {!soloEstructura && presentesNuevos > 0 && (
               <li>
                 {presentesNuevos} jugador{presentesNuevos === 1 ? '' : 'es'} que hoy no está
                 {presentesNuevos === 1 ? '' : 'n'} en la convocatoria oficial.
@@ -213,95 +220,104 @@ const PlanillaOficializacionDetalle: React.FC<Props> = ({ planillaId, solicitudI
         </div>
       )}
 
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[560px] text-sm">
-          <thead>
-            <tr className="border-b border-slate-200 text-left text-2xs font-bold uppercase tracking-wide text-muted">
-              {editable && (
-                <th className="w-8 pb-2 pr-2">
-                  <span className="sr-only">Incorporar</span>
-                </th>
-              )}
-              <th className="pb-2 pr-3">Jugador</th>
-              {hayPresentesDeOtroEquipo && <th className="pb-2 pr-3">Equipo</th>}
-              {CAMPOS.map((campo) => (
-                <th key={campo} className="pb-2 pr-3 text-right">
-                  {campo}
-                </th>
-              ))}
-              <th className="pb-2 text-right">Hoy oficial</th>
-            </tr>
-          </thead>
-          <tbody className="tabular-nums">
-            {planilla.presentes.map((presente) => {
-              const propuesto = dePlanilla[presente._id] ?? VACIO;
-              const actual = presente.jugadorPartido
-                ? deOficial[String(presente.jugadorPartido)]
-                : undefined;
-
-              const difiere =
-                actual !== undefined && CAMPOS.some((c) => actual[c] !== propuesto[c]);
-
-              return (
-                <tr
-                  key={presente._id}
-                  className={`border-b border-slate-100 last:border-0 ${editable && !elegido(presente._id) ? 'opacity-50' : ''}`}
-                >
-                  {editable && (
-                    <td className="py-1.5 pr-2">
-                      <input
-                        type="checkbox"
-                        checked={elegido(presente._id)}
-                        onChange={(e) => togglePresente(presente._id, e.target.checked)}
-                        aria-label={`Incorporar a ${nombreDeJugador(presente.jugador)}`}
-                        className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
-                      />
-                    </td>
-                  )}
-                  <td className="py-1.5 pr-3 text-slate-800">
-                    {nombreDeJugador(presente.jugador)}
-                    {!presente.jugadorPartido && (
-                      <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-2xs font-bold text-amber-700">
-                        Alta nueva
-                      </span>
+      {soloEstructura ? (
+        <p className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
+          El equipo pidió oficializar <b>sólo el partido</b>: sets con su tiempo y ganador, alineaciones,
+          marcas y video. Las estadísticas de jugadores no entran aunque la planilla las tenga.
+        </p>
+      ) : (
+        <>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[560px] text-sm">
+            <thead>
+              <tr className="border-b border-slate-200 text-left text-2xs font-bold uppercase tracking-wide text-muted">
+                {editable && (
+                  <th className="w-8 pb-2 pr-2">
+                    <span className="sr-only">Incorporar</span>
+                  </th>
+                )}
+                <th className="pb-2 pr-3">Jugador</th>
+                {hayPresentesDeOtroEquipo && <th className="pb-2 pr-3">Equipo</th>}
+                {CAMPOS.map((campo) => (
+                  <th key={campo} className="pb-2 pr-3 text-right">
+                    {campo}
+                  </th>
+                ))}
+                <th className="pb-2 text-right">Hoy oficial</th>
+              </tr>
+            </thead>
+            <tbody className="tabular-nums">
+              {planilla.presentes.map((presente) => {
+                const propuesto = dePlanilla[presente._id] ?? VACIO;
+                const actual = presente.jugadorPartido
+                  ? deOficial[String(presente.jugadorPartido)]
+                  : undefined;
+  
+                const difiere =
+                  actual !== undefined && CAMPOS.some((c) => actual[c] !== propuesto[c]);
+  
+                return (
+                  <tr
+                    key={presente._id}
+                    className={`border-b border-slate-100 last:border-0 ${editable && !elegido(presente._id) ? 'opacity-50' : ''}`}
+                  >
+                    {editable && (
+                      <td className="py-1.5 pr-2">
+                        <input
+                          type="checkbox"
+                          checked={elegido(presente._id)}
+                          onChange={(e) => togglePresente(presente._id, e.target.checked)}
+                          aria-label={`Incorporar a ${nombreDeJugador(presente.jugador)}`}
+                          className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
+                        />
+                      </td>
                     )}
-                  </td>
-                  {hayPresentesDeOtroEquipo && (
-                    <td className="py-1.5 pr-3 text-xs text-slate-500">
-                      {nombrePorEquipoId.get(idEquipoDePresente(presente) ?? '') ?? '—'}
+                    <td className="py-1.5 pr-3 text-slate-800">
+                      {nombreDeJugador(presente.jugador)}
+                      {!presente.jugadorPartido && (
+                        <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-2xs font-bold text-amber-700">
+                          Alta nueva
+                        </span>
+                      )}
                     </td>
-                  )}
-                  {CAMPOS.map((campo) => (
-                    <td
-                      key={campo}
-                      className={`py-1.5 pr-3 text-right ${
-                        actual !== undefined && actual[campo] !== propuesto[campo]
-                          ? 'font-semibold text-amber-700'
-                          : 'text-slate-600'
-                      }`}
-                    >
-                      {propuesto[campo]}
+                    {hayPresentesDeOtroEquipo && (
+                      <td className="py-1.5 pr-3 text-xs text-slate-500">
+                        {nombrePorEquipoId.get(idEquipoDePresente(presente) ?? '') ?? '—'}
+                      </td>
+                    )}
+                    {CAMPOS.map((campo) => (
+                      <td
+                        key={campo}
+                        className={`py-1.5 pr-3 text-right ${
+                          actual !== undefined && actual[campo] !== propuesto[campo]
+                            ? 'font-semibold text-amber-700'
+                            : 'text-slate-600'
+                        }`}
+                      >
+                        {propuesto[campo]}
+                      </td>
+                    ))}
+                    <td className="py-1.5 text-right text-xs text-muted">
+                      {actual === undefined
+                        ? '—'
+                        : difiere
+                          ? CAMPOS.map((c) => actual[c]).join(' / ')
+                          : 'igual'}
                     </td>
-                  ))}
-                  <td className="py-1.5 text-right text-xs text-muted">
-                    {actual === undefined
-                      ? '—'
-                      : difiere
-                        ? CAMPOS.map((c) => actual[c]).join(' / ')
-                        : 'igual'}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-
-      <p className="text-xs text-slate-500">
-        La columna «Hoy oficial» muestra los totales que ya tiene el registro de la competencia,
-        en el mismo orden que las columnas. Un «—» significa que ese jugador todavía no tiene
-        estadísticas oficiales en este partido.
-      </p>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+  
+        <p className="text-xs text-slate-500">
+          La columna «Hoy oficial» muestra los totales que ya tiene el registro de la competencia,
+          en el mismo orden que las columnas. Un «—» significa que ese jugador todavía no tiene
+          estadísticas oficiales en este partido.
+        </p>
+          </>
+      )}
 
       {editable && planilla.modo === 'sets' && planilla.sets.length > 0 && (
         <div className="space-y-2 rounded-lg border border-slate-200 p-3">
