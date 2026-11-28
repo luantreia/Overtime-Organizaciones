@@ -5,14 +5,16 @@ import { useCompetenciaDetalle } from '../hooks/useCompetenciaDetalle';
 import GeneralTab from '../tabs/GeneralTab';
 import EstructuraTab from '../tabs/EstructuraTab';
 import PartidosTab from '../tabs/PartidosTab';
+import VideosTab from '../tabs/VideosTab';
 import CompetenciaRankedSection from '../sections/CompetenciaRankedSection';
 
-type Tab = 'general' | 'estructura' | 'partidos' | 'ranked';
+type Tab = 'general' | 'estructura' | 'partidos' | 'videos' | 'ranked';
 
 const ETIQUETAS: Record<Tab, string> = {
   general: 'General',
   estructura: 'Temporadas/Fases',
   partidos: 'Partidos',
+  videos: 'Videos',
   ranked: 'Ranked',
 };
 
@@ -26,7 +28,7 @@ const CompetenciaDetallePage = () => {
   const detalle = useCompetenciaDetalle(competenciaId);
   const filtros = useFiltrosURL<'tab'>();
 
-  const tabs: Tab[] = ['general', 'estructura', 'partidos', ...(detalle.datos.rankedEnabled ? ['ranked' as const] : [])];
+  const tabs: Tab[] = ['general', 'estructura', 'partidos', 'videos', ...(detalle.datos.rankedEnabled ? ['ranked' as const] : [])];
   const pedida = filtros.get('tab') as Tab;
   const tab: Tab = tabs.includes(pedida) ? pedida : 'estructura';
   // `estructura` es la pestaña por defecto: no se escribe en la URL.
@@ -67,6 +69,7 @@ const CompetenciaDetallePage = () => {
         {tab === 'general' ? <GeneralTab competenciaId={competenciaId} detalle={detalle} /> : null}
         {tab === 'estructura' ? <EstructuraTab competenciaId={competenciaId} detalle={detalle} /> : null}
         {tab === 'partidos' ? <PartidosTab competenciaId={competenciaId} detalle={detalle} /> : null}
+        {tab === 'videos' ? <VideosTab competenciaId={competenciaId} /> : null}
         {tab === 'ranked' ? (
           <CompetenciaRankedSection
             competenciaId={competenciaId}
